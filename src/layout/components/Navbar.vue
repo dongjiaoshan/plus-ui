@@ -26,6 +26,9 @@
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
         </el-select>
 
+        <!-- SYS-AUTH-001 djs 多农场切换器（V1 multi-farm disabled 时组件自动隐藏） -->
+        <farm-switcher />
+
         <search-menu ref="searchMenuRef" />
         <el-tooltip content="搜索" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="openSearchMenu">
@@ -94,6 +97,7 @@
 
 <script setup lang="ts">
 import SearchMenu from './TopBar/search.vue';
+import FarmSwitcher from '@/components/FarmSwitcher/index.vue';
 import { useAppStore } from '@/store/modules/app';
 import { useUserStore } from '@/store/modules/user';
 import { useSettingsStore } from '@/store/modules/settings';

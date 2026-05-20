@@ -81,5 +81,24 @@ export default {
     layoutSetting: '布局设置',
     personalCenter: '个人中心',
     logout: '退出登录'
+  },
+  // 东角山业务模块占位
+  djs: {
+    placeholder: {
+      title: '{domain} 模块',
+      subtitle: '占位页 — 业务功能将在后续 ticket 中实现'
+    },
+    oss: {
+      upload: '上传图片',
+      uploading: '上传中...',
+      uploadSuccess: '上传成功',
+      uploadFailed: '上传失败',
+      retry: '重试',
+      remove: '删除',
+      fileTooLarge: '文件大小超过 {max}MB 限制',
+      typeNotAllowed: '不支持的文件类型，仅允许 {types}',
+      reachLimit: '最多上传 {limit} 张',
+      preview: '预览'
+    }
   }
 };

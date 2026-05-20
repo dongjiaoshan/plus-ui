@@ -81,5 +81,24 @@ export default {
     layoutSetting: 'Layout Setting',
     personalCenter: 'Personal Center',
     logout: 'Logout'
+  },
+  // Dongjiaoshan business modules placeholder
+  djs: {
+    placeholder: {
+      title: '{domain} Module',
+      subtitle: 'Placeholder — business features will be implemented in later tickets'
+    },
+    oss: {
+      upload: 'Upload',
+      uploading: 'Uploading...',
+      uploadSuccess: 'Upload succeeded',
+      uploadFailed: 'Upload failed',
+      retry: 'Retry',
+      remove: 'Remove',
+      fileTooLarge: 'File exceeds the {max}MB limit',
+      typeNotAllowed: 'File type not allowed; allowed: {types}',
+      reachLimit: 'Limit reached: {limit} files',
+      preview: 'Preview'
+    }
   }
 };

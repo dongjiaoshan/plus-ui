@@ -48,6 +48,13 @@ export interface UserVO extends BaseEntity {
   postIds: any;
   roleId: any;
   admin: boolean;
+  // SYS-AUTH-001 djs 扩字段（sys_user 表已扩，SysUser entity 未扩；form 仅 farm_id 可写，
+  // wx_openid 后端只读返显，前端不可编辑）
+  farmId?: string;
+  currentFarmId?: string;
+  accessibleFarmIds?: string;
+  wxOpenid?: string;
+  wxUnionid?: string;
 }
 
 /**
@@ -67,6 +74,9 @@ export interface UserForm {
   remark?: string;
   postIds: string[];
   roleIds: string[];
+  // SYS-AUTH-001 djs 扩字段（farmId 用户可改；wxOpenid 只读返显）
+  farmId?: string;
+  wxOpenid?: string;
 }
 
 export interface UserInfoVO {
