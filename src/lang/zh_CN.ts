@@ -155,6 +155,102 @@ export default {
       del: '是否确认删除选中的 {count} 条人员记录？'
     }
   },
+  // 供应商管理（SYS-MD-003）
+  supplier: {
+    title: {
+      add: '新增供应商',
+      edit: '编辑供应商'
+    },
+    column: {
+      supplierCode: '供应商编码',
+      supplierName: '供应商名称',
+      supplierType: '类型',
+      contactName: '联系人',
+      contactPhone: '联系电话',
+      address: '地址',
+      businessStatus: '状态',
+      createTime: '创建时间'
+    },
+    field: {
+      supplierName: '供应商名称',
+      supplierType: '类型',
+      contactName: '联系人',
+      contactPhone: '联系电话',
+      address: '地址',
+      businessStatus: '状态',
+      settleType: '结算方式',
+      bankName: '开户行',
+      bankAccount: '银行账户',
+      remark: '备注'
+    },
+    placeholder: {
+      supplierName: '请输入供应商名称',
+      supplierType: '请选择类型',
+      contactName: '请输入联系人',
+      contactPhone: '请输入联系电话',
+      address: '请输入地址',
+      settleType: '请输入结算方式',
+      bankName: '请输入开户行名称',
+      bankAccount: '请输入银行账户'
+    },
+    rule: {
+      supplierName: { required: '供应商名称不能为空' },
+      supplierType: { required: '请选择供应商类型' },
+      businessStatus: { required: '请选择业务状态' },
+      contactPhone: { pattern: '请输入合法的联系电话' }
+    },
+    confirm: {
+      del: '是否确认删除选中的 {count} 条供应商记录？'
+    }
+  },
+  // 门店主数据（SYS-MD-002）
+  store: {
+    title: {
+      add: '新增门店',
+      edit: '编辑门店'
+    },
+    column: {
+      storeCode: '门店编码',
+      storeName: '门店名称',
+      storeType: '门店类型',
+      businessStatus: '经营状态',
+      address: '门店地址',
+      contactName: '联系人',
+      contactPhone: '联系电话',
+      createTime: '创建时间'
+    },
+    field: {
+      storeCode: '门店编码',
+      storeName: '门店名称',
+      storeType: '门店类型',
+      businessStatus: '经营状态',
+      address: '门店地址',
+      contactName: '联系人',
+      contactPhone: '联系电话',
+      remark: '备注'
+    },
+    placeholder: {
+      storeName: '请输入门店名称',
+      storeType: '请选择门店类型',
+      contactName: '请输入联系人',
+      contactPhone: '请输入手机号',
+      address: '请输入门店地址'
+    },
+    option: {
+      direct: '直营',
+      franchise: '加盟',
+      cooperating: '合作中',
+      terminated: '已终止'
+    },
+    rule: {
+      storeName: { required: '门店名称不能为空' },
+      businessStatus: { required: '请选择经营状态' },
+      contactPhone: { pattern: '请输入合法的手机号' }
+    },
+    confirm: {
+      del: '是否确认删除选中的 {count} 条门店记录？'
+    }
+  },
   // 东角山业务模块占位
   djs: {
     placeholder: {

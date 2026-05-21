@@ -155,6 +155,102 @@ export default {
       del: 'Delete the selected {count} person record(s)?'
     }
   },
+  // Supplier master data (SYS-MD-003)
+  supplier: {
+    title: {
+      add: 'Add supplier',
+      edit: 'Edit supplier'
+    },
+    column: {
+      supplierCode: 'Supplier code',
+      supplierName: 'Supplier name',
+      supplierType: 'Type',
+      contactName: 'Contact',
+      contactPhone: 'Phone',
+      address: 'Address',
+      businessStatus: 'Status',
+      createTime: 'Created at'
+    },
+    field: {
+      supplierName: 'Supplier name',
+      supplierType: 'Type',
+      contactName: 'Contact',
+      contactPhone: 'Phone',
+      address: 'Address',
+      businessStatus: 'Status',
+      settleType: 'Settle type',
+      bankName: 'Bank name',
+      bankAccount: 'Bank account',
+      remark: 'Remark'
+    },
+    placeholder: {
+      supplierName: 'Enter supplier name',
+      supplierType: 'Select type',
+      contactName: 'Enter contact name',
+      contactPhone: 'Enter phone',
+      address: 'Enter address',
+      settleType: 'Enter settle type',
+      bankName: 'Enter bank name',
+      bankAccount: 'Enter bank account'
+    },
+    rule: {
+      supplierName: { required: 'Supplier name is required' },
+      supplierType: { required: 'Please select supplier type' },
+      businessStatus: { required: 'Please select business status' },
+      contactPhone: { pattern: 'Please enter a valid phone' }
+    },
+    confirm: {
+      del: 'Delete the selected {count} supplier record(s)?'
+    }
+  },
+  // Store master data (SYS-MD-002)
+  store: {
+    title: {
+      add: 'Add store',
+      edit: 'Edit store'
+    },
+    column: {
+      storeCode: 'Store code',
+      storeName: 'Store name',
+      storeType: 'Store type',
+      businessStatus: 'Business status',
+      address: 'Address',
+      contactName: 'Contact',
+      contactPhone: 'Phone',
+      createTime: 'Created at'
+    },
+    field: {
+      storeCode: 'Store code',
+      storeName: 'Store name',
+      storeType: 'Store type',
+      businessStatus: 'Business status',
+      address: 'Address',
+      contactName: 'Contact',
+      contactPhone: 'Phone',
+      remark: 'Remark'
+    },
+    placeholder: {
+      storeName: 'Enter store name',
+      storeType: 'Select store type',
+      contactName: 'Enter contact name',
+      contactPhone: 'Enter phone',
+      address: 'Enter address'
+    },
+    option: {
+      direct: 'Direct',
+      franchise: 'Franchise',
+      cooperating: 'Cooperating',
+      terminated: 'Terminated'
+    },
+    rule: {
+      storeName: { required: 'Store name is required' },
+      businessStatus: { required: 'Business status is required' },
+      contactPhone: { pattern: 'Please enter a valid phone' }
+    },
+    confirm: {
+      del: 'Delete the selected {count} store record(s)?'
+    }
+  },
   // Dongjiaoshan business modules placeholder
   djs: {
     placeholder: {
