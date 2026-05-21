@@ -245,7 +245,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12" v-if="form.userId != undefined">
+          <el-col :span="12" v-if="form.userId">
             <el-form-item label="微信 openid">
               <el-input v-model="form.wxOpenid" placeholder="员工小程序首次登录后自动绑定" readonly />
             </el-form-item>
@@ -637,9 +637,7 @@ const handleUpdate = async (row?: UserForm) => {
   dialog.title = '修改用户';
   Object.assign(form.value, data.user);
   postOptions.value = data.posts;
-  roleOptions.value = Array.from(
-    new Map([...data.roles, ...data.user.roles].map(role => [role.roleId, role])).values()
-  );
+  roleOptions.value = Array.from(new Map([...data.roles, ...data.user.roles].map((role) => [role.roleId, role])).values());
   form.value.postIds = data.postIds;
   form.value.roleIds = data.roleIds;
   form.value.password = '';

@@ -27,10 +27,22 @@
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5" v-if="tab === 'waiting'">
-            <el-button class="todo-action-btn todo-action-btn--primary" type="primary" plain icon="Edit" :disabled="multiple" @click="handleUserOpen()"
+            <el-button
+              class="todo-action-btn todo-action-btn--primary"
+              type="primary"
+              plain
+              icon="Edit"
+              :disabled="multiple"
+              @click="handleUserOpen()"
               >修改办理人
             </el-button>
-            <el-button class="todo-action-btn todo-action-btn--warning" type="warning" plain icon="Bell" :disabled="multiple" @click="handleUrgeTaskOpen()"
+            <el-button
+              class="todo-action-btn todo-action-btn--warning"
+              type="warning"
+              plain
+              icon="Bell"
+              :disabled="multiple"
+              @click="handleUrgeTaskOpen()"
               >催办
             </el-button>
           </el-col>

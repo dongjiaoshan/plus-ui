@@ -67,7 +67,7 @@
                   <span class="link-type" @click.stop="handleTypeRowClick(scope.row)">{{ scope.row.dictType }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="备注" align="center" prop="remark" width="160"/>
+              <el-table-column label="备注" align="center" prop="remark" width="160" />
               <el-table-column label="创建时间" align="center" prop="createTime" width="180">
                 <template #default="scope">
                   <span>{{ proxy.parseTime(scope.row.createTime) }}</span>
@@ -91,6 +91,7 @@
             v-model:page="typeQueryParams.pageNum"
             v-model:limit="typeQueryParams.pageSize"
             :total="typeTotal"
+            layout="total, sizes, prev, pager, next"
             @pagination="getTypeList"
           />
         </el-card>
@@ -200,6 +201,7 @@
             v-model:page="dataQueryParams.pageNum"
             v-model:limit="dataQueryParams.pageSize"
             :total="dataTotal"
+            layout="total, sizes, prev, pager, next"
             @pagination="getDataList"
           />
         </el-card>
@@ -214,12 +216,14 @@
         </el-form-item>
         <el-form-item prop="dictType">
           <el-input v-model="typeForm.dictType" placeholder="请输入字典类型" maxlength="100" />
-          <span slot="label">
-            <el-tooltip content="数据存储中的Key值，如：sys_user_sex" placement="top">
-              <i class="el-icon-question"></i>
-            </el-tooltip>
-            字典类型
-          </span>
+          <template v-slot:label>
+            <span>
+              <el-tooltip content="数据存储中的Key值，如：sys_user_sex" placement="top">
+                <i class="el-icon-question"></i>
+              </el-tooltip>
+              字典类型
+            </span>
+          </template>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input v-model="typeForm.remark" type="textarea" placeholder="请输入内容"></el-input>
@@ -671,5 +675,4 @@ onMounted(() => {
 .dict-table-wrap {
   overflow-x: auto;
 }
-
 </style>

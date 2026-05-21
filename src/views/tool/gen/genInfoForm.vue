@@ -81,7 +81,6 @@
           />
         </el-form-item>
       </el-col>
-
     </el-row>
 
     <template v-if="info.tplCategory == 'tree'">

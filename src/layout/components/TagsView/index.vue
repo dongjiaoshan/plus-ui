@@ -12,7 +12,7 @@
         @click.middle="!isAffix(tag) ? closeSelectedTag(tag) : ''"
         @contextmenu.prevent="openMenu(tag, $event)"
       >
-        <svg-icon v-if="tagsIcon && tag.meta && tag.meta.icon && tag.meta.icon !== '#'" :icon-class="tag.meta.icon"/>
+        <svg-icon v-if="tagsIcon && tag.meta && tag.meta.icon && tag.meta.icon !== '#'" :icon-class="tag.meta.icon" />
         <span class="tags-view-item-title">{{ tag.title }}</span>
         <span v-if="!isAffix(tag)" @click.prevent.stop="closeSelectedTag(tag)">
           <close class="el-icon-close" style="width: 1em; height: 1em; vertical-align: middle" />
@@ -52,7 +52,7 @@ const router = useRouter();
 const visitedViews = computed(() => useTagsViewStore().getVisitedViews());
 const routes = computed(() => usePermissionStore().getRoutes());
 const theme = computed(() => useSettingsStore().theme);
-const tagsIcon = computed(() => useSettingsStore().tagsIcon)
+const tagsIcon = computed(() => useSettingsStore().tagsIcon);
 
 watch(route, () => {
   addTags();
@@ -261,7 +261,11 @@ onMounted(() => {
       margin-left: 5px;
       margin-top: 4px;
       border-radius: var(--app-radius-md);
-      transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      transition:
+        box-shadow 0.2s ease,
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
       &:hover {
         color: var(--el-color-primary);
         border-color: var(--el-color-primary-light-5);

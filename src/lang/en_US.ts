@@ -82,6 +82,79 @@ export default {
     personalCenter: 'Personal Center',
     logout: 'Logout'
   },
+  // BizTable generic list component
+  biz: {
+    table: {
+      empty: 'No data',
+      column: {
+        action: 'Action'
+      },
+      search: {
+        submit: 'Search',
+        reset: 'Reset',
+        inputPrefix: 'Enter ',
+        selectPrefix: 'Select ',
+        startDate: 'Start date',
+        endDate: 'End date'
+      },
+      action: {
+        add: 'Add',
+        edit: 'Edit',
+        del: 'Delete',
+        batchDel: 'Batch delete',
+        export: 'Export'
+      }
+    }
+  },
+  // Common text
+  common: {
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    opSuccess: 'Operation succeeded'
+  },
+  // Person master data (SYS-MD-001)
+  person: {
+    title: {
+      add: 'Add person',
+      edit: 'Edit person'
+    },
+    column: {
+      personCode: 'Person code',
+      name: 'Name',
+      gender: 'Gender',
+      phone: 'Phone',
+      position: 'Position',
+      status: 'Status',
+      hireDate: 'Hire date',
+      createTime: 'Created at'
+    },
+    field: {
+      name: 'Name',
+      gender: 'Gender',
+      phone: 'Phone',
+      idCard: 'ID card',
+      position: 'Position',
+      hireDate: 'Hire date',
+      status: 'Status',
+      remark: 'Remark'
+    },
+    placeholder: {
+      name: 'Enter name',
+      gender: 'Select gender',
+      phone: 'Enter phone',
+      idCard: 'Enter 15 / 18-digit ID card',
+      position: 'Enter position',
+      hireDate: 'Select hire date'
+    },
+    rule: {
+      name: { required: 'Name is required' },
+      phone: { pattern: 'Please enter a valid phone' },
+      idCard: { pattern: 'Please enter a valid ID card' }
+    },
+    confirm: {
+      del: 'Delete the selected {count} person record(s)?'
+    }
+  },
   // Dongjiaoshan business modules placeholder
   djs: {
     placeholder: {
