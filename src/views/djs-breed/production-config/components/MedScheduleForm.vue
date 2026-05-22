@@ -5,14 +5,14 @@
         <el-col :span="12">
           <el-form-item :label="t('productionConfig.field.medType')" prop="medType">
             <el-select v-model="form.medType" :placeholder="t('productionConfig.placeholder.medType')" filterable>
-              <el-option v-for="item in dict.type.djs_med_type || []" :key="item.value" :label="item.label" :value="item.value" />
+              <el-option v-for="item in djs_med_type" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item :label="t('productionConfig.field.eventTrigger')" prop="eventTrigger">
             <el-select v-model="form.eventTrigger" :placeholder="t('productionConfig.placeholder.eventTrigger')" filterable>
-              <el-option v-for="item in dict.type.djs_med_event_trigger || []" :key="item.value" :label="item.label" :value="item.value" />
+              <el-option v-for="item in djs_med_event_trigger" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -56,7 +56,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { dict } = useDict('djs_med_type', 'djs_med_event_trigger');
+const { djs_med_type, djs_med_event_trigger } = toRefs<any>(proxy?.useDict('djs_med_type', 'djs_med_event_trigger'));
 
 const visible = ref(false);
 const submitting = ref(false);

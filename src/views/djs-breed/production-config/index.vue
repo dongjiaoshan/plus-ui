@@ -112,7 +112,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { dict } = useDict('djs_med_type', 'djs_med_event_trigger');
+const { djs_med_type, djs_med_event_trigger } = toRefs<any>(proxy?.useDict('djs_med_type', 'djs_med_event_trigger'));
 
 const activeTab = ref<'cycle' | 'boar' | 'med'>('cycle');
 
@@ -263,13 +263,13 @@ const medSearchSchema = computed<SearchFieldSchema[]>(() => [
     field: 'medType',
     label: t('productionConfig.field.medType'),
     type: 'select',
-    options: (dict.value.djs_med_type || []).map((d: any) => ({ value: d.value, label: d.label }))
+    options: (djs_med_type.value || []).map((d: any) => ({ value: d.value, label: d.label }))
   },
   {
     field: 'eventTrigger',
     label: t('productionConfig.field.eventTrigger'),
     type: 'select',
-    options: (dict.value.djs_med_event_trigger || []).map((d: any) => ({ value: d.value, label: d.label }))
+    options: (djs_med_event_trigger.value || []).map((d: any) => ({ value: d.value, label: d.label }))
   }
 ]);
 
@@ -280,7 +280,7 @@ const medColumns = computed<BizTableColumn[]>(() => [
     width: 120,
     align: 'center',
     formatter: (row: any) => {
-      const item = (dict.value.djs_med_type || []).find((d: any) => d.value === row.medType);
+      const item = (djs_med_type.value || []).find((d: any) => d.value === row.medType);
       return item ? item.label : row.medType;
     }
   },
@@ -290,7 +290,7 @@ const medColumns = computed<BizTableColumn[]>(() => [
     width: 140,
     align: 'center',
     formatter: (row: any) => {
-      const item = (dict.value.djs_med_event_trigger || []).find((d: any) => d.value === row.eventTrigger);
+      const item = (djs_med_event_trigger.value || []).find((d: any) => d.value === row.eventTrigger);
       return item ? item.label : row.eventTrigger;
     }
   },

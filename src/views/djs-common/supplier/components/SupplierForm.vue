@@ -76,7 +76,7 @@
         </el-col>
         <el-col :span="24">
           <el-form-item :label="t('supplier.field.licenseImage')" prop="licenseImageOssId">
-            <OssUpload v-model="licenseImageIdsModel" biz-type="supplier_license" :limit="1" :file-size="10" />
+            <OssUpload ref="ossUploadRef" v-model="licenseImageIdsModel" biz-type="supplier_license" :limit="1" :file-size="10" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -99,6 +99,7 @@
 import { addSupplier, getSupplier, updateSupplier } from '@/api/djs-common/supplier';
 import type { SupplierForm } from '@/api/djs-common/supplier/types';
 import OssUpload from '@/components/OssUpload/index.vue';
+import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -110,6 +111,7 @@ const { djs_supplier_type, djs_supplier_status, djs_settle_type } = toRefs<any>(
 const visible = ref(false);
 const submitting = ref(false);
 const formRef = ref<ElFormInstance>();
+const ossUploadRef = ref<InstanceType<typeof OssUpload>>();
 
 const defaultForm = (): SupplierForm => ({
   id: undefined,
@@ -168,6 +170,22 @@ const openEdit = async (id: number | string) => {
     ...res.data
   };
   visible.value = true;
+  // 回填 OssUpload 已有图片（OssUpload 内部 watch 不主动反查 URL，必须父组件调 setExistingFiles）
+  const ossId = form.value.licenseImageOssId;
+  if (ossId) {
+    try {
+      const ossRes = await listOssByIds(ossId as number);
+      const items = (ossRes.data || []).map((o) => ({
+        ossId: Number(o.ossId),
+        url: o.url,
+        originalName: o.originalName
+      }));
+      await nextTick();
+      ossUploadRef.value?.setExistingFiles(items);
+    } catch (e) {
+      console.warn('[SupplierForm] listOssByIds failed for licenseImageOssId', ossId, e);
+    }
+  }
 };
 
 defineExpose({ openCreate, openEdit });

@@ -59,7 +59,7 @@
         </el-col>
         <el-col :span="24">
           <el-form-item :label="t('store.field.image')" prop="imageOssId">
-            <OssUpload v-model="imageOssIdsModel" biz-type="store_photo" :limit="1" :file-size="10" />
+            <OssUpload ref="ossUploadRef" v-model="imageOssIdsModel" biz-type="store_photo" :limit="1" :file-size="10" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -82,6 +82,7 @@
 import { addStore, getStore, updateStore } from '@/api/djs-common/store';
 import type { StoreForm } from '@/api/djs-common/store/types';
 import OssUpload from '@/components/OssUpload/index.vue';
+import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -91,6 +92,7 @@ const { djs_store_type, djs_store_status } = toRefs<any>(proxy?.useDict('djs_sto
 const visible = ref(false);
 const submitting = ref(false);
 const formRef = ref<ElFormInstance>();
+const ossUploadRef = ref<InstanceType<typeof OssUpload>>();
 
 const defaultForm = (): StoreForm => ({
   id: undefined,
@@ -139,6 +141,22 @@ const openEdit = async (id: number | string) => {
     ...res.data
   };
   visible.value = true;
+  // 回填 OssUpload 已有图片（OssUpload 内部 watch 不主动反查 URL，必须父组件调 setExistingFiles）
+  const ossId = form.value.imageOssId;
+  if (ossId) {
+    try {
+      const ossRes = await listOssByIds(ossId as number);
+      const items = (ossRes.data || []).map((o) => ({
+        ossId: Number(o.ossId),
+        url: o.url,
+        originalName: o.originalName
+      }));
+      await nextTick();
+      ossUploadRef.value?.setExistingFiles(items);
+    } catch (e) {
+      console.warn('[StoreForm] listOssByIds failed for imageOssId', ossId, e);
+    }
+  }
 };
 
 defineExpose({ openCreate, openEdit });

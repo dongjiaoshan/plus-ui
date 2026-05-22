@@ -25,7 +25,7 @@
           <el-descriptions-item :label="t('supplier.column.purchaseQty')">{{ data.purchaseQty ?? 0 }}</el-descriptions-item>
           <el-descriptions-item :label="t('supplier.field.address')" :span="2">{{ data.address || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('supplier.field.licenseImage')" :span="2">
-            <image-preview v-if="data.licenseImageOssId" :src="String(data.licenseImageOssId)" :width="160" :height="120" />
+            <image-preview v-if="licenseImageUrl" :src="licenseImageUrl" :width="160" :height="120" />
             <el-text v-else type="info">-</el-text>
           </el-descriptions-item>
           <el-descriptions-item :label="t('supplier.field.remark')" :span="2">{{ data.remark || '-' }}</el-descriptions-item>
@@ -47,6 +47,7 @@
 <script setup lang="ts">
 import { getSupplier } from '@/api/djs-common/supplier';
 import type { SupplierVO } from '@/api/djs-common/supplier/types';
+import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -58,12 +59,23 @@ const { djs_supplier_type, djs_supplier_status, djs_settle_type } = toRefs<any>(
 const visible = ref(false);
 const activeTab = ref('info');
 const data = ref<Partial<SupplierVO>>({});
+const licenseImageUrl = ref<string>('');
 
 const open = async (id: number | string) => {
   const res = await getSupplier(id);
   data.value = res.data || {};
+  licenseImageUrl.value = '';
   activeTab.value = 'info';
   visible.value = true;
+  const ossId = data.value.licenseImageOssId;
+  if (ossId) {
+    try {
+      const ossRes = await listOssByIds(ossId as number);
+      licenseImageUrl.value = ossRes.data?.[0]?.url ?? '';
+    } catch (e) {
+      console.warn('[SupplierView] listOssByIds failed for licenseImageOssId', ossId, e);
+    }
+  }
 };
 
 defineExpose({ open });
