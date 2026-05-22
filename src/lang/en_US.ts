@@ -111,6 +111,10 @@ export default {
   common: {
     confirm: 'Confirm',
     cancel: 'Cancel',
+    close: 'Close',
+    detail: 'Detail',
+    edit: 'Edit',
+    delete: 'Delete',
     opSuccess: 'Operation succeeded'
   },
   // Person master data (SYS-MD-001)
@@ -434,6 +438,82 @@ export default {
       delBoar: 'Confirm deletion of {count} boar config(s)?',
       delMed: 'Confirm deletion of {count} med schedule(s)?'
     }
+  },
+  // Pig master + state machine (BRD-CORE-001) — 10 lifecycle / 11 UI events / END + end_reason
+  pig: {
+    action: {
+      fireEvent: 'Fire event'
+    },
+    sex: {
+      male: 'Male',
+      female: 'Female'
+    },
+    column: {
+      earNo: 'Ear No.',
+      earTag: 'Ear tag',
+      pigSex: 'Sex',
+      pigType: 'Type',
+      currentStatus: 'Current state',
+      pigBreedCode: 'Breed',
+      pigStrainCode: 'Strain',
+      birthDate: 'Birth date',
+      introduceDate: 'Introduce date',
+      barnId: 'Barn',
+      penId: 'Pen',
+      motherEar: 'Mother ear',
+      fatherEar: 'Father ear',
+      parity: 'Parity',
+      statusStartedAt: 'Status since',
+      endReason: 'End reason',
+      remark: 'Remark'
+    },
+    placeholder: {
+      earNo: 'Enter ear number',
+      barnId: 'Enter barn id',
+      penId: 'Enter pen id',
+      motherEar: 'Enter mother ear no.'
+    },
+    event: {
+      empty: 'No available events for current state',
+      target: 'Target event',
+      placeholderHint: 'BRD-EVENT-* business forms not yet wired — boss / debug only, no real payload collected',
+      payloadFields: 'Required payload fields (UI placeholder, not collected)',
+      dialogTitle: 'Fire pig state event',
+      fireAnyway: 'Fire anyway',
+      fireSuccess: 'Event fired',
+      breed: 'Breed',
+      farrow: 'Farrow',
+      wean: 'Wean',
+      oestrus: 'Oestrus check',
+      null_return: 'Null return (abort / return / idle)',
+      die: 'Die',
+      eliminate: 'Eliminate',
+      castrate: 'Castrate',
+      transfer: 'Transfer',
+      slaughter: 'Slaughter',
+      intro: 'Introduce',
+      payloadDesc: {
+        oestrus: 'Boolean — confirm pregnancy (true → PH, false → keep PZ)',
+        nullReturn: 'String — abort / return / idle',
+        transferBarn: 'Long — new barn id (optional)',
+        transferPen: 'Long — new pen id (optional)'
+      }
+    },
+    detail: {
+      title: 'Pig detail — {earNo}',
+      tab: {
+        overview: 'Overview',
+        history: 'State history',
+        health: 'Health'
+      },
+      historyEmpty: 'No state changes',
+      historyInit: 'Initial',
+      duration: '{days} day(s)',
+      relatedEvent: 'Related event ID: {id}',
+      healthPlaceholder: 'Health log will be wired in BRD-MED-003',
+      relatedNotFound: 'No pig found with ear no. {earNo}'
+    },
+    exportTodo: 'Export will be wired in BRD-LIST-001'
   },
   // Farm / Barn / Pen (BRD-MD-002) — single farm (ADR-0001), 2-level tree: Barn → Pen
   farm: {

@@ -111,6 +111,10 @@ export default {
   common: {
     confirm: '确 定',
     cancel: '取 消',
+    close: '关 闭',
+    detail: '详 情',
+    edit: '编 辑',
+    delete: '删 除',
     opSuccess: '操作成功'
   },
   // 人员管理（SYS-MD-001）
@@ -434,6 +438,82 @@ export default {
       delBoar: '是否确认删除选中的 {count} 条公猪配置？',
       delMed: '是否确认删除选中的 {count} 条药品周期配置？'
     }
+  },
+  // 猪只主表 + 状态机（BRD-CORE-001）— 10 lifecycle / 11 UI events / END + end_reason 终态聚合
+  pig: {
+    action: {
+      fireEvent: '触发事件'
+    },
+    sex: {
+      male: '公',
+      female: '母'
+    },
+    column: {
+      earNo: '耳号',
+      earTag: '耳号全版',
+      pigSex: '性别',
+      pigType: '类型',
+      currentStatus: '当前状态',
+      pigBreedCode: '品种',
+      pigStrainCode: '品系',
+      birthDate: '出生日期',
+      introduceDate: '引种日期',
+      barnId: '栋舍',
+      penId: '栏位',
+      motherEar: '母猪耳号',
+      fatherEar: '父猪耳号',
+      parity: '胎次',
+      statusStartedAt: '进入状态时间',
+      endReason: '终止原因',
+      remark: '备注'
+    },
+    placeholder: {
+      earNo: '请输入耳号',
+      barnId: '请输入栋舍 ID',
+      penId: '请输入栏位 ID',
+      motherEar: '请输入母猪耳号'
+    },
+    event: {
+      empty: '当前状态下无可触发事件',
+      target: '目标事件',
+      placeholderHint: 'BRD-EVENT-* 业务表单尚未接管 — 此处仅供 boss/调试强制触发，不收集真实 payload',
+      payloadFields: '该事件所需 payload 字段（前端占位，未真实收集）',
+      dialogTitle: '触发猪只状态事件',
+      fireAnyway: '强制触发',
+      fireSuccess: '事件已触发',
+      breed: '配种',
+      farrow: '分娩',
+      wean: '断奶',
+      oestrus: '查情',
+      null_return: '返空（流产 / 返情 / 空怀）',
+      die: '死亡',
+      eliminate: '淘汰',
+      castrate: '阉割',
+      transfer: '转栏',
+      slaughter: '出栏',
+      intro: '引种',
+      payloadDesc: {
+        oestrus: 'Boolean — 是否确认妊娠（true=进入 PH，false=留 PZ）',
+        nullReturn: 'String — abort=流产 / return=返情 / idle=空怀',
+        transferBarn: 'Long — 新栋舍 ID（可选）',
+        transferPen: 'Long — 新栏位 ID（可选）'
+      }
+    },
+    detail: {
+      title: '猪只详情 — {earNo}',
+      tab: {
+        overview: '概览',
+        history: '状态变更',
+        health: '健康记录'
+      },
+      historyEmpty: '暂无状态变更记录',
+      historyInit: '初始',
+      duration: '停留 {days} 天',
+      relatedEvent: '关联业务事件 ID：{id}',
+      healthPlaceholder: '健康记录将由 BRD-MED-003 接入后展示',
+      relatedNotFound: '未找到耳号为 {earNo} 的猪只'
+    },
+    exportTodo: '导出能力将在 BRD-LIST-001 中接入'
   },
   // 农场 / 栋舍 / 栏位（BRD-MD-002）— 单农场（ADR-0001），左侧树两层：栋舍 → 栏位
   farm: {
