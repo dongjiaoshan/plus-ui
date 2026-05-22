@@ -89,11 +89,13 @@ async function fetchList() {
   }
 }
 
-function handleSearch() {
+function handleSearch(payload?: Record<string, any>) {
+  if (payload) Object.assign(searchModel, payload);
   pageNum.value = 1;
   fetchList();
 }
 function handleReset() {
+  Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
   pageNum.value = 1;
   fetchList();
 }
@@ -115,7 +117,8 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
 }
-function handleExport() {
+function handleExport(payload?: Record<string, any>) {
+  if (payload) Object.assign(searchModel, payload);
   proxy?.download(
     'djs/common/person/export',
     {
