@@ -1,0 +1,76 @@
+name: Deploy Staging (Admin)
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging-admin
+  cancel-in-progress: true
+
+env:
+  REMOTE_DIR: /www/wwwroot/admin-staging.dongjiaoshan.com
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Build
+        run: pnpm build:prod
+
+      - name: Verify dist
+        run: |
+          if [ ! -d dist ] || [ -z "$(ls -A dist)" ]; then
+            echo "dist/ missing or empty" >&2
+            exit 1
+          fi
+          ls -lh dist | head -20
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Backup current and rsync new dist
+        env:
+          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+          SSH_TARGET: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+          REMOTE: ${{ env.REMOTE_DIR }}
+        run: |
+          ssh -p "$SSH_PORT" "$SSH_TARGET" REMOTE="$REMOTE" bash -se <<'EOF'
+          set -euo pipefail
+          mkdir -p "$REMOTE" "${REMOTE}.last"
+          if [ -n "$(ls -A "$REMOTE" 2>/dev/null || true)" ]; then
+            rsync -a --delete "$REMOTE/" "${REMOTE}.last/"
+          fi
+          EOF
+          rsync -az --delete \
+            -e "ssh -p $SSH_PORT" \
+            dist/ "$SSH_TARGET:$REMOTE/"
+
+      - name: Reload nginx (optional)
+        if: ${{ env.RELOAD_NGINX == 'true' }}
+        run: |
+          ssh -p ${{ secrets.SSH_PORT || 22 }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "sudo nginx -t && sudo nginx -s reload"
