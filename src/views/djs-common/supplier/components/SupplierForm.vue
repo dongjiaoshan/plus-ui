@@ -1,6 +1,6 @@
 <template>
-  <el-dialog v-model="visible" :title="dialogTitle" destroy-on-close append-to-body width="720px" @closed="handleClosed">
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+  <el-dialog v-model="visible" :title="dialogTitle" destroy-on-close append-to-body width="820px" @closed="handleClosed">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
       <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item :label="t('supplier.field.supplierName')" prop="supplierName">
@@ -15,13 +15,41 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="t('supplier.field.contactName')" prop="contactName">
-            <el-input v-model="form.contactName" :placeholder="t('supplier.placeholder.contactName')" maxlength="32" />
+          <el-form-item :label="t('supplier.field.licenseNo')" prop="licenseNo">
+            <el-input v-model="form.licenseNo" :placeholder="t('supplier.placeholder.licenseNo')" maxlength="64" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="t('supplier.field.contactPhone')" prop="contactPhone">
-            <el-input v-model="form.contactPhone" :placeholder="t('supplier.placeholder.contactPhone')" maxlength="20" />
+          <el-form-item :label="t('supplier.field.businessLicenseNo')" prop="businessLicenseNo">
+            <el-input v-model="form.businessLicenseNo" :placeholder="t('supplier.placeholder.businessLicenseNo')" maxlength="64" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item :label="t('supplier.field.cooperationStartDate')" prop="cooperationStartDate">
+            <el-date-picker
+              v-model="form.cooperationStartDate"
+              type="date"
+              value-format="YYYY-MM-DD"
+              :placeholder="t('supplier.placeholder.cooperationStartDate')"
+              style="width: 100%"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item :label="t('supplier.field.businessStatus')" prop="businessStatus">
+            <el-select v-model="form.businessStatus" :placeholder="t('supplier.placeholder.businessStatus')">
+              <el-option v-for="dict in djs_supplier_status" :key="dict.value" :label="dict.label" :value="dict.value" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item :label="t('supplier.field.liaisonName')" prop="liaisonName">
+            <el-input v-model="form.liaisonName" :placeholder="t('supplier.placeholder.liaisonName')" maxlength="32" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item :label="t('supplier.field.liaisonPhone')" prop="liaisonPhone">
+            <el-input v-model="form.liaisonPhone" :placeholder="t('supplier.placeholder.liaisonPhone')" maxlength="20" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -30,15 +58,10 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="t('supplier.field.businessStatus')" prop="businessStatus">
-            <el-radio-group v-model="form.businessStatus">
-              <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="Number(dict.value)">{{ dict.label }}</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
           <el-form-item :label="t('supplier.field.settleType')" prop="settleType">
-            <el-input v-model="form.settleType" :placeholder="t('supplier.placeholder.settleType')" maxlength="16" />
+            <el-select v-model="form.settleType" :placeholder="t('supplier.placeholder.settleType')" clearable>
+              <el-option v-for="dict in djs_settle_type" :key="dict.value" :label="dict.label" :value="dict.value" />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -49,6 +72,11 @@
         <el-col :span="12">
           <el-form-item :label="t('supplier.field.bankAccount')" prop="bankAccount">
             <el-input v-model="form.bankAccount" :placeholder="t('supplier.placeholder.bankAccount')" maxlength="64" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item :label="t('supplier.field.licenseImage')" prop="licenseImageOssId">
+            <OssUpload v-model="licenseImageIdsModel" biz-type="supplier_license" :limit="1" :file-size="10" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -70,11 +98,14 @@
 <script setup lang="ts">
 import { addSupplier, getSupplier, updateSupplier } from '@/api/djs-common/supplier';
 import type { SupplierForm } from '@/api/djs-common/supplier/types';
+import OssUpload from '@/components/OssUpload/index.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_supplier_type, sys_normal_disable } = toRefs<any>(proxy?.useDict('djs_supplier_type', 'sys_normal_disable'));
+const { djs_supplier_type, djs_supplier_status, djs_settle_type } = toRefs<any>(
+  proxy?.useDict('djs_supplier_type', 'djs_supplier_status', 'djs_settle_type')
+);
 
 const visible = ref(false);
 const submitting = ref(false);
@@ -83,12 +114,16 @@ const formRef = ref<ElFormInstance>();
 const defaultForm = (): SupplierForm => ({
   id: undefined,
   supplierName: '',
+  licenseNo: undefined,
+  licenseImageOssId: null,
+  businessLicenseNo: undefined,
+  cooperationStartDate: undefined,
   supplierType: '',
-  contactName: undefined,
-  contactPhone: undefined,
+  liaisonName: undefined,
+  liaisonPhone: undefined,
   address: undefined,
-  businessStatus: 1,
-  settleType: undefined,
+  businessStatus: '0',
+  settleType: 'cash',
   bankAccount: undefined,
   bankName: undefined,
   remark: undefined
@@ -96,14 +131,22 @@ const defaultForm = (): SupplierForm => ({
 
 const form = ref<SupplierForm>(defaultForm());
 
+// OssUpload v-model 期望 number[]，业务字段是单值 licenseImageOssId
+const licenseImageIdsModel = computed<number[]>({
+  get: () => (form.value.licenseImageOssId ? [form.value.licenseImageOssId as number] : []),
+  set: (val: number[]) => {
+    form.value.licenseImageOssId = val && val.length > 0 ? val[0] : null;
+  }
+});
+
 const rules = computed(() => ({
   supplierName: [{ required: true, message: t('supplier.rule.supplierName.required'), trigger: 'blur' }],
   supplierType: [{ required: true, message: t('supplier.rule.supplierType.required'), trigger: 'change' }],
   businessStatus: [{ required: true, message: t('supplier.rule.businessStatus.required'), trigger: 'change' }],
-  contactPhone: [
+  liaisonPhone: [
     {
       pattern: /^$|^[0-9+\-\s]{6,20}$/,
-      message: t('supplier.rule.contactPhone.pattern'),
+      message: t('supplier.rule.liaisonPhone.pattern'),
       trigger: 'blur'
     }
   ]
@@ -113,13 +156,11 @@ const dialogTitle = computed(() => (form.value.id ? t('supplier.title.edit') : t
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
-/** 外部调：新增 */
 const openCreate = () => {
   form.value = defaultForm();
   visible.value = true;
 };
 
-/** 外部调：编辑 */
 const openEdit = async (id: number | string) => {
   const res = await getSupplier(id);
   form.value = {

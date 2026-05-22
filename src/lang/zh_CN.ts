@@ -102,7 +102,8 @@ export default {
         edit: '修改',
         del: '删除',
         batchDel: '批量删除',
-        export: '导出'
+        export: '导出',
+        view: '查看'
       }
     }
   },
@@ -155,29 +156,39 @@ export default {
       del: '是否确认删除选中的 {count} 条人员记录？'
     }
   },
-  // 供应商管理（SYS-MD-003）
+  // 供应商管理（SYS-MD-003 + SYS-MD-FIX-002）
   supplier: {
     title: {
       add: '新增供应商',
-      edit: '编辑供应商'
+      edit: '编辑供应商',
+      view: '供应商详情',
+      deals: '交易明细'
     },
     column: {
       supplierCode: '供应商编码',
       supplierName: '供应商名称',
       supplierType: '类型',
-      contactName: '联系人',
-      contactPhone: '联系电话',
+      liaisonName: '联系负责人',
+      liaisonPhone: '负责人电话',
       address: '地址',
-      businessStatus: '状态',
+      businessStatus: '合作状态',
+      settleType: '结算方式',
+      dealCount: '交易次数',
+      purchaseQty: '购入数量',
+      remark: '备注',
       createTime: '创建时间'
     },
     field: {
       supplierName: '供应商名称',
+      licenseNo: '营业执照编号',
+      licenseImage: '营业执照图片',
+      businessLicenseNo: '经营许可证编号',
+      cooperationStartDate: '合作开始日期',
       supplierType: '类型',
-      contactName: '联系人',
-      contactPhone: '联系电话',
+      liaisonName: '联系负责人',
+      liaisonPhone: '负责人电话',
       address: '地址',
-      businessStatus: '状态',
+      businessStatus: '合作状态',
       settleType: '结算方式',
       bankName: '开户行',
       bankAccount: '银行账户',
@@ -185,56 +196,79 @@ export default {
     },
     placeholder: {
       supplierName: '请输入供应商名称',
+      licenseNo: '请输入营业执照编号',
+      businessLicenseNo: '请输入经营许可证编号',
+      cooperationStartDate: '请选择合作开始日期',
       supplierType: '请选择类型',
-      contactName: '请输入联系人',
-      contactPhone: '请输入联系电话',
+      liaisonName: '请输入联系负责人',
+      liaisonPhone: '请输入负责人电话',
       address: '请输入地址',
-      settleType: '请输入结算方式',
+      businessStatus: '请选择合作状态',
+      settleType: '请选择结算方式',
       bankName: '请输入开户行名称',
       bankAccount: '请输入银行账户'
     },
     rule: {
       supplierName: { required: '供应商名称不能为空' },
       supplierType: { required: '请选择供应商类型' },
-      businessStatus: { required: '请选择业务状态' },
-      contactPhone: { pattern: '请输入合法的联系电话' }
+      businessStatus: { required: '请选择合作状态' },
+      liaisonPhone: { pattern: '请输入合法的电话号码' }
     },
     confirm: {
       del: '是否确认删除选中的 {count} 条供应商记录？'
+    },
+    empty: {
+      deals: '暂无交易记录'
     }
   },
-  // 门店主数据（SYS-MD-002）
+  // 门店主数据（SYS-MD-002 + SYS-MD-FIX-002）
   store: {
     title: {
       add: '新增门店',
-      edit: '编辑门店'
+      edit: '编辑门店',
+      view: '门店详情',
+      setManager: '设置店长'
     },
     column: {
       storeCode: '门店编码',
       storeName: '门店名称',
+      shortName: '门店简称',
       storeType: '门店类型',
-      businessStatus: '经营状态',
+      managerName: '店长姓名',
+      managerPhone: '店长电话',
+      openDate: '开业日期',
+      businessStatus: '合作状态',
       address: '门店地址',
-      contactName: '联系人',
-      contactPhone: '联系电话',
-      createTime: '创建时间'
+      remark: '备注',
+      createTime: '创建时间',
+      updateTime: '更新时间'
     },
     field: {
       storeCode: '门店编码',
       storeName: '门店名称',
+      shortName: '门店简称',
+      openDate: '开业日期',
       storeType: '门店类型',
-      businessStatus: '经营状态',
+      businessStatus: '合作状态',
       address: '门店地址',
-      contactName: '联系人',
-      contactPhone: '联系电话',
+      managerName: '店长姓名',
+      managerPhone: '店长电话',
+      manager: '店长',
+      posSystemId: '收银系统 ID',
+      image: '门店图片',
       remark: '备注'
     },
     placeholder: {
       storeName: '请输入门店名称',
+      shortName: '请输入门店简称',
+      openDate: '请选择开业日期',
       storeType: '请选择门店类型',
-      contactName: '请输入联系人',
-      contactPhone: '请输入手机号',
-      address: '请输入门店地址'
+      businessStatus: '请选择合作状态',
+      managerName: '请输入店长姓名',
+      managerPhone: '请输入手机号',
+      address: '请输入门店地址',
+      posSystemId: '请输入收银系统 ID',
+      searchUser: '搜索店长（昵称 / 手机号）'
     },
     option: {
       direct: '直营',
@@ -244,11 +278,15 @@ export default {
     },
     rule: {
       storeName: { required: '门店名称不能为空' },
-      businessStatus: { required: '请选择经营状态' },
-      contactPhone: { pattern: '请输入合法的手机号' }
+      businessStatus: { required: '请选择合作状态' },
+      managerPhone: { pattern: '请输入合法的手机号' }
     },
     confirm: {
-      del: '是否确认删除选中的 {count} 条门店记录？'
+      del: '是否确认删除选中的 {count} 条门店记录？',
+      clearManager: '是否确认清空当前店长？'
+    },
+    tip: {
+      managerHint: '请通过"设置店长"按钮关联系统用户'
     }
   },
   // 育种配置（BRD-MD-001）— 品种/品系/配种关系，4 tab 单页

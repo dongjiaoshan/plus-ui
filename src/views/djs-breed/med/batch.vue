@@ -1,5 +1,12 @@
 <template>
   <div class="p-2">
+    <el-alert
+      type="info"
+      :closable="false"
+      show-icon
+      class="mb-3"
+      title="批次管理用于多批次精细化扣减（D5+ FIFO 联动）。如只需简单库存管理，请使用「药品库」主页 currentStock 字段直接进出库。"
+    />
     <BizTable
       ref="tableRef"
       :data="list"

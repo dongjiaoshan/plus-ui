@@ -102,7 +102,8 @@ export default {
         edit: 'Edit',
         del: 'Delete',
         batchDel: 'Batch delete',
-        export: 'Export'
+        export: 'Export',
+        view: 'View'
       }
     }
   },
@@ -155,29 +156,39 @@ export default {
       del: 'Delete the selected {count} person record(s)?'
     }
   },
-  // Supplier master data (SYS-MD-003)
+  // Supplier master data (SYS-MD-003 + SYS-MD-FIX-002)
   supplier: {
     title: {
       add: 'Add supplier',
-      edit: 'Edit supplier'
+      edit: 'Edit supplier',
+      view: 'Supplier details',
+      deals: 'Deal records'
     },
     column: {
       supplierCode: 'Supplier code',
       supplierName: 'Supplier name',
       supplierType: 'Type',
-      contactName: 'Contact',
-      contactPhone: 'Phone',
+      liaisonName: 'Liaison',
+      liaisonPhone: 'Phone',
       address: 'Address',
-      businessStatus: 'Status',
+      businessStatus: 'Cooperation',
+      settleType: 'Settle type',
+      dealCount: 'Deals',
+      purchaseQty: 'Purchased qty',
+      remark: 'Remark',
       createTime: 'Created at'
     },
     field: {
       supplierName: 'Supplier name',
+      licenseNo: 'License No.',
+      licenseImage: 'License image',
+      businessLicenseNo: 'Business permit No.',
+      cooperationStartDate: 'Cooperation start',
       supplierType: 'Type',
-      contactName: 'Contact',
-      contactPhone: 'Phone',
+      liaisonName: 'Liaison',
+      liaisonPhone: 'Phone',
       address: 'Address',
-      businessStatus: 'Status',
+      businessStatus: 'Cooperation',
       settleType: 'Settle type',
       bankName: 'Bank name',
       bankAccount: 'Bank account',
@@ -185,56 +196,79 @@ export default {
     },
     placeholder: {
       supplierName: 'Enter supplier name',
+      licenseNo: 'Enter license number',
+      businessLicenseNo: 'Enter business permit number',
+      cooperationStartDate: 'Select cooperation start date',
       supplierType: 'Select type',
-      contactName: 'Enter contact name',
-      contactPhone: 'Enter phone',
+      liaisonName: 'Enter liaison name',
+      liaisonPhone: 'Enter phone',
       address: 'Enter address',
-      settleType: 'Enter settle type',
+      businessStatus: 'Select cooperation status',
+      settleType: 'Select settle type',
       bankName: 'Enter bank name',
       bankAccount: 'Enter bank account'
     },
     rule: {
       supplierName: { required: 'Supplier name is required' },
       supplierType: { required: 'Please select supplier type' },
-      businessStatus: { required: 'Please select business status' },
-      contactPhone: { pattern: 'Please enter a valid phone' }
+      businessStatus: { required: 'Please select cooperation status' },
+      liaisonPhone: { pattern: 'Please enter a valid phone' }
     },
     confirm: {
       del: 'Delete the selected {count} supplier record(s)?'
+    },
+    empty: {
+      deals: 'No deal records yet'
     }
   },
-  // Store master data (SYS-MD-002)
+  // Store master data (SYS-MD-002 + SYS-MD-FIX-002)
   store: {
     title: {
       add: 'Add store',
-      edit: 'Edit store'
+      edit: 'Edit store',
+      view: 'Store details',
+      setManager: 'Set manager'
     },
     column: {
       storeCode: 'Store code',
       storeName: 'Store name',
+      shortName: 'Short name',
       storeType: 'Store type',
-      businessStatus: 'Business status',
+      managerName: 'Manager',
+      managerPhone: 'Manager phone',
+      openDate: 'Open date',
+      businessStatus: 'Cooperation',
       address: 'Address',
-      contactName: 'Contact',
-      contactPhone: 'Phone',
-      createTime: 'Created at'
+      remark: 'Remark',
+      createTime: 'Created at',
+      updateTime: 'Updated at'
     },
     field: {
       storeCode: 'Store code',
       storeName: 'Store name',
+      shortName: 'Short name',
+      openDate: 'Open date',
       storeType: 'Store type',
-      businessStatus: 'Business status',
+      businessStatus: 'Cooperation',
       address: 'Address',
-      contactName: 'Contact',
-      contactPhone: 'Phone',
+      managerName: 'Manager name',
+      managerPhone: 'Manager phone',
+      manager: 'Manager',
+      posSystemId: 'POS system ID',
+      image: 'Store image',
       remark: 'Remark'
     },
     placeholder: {
       storeName: 'Enter store name',
+      shortName: 'Enter short name',
+      openDate: 'Select open date',
       storeType: 'Select store type',
-      contactName: 'Enter contact name',
-      contactPhone: 'Enter phone',
-      address: 'Enter address'
+      businessStatus: 'Select cooperation status',
+      managerName: 'Enter manager name',
+      managerPhone: 'Enter phone',
+      address: 'Enter address',
+      posSystemId: 'Enter POS system ID',
+      searchUser: 'Search user (nickname / phone)'
     },
     option: {
       direct: 'Direct',
@@ -244,11 +278,15 @@ export default {
     },
     rule: {
       storeName: { required: 'Store name is required' },
-      businessStatus: { required: 'Business status is required' },
-      contactPhone: { pattern: 'Please enter a valid phone' }
+      businessStatus: { required: 'Cooperation status is required' },
+      managerPhone: { pattern: 'Please enter a valid phone' }
     },
     confirm: {
-      del: 'Delete the selected {count} store record(s)?'
+      del: 'Delete the selected {count} store record(s)?',
+      clearManager: 'Clear the current manager?'
+    },
+    tip: {
+      managerHint: 'Use the "Set manager" button to bind a system user'
     }
   },
   // Breeding configuration (BRD-MD-001) — type / strain / mating relations, 4-tab single page
