@@ -83,7 +83,6 @@ const defaultForm = (): PersonForm => ({
   phone: undefined,
   idCard: undefined,
   position: undefined,
-  postId: undefined,
   hireDate: undefined,
   status: '0',
   avatarUrl: undefined,
