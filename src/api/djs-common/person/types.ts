@@ -11,7 +11,6 @@ export interface PersonVO extends BaseEntity {
   phone?: string;
   idCard?: string;
   position?: string;
-  postId?: number | string;
   hireDate?: string;
   status: string;
   avatarUrl?: string;
@@ -26,7 +25,6 @@ export interface PersonForm {
   phone?: string;
   idCard?: string;
   position?: string;
-  postId?: number | string;
   hireDate?: string;
   status?: string;
   avatarUrl?: string;
@@ -39,5 +37,4 @@ export interface PersonQuery extends PageQuery {
   personCode?: string;
   phone?: string;
   status?: string;
-  postId?: number | string;
 }

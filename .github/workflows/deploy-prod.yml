@@ -9,13 +9,8 @@ concurrency:
   group: deploy-admin-prod
   cancel-in-progress: true
 
-env:
-  SSH_USER: deploy
-  SSH_PORT: "22"
-  REMOTE_DIR: /www/wwwroot/admin.dongjiaoshan.com
-
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -31,31 +26,17 @@ jobs:
           node-version: "20"
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
 
       - run: pnpm build:prod
 
-      - name: Verify dist
-        run: |
-          [ -d dist ] && [ -n "$(ls -A dist)" ] || { echo "dist missing/empty" >&2; exit 1; }
-
-      - name: Load SSH key into agent
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Upload dist to server
+        uses: appleboy/scp-action@v0.1.7
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
-
-      - name: Trust server host key
-        run: ssh-keyscan -p $SSH_PORT -H "${{ secrets.SSH_HOST_PROD }}" >> ~/.ssh/known_hosts
-
-      - name: Backup current and rsync new dist
-        env:
-          HOST: ${{ secrets.SSH_HOST_PROD }}
-        run: |
-          ssh -p "$SSH_PORT" "$SSH_USER@$HOST" REMOTE_DIR="$REMOTE_DIR" bash -se <<'EOF'
-          set -euo pipefail
-          mkdir -p "$REMOTE_DIR" "${REMOTE_DIR}.last"
-          if [ -n "$(ls -A "$REMOTE_DIR" 2>/dev/null || true)" ]; then
-            rsync -a --delete "$REMOTE_DIR/" "${REMOTE_DIR}.last/"
-          fi
-          EOF
-          rsync -az --delete -e "ssh -p $SSH_PORT" dist/ "$SSH_USER@$HOST:$REMOTE_DIR/"
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          source: "dist/*"
+          target: /www/wwwroot/admin.dongjiaoshan.com/
+          strip_components: 1
+          rm: true
