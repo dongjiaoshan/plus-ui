@@ -1,17 +1,17 @@
-name: Deploy Staging (Admin)
+name: Deploy Prod (Admin)
 
 on:
   push:
-    branches: [staging]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: deploy-admin-staging
+  group: deploy-admin-prod
   cancel-in-progress: true
 
 env:
-  SSH_USER: root
-  SSH_PORT: '22'
+  SSH_USER: deploy
+  SSH_PORT: "22"
   REMOTE_DIR: /www/wwwroot/admin.dongjiaoshan.com
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile=false
@@ -42,14 +42,14 @@ jobs:
       - name: Load SSH key into agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
 
       - name: Trust server host key
-        run: ssh-keyscan -p $SSH_PORT -H "${{ secrets.SSH_HOST_STAGING }}" >> ~/.ssh/known_hosts
+        run: ssh-keyscan -p $SSH_PORT -H "${{ secrets.SSH_HOST_PROD }}" >> ~/.ssh/known_hosts
 
       - name: Backup current and rsync new dist
         env:
-          HOST: ${{ secrets.SSH_HOST_STAGING }}
+          HOST: ${{ secrets.SSH_HOST_PROD }}
         run: |
           ssh -p "$SSH_PORT" "$SSH_USER@$HOST" REMOTE_DIR="$REMOTE_DIR" bash -se <<'EOF'
           set -euo pipefail
