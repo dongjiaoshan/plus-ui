@@ -95,7 +95,7 @@ const router = useRouter();
 const { t } = useI18n();
 
 const loginForm = ref<LoginData>({
-  tenantId: '000000',
+  tenantId: '1001',
   username: 'admin',
   password: 'admin123',
   rememberMe: false,

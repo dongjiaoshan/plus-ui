@@ -236,6 +236,21 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <!-- SYS-AUTH-001 djs 扩字段：归属农场（V1 multi-farm disabled 时只有 1001）+ 微信 openid 只读 -->
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="归属农场">
+              <el-select v-model="form.farmId" placeholder="请选择归属农场" clearable>
+                <el-option v-for="f in farmOptions" :key="f.id" :label="f.name" :value="f.id" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12" v-if="form.userId">
+            <el-form-item label="微信 openid">
+              <el-input v-model="form.wxOpenid" placeholder="员工小程序首次登录后自动绑定" readonly />
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-row>
           <el-col :span="24">
             <el-form-item label="备注">
@@ -299,6 +314,8 @@ import { to } from 'await-to-js';
 import { optionselect } from '@/api/system/post';
 import { checkPermi } from '@/utils/permission';
 import { useUserStore } from '@/store/modules/user';
+// SYS-AUTH-001 djs 扩字段：归属农场下拉数据
+import { listAccessibleFarms, FarmVO } from '@/api/djs-common/userFarm';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -317,6 +334,8 @@ const enabledDeptOptions = ref<DeptTreeVO[]>([]);
 const initPassword = ref<string>('');
 const postOptions = ref<PostVO[]>([]);
 const roleOptions = ref<RoleVO[]>([]);
+// SYS-AUTH-001 农场下拉（V1 multi-farm disabled 时单元素，仅 1001 主农场）
+const farmOptions = ref<FarmVO[]>([]);
 /*** 用户导入参数 */
 const upload = reactive<ImportOption>({
   // 是否显示弹出层（用户导入）
@@ -366,7 +385,10 @@ const initFormData: UserForm = {
   status: '0',
   remark: '',
   postIds: [],
-  roleIds: []
+  roleIds: [],
+  // SYS-AUTH-001 djs 扩字段
+  farmId: undefined,
+  wxOpenid: undefined
 };
 
 const initData: PageData<UserForm, UserQuery> = {
@@ -615,9 +637,7 @@ const handleUpdate = async (row?: UserForm) => {
   dialog.title = '修改用户';
   Object.assign(form.value, data.user);
   postOptions.value = data.posts;
-  roleOptions.value = Array.from(
-    new Map([...data.roles, ...data.user.roles].map(role => [role.roleId, role])).values()
-  );
+  roleOptions.value = Array.from(new Map([...data.roles, ...data.user.roles].map((role) => [role.roleId, role])).values());
   form.value.postIds = data.postIds;
   form.value.roleIds = data.roleIds;
   form.value.password = '';
@@ -669,6 +689,15 @@ onMounted(() => {
   proxy?.getConfigKey('sys.user.initPassword').then((response) => {
     initPassword.value = response.data;
   });
+  // SYS-AUTH-001 拉用户可访问的农场列表（V1 单元素，V2 走 sys_farm 多元素）
+  listAccessibleFarms()
+    .then((res) => {
+      farmOptions.value = res.data || [];
+    })
+    .catch((e) => {
+      // 静默吞掉：V1 disabled 期间后端可能尚未部署完
+      console.warn('[user/index] 加载农场下拉失败', e);
+    });
 });
 
 async function handleDeptChange(value: number | string) {

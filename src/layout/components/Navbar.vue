@@ -26,6 +26,9 @@
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
         </el-select>
 
+        <!-- SYS-AUTH-001 djs 多农场切换器（V1 multi-farm disabled 时组件自动隐藏） -->
+        <farm-switcher />
+
         <search-menu ref="searchMenuRef" />
         <el-tooltip content="搜索" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="openSearchMenu">
@@ -34,7 +37,7 @@
         </el-tooltip>
         <!-- 消息 -->
         <el-tooltip :content="proxy.$t('navbar.message')" effect="dark" placement="bottom">
-          <div style="display:flex;align-items:center">
+          <div style="display: flex; align-items: center">
             <el-popover placement="bottom" trigger="click" transition="el-zoom-in-top" :width="300" :persistent="false">
               <template #reference>
                 <el-badge :value="newNotice > 0 ? newNotice : ''" :max="99">
@@ -94,6 +97,7 @@
 
 <script setup lang="ts">
 import SearchMenu from './TopBar/search.vue';
+import FarmSwitcher from '@/components/FarmSwitcher/index.vue';
 import { useAppStore } from '@/store/modules/app';
 import { useUserStore } from '@/store/modules/user';
 import { useSettingsStore } from '@/store/modules/settings';
@@ -105,8 +109,8 @@ import notice from './notice/index.vue';
 import router from '@/router';
 import { ElMessageBoxOptions } from 'element-plus/es/components/message-box/src/message-box.type';
 import { NavTypeEnum } from '@/enums/NavTypeEnum';
-import Logo from "@/layout/components/Sidebar/Logo.vue";
-import TopBar from './TopBar'
+import Logo from '@/layout/components/Sidebar/Logo.vue';
+import TopBar from './TopBar';
 
 const appStore = useAppStore();
 const userStore = useUserStore();
@@ -282,7 +286,6 @@ watch(
     margin-left: 8px;
   }
 
-
   .errLog-container {
     display: inline-block;
     vertical-align: top;
@@ -310,7 +313,9 @@ watch(
 
       &.hover-effect {
         cursor: pointer;
-        transition: background 0.2s ease, color 0.2s ease;
+        transition:
+          background 0.2s ease,
+          color 0.2s ease;
 
         &:hover {
           background: var(--el-fill-color-light);
