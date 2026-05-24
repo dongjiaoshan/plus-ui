@@ -183,6 +183,7 @@ export default {
       createTime: 'Created at'
     },
     field: {
+      supplierCode: 'Supplier code',
       supplierName: 'Supplier name',
       licenseNo: 'License No.',
       licenseImage: 'License image',
@@ -196,7 +197,16 @@ export default {
       settleType: 'Settle type',
       bankName: 'Bank name',
       bankAccount: 'Bank account',
-      remark: 'Remark'
+      remark: 'Remark',
+      updateTimeRange: 'Updated at',
+      updateBy: 'Updated by'
+    },
+    group: {
+      basic: 'Basic info',
+      contact: 'Contact',
+      qualification: 'Qualification',
+      finance: 'Finance',
+      remark: 'Other'
     },
     placeholder: {
       supplierName: 'Enter supplier name',
@@ -243,6 +253,8 @@ export default {
       openDate: 'Open date',
       businessStatus: 'Cooperation',
       address: 'Address',
+      employeeCount: 'Employees',
+      updateBy: 'Updated by',
       remark: 'Remark',
       createTime: 'Created at',
       updateTime: 'Updated at'
@@ -260,7 +272,9 @@ export default {
       manager: 'Manager',
       posSystemId: 'POS system ID',
       image: 'Store image',
-      remark: 'Remark'
+      remark: 'Remark',
+      updateTimeRange: 'Updated at',
+      updateBy: 'Updated by'
     },
     placeholder: {
       storeName: 'Enter store name',
@@ -282,6 +296,9 @@ export default {
     },
     rule: {
       storeName: { required: 'Store name is required' },
+      shortName: { required: 'Short name is required' },
+      storeType: { required: 'Store type is required' },
+      posSystemId: { required: 'POS system ID is required' },
       businessStatus: { required: 'Cooperation status is required' },
       managerPhone: { pattern: 'Please enter a valid phone' }
     },
@@ -320,7 +337,8 @@ export default {
       motherCode: 'Mother Code',
       fatherCode: 'Father Code',
       cubCode: 'Cub Code',
-      createTime: 'Created At'
+      createTime: 'Created At',
+      createBy: 'Created By'
     },
     field: {
       breedStrain: 'Type',
@@ -331,7 +349,8 @@ export default {
       remark: 'Remark',
       motherCode: 'Mother Code',
       fatherCode: 'Father Code',
-      cubCode: 'Cub Code'
+      cubCode: 'Cub Code',
+      createTimeRange: 'Created At'
     },
     placeholder: {
       breedStrainCode: 'Enter code (letters / digits / underscore / hyphen)',

@@ -3,15 +3,6 @@
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-row :gutter="16">
         <el-col :span="12">
-          <el-form-item :label="t('breeding.field.breedStrain')" prop="breedStrain">
-            <el-radio-group v-model="form.breedStrain" :disabled="lockStrain" @change="handleStrainChange">
-              <el-radio :value="1">{{ t('breeding.option.type') }}</el-radio>
-              <el-radio :value="2">{{ t('breeding.option.strain') }}</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12" />
-        <el-col :span="12">
           <el-form-item :label="t('breeding.field.motherCode')" prop="motherCode">
             <el-select v-model="form.motherCode" :placeholder="t('breeding.placeholder.motherCode')" filterable clearable>
               <el-option v-for="item in candidateOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -54,12 +45,17 @@ import { addBreedConfig, getBreedConfig, listBreedInfo, updateBreedConfig } from
 import type { BreedConfigForm as BreedConfigFormType, BreedInfoVO } from '@/api/djs-breed/breeding/types';
 import { useI18n } from 'vue-i18n';
 
+/**
+ * BreedConfig 新增 / 编辑表单。
+ *
+ * <p>breedStrain 由父页面（mate-strain.vue / mate-line.vue）通过 openCreate(breedStrain) 锁定，
+ * 不再在表单内提供切换控件。三个 code 下拉只显示同 strain 范畴的 breed_info。</p>
+ */
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const visible = ref(false);
 const submitting = ref(false);
-const lockStrain = ref(false);
 const formRef = ref<ElFormInstance>();
 
 const defaultForm = (breedStrain = 1): BreedConfigFormType => ({
@@ -77,7 +73,6 @@ const form = ref<BreedConfigFormType>(defaultForm());
 const candidateOptions = ref<Array<{ label: string; value: string }>>([]);
 
 const rules = computed(() => ({
-  breedStrain: [{ required: true, message: t('breeding.rule.breedStrain.required'), trigger: 'change' }],
   motherCode: [{ required: true, message: t('breeding.rule.motherCode.required'), trigger: 'change' }],
   fatherCode: [{ required: true, message: t('breeding.rule.fatherCode.required'), trigger: 'change' }],
   cubCode: [{ required: true, message: t('breeding.rule.cubCode.required'), trigger: 'change' }]
@@ -93,7 +88,6 @@ const dialogTitle = computed(() => {
 const emit = defineEmits<{ (e: 'success'): void }>();
 
 async function loadCandidates(breedStrain: number) {
-  // 拉同 strain 范畴下的所有 breed_info 给三个 select 用
   const res = await listBreedInfo({ pageNum: 1, pageSize: 999, breedStrain });
   const rows = (res.rows ?? res.data ?? []) as BreedInfoVO[];
   candidateOptions.value = rows.map((r) => ({
@@ -102,18 +96,9 @@ async function loadCandidates(breedStrain: number) {
   }));
 }
 
-function handleStrainChange(value: string | number | boolean | undefined) {
-  // 切换 strain 时重置三个 code 选项并重新拉
-  form.value.motherCode = '';
-  form.value.fatherCode = '';
-  form.value.cubCode = '';
-  loadCandidates(Number(value));
-}
-
 /** 外部调：新增 */
 const openCreate = async (breedStrain: number) => {
   form.value = defaultForm(breedStrain);
-  lockStrain.value = true;
   await loadCandidates(breedStrain);
   visible.value = true;
 };
@@ -125,7 +110,6 @@ const openEdit = async (id: number | string) => {
     ...defaultForm(),
     ...res.data
   };
-  lockStrain.value = true;
   await loadCandidates(form.value.breedStrain);
   visible.value = true;
 };

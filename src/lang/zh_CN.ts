@@ -183,6 +183,7 @@ export default {
       createTime: '创建时间'
     },
     field: {
+      supplierCode: '供应商编码',
       supplierName: '供应商名称',
       licenseNo: '营业执照编号',
       licenseImage: '营业执照图片',
@@ -196,7 +197,16 @@ export default {
       settleType: '结算方式',
       bankName: '开户行',
       bankAccount: '银行账户',
-      remark: '备注'
+      remark: '备注',
+      updateTimeRange: '更新时间',
+      updateBy: '更新人员'
+    },
+    group: {
+      basic: '基本信息',
+      contact: '联系信息',
+      qualification: '资质信息',
+      finance: '财务信息',
+      remark: '其它'
     },
     placeholder: {
       supplierName: '请输入供应商名称',
@@ -243,6 +253,8 @@ export default {
       openDate: '开业日期',
       businessStatus: '合作状态',
       address: '门店地址',
+      employeeCount: '员工数量',
+      updateBy: '更新人员',
       remark: '备注',
       createTime: '创建时间',
       updateTime: '更新时间'
@@ -260,7 +272,9 @@ export default {
       manager: '店长',
       posSystemId: '收银系统 ID',
       image: '门店图片',
-      remark: '备注'
+      remark: '备注',
+      updateTimeRange: '更新时间',
+      updateBy: '更新人员'
     },
     placeholder: {
       storeName: '请输入门店名称',
@@ -282,6 +296,9 @@ export default {
     },
     rule: {
       storeName: { required: '门店名称不能为空' },
+      shortName: { required: '门店简称不能为空' },
+      storeType: { required: '请选择门店类型' },
+      posSystemId: { required: '收银系统 ID 不能为空' },
       businessStatus: { required: '请选择合作状态' },
       managerPhone: { pattern: '请输入合法的手机号' }
     },
@@ -320,7 +337,8 @@ export default {
       motherCode: '母本编码',
       fatherCode: '父本编码',
       cubCode: '仔代编码',
-      createTime: '创建时间'
+      createTime: '创建时间',
+      createBy: '创建人'
     },
     field: {
       breedStrain: '类型',
@@ -331,7 +349,8 @@ export default {
       remark: '备注',
       motherCode: '母本编码',
       fatherCode: '父本编码',
-      cubCode: '仔代编码'
+      cubCode: '仔代编码',
+      createTimeRange: '创建时间'
     },
     placeholder: {
       breedStrainCode: '请输入编码（字母/数字/下划线/连字符）',

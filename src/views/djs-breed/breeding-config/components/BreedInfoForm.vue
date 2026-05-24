@@ -3,14 +3,6 @@
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-row :gutter="16">
         <el-col :span="12">
-          <el-form-item :label="t('breeding.field.breedStrain')" prop="breedStrain">
-            <el-radio-group v-model="form.breedStrain" :disabled="lockStrain">
-              <el-radio :value="1">{{ t('breeding.option.type') }}</el-radio>
-              <el-radio :value="2">{{ t('breeding.option.strain') }}</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
           <el-form-item :label="t('breeding.field.breedStrainCode')" prop="breedStrainCode">
             <el-input v-model="form.breedStrainCode" :placeholder="t('breeding.placeholder.breedStrainCode')" :disabled="!!form.id" maxlength="32" />
           </el-form-item>
@@ -20,19 +12,9 @@
             <el-input v-model="form.breedStrainName" :placeholder="t('breeding.placeholder.breedStrainName')" maxlength="64" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <el-col v-if="showParentCode" :span="12">
           <el-form-item :label="t('breeding.field.parentCode')" prop="parentCode">
             <el-input v-model="form.parentCode" :placeholder="t('breeding.placeholder.parentCode')" maxlength="32" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item :label="t('breeding.field.description')" prop="description">
-            <el-input v-model="form.description" type="textarea" :rows="2" maxlength="255" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item :label="t('breeding.field.remark')" prop="remark">
-            <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -51,12 +33,23 @@ import { addBreedInfo, getBreedInfo, updateBreedInfo } from '@/api/djs-breed/bre
 import type { BreedInfoForm as BreedInfoFormType } from '@/api/djs-breed/breeding/types';
 import { useI18n } from 'vue-i18n';
 
+/**
+ * BreedInfo 新增 / 编辑表单。
+ *
+ * <p>父组件按 breedStrain 维度拆 4 个独立页面（strain.vue / line.vue / mate-strain.vue / mate-line.vue）后，
+ * 表单不再展示 breedStrain radio —— 通过 openCreate(breedStrain) 入参锁定，编辑时按 row.breedStrain 还原。</p>
+ *
+ * <p>字段显示策略：</p>
+ * <ul>
+ *   <li>品种（breedStrain=1）：仅 breedStrainCode + breedStrainName</li>
+ *   <li>品系（breedStrain=2）：breedStrainCode + breedStrainName + parentCode（归属品种）</li>
+ * </ul>
+ */
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const visible = ref(false);
 const submitting = ref(false);
-const lockStrain = ref(false);
 const formRef = ref<ElFormInstance>();
 
 const defaultForm = (breedStrain = 1): BreedInfoFormType => ({
@@ -71,8 +64,9 @@ const defaultForm = (breedStrain = 1): BreedInfoFormType => ({
 
 const form = ref<BreedInfoFormType>(defaultForm());
 
+const showParentCode = computed(() => form.value.breedStrain === 2);
+
 const rules = computed(() => ({
-  breedStrain: [{ required: true, message: t('breeding.rule.breedStrain.required'), trigger: 'change' }],
   breedStrainCode: [
     { required: true, message: t('breeding.rule.breedStrainCode.required'), trigger: 'blur' },
     { pattern: /^[A-Za-z0-9_-]+$/, message: t('breeding.rule.breedStrainCode.pattern'), trigger: 'blur' }
@@ -89,21 +83,19 @@ const dialogTitle = computed(() => {
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
-/** 外部调：新增（lockStrain 时 radio 锁定，与 tab 一致） */
+/** 外部调：新增（breedStrain 由父页面决定，不再可切） */
 const openCreate = (breedStrain: number) => {
   form.value = defaultForm(breedStrain);
-  lockStrain.value = true;
   visible.value = true;
 };
 
-/** 外部调：编辑 */
+/** 外部调：编辑（breedStrain 跟随 row.breedStrain 还原，不可切） */
 const openEdit = async (id: number | string) => {
   const res = await getBreedInfo(id);
   form.value = {
     ...defaultForm(),
     ...res.data
   };
-  lockStrain.value = true;
   visible.value = true;
 };
 

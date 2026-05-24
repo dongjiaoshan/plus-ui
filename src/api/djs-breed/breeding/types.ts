@@ -28,6 +28,8 @@ export interface BreedInfoVO extends BaseEntity {
   parentCode?: string;
   description?: string;
   remark?: string;
+  /** 创建人 sys_user.user_id */
+  createBy?: number | string;
 }
 
 /** 新增 / 编辑表单 */
@@ -47,6 +49,10 @@ export interface BreedInfoQuery extends PageQuery {
   breedStrainCode?: string;
   breedStrainName?: string;
   parentCode?: string;
+  /** 创建时间范围 - 开始（含），ISO yyyy-MM-dd HH:mm:ss */
+  createTimeBegin?: string;
+  /** 创建时间范围 - 结束（含），ISO yyyy-MM-dd HH:mm:ss */
+  createTimeEnd?: string;
 }
 
 // ============= BreedConfig（配种关系） =============
@@ -61,6 +67,8 @@ export interface BreedConfigVO extends BaseEntity {
   fatherCode: string;
   cubCode: string;
   remark?: string;
+  /** 创建人 sys_user.user_id */
+  createBy?: number | string;
 }
 
 /** 新增 / 编辑表单 */
@@ -79,4 +87,8 @@ export interface BreedConfigQuery extends PageQuery {
   motherCode?: string;
   fatherCode?: string;
   cubCode?: string;
+  /** 创建时间范围 - 开始（含），ISO yyyy-MM-dd HH:mm:ss */
+  createTimeBegin?: string;
+  /** 创建时间范围 - 结束（含），ISO yyyy-MM-dd HH:mm:ss */
+  createTimeEnd?: string;
 }

@@ -31,6 +31,8 @@ export interface SupplierVO extends BaseEntity {
   /** V1 stub：始终 0 */
   purchaseQty?: number | string;
   remark?: string;
+  /** 更新人 sys_user.user_id */
+  updateBy?: number | string;
 }
 
 /** 新增 / 编辑表单（supplierCode / dealCount / purchaseQty 不传） */
@@ -61,4 +63,10 @@ export interface SupplierQuery extends PageQuery {
   liaisonPhone?: string;
   businessStatus?: string;
   settleType?: string;
+  /** 更新时间范围 - 开始（含），ISO yyyy-MM-dd HH:mm:ss */
+  updateTimeBegin?: string;
+  /** 更新时间范围 - 结束（含），ISO yyyy-MM-dd HH:mm:ss */
+  updateTimeEnd?: string;
+  /** 更新人 sys_user.user_id */
+  updateBy?: number;
 }

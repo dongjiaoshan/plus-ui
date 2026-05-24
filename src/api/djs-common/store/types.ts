@@ -23,6 +23,10 @@ export interface StoreVO extends BaseEntity {
   /** OSS oss_id；前端用 image-preview 展示 */
   imageOssId?: number | null;
   remark?: string;
+  /** 员工数量（V1 stub=0） */
+  employeeCount?: number;
+  /** 更新人员 sys_user.user_id */
+  updateBy?: number | string;
 }
 
 /** 新增 / 编辑表单（storeCode / managerUserId 不传） */
@@ -48,4 +52,10 @@ export interface StoreQuery extends PageQuery {
   storeType?: string;
   managerName?: string;
   businessStatus?: string;
+  /** 更新时间范围 - 开始（含），ISO yyyy-MM-dd HH:mm:ss */
+  updateTimeBegin?: string;
+  /** 更新时间范围 - 结束（含），ISO yyyy-MM-dd HH:mm:ss */
+  updateTimeEnd?: string;
+  /** 更新人 sys_user.user_id */
+  updateBy?: number;
 }

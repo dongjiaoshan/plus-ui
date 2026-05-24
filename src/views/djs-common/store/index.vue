@@ -74,7 +74,9 @@ const searchModel = reactive<Record<string, any>>({
   storeCode: undefined,
   storeType: undefined,
   managerName: undefined,
-  businessStatus: undefined
+  businessStatus: undefined,
+  updateTimeRange: undefined,
+  updateBy: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -82,7 +84,9 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'storeCode', label: t('store.field.storeCode'), type: 'input' },
   { field: 'storeType', label: t('store.field.storeType'), type: 'select', dictType: 'djs_store_type' },
   { field: 'managerName', label: t('store.field.managerName'), type: 'input' },
-  { field: 'businessStatus', label: t('store.field.businessStatus'), type: 'select', dictType: 'djs_store_status' }
+  { field: 'businessStatus', label: t('store.field.businessStatus'), type: 'select', dictType: 'djs_store_status' },
+  { field: 'updateTimeRange', label: t('store.field.updateTimeRange'), type: 'daterange' },
+  { field: 'updateBy', label: t('store.field.updateBy'), type: 'input' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -92,25 +96,36 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'storeType', label: t('store.column.storeType'), width: 100, align: 'center', dictType: 'djs_store_type' },
   { prop: 'managerName', label: t('store.column.managerName'), width: 120 },
   { prop: 'managerPhone', label: t('store.column.managerPhone'), width: 140, align: 'center' },
+  { prop: 'employeeCount', label: t('store.column.employeeCount'), width: 100, align: 'center' },
   { prop: 'openDate', label: t('store.column.openDate'), width: 120, align: 'center', formatter: 'date' },
   { prop: 'businessStatus', label: t('store.column.businessStatus'), width: 100, align: 'center', dictType: 'djs_store_status' },
   { prop: 'address', label: t('store.column.address'), minWidth: 200, showOverflowTooltip: true },
-  { prop: 'updateTime', label: t('store.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' }
+  { prop: 'updateTime', label: t('store.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'updateBy', label: t('store.column.updateBy'), width: 120, align: 'center' }
 ]);
+
+function buildQuery(): StoreQuery {
+  const range = searchModel.updateTimeRange as [string, string] | undefined;
+  const updateByRaw = searchModel.updateBy as string | number | undefined;
+  const updateBy = updateByRaw === undefined || updateByRaw === '' ? undefined : Number(updateByRaw);
+  return {
+    pageNum: pageNum.value,
+    pageSize: pageSize.value,
+    storeName: searchModel.storeName || undefined,
+    storeCode: searchModel.storeCode || undefined,
+    storeType: searchModel.storeType || undefined,
+    managerName: searchModel.managerName || undefined,
+    businessStatus: searchModel.businessStatus || undefined,
+    updateTimeBegin: range && range[0] ? `${range[0]} 00:00:00` : undefined,
+    updateTimeEnd: range && range[1] ? `${range[1]} 23:59:59` : undefined,
+    updateBy: Number.isFinite(updateBy) ? (updateBy as number) : undefined
+  };
+}
 
 async function fetchList() {
   loading.value = true;
   try {
-    const query: StoreQuery = {
-      pageNum: pageNum.value,
-      pageSize: pageSize.value,
-      storeName: searchModel.storeName || undefined,
-      storeCode: searchModel.storeCode || undefined,
-      storeType: searchModel.storeType || undefined,
-      managerName: searchModel.managerName || undefined,
-      businessStatus: searchModel.businessStatus || undefined
-    };
-    const res = await listStore(query);
+    const res = await listStore(buildQuery());
     list.value = (res.rows ?? res.data ?? []) as StoreVO[];
     total.value = res.total ?? 0;
   } finally {
@@ -154,17 +169,7 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
 }
 function handleExport(payload?: Record<string, any>) {
   if (payload) Object.assign(searchModel, payload);
-  proxy?.download(
-    'djs/common/store/export',
-    {
-      storeName: searchModel.storeName || undefined,
-      storeCode: searchModel.storeCode || undefined,
-      storeType: searchModel.storeType || undefined,
-      managerName: searchModel.managerName || undefined,
-      businessStatus: searchModel.businessStatus || undefined
-    },
-    `store_${new Date().getTime()}.xlsx`
-  );
+  proxy?.download('djs/common/store/export', buildQuery(), `store_${new Date().getTime()}.xlsx`);
 }
 function handleFormSuccess() {
   fetchList();

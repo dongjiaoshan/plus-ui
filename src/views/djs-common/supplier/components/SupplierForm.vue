@@ -1,6 +1,8 @@
 <template>
   <el-dialog v-model="visible" :title="dialogTitle" destroy-on-close append-to-body width="820px" @closed="handleClosed">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+      <!-- 基本信息 -->
+      <el-divider content-position="left">{{ t('supplier.group.basic') }}</el-divider>
       <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item :label="t('supplier.field.supplierName')" prop="supplierName">
@@ -12,16 +14,6 @@
             <el-select v-model="form.supplierType" :placeholder="t('supplier.placeholder.supplierType')" clearable>
               <el-option v-for="dict in djs_supplier_type" :key="dict.value" :label="dict.label" :value="dict.value" />
             </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('supplier.field.licenseNo')" prop="licenseNo">
-            <el-input v-model="form.licenseNo" :placeholder="t('supplier.placeholder.licenseNo')" maxlength="64" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('supplier.field.businessLicenseNo')" prop="businessLicenseNo">
-            <el-input v-model="form.businessLicenseNo" :placeholder="t('supplier.placeholder.businessLicenseNo')" maxlength="64" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -42,6 +34,11 @@
             </el-select>
           </el-form-item>
         </el-col>
+      </el-row>
+
+      <!-- 联系信息 -->
+      <el-divider content-position="left">{{ t('supplier.group.contact') }}</el-divider>
+      <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item :label="t('supplier.field.liaisonName')" prop="liaisonName">
             <el-input v-model="form.liaisonName" :placeholder="t('supplier.placeholder.liaisonName')" maxlength="32" />
@@ -57,6 +54,31 @@
             <el-input v-model="form.address" :placeholder="t('supplier.placeholder.address')" maxlength="255" />
           </el-form-item>
         </el-col>
+      </el-row>
+
+      <!-- 资质信息（独立分组，反馈 #3） -->
+      <el-divider content-position="left">{{ t('supplier.group.qualification') }}</el-divider>
+      <el-row :gutter="16">
+        <el-col :span="12">
+          <el-form-item :label="t('supplier.field.licenseNo')" prop="licenseNo">
+            <el-input v-model="form.licenseNo" :placeholder="t('supplier.placeholder.licenseNo')" maxlength="64" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item :label="t('supplier.field.businessLicenseNo')" prop="businessLicenseNo">
+            <el-input v-model="form.businessLicenseNo" :placeholder="t('supplier.placeholder.businessLicenseNo')" maxlength="64" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item :label="t('supplier.field.licenseImage')" prop="licenseImageOssId">
+            <OssUpload ref="ossUploadRef" v-model="licenseImageIdsModel" biz-type="supplier_license" :limit="1" :file-size="10" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <!-- 财务信息 -->
+      <el-divider content-position="left">{{ t('supplier.group.finance') }}</el-divider>
+      <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item :label="t('supplier.field.settleType')" prop="settleType">
             <el-select v-model="form.settleType" :placeholder="t('supplier.placeholder.settleType')" clearable>
@@ -74,11 +96,11 @@
             <el-input v-model="form.bankAccount" :placeholder="t('supplier.placeholder.bankAccount')" maxlength="64" />
           </el-form-item>
         </el-col>
-        <el-col :span="24">
-          <el-form-item :label="t('supplier.field.licenseImage')" prop="licenseImageOssId">
-            <OssUpload ref="ossUploadRef" v-model="licenseImageIdsModel" biz-type="supplier_license" :limit="1" :file-size="10" />
-          </el-form-item>
-        </el-col>
+      </el-row>
+
+      <!-- 其它 -->
+      <el-divider content-position="left">{{ t('supplier.group.remark') }}</el-divider>
+      <el-row :gutter="16">
         <el-col :span="24">
           <el-form-item :label="t('supplier.field.remark')" prop="remark">
             <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />

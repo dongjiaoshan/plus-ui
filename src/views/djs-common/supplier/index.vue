@@ -65,18 +65,24 @@ const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
   supplierName: undefined,
+  supplierCode: undefined,
   supplierType: undefined,
   liaisonName: undefined,
   settleType: undefined,
-  businessStatus: undefined
+  businessStatus: undefined,
+  updateTimeRange: undefined,
+  updateBy: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'supplierName', label: t('supplier.field.supplierName'), type: 'input' },
+  { field: 'supplierCode', label: t('supplier.field.supplierCode'), type: 'input' },
   { field: 'supplierType', label: t('supplier.field.supplierType'), type: 'select', dictType: 'djs_supplier_type' },
   { field: 'liaisonName', label: t('supplier.field.liaisonName'), type: 'input' },
   { field: 'settleType', label: t('supplier.field.settleType'), type: 'select', dictType: 'djs_settle_type' },
-  { field: 'businessStatus', label: t('supplier.field.businessStatus'), type: 'select', dictType: 'djs_supplier_status' }
+  { field: 'businessStatus', label: t('supplier.field.businessStatus'), type: 'select', dictType: 'djs_supplier_status' },
+  { field: 'updateTimeRange', label: t('supplier.field.updateTimeRange'), type: 'daterange' },
+  { field: 'updateBy', label: t('supplier.field.updateBy'), type: 'input' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -93,19 +99,29 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'updateTime', label: t('supplier.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
 ]);
 
+function buildQuery(): SupplierQuery {
+  const range = searchModel.updateTimeRange as [string, string] | undefined;
+  const updateByRaw = searchModel.updateBy as string | number | undefined;
+  const updateBy = updateByRaw === undefined || updateByRaw === '' ? undefined : Number(updateByRaw);
+  return {
+    pageNum: pageNum.value,
+    pageSize: pageSize.value,
+    supplierName: searchModel.supplierName || undefined,
+    supplierCode: searchModel.supplierCode || undefined,
+    supplierType: searchModel.supplierType || undefined,
+    liaisonName: searchModel.liaisonName || undefined,
+    settleType: searchModel.settleType || undefined,
+    businessStatus: searchModel.businessStatus || undefined,
+    updateTimeBegin: range && range[0] ? `${range[0]} 00:00:00` : undefined,
+    updateTimeEnd: range && range[1] ? `${range[1]} 23:59:59` : undefined,
+    updateBy: Number.isFinite(updateBy) ? (updateBy as number) : undefined
+  };
+}
+
 async function fetchList() {
   loading.value = true;
   try {
-    const query: SupplierQuery = {
-      pageNum: pageNum.value,
-      pageSize: pageSize.value,
-      supplierName: searchModel.supplierName || undefined,
-      supplierType: searchModel.supplierType || undefined,
-      liaisonName: searchModel.liaisonName || undefined,
-      settleType: searchModel.settleType || undefined,
-      businessStatus: searchModel.businessStatus || undefined
-    };
-    const res = await listSupplier(query);
+    const res = await listSupplier(buildQuery());
     list.value = (res.rows ?? res.data ?? []) as SupplierVO[];
     total.value = res.total ?? 0;
   } finally {
@@ -146,17 +162,7 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
 }
 function handleExport(payload?: Record<string, any>) {
   if (payload) Object.assign(searchModel, payload);
-  proxy?.download(
-    'djs/common/supplier/export',
-    {
-      supplierName: searchModel.supplierName || undefined,
-      supplierType: searchModel.supplierType || undefined,
-      liaisonName: searchModel.liaisonName || undefined,
-      settleType: searchModel.settleType || undefined,
-      businessStatus: searchModel.businessStatus || undefined
-    },
-    `supplier_${new Date().getTime()}.xlsx`
-  );
+  proxy?.download('djs/common/supplier/export', buildQuery(), `supplier_${new Date().getTime()}.xlsx`);
 }
 function handleFormSuccess() {
   fetchList();

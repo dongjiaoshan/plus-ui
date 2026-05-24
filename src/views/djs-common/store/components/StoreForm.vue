@@ -42,12 +42,12 @@
             <el-input v-model="form.posSystemId" :placeholder="t('store.placeholder.posSystemId')" maxlength="64" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <el-col v-if="isEdit" :span="12">
           <el-form-item :label="t('store.field.managerName')" prop="managerName">
             <el-input v-model="form.managerName" :placeholder="t('store.placeholder.managerName')" maxlength="32" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <el-col v-if="isEdit" :span="12">
           <el-form-item :label="t('store.field.managerPhone')" prop="managerPhone">
             <el-input v-model="form.managerPhone" :placeholder="t('store.placeholder.managerPhone')" maxlength="11" />
           </el-form-item>
@@ -119,13 +119,18 @@ const imageOssIdsModel = computed<number[]>({
   }
 });
 
+const isEdit = computed(() => !!form.value.id);
+
 const rules = computed(() => ({
   storeName: [{ required: true, message: t('store.rule.storeName.required'), trigger: 'blur' }],
+  shortName: [{ required: true, message: t('store.rule.shortName.required'), trigger: 'blur' }],
+  storeType: [{ required: true, message: t('store.rule.storeType.required'), trigger: 'change' }],
+  posSystemId: [{ required: true, message: t('store.rule.posSystemId.required'), trigger: 'blur' }],
   businessStatus: [{ required: true, message: t('store.rule.businessStatus.required'), trigger: 'change' }],
   managerPhone: [{ pattern: /^$|^1[3-9]\d{9}$/, message: t('store.rule.managerPhone.pattern'), trigger: 'blur' }]
 }));
 
-const dialogTitle = computed(() => (form.value.id ? t('store.title.edit') : t('store.title.add')));
+const dialogTitle = computed(() => (isEdit.value ? t('store.title.edit') : t('store.title.add')));
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
