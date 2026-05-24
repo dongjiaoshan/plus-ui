@@ -65,7 +65,11 @@ export interface PigVO {
   introduceDate?: string;
   parity?: number;
   barnId?: number | string;
+  /** 栋舍编码（service enrich，列表/详情展示用） */
+  barnCode?: string;
   penId?: number | string;
+  /** 栏位编码（service enrich） */
+  penCode?: string;
   matingId?: number | string;
   motherEar?: string;
   fatherEar?: string;

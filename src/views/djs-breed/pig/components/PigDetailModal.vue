@@ -31,8 +31,8 @@
             <el-descriptions-item :label="t('pig.column.birthDate')">{{ detail.birthDate || '—' }}</el-descriptions-item>
             <el-descriptions-item :label="t('pig.column.introduceDate')">{{ detail.introduceDate || '—' }}</el-descriptions-item>
             <el-descriptions-item v-if="detail.pigSex === 'F'" :label="t('pig.column.parity')">{{ detail.parity ?? '—' }}</el-descriptions-item>
-            <el-descriptions-item :label="t('pig.column.barnId')">{{ detail.barnId || '—' }}</el-descriptions-item>
-            <el-descriptions-item :label="t('pig.column.penId')">{{ detail.penId || '—' }}</el-descriptions-item>
+            <el-descriptions-item :label="t('pig.column.barn')">{{ detail.barnCode || '—' }}</el-descriptions-item>
+            <el-descriptions-item :label="t('pig.column.pen')">{{ detail.penCode || '—' }}</el-descriptions-item>
             <el-descriptions-item :label="t('pig.column.motherEar')">
               <el-link v-if="detail.motherEar" type="primary" @click="onOpenParent('mother')">{{ detail.motherEar }}</el-link>
               <span v-else>—</span>

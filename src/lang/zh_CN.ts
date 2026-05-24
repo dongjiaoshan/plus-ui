@@ -479,6 +479,8 @@ export default {
       introduceDate: '引种日期',
       barnId: '栋舍',
       penId: '栏位',
+      barn: '栋舍',
+      pen: '栏位',
       motherEar: '母猪耳号',
       fatherEar: '父猪耳号',
       parity: '胎次',

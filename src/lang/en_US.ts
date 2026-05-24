@@ -479,6 +479,8 @@ export default {
       introduceDate: 'Introduce date',
       barnId: 'Barn',
       penId: 'Pen',
+      barn: 'Barn',
+      pen: 'Pen',
       motherEar: 'Mother ear',
       fatherEar: 'Father ear',
       parity: 'Parity',
