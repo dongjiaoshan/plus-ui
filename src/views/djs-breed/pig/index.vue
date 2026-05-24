@@ -148,7 +148,10 @@ async function load() {
   }
 }
 
-function handleSearch() {
+function handleSearch(payload: PigQuery) {
+  // BizTable 内部维护 innerSearchModel，搜索时通过 emit 把当前值传回来 —— 必须 merge 进父 searchModel，
+  // 否则 load() 用的还是父级初始的全 undefined。
+  Object.assign(searchModel, payload);
   pageNum.value = 1;
   load();
 }

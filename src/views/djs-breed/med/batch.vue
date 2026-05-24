@@ -92,11 +92,13 @@ async function fetchList() {
   }
 }
 
-function handleSearch() {
+function handleSearch(payload: Record<string, any>) {
+  Object.assign(searchModel, payload);
   pageNum.value = 1;
   fetchList();
 }
 function handleReset() {
+  Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
   pageNum.value = 1;
   fetchList();
 }

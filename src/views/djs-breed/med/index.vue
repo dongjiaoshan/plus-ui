@@ -95,11 +95,14 @@ async function fetchList() {
   }
 }
 
-function handleSearch() {
+function handleSearch(payload: Record<string, any>) {
+  // BizTable 单向数据流，emit('search') 把 innerSearchModel 传回，必须 merge 进父 searchModel
+  Object.assign(searchModel, payload);
   pageNum.value = 1;
   fetchList();
 }
 function handleReset() {
+  Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
   pageNum.value = 1;
   fetchList();
 }
