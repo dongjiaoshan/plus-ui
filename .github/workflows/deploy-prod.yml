@@ -30,6 +30,23 @@ jobs:
 
       - run: pnpm build:prod
 
+      - name: Clean target folder on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          script: |
+            TARGET=/www/wwwroot/admin.dongjiaoshan.com
+            mkdir -p "$TARGET"
+            cd "$TARGET"
+            chattr -i .user.ini 2>/dev/null || true
+            find . -mindepth 1 -maxdepth 1 \
+              ! -name '.well-known' \
+              ! -name '.user.ini' \
+              -exec rm -rf {} + || true
+            [ -f .user.ini ] && chattr +i .user.ini 2>/dev/null || true
+
       - name: Upload dist to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -39,4 +56,3 @@ jobs:
           source: "dist/*"
           target: /www/wwwroot/admin.dongjiaoshan.com/
           strip_components: 1
-          rm: true
