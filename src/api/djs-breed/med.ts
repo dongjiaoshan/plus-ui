@@ -1,13 +1,25 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { MedBatchForm, MedBatchQuery, MedBatchVO, MedicineForm, MedicineQuery, MedicineVO } from './med/types';
+import type {
+  MedBatchForm,
+  MedBatchQuery,
+  MedBatchVO,
+  MedicineForm,
+  MedicineQuery,
+  MedicineVO,
+  MedUsageForm,
+  MedUsageQuery,
+  MedUsageTodayStat,
+  MedUsageVO
+} from './med/types';
 
 /**
- * 药品库 + 药品批次 API（BRD-MED-001）。
+ * 药品库 + 药品批次 + 领用台账 API（BRD-MED-001 / BRD-MED-002）。
  *
  * 后端：
- *  - org.dromara.djs.breed.med.controller.MedicineController  /djs/breed/med
- *  - org.dromara.djs.breed.med.controller.MedBatchController  /djs/breed/med-batch
+ *  - org.dromara.djs.breed.med.controller.MedicineController   /djs/breed/med
+ *  - org.dromara.djs.breed.med.controller.MedBatchController   /djs/breed/med-batch
+ *  - org.dromara.djs.breed.med.controller.MedUsageController   /djs/breed/med-usage
  */
 
 // ============= Medicine =============
@@ -99,5 +111,50 @@ export const delMedBatch = (ids: number | string | (number | string)[]) => {
   return request({
     url: '/djs/breed/med-batch/remove/' + path,
     method: 'delete'
+  });
+};
+
+// ============= MedUsage（BRD-MED-002 领用台账） =============
+
+/** 分页查询领用记录 */
+export const listMedUsage = (query: MedUsageQuery): AxiosPromise<MedUsageVO[]> => {
+  return request({
+    url: '/djs/breed/med-usage/list',
+    method: 'get',
+    params: query
+  });
+};
+
+/** 详情 */
+export const getMedUsage = (id: number | string): AxiosPromise<MedUsageVO> => {
+  return request({
+    url: '/djs/breed/med-usage/getInfo/' + id,
+    method: 'get'
+  });
+};
+
+/** 新增领用 / 退回 / 损耗（后端同步扣减或归还库存） */
+export const addMedUsage = (data: MedUsageForm) => {
+  return request({
+    url: '/djs/breed/med-usage/add',
+    method: 'post',
+    data
+  });
+};
+
+/** 软删（不回滚库存） */
+export const delMedUsage = (ids: number | string | (number | string)[]) => {
+  const path = Array.isArray(ids) ? ids.join(',') : String(ids);
+  return request({
+    url: '/djs/breed/med-usage/remove/' + path,
+    method: 'delete'
+  });
+};
+
+/** 今日汇总 {use, return, loss} */
+export const medUsageTodayStat = (): AxiosPromise<MedUsageTodayStat> => {
+  return request({
+    url: '/djs/breed/med-usage/today-stat',
+    method: 'get'
   });
 };

@@ -10,21 +10,22 @@ export interface PersonVO extends BaseEntity {
   gender?: string;
   phone?: string;
   idCard?: string;
-  position?: string;
+  postId?: number | string;
+  postName?: string;
   hireDate?: string;
   status: string;
   avatarUrl?: string;
   remark?: string;
 }
 
-/** 新增 / 编辑表单（personCode 由后端生成，前端不传） */
+/** 新增 / 编辑表单（personCode 由后端生成，前端不传；postName 由后端 enrich，前端不传） */
 export interface PersonForm {
   id?: number | string;
   name: string;
   gender?: string;
   phone?: string;
   idCard?: string;
-  position?: string;
+  postId?: number | string;
   hireDate?: string;
   status?: string;
   avatarUrl?: string;
@@ -37,4 +38,5 @@ export interface PersonQuery extends PageQuery {
   personCode?: string;
   phone?: string;
   status?: string;
+  postId?: number | string;
 }

@@ -128,7 +128,7 @@ export default {
       name: '姓名',
       gender: '性别',
       phone: '联系电话',
-      position: '岗位',
+      post: '岗位',
       status: '状态',
       hireDate: '入职日期',
       createTime: '创建时间'
@@ -138,7 +138,7 @@ export default {
       gender: '性别',
       phone: '联系电话',
       idCard: '身份证号',
-      position: '岗位',
+      post: '岗位',
       hireDate: '入职日期',
       status: '状态',
       remark: '备注'
@@ -148,7 +148,7 @@ export default {
       gender: '请选择性别',
       phone: '请输入手机号',
       idCard: '请输入 15 / 18 位身份证号',
-      position: '请输入岗位',
+      post: '请选择岗位',
       hireDate: '请选择入职日期'
     },
     rule: {
@@ -714,6 +714,54 @@ export default {
     },
     confirm: {
       del: '是否确认删除选中的 {count} 条批次记录？'
+    }
+  },
+  // 药品领用台账（BRD-MED-002）
+  medUsage: {
+    title: {
+      add: '新增领用 / 退回 / 损耗'
+    },
+    type: {
+      use: '领用',
+      return: '退回',
+      loss: '损耗'
+    },
+    column: {
+      medicineId: '药品 ID',
+      batchId: '批次 ID',
+      usageType: '类型',
+      usageQty: '数量',
+      useDate: '业务日期',
+      pigId: '关联猪只',
+      relatedPenId: '关联栏位',
+      remark: '备注',
+      createBy: '操作员',
+      createTime: '创建时间'
+    },
+    field: {
+      medicineId: '药品 ID',
+      batchId: '批次',
+      usageType: '类型',
+      usageQty: '数量',
+      useDate: '业务日期',
+      useDateFrom: '日期 ≥',
+      useDateTo: '日期 ≤',
+      pigId: '关联猪只',
+      relatedPenId: '关联栏位',
+      remark: '备注'
+    },
+    placeholder: {
+      batchId: '请搜索批次（按批次号）',
+      useDate: '请选择业务日期'
+    },
+    rule: {
+      batchId: { required: '请选择批次' },
+      usageType: { required: '请选择类型' },
+      usageQty: { required: '数量必须大于 0' },
+      useDate: { required: '请选择业务日期' }
+    },
+    confirm: {
+      del: '是否确认删除选中的 {count} 条领用记录？已发生的库存动作不会回滚。'
     }
   },
   // 东角山业务模块占位

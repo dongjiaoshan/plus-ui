@@ -128,7 +128,7 @@ export default {
       name: 'Name',
       gender: 'Gender',
       phone: 'Phone',
-      position: 'Position',
+      post: 'Post',
       status: 'Status',
       hireDate: 'Hire date',
       createTime: 'Created at'
@@ -138,7 +138,7 @@ export default {
       gender: 'Gender',
       phone: 'Phone',
       idCard: 'ID card',
-      position: 'Position',
+      post: 'Post',
       hireDate: 'Hire date',
       status: 'Status',
       remark: 'Remark'
@@ -148,7 +148,7 @@ export default {
       gender: 'Select gender',
       phone: 'Enter phone',
       idCard: 'Enter 15 / 18-digit ID card',
-      position: 'Enter position',
+      post: 'Select post',
       hireDate: 'Select hire date'
     },
     rule: {
@@ -714,6 +714,48 @@ export default {
     },
     confirm: {
       del: 'Delete {count} batch record(s)?'
+    }
+  },
+  // Medicine usage ledger (BRD-MED-002)
+  medUsage: {
+    title: { add: 'New usage / return / loss' },
+    type: { use: 'Use', return: 'Return', loss: 'Loss' },
+    column: {
+      medicineId: 'Medicine ID',
+      batchId: 'Batch ID',
+      usageType: 'Type',
+      usageQty: 'Qty',
+      useDate: 'Date',
+      pigId: 'Pig',
+      relatedPenId: 'Pen',
+      remark: 'Remark',
+      createBy: 'Operator',
+      createTime: 'Created'
+    },
+    field: {
+      medicineId: 'Medicine ID',
+      batchId: 'Batch',
+      usageType: 'Type',
+      usageQty: 'Quantity',
+      useDate: 'Business date',
+      useDateFrom: 'Date ≥',
+      useDateTo: 'Date ≤',
+      pigId: 'Pig',
+      relatedPenId: 'Pen',
+      remark: 'Remark'
+    },
+    placeholder: {
+      batchId: 'Search batch by batch no.',
+      useDate: 'Pick date'
+    },
+    rule: {
+      batchId: { required: 'Batch is required' },
+      usageType: { required: 'Type is required' },
+      usageQty: { required: 'Qty must be > 0' },
+      useDate: { required: 'Date is required' }
+    },
+    confirm: {
+      del: 'Delete {count} usage record(s)? Stock changes will NOT be reverted.'
     }
   },
   // Dongjiaoshan business modules placeholder

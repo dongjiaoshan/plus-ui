@@ -83,3 +83,47 @@ export interface MedBatchQuery extends PageQuery {
   medicineId?: number | string;
   batchNo?: string;
 }
+
+// ============= MedUsage（药品领用台账 t_breed_medicine_usage） =============
+
+export type MedUsageType = 'use' | 'return' | 'loss';
+
+export interface MedUsageVO extends BaseEntity {
+  id: number | string;
+  batchId: number | string;
+  medicineId: number | string;
+  usageType: MedUsageType;
+  usageQty: number | string;
+  useDate: string;
+  relatedPenId?: number | string;
+  pigId?: number | string;
+  scheduleId?: number | string;
+  remark?: string;
+}
+
+export interface MedUsageForm {
+  batchId: number | string;
+  medicineId: number | string;
+  usageType: MedUsageType;
+  usageQty: number | string;
+  useDate: string;
+  relatedPenId?: number | string;
+  pigId?: number | string;
+  scheduleId?: number | string;
+  remark?: string;
+}
+
+export interface MedUsageQuery extends PageQuery {
+  medicineId?: number | string;
+  batchId?: number | string;
+  usageType?: MedUsageType | string;
+  useDateFrom?: string;
+  useDateTo?: string;
+  pigId?: number | string;
+}
+
+export interface MedUsageTodayStat {
+  use: number | string;
+  return: number | string;
+  loss: number | string;
+}

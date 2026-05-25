@@ -34,6 +34,8 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import PersonForm from './components/PersonForm.vue';
 import { delPerson, listPerson } from '@/api/djs-common/person';
 import type { PersonQuery, PersonVO } from '@/api/djs-common/person/types';
+import { listPost } from '@/api/system/post';
+import type { PostVO } from '@/api/system/post/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -51,13 +53,22 @@ const pageSize = ref(10);
 const searchModel = reactive<Record<string, any>>({
   name: undefined,
   phone: undefined,
-  status: undefined
+  status: undefined,
+  postId: undefined
 });
+
+const postOptions = ref<PostVO[]>([]);
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'name', label: t('person.field.name'), type: 'input' },
   { field: 'phone', label: t('person.field.phone'), type: 'input' },
-  { field: 'status', label: t('person.field.status'), type: 'select', dictType: 'djs_user_status' }
+  { field: 'status', label: t('person.field.status'), type: 'select', dictType: 'djs_user_status' },
+  {
+    field: 'postId',
+    label: t('person.field.post'),
+    type: 'select',
+    options: postOptions.value.map((p) => ({ label: p.postName, value: p.postId }))
+  }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -65,7 +76,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'name', label: t('person.column.name'), minWidth: 120 },
   { prop: 'gender', label: t('person.column.gender'), width: 80, align: 'center', dictType: 'sys_user_sex' },
   { prop: 'phone', label: t('person.column.phone'), width: 140, align: 'center' },
-  { prop: 'position', label: t('person.column.position'), width: 140 },
+  { prop: 'postName', label: t('person.column.post'), width: 140 },
   { prop: 'status', label: t('person.column.status'), width: 100, align: 'center', dictType: 'djs_user_status' },
   { prop: 'hireDate', label: t('person.column.hireDate'), width: 120, align: 'center', formatter: 'date' },
   { prop: 'createTime', label: t('person.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
@@ -79,7 +90,8 @@ async function fetchList() {
       pageSize: pageSize.value,
       name: searchModel.name || undefined,
       phone: searchModel.phone || undefined,
-      status: searchModel.status || undefined
+      status: searchModel.status || undefined,
+      postId: searchModel.postId || undefined
     };
     const res = await listPerson(query);
     list.value = (res.rows ?? res.data ?? []) as PersonVO[];
@@ -87,6 +99,11 @@ async function fetchList() {
   } finally {
     loading.value = false;
   }
+}
+
+async function fetchPostOptions() {
+  const res = await listPost({ status: '0' } as any);
+  postOptions.value = (res.rows ?? res.data ?? []) as PostVO[];
 }
 
 function handleSearch(payload?: Record<string, any>) {
@@ -124,7 +141,8 @@ function handleExport(payload?: Record<string, any>) {
     {
       name: searchModel.name || undefined,
       phone: searchModel.phone || undefined,
-      status: searchModel.status || undefined
+      status: searchModel.status || undefined,
+      postId: searchModel.postId || undefined
     },
     `person_${new Date().getTime()}.xlsx`
   );
@@ -134,6 +152,7 @@ function handleFormSuccess() {
 }
 
 onMounted(() => {
+  fetchPostOptions();
   fetchList();
 });
 </script>

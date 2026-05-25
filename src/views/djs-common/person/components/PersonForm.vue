@@ -25,8 +25,10 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="t('person.field.position')" prop="position">
-            <el-input v-model="form.position" :placeholder="t('person.placeholder.position')" maxlength="64" />
+          <el-form-item :label="t('person.field.post')" prop="postId">
+            <el-select v-model="form.postId" :placeholder="t('person.placeholder.post')" clearable filterable>
+              <el-option v-for="p in postOptions" :key="p.postId" :label="p.postName" :value="p.postId" />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -66,6 +68,8 @@
 <script setup lang="ts">
 import { addPerson, getPerson, updatePerson } from '@/api/djs-common/person';
 import type { PersonForm } from '@/api/djs-common/person/types';
+import { listPost } from '@/api/system/post';
+import type { PostVO } from '@/api/system/post/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -75,6 +79,7 @@ const { sys_user_sex, djs_user_status } = toRefs<any>(proxy?.useDict('sys_user_s
 const visible = ref(false);
 const submitting = ref(false);
 const formRef = ref<ElFormInstance>();
+const postOptions = ref<PostVO[]>([]);
 
 const defaultForm = (): PersonForm => ({
   id: undefined,
@@ -82,7 +87,7 @@ const defaultForm = (): PersonForm => ({
   gender: undefined,
   phone: undefined,
   idCard: undefined,
-  position: undefined,
+  postId: undefined,
   hireDate: undefined,
   status: '0',
   avatarUrl: undefined,
@@ -107,15 +112,23 @@ const dialogTitle = computed(() => (form.value.id ? t('person.title.edit') : t('
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
+/** 拉所有启用岗位（status='0' 正常）供下拉用；首次打开懒加载 */
+const ensurePostOptions = async () => {
+  if (postOptions.value.length > 0) return;
+  const res = await listPost({ status: '0' } as any);
+  postOptions.value = (res.rows ?? res.data ?? []) as PostVO[];
+};
+
 /** 外部调：新增 */
-const openCreate = () => {
+const openCreate = async () => {
   form.value = defaultForm();
+  await ensurePostOptions();
   visible.value = true;
 };
 
 /** 外部调：编辑 */
 const openEdit = async (id: number | string) => {
-  const res = await getPerson(id);
+  const [res] = await Promise.all([getPerson(id), ensurePostOptions()]);
   form.value = {
     ...defaultForm(),
     ...res.data
