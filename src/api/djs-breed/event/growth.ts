@@ -22,6 +22,8 @@ export interface PigGrowthVO {
   backHeight?: number | string | null;
   photoOssIds?: string;
   operatorId?: number | string | null;
+  /** 操作人姓名（ADR-0007 + 跨层契约 §4.5；后端 @Translation USER_ID_TO_NAME） */
+  operatorName?: string | null;
   barnName?: string | null;
   penName?: string | null;
   remark?: string;

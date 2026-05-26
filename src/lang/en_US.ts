@@ -115,6 +115,8 @@ export default {
     detail: 'Detail',
     edit: 'Edit',
     delete: 'Delete',
+    back: 'Back',
+    createTime: 'Created at',
     opSuccess: 'Operation succeeded'
   },
   // Supplier master data (SYS-MD-003 + SYS-MD-FIX-002)
@@ -420,6 +422,13 @@ export default {
     action: {
       fireEvent: 'Fire event'
     },
+    tab: {
+      all: 'All',
+      sow: 'Sow',
+      boar: 'Boar',
+      piglet: 'Piglet',
+      fattening: 'Fattening'
+    },
     sex: {
       male: 'Male',
       female: 'Female'
@@ -441,9 +450,27 @@ export default {
       motherEar: 'Mother ear',
       fatherEar: 'Father ear',
       parity: 'Parity',
+      matingCount: 'Mating count',
+      lastMatingDate: 'Last mating date',
+      enterFattenAt: 'Enter fatten at',
       statusStartedAt: 'Status since',
       endReason: 'End reason',
       remark: 'Remark'
+    },
+    perf: {
+      totalBorn: 'Total born',
+      totalLiveBorn: 'Live born',
+      totalWeaned: 'Weaned',
+      avgBornWeight: 'Avg born wt (kg)',
+      avgWeanedWeight: 'Avg wean wt (kg)',
+      lastUpdateDate: 'Last update'
+    },
+    growth: {
+      measureDate: 'Measure date',
+      weight: 'Weight (kg)',
+      backfatThickness: 'Backfat (mm)',
+      backHeight: 'Back height (cm)',
+      operatorName: 'Operator'
     },
     placeholder: {
       earNo: 'Enter ear number',
@@ -479,9 +506,13 @@ export default {
     },
     detail: {
       title: 'Pig detail — {earNo}',
+      creator: 'Created by',
       tab: {
         overview: 'Overview',
-        history: 'State history',
+        basic: 'Basic info',
+        performance: 'Performance',
+        history: 'History',
+        growth: 'Growth curve',
         health: 'Health'
       },
       historyEmpty: 'No state changes',
@@ -489,6 +520,9 @@ export default {
       duration: '{days} day(s)',
       relatedEvent: 'Related event ID: {id}',
       healthPlaceholder: 'Health log will be wired in BRD-MED-003',
+      performanceEmpty: 'No performance data yet (filled by BRD-DASH-001 cron)',
+      performanceDataHint: 'Data sourced from t_farm_sow_performance, populated by farrow / wean events or nightly job.',
+      growthEmpty: 'No growth measurements',
       relatedNotFound: 'No pig found with ear no. {earNo}'
     },
     exportTodo: 'Export will be wired in BRD-LIST-001'
@@ -713,6 +747,69 @@ export default {
     },
     confirm: {
       del: 'Delete {count} usage record(s)? Stock changes will NOT be reverted.'
+    }
+  },
+  // Warehouse location (WMS-MD-001)
+  location: {
+    title: {
+      add: 'New location',
+      edit: 'Edit location'
+    },
+    column: {
+      locationCode: 'Code',
+      locationName: 'Name',
+      locationType: 'Type',
+      locationThumb: 'Image',
+      capacity: 'Capacity',
+      locationStatus: 'Status',
+      createTime: 'Created'
+    },
+    field: {
+      locationCode: 'Code',
+      locationName: 'Name',
+      locationType: 'Type',
+      locationThumb: 'Thumbnail',
+      locationImg: 'Images',
+      locationStatus: 'Status',
+      capacity: 'Capacity',
+      remark: 'Remark'
+    },
+    placeholder: {
+      locationCode: 'e.g. L0001 / FROZEN-01',
+      locationName: 'Location name',
+      locationType: 'Pick type',
+      locationThumb: 'OSS objectName (single)',
+      locationImg: 'OSS objectNames comma-separated',
+      capacity: 'Capacity (kg / m³)'
+    },
+    rule: {
+      locationCode: { required: 'Code is required' },
+      locationName: { required: 'Name is required' },
+      locationType: { required: 'Type is required' },
+      locationStatus: { required: 'Status is required' }
+    },
+    confirm: {
+      del: 'Delete {count} location(s)? Make sure they have no active stock.'
+    }
+  },
+  // Warehouse stock query (WMS-MD-001, read-only)
+  stock: {
+    field: {
+      productName: 'Product',
+      earNo: 'Ear No.',
+      isEnd: 'Done'
+    },
+    column: {
+      locationName: 'Location',
+      productName: 'Product',
+      productStock: 'Stock',
+      productUnit: 'Unit',
+      earNo: 'Ear No.',
+      isEnd: 'Done',
+      latestCheckTime: 'Last check',
+      checkResult: 'Check result',
+      operatorName: 'Operator',
+      createTime: 'Created'
     }
   },
   // Dongjiaoshan business modules placeholder
