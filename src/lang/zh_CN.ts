@@ -117,49 +117,6 @@ export default {
     delete: '删 除',
     opSuccess: '操作成功'
   },
-  // 人员管理（SYS-MD-001）
-  person: {
-    title: {
-      add: '新增人员',
-      edit: '编辑人员'
-    },
-    column: {
-      personCode: '人员编码',
-      name: '姓名',
-      gender: '性别',
-      phone: '联系电话',
-      post: '岗位',
-      status: '状态',
-      hireDate: '入职日期',
-      createTime: '创建时间'
-    },
-    field: {
-      name: '姓名',
-      gender: '性别',
-      phone: '联系电话',
-      idCard: '身份证号',
-      post: '岗位',
-      hireDate: '入职日期',
-      status: '状态',
-      remark: '备注'
-    },
-    placeholder: {
-      name: '请输入姓名',
-      gender: '请选择性别',
-      phone: '请输入手机号',
-      idCard: '请输入 15 / 18 位身份证号',
-      post: '请选择岗位',
-      hireDate: '请选择入职日期'
-    },
-    rule: {
-      name: { required: '姓名不能为空' },
-      phone: { pattern: '请输入合法的手机号' },
-      idCard: { pattern: '请输入合法的身份证号' }
-    },
-    confirm: {
-      del: '是否确认删除选中的 {count} 条人员记录？'
-    }
-  },
   // 供应商管理（SYS-MD-003 + SYS-MD-FIX-002）
   supplier: {
     title: {

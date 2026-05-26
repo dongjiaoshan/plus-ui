@@ -117,49 +117,6 @@ export default {
     delete: 'Delete',
     opSuccess: 'Operation succeeded'
   },
-  // Person master data (SYS-MD-001)
-  person: {
-    title: {
-      add: 'Add person',
-      edit: 'Edit person'
-    },
-    column: {
-      personCode: 'Person code',
-      name: 'Name',
-      gender: 'Gender',
-      phone: 'Phone',
-      post: 'Post',
-      status: 'Status',
-      hireDate: 'Hire date',
-      createTime: 'Created at'
-    },
-    field: {
-      name: 'Name',
-      gender: 'Gender',
-      phone: 'Phone',
-      idCard: 'ID card',
-      post: 'Post',
-      hireDate: 'Hire date',
-      status: 'Status',
-      remark: 'Remark'
-    },
-    placeholder: {
-      name: 'Enter name',
-      gender: 'Select gender',
-      phone: 'Enter phone',
-      idCard: 'Enter 15 / 18-digit ID card',
-      post: 'Select post',
-      hireDate: 'Select hire date'
-    },
-    rule: {
-      name: { required: 'Name is required' },
-      phone: { pattern: 'Please enter a valid phone' },
-      idCard: { pattern: 'Please enter a valid ID card' }
-    },
-    confirm: {
-      del: 'Delete the selected {count} person record(s)?'
-    }
-  },
   // Supplier master data (SYS-MD-003 + SYS-MD-FIX-002)
   supplier: {
     title: {
