@@ -127,3 +127,65 @@ export interface MedUsageTodayStat {
   return: number | string;
   loss: number | string;
 }
+
+// ============= MedRecord（用药治疗流水 t_breed_medicine_record，BRD-MED-003） =============
+
+/** 1=单只 / 2=批量 master / 3=批量 detail */
+export type MedRecordDrugType = 1 | 2 | 3;
+
+export interface MedRecordVO extends BaseEntity {
+  id: number | string;
+  useDate: string;
+  pigId?: number | string;
+  earNo?: string;
+  masterId?: number | string;
+  drugType: MedRecordDrugType;
+  medicineType: string;
+  medicineReason?: string;
+  medicineWay: string;
+  medicineId: number | string;
+  medicineName: string;
+  batchId: number | string;
+  usageId?: number | string;
+  scheduleId?: number | string;
+  medicineDosage: number | string;
+  operatorId: number | string;
+  operatorName?: string;
+  remark?: string;
+}
+
+export interface MedRecordForm {
+  useDate: string;
+  pigId: number | string;
+  medicineType: string;
+  medicineReason?: string;
+  medicineWay: string;
+  medicineId: number | string;
+  batchId: number | string;
+  usageId?: number | string;
+  scheduleId?: number | string;
+  medicineDosage: number | string;
+  remark?: string;
+}
+
+export interface MedRecordQuery extends PageQuery {
+  pigId?: number | string;
+  earNo?: string;
+  medicineType?: string;
+  drugType?: MedRecordDrugType;
+  beginDate?: string;
+  endDate?: string;
+  batchId?: number | string;
+  medicineId?: number | string;
+  operatorId?: number | string;
+}
+
+export interface UsableBatchVO {
+  batchId: number | string;
+  medicineId: number | string;
+  medicineName: string;
+  batchNo: string;
+  quantity: number | string;
+  usageId?: number | string;
+  lastUseDate?: string;
+}

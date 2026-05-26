@@ -7,10 +7,14 @@ import type {
   MedicineForm,
   MedicineQuery,
   MedicineVO,
+  MedRecordForm,
+  MedRecordQuery,
+  MedRecordVO,
   MedUsageForm,
   MedUsageQuery,
   MedUsageTodayStat,
-  MedUsageVO
+  MedUsageVO,
+  UsableBatchVO
 } from './med/types';
 
 /**
@@ -156,5 +160,68 @@ export const medUsageTodayStat = (): AxiosPromise<MedUsageTodayStat> => {
   return request({
     url: '/djs/breed/med-usage/today-stat',
     method: 'get'
+  });
+};
+
+// ============= MedRecord（BRD-MED-003 用药治疗流水） =============
+
+/** 分页查询用药治疗记录 */
+export const listMedRecord = (query: MedRecordQuery): AxiosPromise<MedRecordVO[]> => {
+  return request({
+    url: '/djs/breed/med-record/list',
+    method: 'get',
+    params: query
+  });
+};
+
+/** 详情 */
+export const getMedRecord = (id: number | string): AxiosPromise<MedRecordVO> => {
+  return request({
+    url: '/djs/breed/med-record/getInfo/' + id,
+    method: 'get'
+  });
+};
+
+/** 查批量 master 下的 detail */
+export const getMedRecordByMaster = (masterId: number | string): AxiosPromise<MedRecordVO[]> => {
+  return request({
+    url: '/djs/breed/med-record/detail/master/' + masterId,
+    method: 'get'
+  });
+};
+
+/** 单只用药 */
+export const addMedRecord = (data: MedRecordForm) => {
+  return request({
+    url: '/djs/breed/med-record/add',
+    method: 'post',
+    data
+  });
+};
+
+/** 批量用药（返 master.id） */
+export const addMedRecordBatch = (data: MedRecordForm & { pigIds: (number | string)[] }) => {
+  return request({
+    url: '/djs/breed/med-record/add-batch',
+    method: 'post',
+    data
+  });
+};
+
+/** mp picker 数据源（admin 端 mineOnly=false 查全场） */
+export const usableBatches = (mineOnly = false): AxiosPromise<UsableBatchVO[]> => {
+  return request({
+    url: '/djs/breed/med-record/usable-batch',
+    method: 'get',
+    params: { mineOnly }
+  });
+};
+
+/** 软删（不回滚库存） */
+export const delMedRecord = (ids: number | string | (number | string)[]) => {
+  const path = Array.isArray(ids) ? ids.join(',') : String(ids);
+  return request({
+    url: '/djs/breed/med-record/remove/' + path,
+    method: 'delete'
   });
 };

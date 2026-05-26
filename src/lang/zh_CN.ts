@@ -115,6 +115,8 @@ export default {
     detail: '详 情',
     edit: '编 辑',
     delete: '删 除',
+    back: '返 回',
+    createTime: '创建时间',
     opSuccess: '操作成功'
   },
   // 供应商管理（SYS-MD-003 + SYS-MD-FIX-002）
@@ -420,6 +422,13 @@ export default {
     action: {
       fireEvent: '触发事件'
     },
+    tab: {
+      all: '全部',
+      sow: '母猪',
+      boar: '公猪',
+      piglet: '仔猪',
+      fattening: '育肥'
+    },
     sex: {
       male: '公',
       female: '母'
@@ -441,9 +450,27 @@ export default {
       motherEar: '母猪耳号',
       fatherEar: '父猪耳号',
       parity: '胎次',
+      matingCount: '配种次数',
+      lastMatingDate: '上次配种日',
+      enterFattenAt: '入栏时间',
       statusStartedAt: '进入状态时间',
       endReason: '终止原因',
       remark: '备注'
+    },
+    perf: {
+      totalBorn: '产仔总数',
+      totalLiveBorn: '健仔数',
+      totalWeaned: '断奶头数',
+      avgBornWeight: '平均出生重 (kg)',
+      avgWeanedWeight: '平均断奶重 (kg)',
+      lastUpdateDate: '最近更新'
+    },
+    growth: {
+      measureDate: '测量日',
+      weight: '体重 (kg)',
+      backfatThickness: '背膘 (mm)',
+      backHeight: '背高 (cm)',
+      operatorName: '操作人'
     },
     placeholder: {
       earNo: '请输入耳号',
@@ -479,9 +506,13 @@ export default {
     },
     detail: {
       title: '猪只详情 — {earNo}',
+      creator: '建档人',
       tab: {
         overview: '概览',
-        history: '状态变更',
+        basic: '基础信息',
+        performance: '生产指标',
+        history: '养殖记录',
+        growth: '生长曲线',
         health: '健康记录'
       },
       historyEmpty: '暂无状态变更记录',
@@ -489,6 +520,9 @@ export default {
       duration: '停留 {days} 天',
       relatedEvent: '关联业务事件 ID：{id}',
       healthPlaceholder: '健康记录将由 BRD-MED-003 接入后展示',
+      performanceEmpty: '该母猪暂无生产指标（数据由 BRD-DASH-001 定时任务汇总写入）',
+      performanceDataHint: '该数据来自 t_farm_sow_performance，由分娩 / 断奶事件回写或夜间批处理生成。',
+      growthEmpty: '暂无生长测量记录',
       relatedNotFound: '未找到耳号为 {earNo} 的猪只'
     },
     exportTodo: '导出能力将在 BRD-LIST-001 中接入'
@@ -719,6 +753,69 @@ export default {
     },
     confirm: {
       del: '是否确认删除选中的 {count} 条领用记录？已发生的库存动作不会回滚。'
+    }
+  },
+  // 库位（WMS-MD-001）
+  location: {
+    title: {
+      add: '新增库位',
+      edit: '编辑库位'
+    },
+    column: {
+      locationCode: '库位编码',
+      locationName: '库位名称',
+      locationType: '类型',
+      locationThumb: '图片',
+      capacity: '容量',
+      locationStatus: '状态',
+      createTime: '创建时间'
+    },
+    field: {
+      locationCode: '库位编码',
+      locationName: '库位名称',
+      locationType: '库位类型',
+      locationThumb: '缩略图',
+      locationImg: '原图',
+      locationStatus: '状态',
+      capacity: '容量',
+      remark: '备注'
+    },
+    placeholder: {
+      locationCode: '请输入库位编码（如 L0001 / FROZEN-01）',
+      locationName: '请输入库位名称',
+      locationType: '请选择库位类型',
+      locationThumb: 'OSS objectName 单张',
+      locationImg: 'OSS objectName 多张逗号分隔',
+      capacity: '请输入容量（kg / m³）'
+    },
+    rule: {
+      locationCode: { required: '库位编码不能为空' },
+      locationName: { required: '库位名称不能为空' },
+      locationType: { required: '请选择库位类型' },
+      locationStatus: { required: '请选择状态' }
+    },
+    confirm: {
+      del: '是否确认删除选中的 {count} 条库位？删除前需先确保库位无在用库存。'
+    }
+  },
+  // 库存查询（WMS-MD-001，只读列表）
+  stock: {
+    field: {
+      productName: '产品名称',
+      earNo: '耳号',
+      isEnd: '是否完成'
+    },
+    column: {
+      locationName: '库位',
+      productName: '产品名称',
+      productStock: '当前库存',
+      productUnit: '单位',
+      earNo: '耳号',
+      isEnd: '是否完成',
+      latestCheckTime: '最新盘点',
+      checkResult: '盘点结果',
+      operatorName: '操作人',
+      createTime: '创建时间'
     }
   },
   // 东角山业务模块占位

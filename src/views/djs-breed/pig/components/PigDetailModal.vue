@@ -87,35 +87,29 @@
     </el-tabs>
 
     <template #footer>
-      <PigEventDropdown v-if="detail" :pig="detail" @select="onEventSelect" />
       <el-button @click="visible = false">{{ t('common.close') }}</el-button>
     </template>
-
-    <PigEventPlaceholderDialog ref="eventDialogRef" @success="onEventSuccess" />
   </el-dialog>
 </template>
 
 <script setup lang="ts" name="PigDetailModal">
 /**
- * 猪只详情 modal（BRD-CORE-001）。3 tab：
+ * 猪只详情 modal（BRD-CORE-001 + D7 BRD-LIST-001 改造）。3 tab：
  *  - overview：基本信息 + 当前状态徽章 + 谱系
  *  - history：状态变更时间线（拉全量 /history，最多 200 条）
  *  - health：BRD-MED-003 placeholder
  *
- * 触发事件：footer 暴露 PigEventDropdown — 选事件后弹 PigEventPlaceholderDialog
- * 显示该事件需要的 payload 字段（运维 / boss 可强制触发，普通业务走 BRD-EVENT-* 端点）。
+ * D7 起 admin 改纯只读，事件触发统一走 mp（PigEventDropdown / PigEventPlaceholderDialog
+ * 已废弃）。本组件保留为"详情 + 历史" 只读视图。
  */
-import { computed, nextTick, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { ArrowRight } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { useDict } from '@/utils/dict';
 import { getPig, listPigHistory } from '@/api/djs-breed/pig';
-import type { PigDetailVO, PigStatusEventCode, PigStatusRecordVO, PigVO } from '@/api/djs-breed/pig/types';
-import PigEventDropdown from './PigEventDropdown.vue';
-import PigEventPlaceholderDialog from './PigEventPlaceholderDialog.vue';
+import type { PigDetailVO, PigStatusEventCode, PigStatusRecordVO } from '@/api/djs-breed/pig/types';
 
 const emit = defineEmits<{
-  (e: 'event-fired'): void;
   (e: 'open-related-ear', earNo: string): void;
 }>();
 
@@ -132,8 +126,6 @@ const loading = ref(false);
 const historyLoading = ref(false);
 const detail = ref<PigDetailVO | null>(null);
 const history = ref<PigStatusRecordVO[]>([]);
-
-const eventDialogRef = ref<{ open: (pig: PigVO, ev: PigStatusEventCode) => void }>();
 
 const sexLabel = computed(() => {
   if (!detail.value) return '';
@@ -187,21 +179,6 @@ async function loadHistory(id: number | string) {
 function onClosed() {
   detail.value = null;
   history.value = [];
-}
-
-function onEventSelect(ev: PigStatusEventCode, pig: PigVO) {
-  nextTick(() => {
-    eventDialogRef.value?.open(pig, ev);
-  });
-}
-
-async function onEventSuccess() {
-  emit('event-fired');
-  // 重拉 detail + history
-  if (detail.value) {
-    await open(detail.value.id);
-    activeTab.value = 'history';
-  }
 }
 
 function onOpenParent(kind: 'mother' | 'father') {

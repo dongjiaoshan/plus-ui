@@ -73,8 +73,15 @@ export interface PigVO {
   matingId?: number | string;
   motherEar?: string;
   fatherEar?: string;
+  /** 母猪累计配种次数（matingCount，由 BREED 事件后置原子 +=1 维护） */
+  matingCount?: number;
+  /** 上次配种日（payload.breedingDate） */
+  lastMatingDate?: string;
   remark?: string;
   createTime?: string;
+  createBy?: number | string;
+  /** 创建人姓名（ADR-0007 + 跨层契约 §4.5；后端 @Translation USER_ID_TO_NAME） */
+  createName?: string;
   version?: number;
 }
 
