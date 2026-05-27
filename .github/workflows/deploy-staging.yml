@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -56,6 +56,6 @@ jobs:
           host: ${{ secrets.SSH_HOST_STAGING }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-          source: "dist/*"
+          source: 'dist/*'
           target: /www/wwwroot/admin.dongjiaoshan.com/
           strip_components: 1

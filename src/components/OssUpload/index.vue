@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Delete, Plus, ZoomIn } from '@element-plus/icons-vue';
 import { ElMessage, type UploadFile, type UploadRawFile, type UploadUserFile } from 'element-plus';
@@ -114,29 +114,12 @@ const resultMap = ref<Map<number, OssUploadResult>>(new Map());
 
 const acceptAttr = computed(() => props.fileTypes.map((t) => '.' + t).join(','));
 
-/** 父组件传 modelValue（ossId[]）→ 反查 url 填到 fileList（依赖外层用 listByIds 预拉，本组件只渲染回显） */
-watch(
-  () => props.modelValue,
-  (val) => {
-    // V1：父组件传 ossId[]，本组件不主动反查（避免在组件内 N+1）。
-    // 如果父组件已经在 setup 阶段调 /resource/oss/listByIds 拼好 fileList，可以通过 expose 接口 setFileList
-    // 本 ticket 留 hook 给后续 ticket（如 PLT-MD-001 地块图片）增强。
-    const ids = normalizeIds(val);
-    // 回填仅在 resultMap 已知（即本会话上传过）时
-    fileList.value = ids
-      .map((id) => {
-        const r = resultMap.value.get(id);
-        return r ? ({ name: r.originalName, url: r.url, uid: id, status: 'success' } as UploadUserFile) : null;
-      })
-      .filter(Boolean) as UploadUserFile[];
-  },
-  { immediate: true, deep: true }
-);
-
-function normalizeIds(val: number | number[] | null | undefined): number[] {
-  if (val === null || val === undefined) return [];
-  return Array.isArray(val) ? val.filter((x) => typeof x === 'number') : [val].filter((x) => typeof x === 'number');
-}
+/**
+ * 不再 watch props.modelValue 反向重建 fileList —— element-plus el-upload 在 listType=picture-card 模式下自己维护
+ * uploadFiles 数组（含 blob URL → 上传完成后我们覆盖为 OSS URL），外部父组件用 `setExistingFiles(...)` 显式回填编辑场景，
+ * 用 `onRemove` 删除后通过 `syncModel` 反向 emit。如果在这里再 watch + 覆盖 fileList，会把 el-upload 内部刚 push 的临时 file
+ * 抹掉，导致"上传成功但缩略图不显示"。详见 D08 _open-issues §[D08-1.10]。
+ */
 
 function syncModel() {
   const ids = Array.from(resultMap.value.keys());
@@ -232,8 +215,17 @@ async function doUpload(file: File): Promise<void> {
   };
   resultMap.value.set(ossId, result);
 
-  // 更新 fileList 显示
-  fileList.value = [...fileList.value, { name: file.name, url: publicUrl, uid: ossId, status: 'success' } as UploadUserFile];
+  // 让 el-upload 内部 uploadFiles 中刚 push 的临时 file 显示我们拿到的 OSS URL。
+  // element-plus picture-card 默认 file.url = createObjectURL(blob)；OSS 上传完后我们覆盖为 OSS 公网 URL，
+  // 并把 uid 改成 ossId 便于 onRemove 时定位 resultMap。直接修改 file 字段是 element-plus reactive 数组，会触发模板重渲染。
+  const internal = (uploadRef.value as any)?.uploadFiles?.find((f: any) => f.raw === file) as UploadUserFile | undefined;
+  if (internal) {
+    internal.url = publicUrl;
+    internal.uid = ossId;
+    internal.status = 'success';
+  }
+  // 同步外部 fileList ref（v-model 反查删除用）
+  fileList.value = [...fileList.value.filter((f) => Number(f.uid) !== ossId), { name: file.name, url: publicUrl, uid: ossId, status: 'success' } as UploadUserFile];
 
   emit('uploaded', result);
   syncModel();

@@ -131,6 +131,8 @@ const props = withDefaults(defineProps<BizTableProps>(), {
   showAdd: true,
   showBatchDel: true,
   showExport: false,
+  showRowEdit: true,
+  showRowDel: true,
   rowKey: 'id'
 });
 
@@ -144,9 +146,9 @@ defineSlots<{
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { t } = useI18n();
 
-/* ---------- 行操作列：根据父组件传的 emits 是否监听决定显隐 ---------- */
-const showRowEdit = computed(() => true);
-const showRowDel = computed(() => true);
+/* ---------- 行操作列：受 props.showRowEdit / showRowDel 控制 ---------- */
+const showRowEdit = computed(() => props.showRowEdit);
+const showRowDel = computed(() => props.showRowDel);
 const actionWidth = 160;
 
 /* ---------- 查询表单 model ---------- */
