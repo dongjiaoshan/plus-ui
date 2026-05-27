@@ -89,48 +89,48 @@ function handlePageChange(p: number, s: number) {
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `data` | `BizRow[]` | — | 表格数据 |
-| `total` | `number` | — | 总条数 |
-| `loading` | `boolean` | `false` | loading 态 |
-| `searchSchema` | `SearchFieldSchema[]` | `[]` | 查询表单字段 schema |
-| `searchModel` | `Record<string, any>` | `{}` | 查询表单 model |
-| `columns` | `BizTableColumn[]` | — | 表格列定义 |
-| `rowKey` | `string` | `'id'` | el-table row-key |
-| `selectable` | `boolean` | `false` | 多选 |
-| `pageNum` | `number` | `1` | 当前页 |
-| `pageSize` | `number` | `10` | 每页条数 |
-| `pageSizes` | `number[]` | `[10,20,30,50]` | 每页条数候选 |
-| `dictTypes` | `string[]` | `[]` | 字典自动加载（用于联动列与 select 查询） |
-| `permPrefix` | `string` | — | 权限前缀，自动拼 `:add` / `:edit` / `:remove` / `:export` |
-| `showAdd` | `boolean` | `true` | 工具栏新增按钮 |
-| `showBatchDel` | `boolean` | `true` | 工具栏批量删除按钮 |
-| `showExport` | `boolean` | `false` | 工具栏导出按钮 |
-| `height` | `string \| number` | — | 表格高度（虚拟滚动） |
-| `tableStyle` | `CSSProperties` | — | 表格自定义 style |
+| prop           | 类型                  | 默认            | 说明                                                      |
+| -------------- | --------------------- | --------------- | --------------------------------------------------------- |
+| `data`         | `BizRow[]`            | —               | 表格数据                                                  |
+| `total`        | `number`              | —               | 总条数                                                    |
+| `loading`      | `boolean`             | `false`         | loading 态                                                |
+| `searchSchema` | `SearchFieldSchema[]` | `[]`            | 查询表单字段 schema                                       |
+| `searchModel`  | `Record<string, any>` | `{}`            | 查询表单 model                                            |
+| `columns`      | `BizTableColumn[]`    | —               | 表格列定义                                                |
+| `rowKey`       | `string`              | `'id'`          | el-table row-key                                          |
+| `selectable`   | `boolean`             | `false`         | 多选                                                      |
+| `pageNum`      | `number`              | `1`             | 当前页                                                    |
+| `pageSize`     | `number`              | `10`            | 每页条数                                                  |
+| `pageSizes`    | `number[]`            | `[10,20,30,50]` | 每页条数候选                                              |
+| `dictTypes`    | `string[]`            | `[]`            | 字典自动加载（用于联动列与 select 查询）                  |
+| `permPrefix`   | `string`              | —               | 权限前缀，自动拼 `:add` / `:edit` / `:remove` / `:export` |
+| `showAdd`      | `boolean`             | `true`          | 工具栏新增按钮                                            |
+| `showBatchDel` | `boolean`             | `true`          | 工具栏批量删除按钮                                        |
+| `showExport`   | `boolean`             | `false`         | 工具栏导出按钮                                            |
+| `height`       | `string \| number`    | —               | 表格高度（虚拟滚动）                                      |
+| `tableStyle`   | `CSSProperties`       | —               | 表格自定义 style                                          |
 
 ## Emits
 
-| event | 参数 | 说明 |
-|---|---|---|
-| `search` | `(model)` | 点击搜索 / 刷新 / 列显隐变化时触发 |
-| `reset` | — | 点击重置 |
-| `add` | — | 工具栏新增 |
-| `edit` | `(row)` | 默认行编辑 slot |
-| `del` | `(row \| row[])` | 单行删除 / 批量删除 |
-| `export` | `(params)` | 工具栏导出 |
-| `page-change` | `(pageNum, pageSize)` | 分页改变 |
-| `selection-change` | `(rows)` | 多选改变 |
-| `sort-change` | `({ prop, order })` | 排序改变（order: 'asc' \| 'desc' \| null） |
+| event              | 参数                  | 说明                                       |
+| ------------------ | --------------------- | ------------------------------------------ |
+| `search`           | `(model)`             | 点击搜索 / 刷新 / 列显隐变化时触发         |
+| `reset`            | —                     | 点击重置                                   |
+| `add`              | —                     | 工具栏新增                                 |
+| `edit`             | `(row)`               | 默认行编辑 slot                            |
+| `del`              | `(row \| row[])`      | 单行删除 / 批量删除                        |
+| `export`           | `(params)`            | 工具栏导出                                 |
+| `page-change`      | `(pageNum, pageSize)` | 分页改变                                   |
+| `selection-change` | `(rows)`              | 多选改变                                   |
+| `sort-change`      | `({ prop, order })`   | 排序改变（order: 'asc' \| 'desc' \| null） |
 
 ## Slots
 
-| slot | 作用域 | 说明 |
-|---|---|---|
-| `cell-<prop>` | `{ row, index }` | 自定义某一列内容（优先级低于 `dictType` / `formatter`） |
-| `action` | `{ row, index }` | 完全自定义行操作列；不传则默认编辑 + 删除按钮 |
-| `toolbar-extra` | — | 工具栏左侧追加按钮 |
+| slot            | 作用域           | 说明                                                    |
+| --------------- | ---------------- | ------------------------------------------------------- |
+| `cell-<prop>`   | `{ row, index }` | 自定义某一列内容（优先级低于 `dictType` / `formatter`） |
+| `action`        | `{ row, index }` | 完全自定义行操作列；不传则默认编辑 + 删除按钮           |
+| `toolbar-extra` | —                | 工具栏左侧追加按钮                                      |
 
 ## Expose
 
@@ -139,18 +139,16 @@ function handlePageChange(p: number, s: number) {
 ```ts
 const tableRef = ref<BizTableExpose>();
 
-tableRef.value?.refresh();        // 重新触发 search
-tableRef.value?.reset();          // 重置查询表单
-tableRef.value?.getSelected();    // 取当前选中行
+tableRef.value?.refresh(); // 重新触发 search
+tableRef.value?.reset(); // 重置查询表单
+tableRef.value?.getSelected(); // 取当前选中行
 tableRef.value?.clearSelection(); // 清空选中
 ```
 
 ## 列字典联动
 
 ```ts
-const columns: BizTableColumn[] = [
-  { prop: 'status', label: '状态', dictType: 'djs_pig_lifecycle' }
-];
+const columns: BizTableColumn[] = [{ prop: 'status', label: '状态', dictType: 'djs_pig_lifecycle' }];
 // 配合 props.dictTypes=['djs_pig_lifecycle']，列自动渲染 <dict-tag>
 ```
 

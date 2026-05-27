@@ -798,6 +798,78 @@ export default {
       del: '是否确认删除选中的 {count} 条库位？删除前需先确保库位无在用库存。'
     }
   },
+  // 产品 / 商品 / 礼盒（WMS-MD-002，共表 3 形态）
+  product: {
+    title: {
+      add: '新增商品',
+      edit: '编辑商品'
+    },
+    column: {
+      productId: '编码',
+      productName: '名称',
+      productType: '类型',
+      productAttr: '产品属性',
+      productWorkshop: '生产车间',
+      belongType: '归属',
+      productThumb: '图片',
+      productUnit: '单位',
+      productSpec: '规格',
+      productStatus: '状态',
+      createTime: '创建时间'
+    },
+    field: {
+      productId: '产品编码',
+      productName: '产品名称',
+      productType: '产品类型',
+      productUnit: '单位',
+      productSpec: '规格',
+      belongType: '归属类型',
+      buyClass: '外购类',
+      productAttr: '产品属性',
+      productWorkshop: '生产车间',
+      productMaterial: '原材料 ID',
+      materialNum: '原材料计算量',
+      productThumb: '缩略图',
+      productImg: '详情图',
+      productStatus: '状态',
+      isDelivery: '是否发货产品',
+      isBuyOut: '是否买断',
+      supplierId: '供应商',
+      productDesc: '产品描述',
+      remark: '备注',
+      giftComponents: '礼盒组件',
+      componentProduct: '组件产品',
+      componentCount: '数量',
+      componentUnit: '单位',
+      componentSort: '排序'
+    },
+    placeholder: {
+      productId: '例 P0001 / SP-PORK-001（用户手填）',
+      productUnit: '例 kg / 个 / 盒',
+      productSpec: '例 500g/包',
+      productMaterial: '关联原材料产品 ID',
+      buyClass: '请选择外购类（如字典空请到字典管理添加）',
+      supplierId: '请选择供应商'
+    },
+    rule: {
+      productType: { required: '请选择产品类型' },
+      productId: { required: '产品编码不能为空' },
+      productName: { required: '产品名称不能为空' },
+      productUnit: { required: '产品单位不能为空' },
+      belongType: { required: '自产产品归属类型不能为空' },
+      supplierId: { required: '外购产品必须选择供应商' },
+      giftComponents: { required: '礼盒至少需要 1 个组件' }
+    },
+    tip: {
+      buyClassEmpty: '暂无外购类字典，请到「系统管理 → 字典管理 → djs_buy_class」添加'
+    },
+    action: {
+      addComponent: '添加组件'
+    },
+    confirm: {
+      del: '是否确认删除选中的 {count} 条商品？删除前需先确保无库存且未被作为原材料引用。'
+    }
+  },
   // 库存查询（WMS-MD-001，只读列表）
   stock: {
     field: {
@@ -818,6 +890,182 @@ export default {
       createTime: '创建时间'
     }
   },
+  // 种植 - 片区（PLT-MD-001）
+  plantZone: {
+    title: { add: '新增片区', edit: '编辑片区' },
+    column: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '说明', zoneBelong: '所属大区', zoneStatus: '状态', createTime: '创建时间' },
+    field: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '片区说明', zoneBelong: '所属大区', zoneStatus: '状态' },
+    placeholder: {
+      zoneCode: '请输入片区编码（如 Z001 / EAST-01）',
+      zoneName: '请输入片区名称',
+      zoneDesc: '片区说明（可选）',
+      zoneBelong: '所属大区（可选，例 东部）',
+      search: '搜索片区名称'
+    },
+    rule: { zoneCode: { required: '片区编码不能为空' }, zoneName: { required: '片区名称不能为空' } },
+    confirm: { del: '是否确认删除选中的 {count} 个片区？删除前需确保片区下无关联地块。' },
+    empty: '暂无片区数据，请新建片区开始'
+  },
+  // 种植 - 地块（PLT-MD-001）
+  plantPlot: {
+    title: { add: '新增地块', edit: '编辑地块', view: '地块详情' },
+    tab: { basic: '基础信息', location: '位置面积', soil: '土壤环境' },
+    column: {
+      plotCode: '地块编码',
+      plotName: '地块名称',
+      zoneName: '所属片区',
+      plotType: '类型',
+      soilType: '土壤类型',
+      soilFertility: '土壤肥力',
+      plotStatus: '状态',
+      plotArea: '面积',
+      isLease: '租赁',
+      plotImage: '图片',
+      createTime: '创建时间'
+    },
+    field: {
+      plotCode: '地块编码',
+      plotName: '地块名称',
+      zoneId: '所属片区',
+      plotType: '地块类型',
+      plotStatus: '地块状态',
+      plotArea: '面积（亩）',
+      isLease: '是否租赁',
+      plotRemark: '地块备注',
+      plotImagePreview: '缩略图',
+      plotImageUrl: '地块图片',
+      plotLocationDesc: '位置描述',
+      plotLocationX: '经度',
+      plotLocationY: '纬度',
+      soilType: '土壤类型',
+      soilFertility: '土壤肥力',
+      soilPh: '土壤 PH',
+      terrainCondition: '地势',
+      lightCondition: '光照',
+      drainCondition: '排水'
+    },
+    placeholder: {
+      plotCode: '请输入地块编码（如 P001 / EAST-01）',
+      plotName: '请输入地块名称',
+      zoneId: '请选择所属片区',
+      plotType: '请选择地块类型',
+      plotStatus: '请选择地块状态',
+      plotArea: '请输入面积（亩）',
+      plotRemark: '地块业务备注（可选）',
+      plotLocationDesc: '位置文字描述（可选）',
+      soilType: '请选择土壤类型',
+      soilFertility: '请选择土壤肥力',
+      soilPh: 'PH 值（0-14）',
+      terrainCondition: '请选择地势',
+      lightCondition: '请选择光照',
+      drainCondition: '请选择排水'
+    },
+    rule: {
+      plotCode: { required: '地块编码不能为空' },
+      plotName: { required: '地块名称不能为空' },
+      zoneId: { required: '请选择所属片区' },
+      plotArea: { required: '地块面积必填' }
+    },
+    confirm: { del: '是否确认删除选中的 {count} 个地块？' },
+    empty: '当前片区下暂无地块',
+    selectZoneFirst: '请先选择左侧片区，再操作地块'
+  },
+  // 种植 - 作物（PLT-MD-001）
+  plantCrop: {
+    title: { add: '新增作物', edit: '编辑作物', view: '作物详情' },
+    tab: { basic: '基础信息', growth: '生长周期', yield: '产量品质' },
+    column: {
+      cropCode: '作物编码',
+      cropName: '作物名称',
+      varietyName: '品种名',
+      cropFamily: '科属',
+      plantingSeason: '种植季节',
+      cycle: '生长周期',
+      predictedPer: '预计亩产',
+      pickUnitPrice: '采摘单价',
+      createTime: '创建时间'
+    },
+    field: {
+      cropCode: '作物编码',
+      cropName: '作物名称',
+      cropImagePreview: '缩略图',
+      cropImageUrl: '作物图片',
+      varietyName: '品种名',
+      varietyOrigin: '品种来源',
+      cropFamily: '作物科属',
+      relatedProduct: '关联产品',
+      plantingSeason: '种植季节',
+      sowingPeriod: '适宜播种期',
+      maxCycle: '生长最大周期(天)',
+      minCycle: '生长最小周期(天)',
+      fertilizationInterval: '施肥间隔(天)',
+      irrigationInterval: '浇灌间隔(天)',
+      predictedPer: '预计亩产(kg/亩)',
+      qualityDesc: '品质描述',
+      pickUnitPrice: '采摘单价(元/斤)'
+    },
+    placeholder: {
+      cropCode: '请输入作物编码（如 C001）',
+      cropName: '请输入作物名称（如 白菜）',
+      varietyName: '品种名（如 京白菜 4 号）',
+      varietyOrigin: '品种来源/供应商（V1 自由文本）',
+      cropFamily: '请选择作物科属',
+      plantingSeason: '多选种植季节',
+      sowingPeriod: '例：3 月上旬 - 4 月下旬',
+      qualityDesc: '品质描述'
+    },
+    rule: { cropCode: { required: '作物编码不能为空' }, cropName: { required: '作物名称不能为空' } },
+    confirm: { del: '是否确认删除选中的 {count} 个作物？' }
+  },
+  // 种植 - 班组（PLT-MD-002）
+  plantTeam: {
+    pageTitle: '班组管理',
+    title: { add: '新增班组', edit: '编辑班组', member: '成员管理 - {teamName}' },
+    column: {
+      teamName: '班组名称',
+      leader: '班组负责人',
+      teamStatus: '状态',
+      memberCount: '成员数',
+      remark: '备注',
+      createTime: '创建时间'
+    },
+    field: {
+      teamName: '班组名称',
+      teamStatus: '状态',
+      remark: '备注'
+    },
+    placeholder: {
+      teamName: '请输入班组名称（如 果蔬班 / 薯类班）',
+      remark: '备注'
+    },
+    rule: {
+      teamName: { required: '班组名称不能为空' }
+    },
+    confirm: {
+      del: '是否确认删除选中的班组？',
+      removeMember: '是否将成员【{nickName}】调出班组？'
+    },
+    member: {
+      currentTitle: '当前成员',
+      candidateTitle: '候选员工（种植部，未分配班组）',
+      noLeader: '未指定',
+      isLeader: '负责人',
+      colNickName: '姓名',
+      colPhone: '手机号',
+      colDept: '部门',
+      addBtn: '加入班组',
+      removeBtn: '调出',
+      setLeaderBtn: '设为负责人',
+      noSelection: '请先选择候选员工',
+      emptyMembers: '该班组暂无成员',
+      emptyCandidates: '暂无候选员工'
+    },
+    tip: {
+      addSuccess: '成员加入成功',
+      removeSuccess: '成员已调出',
+      setLeaderSuccess: '已设为班组负责人'
+    }
+  },
   // 东角山业务模块占位
   djs: {
     placeholder: {
@@ -835,6 +1083,125 @@ export default {
       typeNotAllowed: '不支持的文件类型，仅允许 {types}',
       reachLimit: '最多上传 {limit} 张',
       preview: '预览'
+    },
+    warehouse: {
+      pigBurn: {
+        title: '燎毛记录',
+        burnId: '燎毛单号',
+        earNo: '猪只耳号',
+        burnTime: '燎毛时间',
+        arriveWeight: '到场重量 (kg)',
+        burnWeight: '燎毛后重量 (kg)',
+        lossWeight: '损耗 (kg)',
+        burnStatus: '状态',
+        operator: '操作人',
+        location: '入库位',
+        remark: '备注'
+      }
+    }
+  },
+  demand: {
+    not_found_msg: '需求单不存在或已删除',
+    productType: {
+      white_bar: '白条',
+      vegetable: '蔬菜',
+      gift_box: '礼盒',
+      other: '其他'
+    },
+    field: {
+      demandNo: '需求单号',
+      demandDate: '需求日期',
+      'demandDate.required': '需求日期不能为空',
+      storeId: '提单门店',
+      'storeId.required': '提单门店不能为空',
+      productId: '产品 ID',
+      'productId.required': '产品不能为空',
+      productName: '产品名称',
+      'productName.required': '产品名称不能为空',
+      productType: '业态',
+      productSpec: '规格',
+      demandQuantity: '需求量',
+      'demandQuantity.required': '需求量不能为空',
+      productUnit: '单位',
+      'productUnit.required': '单位不能为空',
+      rawMaterial: '原材料描述',
+      materialQty: '原材料计算量',
+      demandRemark: '需求备注',
+      demandExplain: '需求说明',
+      demandStatus: '状态',
+      expectedArriveDate: '期望到货日',
+      beginDate: '开始日期',
+      endDate: '结束日期',
+      productionDestination: '排产去向'
+    },
+    productionDestination: {
+      white_bar: '分割间 + 肉品打包间',
+      vegetable: '菜品打包间',
+      gift_box: '礼盒打包',
+      other: '其他产品打包'
+    },
+    column: {
+      demandNo: '需求单号',
+      demandDate: '需求日期',
+      storeId: '门店',
+      productName: '产品',
+      giftSku: '礼盒 SKU',
+      productSpec: '规格',
+      demandQuantity: '需求量',
+      productUnit: '单位',
+      rawMaterial: '原材料',
+      demandStatus: '状态',
+      shippedCount: '已发货',
+      expectedArriveDate: '期望到货',
+      createByName: '创建人',
+      createTime: '创建时间',
+      actions: '操作'
+    },
+    placeholder: {
+      demandNoAuto: '保存后自动生成',
+      storeId: '请选择提单门店',
+      productId: '请选择产品（按业态过滤）',
+      demandQuantity: '请输入需求量',
+      productUnit: '如 头 / kg / 盒',
+      rawMaterial: '如 "需要 5 头猪"',
+      demandExplain: '如 "25 号之前每天 1 头猪送到矿业 / 背膘不要太厚"'
+    },
+    form: {
+      addTitle: '新增需求',
+      editTitle: '编辑需求'
+    },
+    action: {
+      submit: '提交',
+      confirm: '确认',
+      startProduction: '开始排产',
+      cancel: '取消',
+      assignPig: '指定猪只',
+      history: '状态历史'
+    },
+    confirm: {
+      del: '确认删除选中的 {count} 条需求？仅 DRAFT/CANCELLED 态可删',
+      submit: '确认提交需求 {no} 到仓库审核？',
+      confirm: '确认锁定需求 {no}？',
+      startProduction: '确认开始排产需求 {no}？开始后不可取消'
+    },
+    prompt: {
+      cancelRemark: '请输入取消原因（可选）',
+      cancelRemarkPh: '如客户撤单 / 库存不足等'
+    },
+    assignPig: {
+      title: '指定猪只 - {no}',
+      earNos: '耳号清单',
+      placeholder: '每行一个耳号，或用逗号 / 空格分隔，如：\n01A12605001\n01A12605002',
+      hint: '工人会按指定耳号顺序进入燎毛 / 分割工序，仅白条业态需指定',
+      assigned: '已指定',
+      assignBtn: '指定 {count} 头',
+      confirmRemove: '确认移除耳号 {earNo}？'
+    },
+    history: {
+      title: '状态流转历史',
+      operator: '操作人',
+      remark: '备注',
+      empty: '暂无状态变更记录'
     }
   }
 };

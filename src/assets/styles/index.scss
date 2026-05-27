@@ -15,15 +15,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   background: var(--el-bg-color-page);
-  font-family:
-    'MiSans',
-    'HarmonyOS Sans SC',
-    'PingFang SC',
-    'Source Han Sans SC',
-    'Noto Sans SC',
-    'Hiragino Sans GB',
-    'Microsoft YaHei',
-    sans-serif;
+  font-family: 'MiSans', 'HarmonyOS Sans SC', 'PingFang SC', 'Source Han Sans SC', 'Noto Sans SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 label {
@@ -122,15 +114,7 @@ aside {
   display: block;
   line-height: 32px;
   font-size: 16px;
-  font-family:
-    'MiSans',
-    'HarmonyOS Sans SC',
-    'PingFang SC',
-    'Source Han Sans SC',
-    'Noto Sans SC',
-    'Hiragino Sans GB',
-    'Microsoft YaHei',
-    sans-serif;
+  font-family: 'MiSans', 'HarmonyOS Sans SC', 'PingFang SC', 'Source Han Sans SC', 'Noto Sans SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   color: var(--el-text-color-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -163,7 +147,9 @@ aside {
   padding: 16px;
   background: var(--app-surface-bg);
   box-shadow: var(--app-shadow-sm);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 
   &:hover {
     box-shadow: var(--app-shadow-md);

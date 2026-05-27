@@ -792,6 +792,78 @@ export default {
       del: 'Delete {count} location(s)? Make sure they have no active stock.'
     }
   },
+  // Warehouse product / commodity / gift box (WMS-MD-002, 3-form shared table)
+  product: {
+    title: {
+      add: 'New product',
+      edit: 'Edit product'
+    },
+    column: {
+      productId: 'Code',
+      productName: 'Name',
+      productType: 'Type',
+      productAttr: 'Attribute',
+      productWorkshop: 'Workshop',
+      belongType: 'Belong',
+      productThumb: 'Image',
+      productUnit: 'Unit',
+      productSpec: 'Spec',
+      productStatus: 'Status',
+      createTime: 'Created'
+    },
+    field: {
+      productId: 'Product code',
+      productName: 'Product name',
+      productType: 'Product type',
+      productUnit: 'Unit',
+      productSpec: 'Spec',
+      belongType: 'Belong type',
+      buyClass: 'Purchase class',
+      productAttr: 'Attribute',
+      productWorkshop: 'Workshop',
+      productMaterial: 'Material ID',
+      materialNum: 'Material amount',
+      productThumb: 'Thumb',
+      productImg: 'Images',
+      productStatus: 'Status',
+      isDelivery: 'Is delivery',
+      isBuyOut: 'Buy-out',
+      supplierId: 'Supplier',
+      productDesc: 'Description',
+      remark: 'Remark',
+      giftComponents: 'Gift components',
+      componentProduct: 'Component product',
+      componentCount: 'Count',
+      componentUnit: 'Unit',
+      componentSort: 'Sort'
+    },
+    placeholder: {
+      productId: 'e.g. P0001 / SP-PORK-001 (manual)',
+      productUnit: 'e.g. kg / pcs / box',
+      productSpec: 'e.g. 500g/pack',
+      productMaterial: 'Related raw material product ID',
+      buyClass: 'Choose purchase class (add via dict manager if empty)',
+      supplierId: 'Choose supplier'
+    },
+    rule: {
+      productType: { required: 'Please select product type' },
+      productId: { required: 'Product code is required' },
+      productName: { required: 'Product name is required' },
+      productUnit: { required: 'Product unit is required' },
+      belongType: { required: 'Self-produce belong type is required' },
+      supplierId: { required: 'Supplier is required for purchased products' },
+      giftComponents: { required: 'Gift box requires at least one component' }
+    },
+    tip: {
+      buyClassEmpty: 'No purchase class yet — add via System → Dict → djs_buy_class'
+    },
+    action: {
+      addComponent: 'Add component'
+    },
+    confirm: {
+      del: 'Delete {count} product(s)? Make sure none has active stock or is referenced as raw material.'
+    }
+  },
   // Warehouse stock query (WMS-MD-001, read-only)
   stock: {
     field: {
@@ -812,6 +884,182 @@ export default {
       createTime: 'Created'
     }
   },
+  // Planting - Zone (PLT-MD-001)
+  plantZone: {
+    title: { add: 'Add Zone', edit: 'Edit Zone' },
+    column: { zoneCode: 'Code', zoneName: 'Name', zoneDesc: 'Description', zoneBelong: 'Belong', zoneStatus: 'Status', createTime: 'Created' },
+    field: { zoneCode: 'Zone Code', zoneName: 'Zone Name', zoneDesc: 'Description', zoneBelong: 'Belong Region', zoneStatus: 'Status' },
+    placeholder: {
+      zoneCode: 'Enter zone code (e.g. Z001 / EAST-01)',
+      zoneName: 'Enter zone name',
+      zoneDesc: 'Description (optional)',
+      zoneBelong: 'Belong region (optional)',
+      search: 'Search zone name'
+    },
+    rule: { zoneCode: { required: 'Zone code is required' }, zoneName: { required: 'Zone name is required' } },
+    confirm: { del: 'Are you sure to delete {count} zones? Ensure no associated plots exist.' },
+    empty: 'No zones yet. Create one to get started.'
+  },
+  // Planting - Plot (PLT-MD-001)
+  plantPlot: {
+    title: { add: 'Add Plot', edit: 'Edit Plot', view: 'Plot Detail' },
+    tab: { basic: 'Basic', location: 'Location & Area', soil: 'Soil & Environment' },
+    column: {
+      plotCode: 'Code',
+      plotName: 'Name',
+      zoneName: 'Zone',
+      plotType: 'Type',
+      soilType: 'Soil',
+      soilFertility: 'Fertility',
+      plotStatus: 'Status',
+      plotArea: 'Area',
+      isLease: 'Lease',
+      plotImage: 'Image',
+      createTime: 'Created'
+    },
+    field: {
+      plotCode: 'Plot Code',
+      plotName: 'Plot Name',
+      zoneId: 'Zone',
+      plotType: 'Plot Type',
+      plotStatus: 'Plot Status',
+      plotArea: 'Area (mu)',
+      isLease: 'Leased',
+      plotRemark: 'Plot Remark',
+      plotImagePreview: 'Thumbnail',
+      plotImageUrl: 'Plot Images',
+      plotLocationDesc: 'Location Description',
+      plotLocationX: 'Longitude',
+      plotLocationY: 'Latitude',
+      soilType: 'Soil Type',
+      soilFertility: 'Soil Fertility',
+      soilPh: 'Soil PH',
+      terrainCondition: 'Terrain',
+      lightCondition: 'Light',
+      drainCondition: 'Drainage'
+    },
+    placeholder: {
+      plotCode: 'Enter plot code (e.g. P001)',
+      plotName: 'Enter plot name',
+      zoneId: 'Select zone',
+      plotType: 'Select plot type',
+      plotStatus: 'Select plot status',
+      plotArea: 'Area in mu',
+      plotRemark: 'Business remark (optional)',
+      plotLocationDesc: 'Location description (optional)',
+      soilType: 'Select soil type',
+      soilFertility: 'Select soil fertility',
+      soilPh: 'PH 0-14',
+      terrainCondition: 'Select terrain',
+      lightCondition: 'Select light',
+      drainCondition: 'Select drainage'
+    },
+    rule: {
+      plotCode: { required: 'Plot code is required' },
+      plotName: { required: 'Plot name is required' },
+      zoneId: { required: 'Please select a zone' },
+      plotArea: { required: 'Area is required' }
+    },
+    confirm: { del: 'Delete {count} plots?' },
+    empty: 'No plots in current zone',
+    selectZoneFirst: 'Please select a zone on the left first'
+  },
+  // Planting - Crop (PLT-MD-001)
+  plantCrop: {
+    title: { add: 'Add Crop', edit: 'Edit Crop', view: 'Crop Detail' },
+    tab: { basic: 'Basic', growth: 'Growth Cycle', yield: 'Yield & Quality' },
+    column: {
+      cropCode: 'Code',
+      cropName: 'Name',
+      varietyName: 'Variety',
+      cropFamily: 'Family',
+      plantingSeason: 'Season',
+      cycle: 'Cycle',
+      predictedPer: 'Predicted Yield',
+      pickUnitPrice: 'Unit Price',
+      createTime: 'Created'
+    },
+    field: {
+      cropCode: 'Crop Code',
+      cropName: 'Crop Name',
+      cropImagePreview: 'Thumbnail',
+      cropImageUrl: 'Crop Images',
+      varietyName: 'Variety Name',
+      varietyOrigin: 'Variety Origin',
+      cropFamily: 'Crop Family',
+      relatedProduct: 'Related Product',
+      plantingSeason: 'Planting Season',
+      sowingPeriod: 'Sowing Period',
+      maxCycle: 'Max Cycle (days)',
+      minCycle: 'Min Cycle (days)',
+      fertilizationInterval: 'Fertilization Interval (days)',
+      irrigationInterval: 'Irrigation Interval (days)',
+      predictedPer: 'Predicted Yield (kg/mu)',
+      qualityDesc: 'Quality Description',
+      pickUnitPrice: 'Pick Unit Price (yuan/jin)'
+    },
+    placeholder: {
+      cropCode: 'Enter crop code (e.g. C001)',
+      cropName: 'Enter crop name',
+      varietyName: 'Variety name',
+      varietyOrigin: 'Origin / supplier (free text in V1)',
+      cropFamily: 'Select family',
+      plantingSeason: 'Select seasons',
+      sowingPeriod: 'e.g. early Mar - late Apr',
+      qualityDesc: 'Quality description'
+    },
+    rule: { cropCode: { required: 'Crop code is required' }, cropName: { required: 'Crop name is required' } },
+    confirm: { del: 'Delete {count} crops?' }
+  },
+  // Plant - Work team (PLT-MD-002)
+  plantTeam: {
+    pageTitle: 'Work team',
+    title: { add: 'Add team', edit: 'Edit team', member: 'Members - {teamName}' },
+    column: {
+      teamName: 'Team name',
+      leader: 'Leader',
+      teamStatus: 'Status',
+      memberCount: 'Members',
+      remark: 'Remark',
+      createTime: 'Created at'
+    },
+    field: {
+      teamName: 'Team name',
+      teamStatus: 'Status',
+      remark: 'Remark'
+    },
+    placeholder: {
+      teamName: 'e.g. Fruit & Veg Team / Tuber Team',
+      remark: 'Remark'
+    },
+    rule: {
+      teamName: { required: 'Team name is required' }
+    },
+    confirm: {
+      del: 'Delete the selected team(s)?',
+      removeMember: 'Remove [{nickName}] from this team?'
+    },
+    member: {
+      currentTitle: 'Current members',
+      candidateTitle: 'Candidates (Plant dept, unassigned)',
+      noLeader: 'Not set',
+      isLeader: 'Leader',
+      colNickName: 'Name',
+      colPhone: 'Phone',
+      colDept: 'Department',
+      addBtn: 'Add to team',
+      removeBtn: 'Remove',
+      setLeaderBtn: 'Set as leader',
+      noSelection: 'Please select candidate user(s)',
+      emptyMembers: 'No members yet',
+      emptyCandidates: 'No candidate user'
+    },
+    tip: {
+      addSuccess: 'Members added',
+      removeSuccess: 'Member removed',
+      setLeaderSuccess: 'Leader set'
+    }
+  },
   // Dongjiaoshan business modules placeholder
   djs: {
     placeholder: {
@@ -829,6 +1077,125 @@ export default {
       typeNotAllowed: 'File type not allowed; allowed: {types}',
       reachLimit: 'Limit reached: {limit} files',
       preview: 'Preview'
+    },
+    warehouse: {
+      pigBurn: {
+        title: 'Singe Records',
+        burnId: 'Singe No',
+        earNo: 'Pig Ear No',
+        burnTime: 'Singe Time',
+        arriveWeight: 'Arrive Weight (kg)',
+        burnWeight: 'Post-Singe Weight (kg)',
+        lossWeight: 'Loss (kg)',
+        burnStatus: 'Status',
+        operator: 'Operator',
+        location: 'Location',
+        remark: 'Remark'
+      }
+    }
+  },
+  demand: {
+    not_found_msg: 'Demand not found or deleted',
+    productType: {
+      white_bar: 'White Bar',
+      vegetable: 'Vegetable',
+      gift_box: 'Gift Box',
+      other: 'Other'
+    },
+    field: {
+      demandNo: 'Demand No',
+      demandDate: 'Demand Date',
+      'demandDate.required': 'Demand date is required',
+      storeId: 'Store',
+      'storeId.required': 'Store is required',
+      productId: 'Product ID',
+      'productId.required': 'Product is required',
+      productName: 'Product Name',
+      'productName.required': 'Product name is required',
+      productType: 'Category',
+      productSpec: 'Spec',
+      demandQuantity: 'Quantity',
+      'demandQuantity.required': 'Quantity is required',
+      productUnit: 'Unit',
+      'productUnit.required': 'Unit is required',
+      rawMaterial: 'Raw Material',
+      materialQty: 'Material Qty',
+      demandRemark: 'Remark',
+      demandExplain: 'Explanation',
+      demandStatus: 'Status',
+      expectedArriveDate: 'Expected Arrive',
+      beginDate: 'Begin Date',
+      endDate: 'End Date',
+      productionDestination: 'Production Destination'
+    },
+    productionDestination: {
+      white_bar: 'Cutting + Meat Packing',
+      vegetable: 'Vegetable Packing',
+      gift_box: 'Gift-box Packing',
+      other: 'Other Packing'
+    },
+    column: {
+      demandNo: 'Demand No',
+      demandDate: 'Demand Date',
+      storeId: 'Store',
+      productName: 'Product',
+      giftSku: 'Gift SKU',
+      productSpec: 'Spec',
+      demandQuantity: 'Quantity',
+      productUnit: 'Unit',
+      rawMaterial: 'Raw Material',
+      demandStatus: 'Status',
+      shippedCount: 'Shipped',
+      expectedArriveDate: 'Expected',
+      createByName: 'Creator',
+      createTime: 'Created',
+      actions: 'Actions'
+    },
+    placeholder: {
+      demandNoAuto: 'Auto-generated on save',
+      storeId: 'Select store',
+      productId: 'Select product (filtered by demand type)',
+      demandQuantity: 'Enter quantity',
+      productUnit: 'e.g. head / kg / box',
+      rawMaterial: 'e.g. "need 5 pigs"',
+      demandExplain: 'e.g. "1 pig per day to mining site by 25th"'
+    },
+    form: {
+      addTitle: 'Add Demand',
+      editTitle: 'Edit Demand'
+    },
+    action: {
+      submit: 'Submit',
+      confirm: 'Confirm',
+      startProduction: 'Start Prod',
+      cancel: 'Cancel',
+      assignPig: 'Assign Pig',
+      history: 'History'
+    },
+    confirm: {
+      del: 'Delete {count} demand(s)? Only DRAFT/CANCELLED allowed',
+      submit: 'Submit demand {no} to warehouse review?',
+      confirm: 'Lock demand {no}?',
+      startProduction: 'Start production for demand {no}? Cannot cancel after.'
+    },
+    prompt: {
+      cancelRemark: 'Cancel reason (optional)',
+      cancelRemarkPh: 'e.g. customer withdrew / out of stock'
+    },
+    assignPig: {
+      title: 'Assign Pigs - {no}',
+      earNos: 'Ear No List',
+      placeholder: 'One ear no per line, or comma/space separated, e.g.:\n01A12605001\n01A12605002',
+      hint: 'Workers will process pigs in assigned order; only for white-bar demand',
+      assigned: 'Assigned',
+      assignBtn: 'Assign {count}',
+      confirmRemove: 'Remove ear no {earNo}?'
+    },
+    history: {
+      title: 'Status Transition History',
+      operator: 'Operator',
+      remark: 'Remark',
+      empty: 'No status changes yet'
     }
   }
 };

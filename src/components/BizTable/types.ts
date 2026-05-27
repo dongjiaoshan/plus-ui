@@ -99,6 +99,9 @@ export interface BizTableProps {
   showAdd?: boolean;
   showBatchDel?: boolean;
   showExport?: boolean;
+  /** 行操作列内置 Edit / Del 显隐（业务页面用 `#action` slot 自定义时可关掉，避免出现两个操作列）*/
+  showRowEdit?: boolean;
+  showRowDel?: boolean;
   /** 表格高度 */
   height?: string | number;
   /** 表格自定义 style */

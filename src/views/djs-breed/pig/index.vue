@@ -41,6 +41,19 @@
             <span v-else>—</span>
           </template>
 
+          <!-- 当前状态：END 状态额外显示 end_reason（出栏 / 死亡 / 淘汰）；非 END 走默认字典翻译。
+               设计：lifecycle.END 是「终止」抽象终态，end_reason 是结束的具体原因（djs_pig_end_reason 字典：DEAD/CULL/MARKET）。 -->
+          <template #cell-currentStatus="{ row }">
+            <template v-if="row.currentStatus === 'END'">
+              <el-tag type="info" size="small">
+                {{ statusLabel(row.currentStatus) }}<span v-if="row.endReason"> · {{ endReasonLabel(row.endReason) }}</span>
+              </el-tag>
+            </template>
+            <el-tag v-else :type="statusTagType(row.currentStatus)" size="small">
+              {{ statusLabel(row.currentStatus) }}
+            </el-tag>
+          </template>
+
           <!-- 操作：详情（D7 BRD-LIST-001 起 admin 只读，无事件录入） -->
           <template #action="{ row }">
             <el-button type="primary" link size="small" @click="openDetail(row.id)">
@@ -91,6 +104,28 @@ import PigListPiglet from './piglet/index.vue';
 import PigListFattening from './fattening/index.vue';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const { djs_pig_lifecycle, djs_pig_end_reason } = toRefs<any>(proxy?.useDict('djs_pig_lifecycle', 'djs_pig_end_reason'));
+
+function statusLabel(code?: string): string {
+  if (!code) return '—';
+  const d = (djs_pig_lifecycle.value ?? []).find((x: any) => String(x.value) === String(code));
+  return d?.label ?? code;
+}
+function endReasonLabel(code?: string): string {
+  if (!code) return '';
+  const d = (djs_pig_end_reason.value ?? []).find((x: any) => String(x.value) === String(code));
+  return d?.label ?? code;
+}
+function statusTagType(code?: string): 'primary' | 'success' | 'warning' | 'danger' | 'info' {
+  // 业务态色彩：配种类（PZ/PH）primary 蓝 / 分娩(FM) success 绿 / 异常(LC/FQ) warning 橙 / 终止 info 灰 / 其余 default
+  if (!code) return 'info';
+  if (['PZ', 'PH', 'BOAR_ACTIVE'].includes(code)) return 'primary';
+  if (['FM', 'DN'].includes(code)) return 'success';
+  if (['LC', 'FQ'].includes(code)) return 'warning';
+  return 'info';
+}
+
 const activeTab = ref<'all' | 'sow' | 'boar' | 'piglet' | 'fattening'>('all');
 
 const tableRef = ref<BizTableExpose>();
