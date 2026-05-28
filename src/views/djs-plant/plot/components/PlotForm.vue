@@ -173,6 +173,7 @@ import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { PlotInfoForm } from '@/api/djs-plant/plot/types';
 import type { PlotZoneVO } from '@/api/djs-plant/zone/types';
 import { useI18n } from 'vue-i18n';
+import { useOssBridge } from '@/composables/useOssBridge';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -245,25 +246,9 @@ const defaultForm = (): PlotInfoForm => ({
 
 const form = ref<PlotInfoForm>(defaultForm());
 
-// OssUpload v-model 期望 number[]；业务字段是单/多 ossId 字符串
-const thumbOssIdsModel = computed<number[]>({
-  get: () => (form.value.plotImagePreview ? [Number(form.value.plotImagePreview)] : []),
-  set: (val: number[]) => {
-    form.value.plotImagePreview = val && val.length > 0 ? String(val[0]) : undefined;
-  }
-});
-const imgOssIdsModel = computed<number[]>({
-  get: () =>
-    form.value.plotImageUrl
-      ? form.value.plotImageUrl
-          .split(',')
-          .map((x) => Number(x))
-          .filter((x) => !Number.isNaN(x))
-      : [],
-  set: (val: number[]) => {
-    form.value.plotImageUrl = val && val.length > 0 ? val.join(',') : undefined;
-  }
-});
+// OssUpload v-model 期望 number[]；业务字段是单/多 ossId 字符串（useOssBridge 桥接）
+const thumbOssIdsModel = useOssBridge(form, 'plotImagePreview', 'single');
+const imgOssIdsModel = useOssBridge(form, 'plotImageUrl', 'multi');
 
 const rules = computed(() => ({
   zoneId: [{ required: true, message: t('plantPlot.rule.zoneId.required'), trigger: 'change' }],
