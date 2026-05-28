@@ -134,6 +134,7 @@ import OssUpload from '@/components/OssUpload/index.vue';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { CropInfoForm } from '@/api/djs-plant/crop/types';
 import { useI18n } from 'vue-i18n';
+import { useOssBridge } from '@/composables/useOssBridge';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -178,25 +179,9 @@ const plantingSeasonArr = computed<string[]>({
   }
 });
 
-// OssUpload 转换
-const thumbOssIdsModel = computed<number[]>({
-  get: () => (form.value.cropImagePreview ? [Number(form.value.cropImagePreview)] : []),
-  set: (val: number[]) => {
-    form.value.cropImagePreview = val && val.length > 0 ? String(val[0]) : undefined;
-  }
-});
-const imgOssIdsModel = computed<number[]>({
-  get: () =>
-    form.value.cropImageUrl
-      ? form.value.cropImageUrl
-          .split(',')
-          .map((x) => Number(x))
-          .filter((x) => !Number.isNaN(x))
-      : [],
-  set: (val: number[]) => {
-    form.value.cropImageUrl = val && val.length > 0 ? val.join(',') : undefined;
-  }
-});
+// OssUpload v-model 期望 number[]；业务字段是单/多 ossId 字符串（useOssBridge 桥接）
+const thumbOssIdsModel = useOssBridge(form, 'cropImagePreview', 'single');
+const imgOssIdsModel = useOssBridge(form, 'cropImageUrl', 'multi');
 
 const rules = computed(() => ({
   cropCode: [{ required: true, message: t('plantCrop.rule.cropCode.required'), trigger: 'blur' }],

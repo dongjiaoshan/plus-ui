@@ -225,7 +225,10 @@ async function doUpload(file: File): Promise<void> {
     internal.status = 'success';
   }
   // 同步外部 fileList ref（v-model 反查删除用）
-  fileList.value = [...fileList.value.filter((f) => Number(f.uid) !== ossId), { name: file.name, url: publicUrl, uid: ossId, status: 'success' } as UploadUserFile];
+  fileList.value = [
+    ...fileList.value.filter((f) => Number(f.uid) !== ossId),
+    { name: file.name, url: publicUrl, uid: ossId, status: 'success' } as UploadUserFile
+  ];
 
   emit('uploaded', result);
   syncModel();

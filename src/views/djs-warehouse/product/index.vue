@@ -39,7 +39,7 @@
   </div>
 </template>
 
-<script setup name="Product" lang="ts">
+<script setup name="ProductMaster" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';

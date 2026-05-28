@@ -1,5 +1,6 @@
 <template>
   <div class="p-2">
+    <SummaryBar product-type="gift_box" />
     <BizTable
       ref="tableRef"
       :data="list"
@@ -42,6 +43,7 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import DemandForm from '../components/DemandForm.vue';
 import HistoryDialog from '../components/HistoryDialog.vue';
+import SummaryBar from '../components/SummaryBar.vue';
 import { useDemandList } from '../composables/useDemandList';
 import type { DemandManageVO, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
 import { useI18n } from 'vue-i18n';

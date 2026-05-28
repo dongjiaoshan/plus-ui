@@ -798,7 +798,8 @@ export default {
       del: '是否确认删除选中的 {count} 条库位？删除前需先确保库位无在用库存。'
     }
   },
-  // 产品 / 商品 / 礼盒（WMS-MD-002，共表 3 形态）
+  // 商品主数据 / 自产 / 外购 / 礼盒（WMS-MD-002，共表 3 形态）
+  // 注：与 D11+ TRC-CORE-001 "产品列表（生产追溯，serial 码）" 区分，本 namespace 是 SKU 主数据
   product: {
     title: {
       add: '新增商品',
@@ -970,6 +971,84 @@ export default {
     empty: '当前片区下暂无地块',
     selectZoneFirst: '请先选择左侧片区，再操作地块'
   },
+  // 种植 - 土地有机认证（PLT-MD-003）
+  plantPlotOrganic: {
+    title: { add: '新增土地有机证书', edit: '编辑土地有机证书' },
+    column: {
+      organicNo: '证书编号',
+      organicCompany: '颁发单位',
+      organicValid: '有效期',
+      image: '证书图',
+      relatedPlots: '关联地块',
+      warning: '预警状态',
+      createTime: '创建时间'
+    },
+    field: {
+      organicNo: '证书编号',
+      organicCompany: '颁发单位',
+      organicValid: '有效期至',
+      organicImagePreview: '缩略图',
+      organicImageUrl: '证书图片',
+      relatedPlots: '关联地块',
+      isWarning: '预警状态'
+    },
+    placeholder: {
+      organicNo: '请输入证书编号（如 GB-2026-001）',
+      organicCompany: '颁发单位（如 南京国环）',
+      organicValid: '请选择有效期到期日',
+      search: '搜索地块编码 / 名称'
+    },
+    rule: {
+      organicNo: { required: '证书编号不能为空' },
+      organicCompany: { required: '颁发单位不能为空' },
+      organicValid: { required: '请选择证书有效期到期日' }
+    },
+    warning: { yes: '即将到期', no: '正常' },
+    confirm: {
+      del: '是否确认删除选中的 {count} 张证书？将同时清除该证书与地块的关联关系。',
+      scan: '将立即扫描所有有机证书，标记 60 天内到期为预警状态，是否继续？'
+    },
+    unselected: '未关联地块',
+    selected: '已关联地块',
+    scan_warning: '立即扫描预警',
+    scan_done: '扫描完成'
+  },
+  // 种植 - 果蔬有机认证（PLT-MD-003）
+  plantCropOrganic: {
+    title: { add: '新增果蔬有机证书', edit: '编辑果蔬有机证书' },
+    column: {
+      cropCertNo: '证书编号',
+      cropCertCompany: '颁发单位',
+      cropCertValid: '有效期',
+      cropName: '关联作物',
+      image: '证书图',
+      warning: '预警状态',
+      createTime: '创建时间'
+    },
+    field: {
+      cropCertNo: '证书编号',
+      cropCertCompany: '颁发单位',
+      cropCertValid: '有效期至',
+      cropId: '关联作物',
+      cropImagePreview: '缩略图',
+      cropImageUrl: '证书图片',
+      isWarning: '预警状态'
+    },
+    placeholder: {
+      cropCertNo: '请输入证书编号',
+      cropCertCompany: '颁发单位',
+      cropCertValid: '请选择有效期到期日',
+      cropId: '请选择关联作物'
+    },
+    rule: {
+      cropCertNo: { required: '证书编号不能为空' },
+      cropCertCompany: { required: '颁发单位不能为空' },
+      cropCertValid: { required: '请选择证书有效期到期日' },
+      cropId: { required: '请选择关联作物' }
+    },
+    warning: { yes: '即将到期', no: '正常' },
+    confirm: { del: '是否确认删除选中的 {count} 张证书？' }
+  },
   // 种植 - 作物（PLT-MD-001）
   plantCrop: {
     title: { add: '新增作物', edit: '编辑作物', view: '作物详情' },
@@ -1066,6 +1145,121 @@ export default {
       setLeaderSuccess: '已设为班组负责人'
     }
   },
+  // 种植 - 计划（PLT-PLAN-001）
+  plantPlan: {
+    pageTitle: '种植计划',
+    field: {
+      planNo: '计划号',
+      planYear: '年份',
+      planSeason: '季节',
+      crop: '作物',
+      cropId: '作物',
+      totalArea: '总面积',
+      totalPlot: '地块数',
+      earliestHarvestdate: '最早采摘',
+      lastHarvestdate: '最晚采摘',
+      plantStatus: '计划状态',
+      harvestStatus: '采摘状态',
+      plantDate: '计划种植时间',
+      plotCode: '地块编码',
+      plotName: '地块名称',
+      plotArea: '地块面积',
+      plantMonth: '种植月份',
+      plantPeriod: '上中下旬',
+      plantBy: '种植班组',
+      harvestBy: '采摘班组',
+      expectedYield: '预计产量'
+    },
+    column: {
+      planNo: '计划号',
+      planYear: '年份',
+      planSeason: '季节',
+      crop: '作物',
+      totalArea: '总面积(亩)',
+      totalPlot: '地块数',
+      earliestHarvestdate: '最早采摘',
+      lastHarvestdate: '最晚采摘',
+      plantStatus: '状态',
+      action: '操作'
+    },
+    placeholder: {
+      planSeason: '请选择种植季节',
+      plantDate: '例：4 月上旬（可选填）',
+      team: '请选择班组'
+    },
+    action: {
+      detail: '详情'
+    },
+    edit: {
+      btn: {
+        edit: '编辑',
+        save: '保存',
+        cancel: '取消'
+      },
+      title: '编辑种植计划',
+      locked: '不可改',
+      detailsTip: '只能改班组（plot / 月份 / 上中下旬 已锁）',
+      saveSuccess: '种植计划已更新',
+      lockTip: {
+        done: '计划已完成，不允许修改',
+        cancelled: '计划已取消，不允许修改',
+        other: '当前状态不支持修改'
+      }
+    },
+    confirm: { del: '是否确认删除选中的 {count} 个种植计划？' },
+    wizard: {
+      title: '新建种植计划',
+      backToList: '返回列表',
+      step1: '选择年份与季节',
+      step2: '选择作物',
+      step3: '选择地块与时间',
+      submit: '创建计划',
+      cropSearch: '搜索作物名称 / 编码 / 品种',
+      cropEmpty: '暂无作物，请先在"作物管理"维护',
+      plotPickerHint: '按片区分组展示所有地块；勾选要安排种植的地块后填月份、上中下旬、班组',
+      zoneEmpty: '暂无地块，请先在"地块管理"维护',
+      selectedSummary: '已选 {count} 个地块',
+      resumeConfirm: '检测到未提交的计划草稿，是否恢复？',
+      resumeYes: '恢复草稿',
+      resumeNo: '新建',
+      tip: {
+        step1Required: '请填写年份和季节',
+        step2Required: '请选择 1 个作物',
+        step3Required: '请至少选择 1 个地块',
+        submitSuccess: '种植计划已创建'
+      },
+      col: {
+        plotCode: '地块编码',
+        plotName: '地块名称',
+        plotArea: '面积',
+        month: '月份',
+        period: '上中下旬',
+        plantBy: '种植班组',
+        harvestBy: '采摘班组',
+        selected: '选择',
+        selectHint: '勾选后该地块加入本次计划'
+      },
+      placeholder: {
+        month: '月',
+        period: '上/中/下旬',
+        team: '选班组'
+      }
+    },
+    dict: {
+      period: { early: '上旬', mid: '中旬', late: '下旬' }
+    },
+    detail: {
+      title: '种植计划详情',
+      detailsTitle: '地块明细',
+      missingId: '缺少计划 ID'
+    },
+    gantt: {
+      title: '双甘特图（计划 vs 实际）',
+      v1Note: 'V1 简化版',
+      empty: '暂无明细，无法绘制甘特图',
+      legend: { plan: '计划范围', actual: '实际执行' }
+    }
+  },
   // 东角山业务模块占位
   djs: {
     placeholder: {
@@ -1097,6 +1291,94 @@ export default {
         operator: '操作人',
         location: '入库位',
         remark: '备注'
+      },
+      pigCut: {
+        title: '分割记录',
+        cutId: '分割单号',
+        barId: '白条编号',
+        earNo: '猪只耳号',
+        pickupTime: '白条领用时间',
+        cutStartTime: '分割开始时间',
+        cutDoneTime: '出库完成时间',
+        pickupWeight: '领用重量 (kg)',
+        dripLoss: '滴水损失 (kg)',
+        acidRemoveMinutes: '排酸时长 (分钟)',
+        cutStatus: '状态',
+        operator: '操作人',
+        location: '入冻品库位',
+        isHalf: '是否半扇',
+        remark: '备注'
+      },
+      vegHandle: {
+        title: '毛菜处理',
+        plot: '地块',
+        crop: '作物',
+        pickStartTime: '采摘开始时间',
+        pickEndTime: '采摘结束时间',
+        pickedWeight: '已摘 (kg)',
+        handledWeight: '处理后 (kg)',
+        feedWeight: '饲料 (kg)',
+        sendPlatformWeight: '发往月台 (kg)',
+        stockInWeight: '入库 (kg)',
+        lossWeight: '损耗 (kg)',
+        handleStatus: '处理状态',
+        statusPending: '待处理',
+        statusProcessing: '处理中',
+        statusDone: '已完成',
+        recordType: '记录类型',
+        recordTypePick: '采收',
+        recordTypeHandle: '处理',
+        recordWeight: '本次重量 (kg)',
+        handleTarget: '处理目标',
+        location: '入库库位',
+        operator: '处理人',
+        handleTime: '处理时间',
+        remark: '备注',
+        recordsDialogTitle: '处理流水明细',
+        detail: '详情'
+      },
+      stockFlow: {
+        title: '出入库流水',
+        flowNo: '流水号',
+        flowDate: '业务时间',
+        flowType: '类型',
+        inoutType: '出入',
+        matType: '物资类型',
+        productName: '产品',
+        productCode: '产品码',
+        belongType: '归属',
+        changeQuantity: '数量',
+        productUnit: '单位',
+        location: '库位',
+        earNo: '耳号',
+        plot: '地块',
+        stockOutDest: '出库去向',
+        operator: '操作人',
+        remark: '备注',
+        adjust: '调账',
+        adjustHint: '流水调账 (D11 完整实现)',
+        adjustNotImpl: '调账功能 D11 WMS-FLOW-001 实现 (flowNo={flowNo})'
+      },
+      matPack: {
+        title: '包材流水'
+      },
+      purchaseIn: {
+        title: '采购入库',
+        flowNo: '入库单号',
+        flowDate: '入库时间',
+        product: '物资',
+        productPlaceholder: '请选择物资',
+        productRequired: '请选择物资',
+        location: '库位',
+        locationPlaceholder: '请选择库位',
+        locationRequired: '请选择库位',
+        quantity: '入库数量',
+        quantityRequired: '入库数量必填且 > 0',
+        unit: '单位',
+        operator: '操作人',
+        remark: '备注',
+        dialogTitle: '新增采购入库',
+        submitSuccess: '入库成功'
       }
     }
   },
@@ -1188,14 +1470,30 @@ export default {
       cancelRemark: '请输入取消原因（可选）',
       cancelRemarkPh: '如客户撤单 / 库存不足等'
     },
+    summary: {
+      loading: '加载中…',
+      loadFailed: '业态摘要加载失败，请刷新重试',
+      whiteBar: '当前可出栏育肥猪 {count} 头',
+      vegetable: '当前种植 {plot} 地块 / 预计待产量 {yield} kg / 最早采摘 {pickDate} / 当前库存 {stock} kg',
+      giftBox: '当前礼盒库存 {count} 盒',
+      other: '当前原料库存 {stock} kg'
+    },
     assignPig: {
-      title: '指定猪只 - {no}',
-      earNos: '耳号清单',
-      placeholder: '每行一个耳号，或用逗号 / 空格分隔，如：\n01A12605001\n01A12605002',
-      hint: '工人会按指定耳号顺序进入燎毛 / 分割工序，仅白条业态需指定',
-      assigned: '已指定',
-      assignBtn: '指定 {count} 头',
-      confirmRemove: '确认移除耳号 {earNo}？'
+      title: '指定猪只 - {no}（需 {required} 头）',
+      selectedTip: '已选 {selected} / {required} 头',
+      confirmBtn: '确认指定（{count} 头）',
+      assignSuccess: '已指定 {count} 头',
+      assignedTitle: '已指定（{count}）',
+      overLimit: '最多指定 {required} 头，请先取消多余勾选',
+      emptyAvailable: '当前没有可出栏育肥猪',
+      confirmRemove: '确认移除耳号 {earNo}？',
+      column: {
+        earNo: '耳号',
+        pigSex: '性别',
+        pigBreed: '品种品系',
+        ageDays: '日龄（天）',
+        lastBackfat: '最新背膘 (mm)'
+      }
     },
     history: {
       title: '状态流转历史',

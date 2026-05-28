@@ -1,5 +1,6 @@
 <template>
   <div class="p-2">
+    <SummaryBar product-type="white_bar" />
     <BizTable
       ref="tableRef"
       :data="list"
@@ -57,6 +58,7 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import DemandForm from '../components/DemandForm.vue';
 import PigAssignDialog from '../components/PigAssignDialog.vue';
 import HistoryDialog from '../components/HistoryDialog.vue';
+import SummaryBar from '../components/SummaryBar.vue';
 import { useDemandList } from '../composables/useDemandList';
 import type { DemandManageVO, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
 import { useI18n } from 'vue-i18n';
@@ -66,7 +68,7 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
 const formRef = ref<{ openCreate: () => void; openEdit: (id: string) => void }>();
-const pigDialogRef = ref<{ open: (demandId: string, demandNo: string) => void }>();
+const pigDialogRef = ref<{ open: (demandId: string, demandNo: string, requiredCount: number) => void }>();
 const historyDialogRef = ref<{ open: (demandId: string) => void }>();
 
 const {
@@ -165,7 +167,8 @@ async function onCancel(row: DemandManageVO) {
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
 }
 function onAssignPig(row: DemandManageVO) {
-  pigDialogRef.value?.open(row.id, row.demandNo);
+  const required = Number(row.demandQuantity ?? 0);
+  pigDialogRef.value?.open(row.id, row.demandNo, required);
 }
 function onHistory(row: DemandManageVO) {
   historyDialogRef.value?.open(row.id);

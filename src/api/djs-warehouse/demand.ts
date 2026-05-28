@@ -1,6 +1,16 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { AssignPigForm, AuditHistoryEntryVO, DemandManageForm, DemandManageQuery, DemandManageVO, DemandPigVO } from './demand/types';
+import type {
+  AssignPigForm,
+  AuditHistoryEntryVO,
+  DemandManageForm,
+  DemandManageQuery,
+  DemandManageVO,
+  DemandPigVO,
+  DemandProductType,
+  DemandSummaryVO,
+  PigAvailableVO
+} from './demand/types';
 
 /**
  * 需求管理 API（WMS-DEMAND-001）。
@@ -58,7 +68,17 @@ export const removeAssignedPig = (id: string | number, earNo: string) =>
 export const listAssignedPigs = (id: string | number): AxiosPromise<DemandPigVO[]> =>
   request({ url: `/djs/warehouse/demand/${id}/pigs`, method: 'get' });
 
+/** 「可出栏」育肥猪分页（DJS-FIX-ADMIN-W22-001）。 */
+export const listAvailablePigs = (params: { pageNum?: number; pageSize?: number }): AxiosPromise<PigAvailableVO[]> =>
+  request({ url: '/djs/warehouse/demand/pigs/available', method: 'get', params });
+
 // =========== 状态历史 ===========
 
 export const getDemandHistory = (id: string | number): AxiosPromise<AuditHistoryEntryVO[]> =>
   request({ url: `/djs/warehouse/demand/${id}/history`, method: 'get' });
+
+// =========== 业态摘要（DJS-FIX-ADMIN-W22-003）===========
+
+/** 业态 SummaryBar 摘要（4 业态 union DTO；按 productType 填字段）。 */
+export const getDemandSummary = (productType: DemandProductType): AxiosPromise<DemandSummaryVO> =>
+  request({ url: '/djs/warehouse/demand/summary', method: 'get', params: { productType } });

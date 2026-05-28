@@ -792,11 +792,12 @@ export default {
       del: 'Delete {count} location(s)? Make sure they have no active stock.'
     }
   },
-  // Warehouse product / commodity / gift box (WMS-MD-002, 3-form shared table)
+  // Warehouse commodity master data / self-produce / purchase / gift box (WMS-MD-002, 3-form shared table)
+  // Note: distinguished from D11+ TRC-CORE-001 "Product list (traceability serial)" — this namespace is SKU master
   product: {
     title: {
-      add: 'New product',
-      edit: 'Edit product'
+      add: 'New commodity',
+      edit: 'Edit commodity'
     },
     column: {
       productId: 'Code',
@@ -964,6 +965,84 @@ export default {
     empty: 'No plots in current zone',
     selectZoneFirst: 'Please select a zone on the left first'
   },
+  // Planting - Plot Organic Certificate (PLT-MD-003)
+  plantPlotOrganic: {
+    title: { add: 'Add Plot Organic Cert', edit: 'Edit Plot Organic Cert' },
+    column: {
+      organicNo: 'Cert No.',
+      organicCompany: 'Issuer',
+      organicValid: 'Valid Until',
+      image: 'Image',
+      relatedPlots: 'Related Plots',
+      warning: 'Warning',
+      createTime: 'Created'
+    },
+    field: {
+      organicNo: 'Cert No.',
+      organicCompany: 'Issuer',
+      organicValid: 'Valid Until',
+      organicImagePreview: 'Thumbnail',
+      organicImageUrl: 'Cert Images',
+      relatedPlots: 'Related Plots',
+      isWarning: 'Warning Status'
+    },
+    placeholder: {
+      organicNo: 'Enter cert number (e.g. GB-2026-001)',
+      organicCompany: 'Issuer (e.g. CNCA)',
+      organicValid: 'Pick expiry date',
+      search: 'Search plot code / name'
+    },
+    rule: {
+      organicNo: { required: 'Cert number is required' },
+      organicCompany: { required: 'Issuer is required' },
+      organicValid: { required: 'Expiry date is required' }
+    },
+    warning: { yes: 'Expiring', no: 'Normal' },
+    confirm: {
+      del: 'Delete {count} certificates? Related plot associations will be removed.',
+      scan: 'Scan all certificates and mark expiring (≤ 60 days) as warning, continue?'
+    },
+    unselected: 'Available plots',
+    selected: 'Linked plots',
+    scan_warning: 'Scan now',
+    scan_done: 'Scan completed'
+  },
+  // Planting - Crop Organic Certificate (PLT-MD-003)
+  plantCropOrganic: {
+    title: { add: 'Add Crop Organic Cert', edit: 'Edit Crop Organic Cert' },
+    column: {
+      cropCertNo: 'Cert No.',
+      cropCertCompany: 'Issuer',
+      cropCertValid: 'Valid Until',
+      cropName: 'Crop',
+      image: 'Image',
+      warning: 'Warning',
+      createTime: 'Created'
+    },
+    field: {
+      cropCertNo: 'Cert No.',
+      cropCertCompany: 'Issuer',
+      cropCertValid: 'Valid Until',
+      cropId: 'Crop',
+      cropImagePreview: 'Thumbnail',
+      cropImageUrl: 'Cert Images',
+      isWarning: 'Warning Status'
+    },
+    placeholder: {
+      cropCertNo: 'Enter cert number',
+      cropCertCompany: 'Issuer',
+      cropCertValid: 'Pick expiry date',
+      cropId: 'Select related crop'
+    },
+    rule: {
+      cropCertNo: { required: 'Cert number is required' },
+      cropCertCompany: { required: 'Issuer is required' },
+      cropCertValid: { required: 'Expiry date is required' },
+      cropId: { required: 'Please select related crop' }
+    },
+    warning: { yes: 'Expiring', no: 'Normal' },
+    confirm: { del: 'Delete {count} certificates?' }
+  },
   // Planting - Crop (PLT-MD-001)
   plantCrop: {
     title: { add: 'Add Crop', edit: 'Edit Crop', view: 'Crop Detail' },
@@ -1060,6 +1139,121 @@ export default {
       setLeaderSuccess: 'Leader set'
     }
   },
+  // Plant - Plan (PLT-PLAN-001)
+  plantPlan: {
+    pageTitle: 'Planting Plan',
+    field: {
+      planNo: 'Plan No.',
+      planYear: 'Year',
+      planSeason: 'Season',
+      crop: 'Crop',
+      cropId: 'Crop',
+      totalArea: 'Total Area',
+      totalPlot: 'Plot Count',
+      earliestHarvestdate: 'Earliest Harvest',
+      lastHarvestdate: 'Last Harvest',
+      plantStatus: 'Plan Status',
+      harvestStatus: 'Harvest Status',
+      plantDate: 'Planned Plant Date',
+      plotCode: 'Plot Code',
+      plotName: 'Plot Name',
+      plotArea: 'Plot Area',
+      plantMonth: 'Plant Month',
+      plantPeriod: 'Period',
+      plantBy: 'Plant Team',
+      harvestBy: 'Harvest Team',
+      expectedYield: 'Expected Yield'
+    },
+    column: {
+      planNo: 'Plan No.',
+      planYear: 'Year',
+      planSeason: 'Season',
+      crop: 'Crop',
+      totalArea: 'Total Area (mu)',
+      totalPlot: 'Plots',
+      earliestHarvestdate: 'Earliest Harvest',
+      lastHarvestdate: 'Last Harvest',
+      plantStatus: 'Status',
+      action: 'Actions'
+    },
+    placeholder: {
+      planSeason: 'Select planting season',
+      plantDate: 'e.g. early April (optional)',
+      team: 'Select team'
+    },
+    action: {
+      detail: 'Details'
+    },
+    edit: {
+      btn: {
+        edit: 'Edit',
+        save: 'Save',
+        cancel: 'Cancel'
+      },
+      title: 'Edit Planting Plan',
+      locked: 'Read-only',
+      detailsTip: 'Only team can be changed (plot / month / period are locked)',
+      saveSuccess: 'Planting plan updated',
+      lockTip: {
+        done: 'Plan is completed; editing not allowed',
+        cancelled: 'Plan is cancelled; editing not allowed',
+        other: 'Status does not support editing'
+      }
+    },
+    confirm: { del: 'Confirm deleting {count} planting plan(s)?' },
+    wizard: {
+      title: 'Create Planting Plan',
+      backToList: 'Back to List',
+      step1: 'Year & Season',
+      step2: 'Select Crop',
+      step3: 'Plots & Time',
+      submit: 'Create Plan',
+      cropSearch: 'Search by name / code / variety',
+      cropEmpty: 'No crops; please maintain in Crop Management first',
+      plotPickerHint: 'Plots grouped by zone; check the plots to plan, then set month, period, teams',
+      zoneEmpty: 'No plots; please maintain in Plot Management first',
+      selectedSummary: 'Selected: {count} plot(s)',
+      resumeConfirm: 'A pending draft is detected. Resume?',
+      resumeYes: 'Resume',
+      resumeNo: 'Start Fresh',
+      tip: {
+        step1Required: 'Year and season are required',
+        step2Required: 'Please select a crop',
+        step3Required: 'Please select at least 1 plot',
+        submitSuccess: 'Planting plan created'
+      },
+      col: {
+        plotCode: 'Plot Code',
+        plotName: 'Plot Name',
+        plotArea: 'Area',
+        month: 'Month',
+        period: 'Period',
+        plantBy: 'Plant Team',
+        harvestBy: 'Harvest Team',
+        selected: 'Pick',
+        selectHint: 'Tick to include this plot'
+      },
+      placeholder: {
+        month: 'Mo.',
+        period: 'Early/Mid/Late',
+        team: 'Team'
+      }
+    },
+    dict: {
+      period: { early: 'Early', mid: 'Mid', late: 'Late' }
+    },
+    detail: {
+      title: 'Plan Detail',
+      detailsTitle: 'Plot Details',
+      missingId: 'Missing plan id'
+    },
+    gantt: {
+      title: 'Dual Gantt (Plan vs Actual)',
+      v1Note: 'V1 simplified',
+      empty: 'No details; gantt unavailable',
+      legend: { plan: 'Plan range', actual: 'Actual' }
+    }
+  },
   // Dongjiaoshan business modules placeholder
   djs: {
     placeholder: {
@@ -1091,6 +1285,94 @@ export default {
         operator: 'Operator',
         location: 'Location',
         remark: 'Remark'
+      },
+      pigCut: {
+        title: 'Pig Cut Records',
+        cutId: 'Cut No',
+        barId: 'White-Bar No',
+        earNo: 'Pig Ear No',
+        pickupTime: 'Pickup Time',
+        cutStartTime: 'Cut Start Time',
+        cutDoneTime: 'Cut Done Time',
+        pickupWeight: 'Pickup Weight (kg)',
+        dripLoss: 'Drip Loss (kg)',
+        acidRemoveMinutes: 'Acid-Remove (min)',
+        cutStatus: 'Status',
+        operator: 'Operator',
+        location: 'Frozen Location',
+        isHalf: 'Half Bar?',
+        remark: 'Remark'
+      },
+      vegHandle: {
+        title: 'Vegetable Handle',
+        plot: 'Plot',
+        crop: 'Crop',
+        pickStartTime: 'Pick Start Time',
+        pickEndTime: 'Pick End Time',
+        pickedWeight: 'Picked (kg)',
+        handledWeight: 'Handled (kg)',
+        feedWeight: 'Feed (kg)',
+        sendPlatformWeight: 'Platform (kg)',
+        stockInWeight: 'Stock-In (kg)',
+        lossWeight: 'Loss (kg)',
+        handleStatus: 'Status',
+        statusPending: 'Pending',
+        statusProcessing: 'Processing',
+        statusDone: 'Done',
+        recordType: 'Record Type',
+        recordTypePick: 'Pick',
+        recordTypeHandle: 'Handle',
+        recordWeight: 'Record Weight (kg)',
+        handleTarget: 'Target',
+        location: 'Stock-In Location',
+        operator: 'Operator',
+        handleTime: 'Handle Time',
+        remark: 'Remark',
+        recordsDialogTitle: 'Handle Records',
+        detail: 'Detail'
+      },
+      stockFlow: {
+        title: 'Stock Flow',
+        flowNo: 'Flow No',
+        flowDate: 'Date',
+        flowType: 'Type',
+        inoutType: 'IN/OUT',
+        matType: 'Mat Type',
+        productName: 'Product',
+        productCode: 'Code',
+        belongType: 'Belong',
+        changeQuantity: 'Qty',
+        productUnit: 'Unit',
+        location: 'Location',
+        earNo: 'Ear No',
+        plot: 'Plot',
+        stockOutDest: 'Out Dest',
+        operator: 'Operator',
+        remark: 'Remark',
+        adjust: 'Adjust',
+        adjustHint: 'Flow adjust (D11)',
+        adjustNotImpl: 'Adjust not implemented yet (D11 WMS-FLOW-001) — flowNo={flowNo}'
+      },
+      matPack: {
+        title: 'Package Flow'
+      },
+      purchaseIn: {
+        title: 'Purchase In',
+        flowNo: 'Inbound No',
+        flowDate: 'Inbound Time',
+        product: 'Product',
+        productPlaceholder: 'Select product',
+        productRequired: 'Product is required',
+        location: 'Location',
+        locationPlaceholder: 'Select location',
+        locationRequired: 'Location is required',
+        quantity: 'Quantity',
+        quantityRequired: 'Quantity is required and must be > 0',
+        unit: 'Unit',
+        operator: 'Operator',
+        remark: 'Remark',
+        dialogTitle: 'New Purchase In',
+        submitSuccess: 'Inbound submitted'
       }
     }
   },
@@ -1182,14 +1464,30 @@ export default {
       cancelRemark: 'Cancel reason (optional)',
       cancelRemarkPh: 'e.g. customer withdrew / out of stock'
     },
+    summary: {
+      loading: 'Loading…',
+      loadFailed: 'Failed to load summary, please refresh',
+      whiteBar: '{count} fattening pigs available',
+      vegetable: 'Planting on {plot} plots / expected yield {yield} kg / earliest pick {pickDate} / current stock {stock} kg',
+      giftBox: 'Current gift-box stock: {count}',
+      other: 'Current raw-material stock: {stock} kg'
+    },
     assignPig: {
-      title: 'Assign Pigs - {no}',
-      earNos: 'Ear No List',
-      placeholder: 'One ear no per line, or comma/space separated, e.g.:\n01A12605001\n01A12605002',
-      hint: 'Workers will process pigs in assigned order; only for white-bar demand',
-      assigned: 'Assigned',
-      assignBtn: 'Assign {count}',
-      confirmRemove: 'Remove ear no {earNo}?'
+      title: 'Assign Pigs - {no} (need {required})',
+      selectedTip: 'Selected {selected} / {required}',
+      confirmBtn: 'Confirm ({count})',
+      assignSuccess: 'Assigned {count} pigs',
+      assignedTitle: 'Assigned ({count})',
+      overLimit: 'At most {required} pigs allowed, please uncheck extras first',
+      emptyAvailable: 'No available fattening pigs',
+      confirmRemove: 'Remove ear no {earNo}?',
+      column: {
+        earNo: 'Ear No',
+        pigSex: 'Sex',
+        pigBreed: 'Breed/Strain',
+        ageDays: 'Age (days)',
+        lastBackfat: 'Last Backfat (mm)'
+      }
     },
     history: {
       title: 'Status Transition History',

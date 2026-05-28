@@ -81,6 +81,39 @@ export interface AssignPigForm {
   earNos: string[];
 }
 
+/** 「可出栏」育肥猪 VO（DJS-FIX-ADMIN-W22-001）。 */
+export interface PigAvailableVO {
+  earNo: string;
+  pigSex?: string;
+  pigBreedLabel?: string;
+  ageDays?: number;
+  lastBackfat?: number | string;
+}
+
+/**
+ * 需求确认页 SummaryBar union DTO（DJS-FIX-ADMIN-W22-003）。
+ *
+ * 4 业态共用一个 VO，按 productType 填不同字段，其余字段保持 null/undefined。
+ */
+export interface DemandSummaryVO {
+  productType: DemandProductType;
+
+  // white_bar
+  availablePigs?: number;
+
+  // vegetable
+  plotCount?: number;
+  expectedYieldKg?: number | string;
+  earliestPickDate?: string;
+  currentStockKg?: number | string;
+
+  // gift_box
+  giftBoxStock?: number | string;
+
+  // other
+  rawMaterialStockKg?: number | string;
+}
+
 export interface AuditHistoryEntryVO {
   from: DemandStatusCode | string;
   to: DemandStatusCode | string;
