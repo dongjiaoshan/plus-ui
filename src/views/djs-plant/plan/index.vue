@@ -142,11 +142,7 @@ const handleDel = async (rows: BizRow[]) => {
 };
 
 const handleExport = () => {
-  proxy?.download(
-    'djs/plant/plan/export',
-    { ...searchModel },
-    `${t('plantPlan.pageTitle')}_${new Date().getTime()}.xlsx`
-  );
+  proxy?.download('djs/plant/plan/export', { ...searchModel }, `${t('plantPlan.pageTitle')}_${new Date().getTime()}.xlsx`);
 };
 
 onMounted(loadList);

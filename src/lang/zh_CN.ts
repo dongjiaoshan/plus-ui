@@ -117,7 +117,17 @@ export default {
     delete: '删 除',
     back: '返 回',
     createTime: '创建时间',
-    opSuccess: '操作成功'
+    opSuccess: '操作成功',
+    search: '搜索',
+    reset: '重置',
+    add: '新增',
+    save: '保存',
+    empty: '暂无数据',
+    tip: '提示',
+    deleteSuccess: '删除成功',
+    to: '至',
+    prev: '上一步',
+    next: '下一步'
   },
   // 供应商管理（SYS-MD-003 + SYS-MD-FIX-002）
   supplier: {
@@ -1260,6 +1270,106 @@ export default {
       legend: { plan: '计划范围', actual: '实际执行' }
     }
   },
+  pickPlan: {
+    pageTitle: '采摘计划',
+    field: {
+      planYear: '计划年份',
+      planSeason: '计划季节',
+      harvestStatus: '采摘状态'
+    },
+    placeholder: {
+      planSeason: '请选择季节',
+      harvestStatus: '请选择采摘状态',
+      team: '采摘班组'
+    },
+    column: {
+      planNo: '计划号',
+      planYear: '年份',
+      planSeason: '季节',
+      crop: '作物',
+      plotCount: '地块数',
+      planEarliest: '计划最早',
+      planLatest: '计划最晚',
+      actualBegin: '实际开始',
+      actualEnd: '实际结束',
+      expectedYield: '预计产量',
+      actualYield: '实际产量',
+      activityPlotCount: '游客活动地块',
+      action: '操作'
+    },
+    action: { adjust: '调整' },
+    adjust: {
+      title: '调整采摘计划',
+      backToList: '返回列表',
+      tip: '按地块设置实际采摘起止日期、是否游客采摘活动、采摘班组；保存后立即生效。',
+      activityYes: '游客采摘',
+      activityNo: '常规',
+      paramsMissing: '缺少 planId / cropId 参数',
+      saveSuccess: '已更新 {count} 行明细',
+      col: {
+        plotCode: '地块编码',
+        plotName: '地块名称',
+        plotArea: '面积',
+        planEarliest: '计划最早',
+        planLatest: '计划最晚',
+        beginHarvestdate: '实际开始采摘',
+        endHarvestdate: '实际结束采摘',
+        isPick: '游客采摘',
+        harvestBy: '采摘班组',
+        harvestStatus: '采摘状态'
+      }
+    }
+  },
+  pickActivity: {
+    pageTitle: '采摘活动',
+    field: {
+      activityNo: '活动编码',
+      activityName: '活动名称',
+      activityStatus: '活动状态',
+      activityDate: '活动日期',
+      cropId: '作物',
+      totalPlot: '涉及地块数',
+      totalYield: '当日采摘汇总(kg)',
+      visitorCount: '参与游客人数',
+      remark: '备注'
+    },
+    placeholder: {
+      activityNo: '编码模糊匹配',
+      activityName: '名称模糊匹配',
+      dateFrom: '开始日期',
+      dateTo: '结束日期'
+    },
+    column: {
+      activityNo: '活动编码',
+      activityName: '活动名称',
+      activityDate: '活动日期',
+      activityStatus: '状态',
+      crop: '作物',
+      totalPlot: '地块数',
+      totalYield: '采摘量',
+      visitorCount: '游客人数',
+      action: '操作'
+    },
+    action: { summary: '汇总结束' },
+    dialog: {
+      addTitle: '新增采摘活动',
+      editTitle: '编辑采摘活动'
+    },
+    rule: {
+      activityNameRequired: '请填写活动名称',
+      activityDateRequired: '请选择活动日期',
+      cropRequired: '请选择作物'
+    },
+    confirm: {
+      del: '确认删除采摘活动「{name}」？',
+      summary: '汇总后将状态置为「已结束」，并从采摘明细聚合当日产量回填，是否继续？'
+    },
+    tip: {
+      addSuccess: '采摘活动已创建',
+      updateSuccess: '采摘活动已更新',
+      summarySuccess: '汇总完成，当日采摘 {yield} kg'
+    }
+  },
   // 东角山业务模块占位
   djs: {
     placeholder: {
@@ -1379,6 +1489,53 @@ export default {
         remark: '备注',
         dialogTitle: '新增采购入库',
         submitSuccess: '入库成功'
+      },
+      shipment: {
+        title: '发货流水',
+        shipmentNo: '发货单号',
+        shipDate: '发货日期',
+        productType: '业态',
+        demandId: '关联需求',
+        storeId: '目的门店',
+        shipQuantity: '发货数量',
+        shipUnit: '单位',
+        deliverType: '发货方式',
+        shipmentStatus: '状态',
+        checker: '清点员',
+        checkTime: '清点时间',
+        remark: '备注'
+      },
+      return: {
+        title: '退货管理',
+        returnNo: '退货单号',
+        applyTime: '申请时间',
+        storeId: '退货门店',
+        productId: '产品 ID',
+        productName: '产品名称',
+        returnWeight: '退货重量',
+        confirmWeight: '确认重量',
+        confirmUser: '确认人',
+        confirmTime: '确认时间',
+        isConfirm: '是否确认',
+        returnReason: '退货原因',
+        returnDirection: '退货方向',
+        returnStatus: '退货状态',
+        remark: '备注',
+        confirm: '确认',
+        confirmed: '已确认',
+        productIdRequired: '产品 ID 不能为空',
+        returnWeightRequired: '退货重量必填且 > 0',
+        confirmWeightRequired: '确认重量必填且 > 0',
+        dialogAddTitle: '新增退货',
+        dialogEditTitle: '编辑退货',
+        confirmDialogTitle: '确认退货',
+        confirmStockHint: '门店→仓库方向：确认后将自动联动 stock_flow（return_in 入库）',
+        confirmPlaceholderHint: '其他方向 V1 仅录入占位，不联动 stock_flow（V2 实现）',
+        addSuccess: '退货已新增',
+        editSuccess: '退货已编辑',
+        deleteConfirm: '确认删除退货单【{no}】？',
+        deleteSuccess: '退货已删除',
+        confirmSuccess: '退货已确认'
       }
     }
   },

@@ -24,12 +24,7 @@
     >
       <!-- 只读，无 edit / del；提供「详情」按钮显式入口（行点击为辅助入口） -->
       <template #action="{ row }">
-        <el-button
-          v-hasPermi="['djs:warehouse:vegHandle:query']"
-          link
-          type="primary"
-          @click="handleRowClick(row as VegetableHandleVO)"
-        >
+        <el-button v-hasPermi="['djs:warehouse:vegHandle:query']" link type="primary" @click="handleRowClick(row as VegetableHandleVO)">
           {{ t('djs.warehouse.vegHandle.detail') }}
         </el-button>
       </template>

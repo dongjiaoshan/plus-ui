@@ -8,13 +8,7 @@
    - other：原料库存 kg（product_attr=2 合计）
 -->
 <template>
-  <el-alert
-    v-if="!error"
-    :type="alertType"
-    :closable="false"
-    show-icon
-    style="margin-bottom: 12px;"
-  >
+  <el-alert v-if="!error" :type="alertType" :closable="false" show-icon style="margin-bottom: 12px">
     <template #title>
       <span v-if="loading">{{ t('demand.summary.loading') }}</span>
       <span v-else-if="productType === 'white_bar' && summary">
@@ -38,14 +32,7 @@
       </span>
     </template>
   </el-alert>
-  <el-alert
-    v-else
-    type="error"
-    :closable="false"
-    show-icon
-    :title="t('demand.summary.loadFailed')"
-    style="margin-bottom: 12px;"
-  />
+  <el-alert v-else type="error" :closable="false" show-icon :title="t('demand.summary.loadFailed')" style="margin-bottom: 12px" />
 </template>
 
 <script setup lang="ts">
@@ -62,11 +49,7 @@ const error = ref<boolean>(false);
 
 const alertType = computed<'success' | 'warning' | 'info' | 'error'>(() => {
   // white_bar 0 头时 warning 提示，其他业态用 info 中性
-  if (
-    props.productType === 'white_bar' &&
-    summary.value &&
-    (summary.value.availablePigs ?? 0) === 0
-  ) {
+  if (props.productType === 'white_bar' && summary.value && (summary.value.availablePigs ?? 0) === 0) {
     return 'warning';
   }
   return 'info';

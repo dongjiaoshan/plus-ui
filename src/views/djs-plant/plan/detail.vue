@@ -34,18 +34,8 @@
         <el-descriptions-item :label="t('plantPlan.field.planYear')">{{ plan?.plan?.planYear }}</el-descriptions-item>
         <el-descriptions-item :label="t('plantPlan.field.planSeason')">
           <template v-if="editMode">
-            <el-select
-              v-model="editForm.planSeason"
-              size="small"
-              :placeholder="t('plantPlan.placeholder.planSeason')"
-              style="width: 160px"
-            >
-              <el-option
-                v-for="d in djs_planting_season"
-                :key="d.value"
-                :label="d.label"
-                :value="d.value"
-              />
+            <el-select v-model="editForm.planSeason" size="small" :placeholder="t('plantPlan.placeholder.planSeason')" style="width: 160px">
+              <el-option v-for="d in djs_planting_season" :key="d.value" :label="d.label" :value="d.value" />
             </el-select>
           </template>
           <template v-else>
@@ -69,13 +59,7 @@
         </el-descriptions-item>
         <el-descriptions-item :label="t('plantPlan.field.plantDate')">
           <template v-if="editMode">
-            <el-input
-              v-model="editForm.plantDate"
-              size="small"
-              :placeholder="t('plantPlan.placeholder.plantDate')"
-              style="width: 200px"
-              clearable
-            />
+            <el-input v-model="editForm.plantDate" size="small" :placeholder="t('plantPlan.placeholder.plantDate')" style="width: 200px" clearable />
           </template>
           <template v-else>
             {{ plan?.plan?.plantDate || '-' }}
@@ -298,7 +282,7 @@ async function loadTeams() {
   try {
     const res: any = await listAllTeam({ teamStatus: 1 });
     const rows = (res?.data ?? res?.rows ?? []) as Array<{ id: string; teamName: string }>;
-    teamOptions.value = rows.map(r => ({ id: String(r.id), teamName: r.teamName }));
+    teamOptions.value = rows.map((r) => ({ id: String(r.id), teamName: r.teamName }));
   } catch {
     teamOptions.value = [];
   }
@@ -309,7 +293,7 @@ function onEnterEdit() {
   editForm.planSeason = plan.value.plan.planSeason;
   editForm.cropId = plan.value.plan.cropId;
   editForm.plantDate = plan.value.plan.plantDate;
-  editDetails.value = (plan.value.details || []).map(d => ({ ...d }));
+  editDetails.value = (plan.value.details || []).map((d) => ({ ...d }));
   loadTeams();
   editMode.value = true;
 }
@@ -331,7 +315,7 @@ async function onSave() {
   if (!plan.value?.plan) return;
   saving.value = true;
   try {
-    const details: PlantDetailInput[] = editDetails.value.map(d => ({
+    const details: PlantDetailInput[] = editDetails.value.map((d) => ({
       id: d.id,
       plotId: d.plotId,
       plantMonth: d.plantMonth,

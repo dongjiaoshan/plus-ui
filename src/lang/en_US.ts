@@ -117,7 +117,17 @@ export default {
     delete: 'Delete',
     back: 'Back',
     createTime: 'Created at',
-    opSuccess: 'Operation succeeded'
+    opSuccess: 'Operation succeeded',
+    search: 'Search',
+    reset: 'Reset',
+    add: 'Add',
+    save: 'Save',
+    empty: 'No data',
+    tip: 'Tip',
+    deleteSuccess: 'Deleted',
+    to: 'to',
+    prev: 'Prev',
+    next: 'Next'
   },
   // Supplier master data (SYS-MD-003 + SYS-MD-FIX-002)
   supplier: {
@@ -1254,6 +1264,106 @@ export default {
       legend: { plan: 'Plan range', actual: 'Actual' }
     }
   },
+  pickPlan: {
+    pageTitle: 'Pick Plan',
+    field: {
+      planYear: 'Plan Year',
+      planSeason: 'Season',
+      harvestStatus: 'Harvest Status'
+    },
+    placeholder: {
+      planSeason: 'Pick a season',
+      harvestStatus: 'Pick a harvest status',
+      team: 'Harvest team'
+    },
+    column: {
+      planNo: 'Plan No',
+      planYear: 'Year',
+      planSeason: 'Season',
+      crop: 'Crop',
+      plotCount: 'Plots',
+      planEarliest: 'Plan Earliest',
+      planLatest: 'Plan Latest',
+      actualBegin: 'Actual Begin',
+      actualEnd: 'Actual End',
+      expectedYield: 'Expected Yield',
+      actualYield: 'Actual Yield',
+      activityPlotCount: 'Visitor Plots',
+      action: 'Action'
+    },
+    action: { adjust: 'Adjust' },
+    adjust: {
+      title: 'Adjust Pick Plan',
+      backToList: 'Back',
+      tip: 'Adjust actual harvest dates, visitor pick flag and harvest team per plot. Saves immediately.',
+      activityYes: 'Visitor',
+      activityNo: 'Normal',
+      paramsMissing: 'planId / cropId missing',
+      saveSuccess: '{count} rows updated',
+      col: {
+        plotCode: 'Plot Code',
+        plotName: 'Plot Name',
+        plotArea: 'Area',
+        planEarliest: 'Plan Earliest',
+        planLatest: 'Plan Latest',
+        beginHarvestdate: 'Actual Begin',
+        endHarvestdate: 'Actual End',
+        isPick: 'Visitor Pick',
+        harvestBy: 'Harvest Team',
+        harvestStatus: 'Status'
+      }
+    }
+  },
+  pickActivity: {
+    pageTitle: 'Pick Activity',
+    field: {
+      activityNo: 'Activity No',
+      activityName: 'Activity Name',
+      activityStatus: 'Status',
+      activityDate: 'Date',
+      cropId: 'Crop',
+      totalPlot: 'Plots',
+      totalYield: 'Total Yield (kg)',
+      visitorCount: 'Visitors',
+      remark: 'Remark'
+    },
+    placeholder: {
+      activityNo: 'fuzzy match',
+      activityName: 'fuzzy match',
+      dateFrom: 'From',
+      dateTo: 'To'
+    },
+    column: {
+      activityNo: 'Activity No',
+      activityName: 'Name',
+      activityDate: 'Date',
+      activityStatus: 'Status',
+      crop: 'Crop',
+      totalPlot: 'Plots',
+      totalYield: 'Yield',
+      visitorCount: 'Visitors',
+      action: 'Action'
+    },
+    action: { summary: 'Summarize' },
+    dialog: {
+      addTitle: 'Add Pick Activity',
+      editTitle: 'Edit Pick Activity'
+    },
+    rule: {
+      activityNameRequired: 'Name required',
+      activityDateRequired: 'Date required',
+      cropRequired: 'Crop required'
+    },
+    confirm: {
+      del: 'Delete activity "{name}"?',
+      summary: 'Summarize will set status to "ended" and backfill total yield. Continue?'
+    },
+    tip: {
+      addSuccess: 'Activity created',
+      updateSuccess: 'Activity updated',
+      summarySuccess: 'Summarized: today {yield} kg'
+    }
+  },
   // Dongjiaoshan business modules placeholder
   djs: {
     placeholder: {
@@ -1373,6 +1483,53 @@ export default {
         remark: 'Remark',
         dialogTitle: 'New Purchase In',
         submitSuccess: 'Inbound submitted'
+      },
+      shipment: {
+        title: 'Shipment',
+        shipmentNo: 'Shipment No',
+        shipDate: 'Ship Date',
+        productType: 'Type',
+        demandId: 'Demand',
+        storeId: 'Store',
+        shipQuantity: 'Quantity',
+        shipUnit: 'Unit',
+        deliverType: 'Deliver Type',
+        shipmentStatus: 'Status',
+        checker: 'Checker',
+        checkTime: 'Check Time',
+        remark: 'Remark'
+      },
+      return: {
+        title: 'Return Management',
+        returnNo: 'Return No',
+        applyTime: 'Apply Time',
+        storeId: 'Store',
+        productId: 'Product ID',
+        productName: 'Product Name',
+        returnWeight: 'Return Weight',
+        confirmWeight: 'Confirm Weight',
+        confirmUser: 'Confirm User',
+        confirmTime: 'Confirm Time',
+        isConfirm: 'Confirmed',
+        returnReason: 'Reason',
+        returnDirection: 'Direction',
+        returnStatus: 'Status',
+        remark: 'Remark',
+        confirm: 'Confirm',
+        confirmed: 'Confirmed',
+        productIdRequired: 'Product ID is required',
+        returnWeightRequired: 'Return weight is required and must be > 0',
+        confirmWeightRequired: 'Confirm weight is required and must be > 0',
+        dialogAddTitle: 'New Return',
+        dialogEditTitle: 'Edit Return',
+        confirmDialogTitle: 'Confirm Return',
+        confirmStockHint: 'store_to_warehouse direction: stock_flow (return_in) will be triggered',
+        confirmPlaceholderHint: 'Other directions: V1 placeholder, no stock_flow trigger',
+        addSuccess: 'Return added',
+        editSuccess: 'Return updated',
+        deleteConfirm: 'Delete return [{no}]?',
+        deleteSuccess: 'Return deleted',
+        confirmSuccess: 'Return confirmed'
       }
     }
   },
