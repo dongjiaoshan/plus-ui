@@ -76,8 +76,6 @@
         <PigListFattening v-if="activeTab === 'fattening'" />
       </el-tab-pane>
     </el-tabs>
-
-    <PigDetailModal ref="detailModalRef" @open-related-ear="openByEarNo" />
   </div>
 </template>
 
@@ -93,17 +91,18 @@
  * D7 起 admin 全只读，事件录入统一走 mp。
  */
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { listPig } from '@/api/djs-breed/pig';
 import type { PigQuery, PigVO } from '@/api/djs-breed/pig/types';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import PigDetailModal from './components/PigDetailModal.vue';
 import PigListSow from './sow/index.vue';
 import PigListBoar from './boar/index.vue';
 import PigListPiglet from './piglet/index.vue';
 import PigListFattening from './fattening/index.vue';
 
 const { t } = useI18n();
+const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { djs_pig_lifecycle, djs_pig_end_reason } = toRefs<any>(proxy?.useDict('djs_pig_lifecycle', 'djs_pig_end_reason'));
 
@@ -129,7 +128,6 @@ function statusTagType(code?: string): 'primary' | 'success' | 'warning' | 'dang
 const activeTab = ref<'all' | 'sow' | 'boar' | 'piglet' | 'fattening'>('all');
 
 const tableRef = ref<BizTableExpose>();
-const detailModalRef = ref<{ open: (id: number | string) => void }>();
 
 const list = ref<PigVO[]>([]);
 const total = ref(0);
@@ -235,11 +233,11 @@ function handleExport() {
 }
 
 function openDetail(id: number | string) {
-  detailModalRef.value?.open(id);
+  router.push({ path: `/djs-breed/pig/detail/${id}` });
 }
 
 async function openByEarNo(earNo: string) {
-  // 通过耳号反查取 id，再走 detail（V1 简单实现：直接走 list filter + 取第一条非 END）
+  // 通过耳号反查取 id，再走路由详情（V1 简单实现：list filter + 取第一条非 END）
   try {
     // excludeEnd=true：耳号可回收复用（删后下次新猪复用同 earNo + lifecycle_id+1），
     // 这里只跳"活的"那一条；点已 END 的历史 ear 视为无效（_open-issues raise 推荐方案 b）

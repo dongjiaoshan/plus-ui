@@ -7,6 +7,10 @@ export interface PigIntroduceVO {
   introduceType: 'external' | 'internal';
   introduceDate: string;
   supplierId?: number | string;
+  /** enrich：供应商编码（替代裸 supplierId；内部引种 supplierId 空时不装配） */
+  supplierCode?: string;
+  /** enrich：供应商名称（替代裸 supplierId） */
+  supplierName?: string;
   pigCount: number;
   startEarNo?: string;
   pigBreedCode?: string;

@@ -54,19 +54,16 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const searchModel = reactive<Record<string, any>>({
-  medicineId: undefined,
+const searchModel = reactive<Record<string, string | undefined>>({
   batchNo: undefined
 });
 
-const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'medicineId', label: t('medBatch.field.medicineId'), type: 'number' },
-  { field: 'batchNo', label: t('medBatch.field.batchNo'), type: 'input' }
-]);
+const searchSchema = computed<SearchFieldSchema[]>(() => [{ field: 'batchNo', label: t('medBatch.field.batchNo'), type: 'input' }]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'medicineId', label: t('medBatch.column.medicineId'), width: 140 },
+  { prop: 'medicineName', label: t('medBatch.column.medicineName'), width: 160, showOverflowTooltip: true },
   { prop: 'batchNo', label: t('medBatch.column.batchNo'), width: 160, showOverflowTooltip: true },
+  { prop: 'medicineId', label: t('medBatch.column.medicineId'), width: 180, visible: false },
   { prop: 'productionDate', label: t('medBatch.column.productionDate'), width: 130, align: 'center' },
   { prop: 'expiryDate', label: t('medBatch.column.expiryDate'), width: 130, align: 'center' },
   { prop: 'quantity', label: t('medBatch.column.quantity'), width: 120, align: 'right' },
@@ -81,7 +78,6 @@ async function fetchList() {
     const query: MedBatchQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
-      medicineId: searchModel.medicineId || undefined,
       batchNo: searchModel.batchNo || undefined
     };
     const res = await listMedBatch(query);
@@ -124,7 +120,6 @@ function handleExport() {
   proxy?.download(
     'djs/breed/med-batch/export',
     {
-      medicineId: searchModel.medicineId || undefined,
       batchNo: searchModel.batchNo || undefined
     },
     `med_batch_${new Date().getTime()}.xlsx`

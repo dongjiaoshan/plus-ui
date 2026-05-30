@@ -116,7 +116,55 @@
         </el-timeline>
       </el-tab-pane>
 
-      <!-- tab 4 生长曲线 -->
+      <!-- tab 配种 / 分娩明细（从状态流水筛繁殖类事件，结构化呈现） -->
+      <el-tab-pane :label="t('pig.detail.tab.breeding')" name="breeding" lazy>
+        <div v-if="historyLoading" v-loading="historyLoading" class="loading-box" />
+        <el-empty v-else-if="!breedingRows.length" :description="t('pig.detail.breedingEmpty')" />
+        <el-table v-else :data="breedingRows" border size="small">
+          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" />
+          <el-table-column :label="t('pig.detail.breedingCol.eventType')" width="110" align="center">
+            <template #default="{ row }">
+              <dict-tag :options="eventDict" :value="row.eventType" />
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('pig.detail.breedingCol.transition')" min-width="160" align="center">
+            <template #default="{ row }">
+              <span v-if="row.oldStatus"><dict-tag :options="lifecycleDict" :value="row.oldStatus" /> → </span>
+              <dict-tag :options="lifecycleDict" :value="row.newStatus" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="relatedEventId" :label="t('pig.detail.breedingCol.relatedEventId')" width="180" align="center" />
+        </el-table>
+      </el-tab-pane>
+
+      <!-- tab 用药 / 治疗（拉 med/record by pigId） -->
+      <el-tab-pane :label="t('pig.detail.tab.med')" name="med" lazy>
+        <div v-if="medLoading" v-loading="medLoading" class="loading-box" />
+        <el-empty v-else-if="!medRows.length" :description="t('pig.detail.medEmpty')" />
+        <el-table v-else :data="medRows" border size="small">
+          <el-table-column prop="useDate" :label="t('pig.detail.medCol.useDate')" width="120" align="center" />
+          <el-table-column prop="medicineName" :label="t('pig.detail.medCol.medicineName')" min-width="120" />
+          <el-table-column :label="t('pig.detail.medCol.medicineType')" width="100" align="center">
+            <template #default="{ row }">
+              <dict-tag :options="medUseTypeDict" :value="row.medicineType" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="medicineDosage" :label="t('pig.detail.medCol.medicineDosage')" width="90" align="right" />
+          <el-table-column :label="t('pig.detail.medCol.medicineWay')" width="100" align="center">
+            <template #default="{ row }">
+              <dict-tag :options="medWayDict" :value="row.medicineWay" />
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('pig.detail.medCol.medicineReason')" width="110" align="center">
+            <template #default="{ row }">
+              <dict-tag :options="medReasonDict" :value="row.medicineReason" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="operatorName" :label="t('pig.detail.medCol.operatorName')" width="110" align="center" />
+        </el-table>
+      </el-tab-pane>
+
+      <!-- tab 生长曲线 -->
       <el-tab-pane :label="t('pig.detail.tab.growth')" name="growth" lazy>
         <div v-if="growthLoading" v-loading="growthLoading" class="loading-box" />
         <el-empty v-else-if="!growthRows.length" :description="t('pig.detail.growthEmpty')" />
@@ -138,13 +186,16 @@
 
 <script setup name="DjsBreedPigDetail" lang="ts">
 /**
- * 猪只详情页（BRD-LIST-001）— admin 端独立路由 `/djs-breed/pig/detail/:id`。
+ * 猪只详情页（BRD-LIST-001 + BRD-FIX-ADMIN-PIG-DETAIL-001）— admin 端唯一详情入口，
+ * 独立路由 `/djs-breed/pig/detail/:id`（"全部" tab 与 4 类子 tab 统一跳此页，已废弃 modal）。
  *
- * 4 tab：
- *  1. 基础信息   — 所有 pig_type 都展示
- *  2. 生产指标   — 仅 sow（母猪）；source: t_farm_sow_performance（由 BRD-DASH-001 写）
- *  3. 养殖记录   — 状态变更时间线（复用 PigDetailModal 时间线样式，全量 history 最多 200 条）
- *  4. 生长曲线   — ECharts 折线图（体重 / 背膘 / 背高 by measureDate）+ 明细表格
+ * tab：
+ *  1. 基础信息       — 所有 pig_type 都展示
+ *  2. 生产指标       — 仅 sow（母猪）；source: t_farm_sow_performance（由 BRD-DASH-001 写）
+ *  3. 养殖记录       — 状态变更时间线（全量 history 最多 200 条）
+ *  4. 配种 / 分娩明细 — 从状态流水筛繁殖类事件（BREED/FARROW/WEAN/OESTRUS/NULL_RETURN）结构化呈现
+ *  5. 用药 / 治疗     — 拉 med/record by pigId（替代原 health 空占位）
+ *  6. 生长曲线       — ECharts 折线图（体重 / 背膘 / 背高 by measureDate）+ 明细表格
  */
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -153,6 +204,8 @@ import { useDict } from '@/utils/dict';
 import { getPig, listPig, listPigHistory } from '@/api/djs-breed/pig';
 import { listSowPerformance } from '@/api/djs-breed/sow-performance';
 import { listGrowth, type PigGrowthVO } from '@/api/djs-breed/event/growth';
+import { listMedRecord } from '@/api/djs-breed/med';
+import type { MedRecordVO } from '@/api/djs-breed/med/types';
 import type { PigDetailVO, PigStatusEventCode, PigStatusRecordVO } from '@/api/djs-breed/pig/types';
 import { ElMessage } from 'element-plus';
 import * as echarts from 'echarts';
@@ -166,8 +219,19 @@ const {
   djs_pig_lifecycle: lifecycleDict,
   djs_pig_type: pigTypeDict,
   djs_pig_status_event: eventDict,
-  djs_pig_end_reason: endReasonDict
-} = useDict('djs_pig_lifecycle', 'djs_pig_type', 'djs_pig_status_event', 'djs_pig_end_reason');
+  djs_pig_end_reason: endReasonDict,
+  djs_medicine_use_type: medUseTypeDict,
+  djs_medicine_way: medWayDict,
+  djs_medicine_reason: medReasonDict
+} = useDict(
+  'djs_pig_lifecycle',
+  'djs_pig_type',
+  'djs_pig_status_event',
+  'djs_pig_end_reason',
+  'djs_medicine_use_type',
+  'djs_medicine_way',
+  'djs_medicine_reason'
+);
 
 const pigId = computed(() => String(route.params.id ?? ''));
 
@@ -185,6 +249,13 @@ const growthRows = ref<PigGrowthVO[]>([]);
 const growthLoading = ref(false);
 const chartEl = ref<HTMLDivElement>();
 let chart: echarts.ECharts | null = null;
+
+const medRows = ref<MedRecordVO[]>([]);
+const medLoading = ref(false);
+
+// 配种 / 分娩明细：从状态流水筛繁殖类事件，结构化呈现（无独立 BE 端点，复用 history 数据）
+const BREEDING_EVENTS: PigStatusEventCode[] = ['BREED', 'FARROW', 'WEAN', 'OESTRUS', 'NULL_RETURN'];
+const breedingRows = computed(() => history.value.filter((r) => BREEDING_EVENTS.includes(r.eventType)));
 
 const statusTagType = computed<'success' | 'warning' | 'info' | 'primary' | 'danger'>(() => {
   if (!detail.value) return 'info';
@@ -296,11 +367,24 @@ function renderChart(rowsAsc: PigGrowthVO[]) {
   });
 }
 
+async function loadMed() {
+  if (!pigId.value) return;
+  medLoading.value = true;
+  try {
+    const res = (await listMedRecord({ pigId: pigId.value, pageNum: 1, pageSize: 100 })) as any;
+    medRows.value = (res.rows ?? []) as MedRecordVO[];
+  } finally {
+    medLoading.value = false;
+  }
+}
+
 watch(activeTab, async (tab) => {
-  if (tab === 'history') {
+  if (tab === 'history' || tab === 'breeding') {
     await loadFullHistory();
   } else if (tab === 'performance') {
     await loadPerformance();
+  } else if (tab === 'med') {
+    await loadMed();
   } else if (tab === 'growth') {
     await loadGrowth();
   }

@@ -1,8 +1,6 @@
 <template>
   <div class="p-2">
-    <el-alert type="info" :closable="false" class="mb-2">
-      <template #title> 引种登记为 <strong>只读历史</strong>。新增请到小程序端的「引种登记」录入（饲养员在猪舍扫码 + 拍凭证）。 </template>
-    </el-alert>
+    <el-alert type="info" :closable="false" class="mb-2" :title="t('breedEvent.intro.readonlyTip')" />
     <BizTable
       ref="tableRef"
       :data="list"
@@ -24,12 +22,12 @@
     >
       <template #cell-introduceType="{ row }">
         <el-tag :type="row.introduceType === 'external' ? 'warning' : 'success'" size="small">
-          {{ row.introduceType === 'external' ? '外部引种' : '内部调拨' }}
+          {{ row.introduceType === 'external' ? t('breedEvent.intro.type.external') : t('breedEvent.intro.type.internal') }}
         </el-tag>
       </template>
       <template #cell-pigSex="{ row }">
         <el-tag v-if="row.pigSex" :type="row.pigSex === 'F' ? 'success' : 'primary'" size="small">
-          {{ row.pigSex === 'F' ? '母' : '公' }}
+          {{ row.pigSex === 'F' ? t('breedEvent.sex.female') : t('breedEvent.sex.male') }}
         </el-tag>
         <span v-else>—</span>
       </template>
@@ -38,9 +36,12 @@
 </template>
 
 <script setup name="DjsBreedEventIntro" lang="ts">
+import { useI18n } from 'vue-i18n';
 import { listPigIntro } from '@/api/djs-breed/event/intro';
 import type { PigIntroduceVO, PigIntroQuery } from '@/api/djs-breed/event/intro';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+
+const { t } = useI18n();
 
 const tableRef = ref<BizTableExpose>();
 const list = ref<PigIntroduceVO[]>([]);
@@ -57,43 +58,51 @@ const searchModel = reactive<PigIntroQuery>({
   endDate: undefined
 });
 
-const searchSchema: SearchFieldSchema[] = [
-  { field: 'introduceNo', label: '引种单号', type: 'input', placeholder: '前缀如 INT2026', clearable: true },
+const searchSchema = computed<SearchFieldSchema[]>(() => [
+  {
+    field: 'introduceNo',
+    label: t('breedEvent.intro.field.introduceNo'),
+    type: 'input',
+    placeholder: t('breedEvent.intro.placeholder.introduceNo'),
+    clearable: true
+  },
   {
     field: 'introduceType',
-    label: '引种方式',
+    label: t('breedEvent.intro.field.introduceType'),
     type: 'select',
     options: [
-      { label: '外部引种', value: 'external' },
-      { label: '内部调拨', value: 'internal' }
+      { label: t('breedEvent.intro.type.external'), value: 'external' },
+      { label: t('breedEvent.intro.type.internal'), value: 'internal' }
     ],
     clearable: true
   },
   {
     field: 'pigSex',
-    label: '性别',
+    label: t('breedEvent.intro.field.pigSex'),
     type: 'select',
     options: [
-      { label: '母 F', value: 'F' },
-      { label: '公 M', value: 'M' }
+      { label: t('breedEvent.sex.femaleOption'), value: 'F' },
+      { label: t('breedEvent.sex.maleOption'), value: 'M' }
     ],
     clearable: true
   }
-];
+]);
 
-const columns: BizTableColumn[] = [
-  { prop: 'introduceNo', label: '引种单号', minWidth: 160, fixed: 'left' },
-  { prop: 'introduceType', label: '引种方式', width: 100, align: 'center' },
-  { prop: 'introduceDate', label: '引种日期', width: 110, align: 'center', formatter: 'date' },
-  { prop: 'pigCount', label: '猪只数', width: 80, align: 'center' },
-  { prop: 'startEarNo', label: '起始耳号', width: 140, align: 'center' },
-  { prop: 'pigSex', label: '性别', width: 80, align: 'center' },
-  { prop: 'pigBreedCode', label: '品种', width: 100, align: 'center' },
-  { prop: 'pigStrainCode', label: '品系', width: 100, align: 'center' },
-  { prop: 'supplierId', label: '供应商ID', width: 120, align: 'center' },
-  { prop: 'remark', label: '备注', minWidth: 140 },
-  { prop: 'createTime', label: '创建时间', width: 160, align: 'center', formatter: 'datetime' }
-];
+const columns = computed<BizTableColumn[]>(() => [
+  { prop: 'introduceNo', label: t('breedEvent.intro.column.introduceNo'), minWidth: 160, fixed: 'left' },
+  { prop: 'introduceType', label: t('breedEvent.intro.column.introduceType'), width: 100, align: 'center' },
+  { prop: 'introduceDate', label: t('breedEvent.intro.column.introduceDate'), width: 110, align: 'center', formatter: 'date' },
+  { prop: 'pigCount', label: t('breedEvent.intro.column.pigCount'), width: 80, align: 'center' },
+  { prop: 'startEarNo', label: t('breedEvent.intro.column.startEarNo'), width: 140, align: 'center' },
+  { prop: 'pigSex', label: t('breedEvent.intro.column.pigSex'), width: 80, align: 'center' },
+  { prop: 'pigBreedCode', label: t('breedEvent.intro.column.pigBreedCode'), width: 100, align: 'center' },
+  { prop: 'pigStrainCode', label: t('breedEvent.intro.column.pigStrainCode'), width: 100, align: 'center' },
+  { prop: 'supplierCode', label: t('breedEvent.intro.column.supplierCode'), width: 120, align: 'center' },
+  { prop: 'supplierName', label: t('breedEvent.intro.column.supplierName'), width: 140, align: 'center' },
+  { prop: 'remark', label: t('breedEvent.intro.column.remark'), minWidth: 140 },
+  { prop: 'createTime', label: t('breedEvent.intro.column.createTime'), width: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'supplierId', label: t('breedEvent.intro.column.supplierId'), width: 180, align: 'center', visible: false }
+]);
 
 async function load() {
   loading.value = true;
@@ -103,7 +112,7 @@ async function load() {
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
-    const res: any = await listPigIntro(params);
+    const res = await listPigIntro(params);
     list.value = (res.rows ?? []) as PigIntroduceVO[];
     total.value = res.total ?? 0;
   } finally {
@@ -111,14 +120,20 @@ async function load() {
   }
 }
 
-function handleSearch(payload: PigIntroQuery) {
+function handleSearch(payload: Record<string, string | undefined>) {
   Object.assign(searchModel, payload);
   pageNum.value = 1;
   load();
 }
 
 function handleReset() {
-  Object.keys(searchModel).forEach((k) => ((searchModel as any)[k] = undefined));
+  Object.assign(searchModel, {
+    introduceNo: undefined,
+    introduceType: undefined,
+    pigSex: undefined,
+    beginDate: undefined,
+    endDate: undefined
+  });
   pageNum.value = 1;
   load();
 }

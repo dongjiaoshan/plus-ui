@@ -43,12 +43,7 @@
             :loading="productLoading"
             style="width: 100%"
           >
-            <el-option
-              v-for="p in productOptions"
-              :key="String(p.id)"
-              :label="`${p.productId} - ${p.productName}`"
-              :value="p.id"
-            />
+            <el-option v-for="p in productOptions" :key="String(p.id)" :label="`${p.productId} - ${p.productName}`" :value="p.id" />
           </el-select>
         </el-form-item>
         <el-form-item :label="t('djs.warehouse.purchaseIn.location')" prop="locationId">
@@ -60,23 +55,11 @@
             :loading="locationLoading"
             style="width: 100%"
           >
-            <el-option
-              v-for="l in locationOptions"
-              :key="String(l.id)"
-              :label="`${l.locationCode} - ${l.locationName}`"
-              :value="l.id"
-            />
+            <el-option v-for="l in locationOptions" :key="String(l.id)" :label="`${l.locationCode} - ${l.locationName}`" :value="l.id" />
           </el-select>
         </el-form-item>
         <el-form-item :label="t('djs.warehouse.purchaseIn.quantity')" prop="quantity">
-          <el-input-number
-            v-model="form.quantity"
-            :min="0.001"
-            :precision="3"
-            :step="1"
-            controls-position="right"
-            style="width: 100%"
-          />
+          <el-input-number v-model="form.quantity" :min="0.001" :precision="3" :step="1" controls-position="right" style="width: 100%" />
           <span v-if="selectedProductUnit" class="ml-2 text-gray-500">{{ selectedProductUnit }}</span>
         </el-form-item>
         <el-form-item :label="t('djs.warehouse.purchaseIn.remark')" prop="remark">
@@ -177,11 +160,7 @@ function handlePageChange(pn: number, ps: number) {
 }
 
 function handleExport() {
-  proxy?.download(
-    '/djs/warehouse/purchaseIn/export',
-    { ...searchModel },
-    `采购入库_${new Date().getTime()}.xlsx`
-  );
+  proxy?.download('/djs/warehouse/purchaseIn/export', { ...searchModel }, `采购入库_${new Date().getTime()}.xlsx`);
 }
 
 // ---- 新增 dialog ----

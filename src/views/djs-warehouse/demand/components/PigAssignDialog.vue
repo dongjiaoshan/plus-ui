@@ -50,15 +50,7 @@
       <el-divider content-position="left">
         {{ t('demand.assignPig.assignedTitle', { count: assignedList.length }) }}
       </el-divider>
-      <el-tag
-        v-for="p in assignedList"
-        :key="p.earNo"
-        type="primary"
-        closable
-        size="default"
-        class="mr-2 mb-2"
-        @close="onRemove(p.earNo)"
-      >
+      <el-tag v-for="p in assignedList" :key="p.earNo" type="primary" closable size="default" class="mr-2 mb-2" @close="onRemove(p.earNo)">
         {{ p.earNo }}
       </el-tag>
     </div>

@@ -60,6 +60,8 @@ export interface MedicineQuery extends PageQuery {
 export interface MedBatchVO extends BaseEntity {
   id: number | string;
   medicineId: number | string;
+  /** enrich：药品名称（替代裸 medicineId） */
+  medicineName?: string;
   batchNo: string;
   productionDate?: string;
   expiryDate?: string;
@@ -91,12 +93,20 @@ export type MedUsageType = 'use' | 'return' | 'loss';
 export interface MedUsageVO extends BaseEntity {
   id: number | string;
   batchId: number | string;
+  /** enrich：批号（替代裸 batchId） */
+  batchNo?: string;
   medicineId: number | string;
+  /** enrich：药品名称（替代裸 medicineId） */
+  medicineName?: string;
   usageType: MedUsageType;
   usageQty: number | string;
   useDate: string;
   relatedPenId?: number | string;
+  /** enrich：栏位编码（替代裸 relatedPenId） */
+  penCode?: string;
   pigId?: number | string;
+  /** enrich：耳号（替代裸 pigId） */
+  earNo?: string;
   scheduleId?: number | string;
   remark?: string;
 }
@@ -146,6 +156,8 @@ export interface MedRecordVO extends BaseEntity {
   medicineId: number | string;
   medicineName: string;
   batchId: number | string;
+  /** enrich：批号（替代裸 batchId） */
+  batchNo?: string;
   usageId?: number | string;
   scheduleId?: number | string;
   medicineDosage: number | string;
