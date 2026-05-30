@@ -522,6 +522,8 @@ export default {
         basic: '基础信息',
         performance: '生产指标',
         history: '养殖记录',
+        breeding: '配种 / 分娩明细',
+        med: '用药 / 治疗',
         growth: '生长曲线',
         health: '健康记录'
       },
@@ -533,9 +535,158 @@ export default {
       performanceEmpty: '该母猪暂无生产指标（数据由 BRD-DASH-001 定时任务汇总写入）',
       performanceDataHint: '该数据来自 t_farm_sow_performance，由分娩 / 断奶事件回写或夜间批处理生成。',
       growthEmpty: '暂无生长测量记录',
-      relatedNotFound: '未找到耳号为 {earNo} 的猪只'
+      relatedNotFound: '未找到耳号为 {earNo} 的猪只',
+      breedingEmpty: '暂无配种 / 分娩 / 断奶记录',
+      medEmpty: '暂无用药 / 治疗记录',
+      breedingCol: {
+        changeTime: '发生时间',
+        eventType: '事件',
+        transition: '状态变化',
+        relatedEventId: '关联业务 ID'
+      },
+      medCol: {
+        useDate: '用药日期',
+        medicineName: '药品',
+        medicineType: '用药类型',
+        medicineDosage: '剂量',
+        medicineWay: '用药方式',
+        medicineReason: '用药原因',
+        operatorName: '操作人'
+      }
     },
     exportTodo: '导出能力将在 BRD-LIST-001 中接入'
+  },
+  // 养殖事件台账（admin 只读：引种 / 仔猪耳标 / 事件台账 / 生长记录）
+  breedEvent: {
+    sex: {
+      female: '母',
+      male: '公',
+      femaleOption: '母 F',
+      maleOption: '公 M'
+    },
+    intro: {
+      readonlyTip: '引种登记为只读历史。新增请到小程序端的「引种登记」录入（饲养员在猪舍扫码 + 拍凭证）。',
+      type: {
+        external: '外部引种',
+        internal: '内部调拨'
+      },
+      column: {
+        introduceNo: '引种单号',
+        introduceType: '引种方式',
+        introduceDate: '引种日期',
+        pigCount: '猪只数',
+        startEarNo: '起始耳号',
+        pigSex: '性别',
+        pigBreedCode: '品种',
+        pigStrainCode: '品系',
+        supplierCode: '供应商编码',
+        supplierName: '供应商',
+        supplierId: '供应商 ID',
+        remark: '备注',
+        createTime: '创建时间'
+      },
+      field: {
+        introduceNo: '引种单号',
+        introduceType: '引种方式',
+        pigSex: '性别'
+      },
+      placeholder: {
+        introduceNo: '前缀如 INT2026'
+      }
+    },
+    eartag: {
+      readonlyTip: '仔猪耳标为只读历史。新增请到小程序端的「仔猪批量耳标」录入。',
+      column: {
+        pigletEarNo: '仔猪耳号',
+        pigletSex: '性别',
+        motherEarNo: '母猪耳号',
+        fatherEarNo: '父猪耳号',
+        farrowDate: '分娩日期',
+        farrowId: '分娩 ID',
+        birthWeight: '出生重 (kg)',
+        tagDate: '打标日期',
+        remark: '备注'
+      },
+      field: {
+        pigletEarNo: '仔猪耳号',
+        motherEarNo: '母猪耳号',
+        pigletSex: '性别'
+      },
+      placeholder: {
+        pigletEarNo: '完整耳号',
+        motherEarNo: '完整耳号'
+      }
+    },
+    ledger: {
+      readonlyTip: '事件台账 · 状态机统一流水（t_farm_status_record，所有事件自动写入）。各事件录入请到小程序端对应表单。',
+      transitionInit: '初始',
+      column: {
+        changeTime: '变更时间',
+        earNo: '耳号',
+        eventType: '事件',
+        transition: '状态变化',
+        durationDays: '停留天数',
+        relatedEventId: '关联业务 ID',
+        pigId: '猪只 ID',
+        id: '流水 ID'
+      },
+      field: {
+        earNo: '耳号',
+        eventType: '事件类型',
+        newStatus: '变更后状态'
+      },
+      placeholder: {
+        earNo: '精确匹配'
+      }
+    },
+    growth: {
+      tip: '生长记录：mp 端饲养员录体重；admin 端可补录背膘 / 背高（专业设备）。删除窗口：录入后 3 天内可删，超期不可删。',
+      column: {
+        id: 'ID',
+        earNo: '耳号',
+        measureDate: '测量日期',
+        weight: '体重',
+        backfatThickness: '背膘',
+        backHeight: '背高',
+        barnName: '栋舍',
+        penName: '栏位',
+        remark: '备注',
+        createTime: '录入时间',
+        action: '操作'
+      },
+      field: {
+        earNo: '耳号',
+        beginDate: '起始日期',
+        endDate: '结束日期'
+      },
+      placeholder: {
+        earNo: '如 260520-001'
+      },
+      form: {
+        title: '新增生长记录（admin 端可录背膘 / 背高）',
+        pig: '猪只',
+        pigPlaceholder: '按耳号搜索选择',
+        measureDate: '测量日期',
+        measureDatePlaceholder: '选择测量日期',
+        weight: '体重 (kg)',
+        backfatThickness: '背膘厚 (mm)',
+        backfatHint: '可选，admin 端专业设备测得',
+        backHeight: '背高 (cm)',
+        backHeightHint: '可选',
+        remark: '备注'
+      },
+      rule: {
+        pig: '请选择猪只',
+        measureDate: '请选择测量日期',
+        weight: '请输入体重 (kg)'
+      },
+      msg: {
+        added: '生长记录已录入',
+        delConfirm: '确定删除耳号 [{earNo}] 在 {date} 的生长记录？（录入后 3 天内可删，超期会失败）',
+        delConfirmTitle: '删除确认',
+        delSuccess: '删除成功'
+      }
+    }
   },
   // 农场 / 栋舍 / 栏位（BRD-MD-002）— 单农场（ADR-0001），左侧树两层：栋舍 → 栏位
   farm: {
@@ -683,6 +834,7 @@ export default {
     },
     column: {
       medicineId: '药品 ID',
+      medicineName: '药品',
       batchNo: '批次编码',
       productionDate: '生产日期',
       expiryDate: '过期日期',
@@ -719,9 +871,8 @@ export default {
   },
   // 药品领用台账（BRD-MED-002）
   medUsage: {
-    title: {
-      add: '新增领用 / 退回 / 损耗'
-    },
+    readonlyTip:
+      '领用台账为只读历史，记录所有领用 / 退回 / 损耗动作。新增请到小程序端的「药品领用」录入（饲养员在猪舍扫码 + 拍凭证）。台账软删不回滚库存（已发生的对账不可逆）。',
     type: {
       use: '领用',
       return: '退回',
@@ -730,39 +881,54 @@ export default {
     column: {
       medicineId: '药品 ID',
       batchId: '批次 ID',
+      medicineName: '药品',
+      batchNo: '批号',
       usageType: '类型',
       usageQty: '数量',
       useDate: '业务日期',
-      pigId: '关联猪只',
-      relatedPenId: '关联栏位',
+      earNo: '耳号',
+      penCode: '栏位',
       remark: '备注',
       createBy: '操作员',
       createTime: '创建时间'
     },
     field: {
-      medicineId: '药品 ID',
-      batchId: '批次',
       usageType: '类型',
-      usageQty: '数量',
-      useDate: '业务日期',
       useDateFrom: '日期 ≥',
-      useDateTo: '日期 ≤',
-      pigId: '关联猪只',
-      relatedPenId: '关联栏位',
-      remark: '备注'
-    },
-    placeholder: {
-      batchId: '请搜索批次（按批次号）',
-      useDate: '请选择业务日期'
-    },
-    rule: {
-      batchId: { required: '请选择批次' },
-      usageType: { required: '请选择类型' },
-      usageQty: { required: '数量必须大于 0' },
-      useDate: { required: '请选择业务日期' }
+      useDateTo: '日期 ≤'
     },
     confirm: {
       del: '是否确认删除选中的 {count} 条领用记录？已发生的库存动作不会回滚。'
+    }
+  },
+  // 用药治疗台账（BRD-MED-003）
+  medRecord: {
+    readonlyTip:
+      '用药治疗流水：单只 + 批量（master/detail）。admin 端只查不录；新增主要走小程序端「用药治疗」入口（批次仅显示 3 天内已领的）。台账软删不回滚库存。',
+    column: {
+      useDate: '用药日期',
+      earNo: '耳号',
+      drugType: '记录类型',
+      medicineType: '用药类型',
+      medicineReason: '用药原因',
+      medicineWay: '用药方式',
+      medicineName: '药品',
+      batchNo: '批号',
+      batchId: '批次 ID',
+      medicineDosage: '剂量',
+      operatorName: '操作人',
+      remark: '备注',
+      createTime: '创建时间'
+    },
+    field: {
+      earNo: '耳号',
+      medicineType: '用药类型',
+      drugType: '记录类型',
+      beginDate: '开始日期',
+      endDate: '结束日期'
+    },
+    confirm: {
+      del: '是否确认删除选中的 {count} 条用药记录？'
     }
   },
   // 库位（WMS-MD-001）

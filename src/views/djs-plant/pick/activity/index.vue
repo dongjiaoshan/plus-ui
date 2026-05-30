@@ -133,6 +133,7 @@
 import { listPickActivity, getPickActivity, addPickActivity, updatePickActivity, delPickActivity, summaryPickActivity } from '@/api/djs-plant/pick';
 import type { PickActivityForm, PickActivityQuery, PickActivityVO } from '@/api/djs-plant/pick/types';
 import { listCrop } from '@/api/djs-plant/crop';
+import { useDict } from '@/utils/dict';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
 

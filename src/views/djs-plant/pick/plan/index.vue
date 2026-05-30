@@ -64,6 +64,7 @@
 <script setup name="PickPlanIndex" lang="ts">
 import { listPickPlan } from '@/api/djs-plant/pick';
 import type { PickPlanGroupVO, PickPlanQuery } from '@/api/djs-plant/pick/types';
+import { useDict } from '@/utils/dict';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 

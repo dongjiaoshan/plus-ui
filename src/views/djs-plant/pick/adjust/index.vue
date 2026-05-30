@@ -83,6 +83,7 @@
 import { listPickPlanDetails, adjustPickPlan } from '@/api/djs-plant/pick';
 import type { PickAdjustBatchForm } from '@/api/djs-plant/pick/types';
 import type { PlantDetailsVO } from '@/api/djs-plant/plan/types';
+import { useDict } from '@/utils/dict';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 

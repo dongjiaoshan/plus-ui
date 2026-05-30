@@ -48,22 +48,21 @@
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item :label="t('djs.warehouse.return.returnDirection')" prop="returnDirection">
           <el-select v-model="form.returnDirection" style="width: 100%">
-            <el-option
-              v-for="opt in dictDirectionOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
+            <el-option v-for="opt in dictDirectionOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
         <el-form-item :label="t('djs.warehouse.return.storeId')" prop="storeId">
-          <el-input v-model="form.storeId" placeholder="store_id（snowflake，V1 手输；V2 picker）" />
+          <el-select v-model="form.storeId" filterable clearable placeholder="选择退货门店" style="width: 100%">
+            <el-option v-for="s in storeOptions" :key="String(s.id)" :label="`${s.storeName}（${s.storeCode}）`" :value="String(s.id)" />
+          </el-select>
         </el-form-item>
         <el-form-item :label="t('djs.warehouse.return.productId')" prop="productId">
-          <el-input v-model="form.productId" placeholder="product_id（snowflake）" />
+          <el-select v-model="form.productId" filterable clearable placeholder="选择产品" style="width: 100%" @change="onProductChange">
+            <el-option v-for="p in productOptions" :key="String(p.id)" :label="`${p.productName}（${p.productUnit}）`" :value="String(p.id)" />
+          </el-select>
         </el-form-item>
         <el-form-item :label="t('djs.warehouse.return.productName')" prop="productName">
-          <el-input v-model="form.productName" maxlength="128" />
+          <el-input v-model="form.productName" maxlength="128" placeholder="选产品后自动带出，可改" />
         </el-form-item>
         <el-form-item :label="t('djs.warehouse.return.returnWeight')" prop="returnWeight">
           <el-input-number v-model="form.returnWeight" :min="0.001" :precision="3" :step="1" controls-position="right" style="width: 100%" />
@@ -84,13 +83,7 @@
     </el-dialog>
 
     <!-- 确认退货 -->
-    <el-dialog
-      v-model="confirmDialogVisible"
-      :title="t('djs.warehouse.return.confirmDialogTitle')"
-      destroy-on-close
-      append-to-body
-      width="480px"
-    >
+    <el-dialog v-model="confirmDialogVisible" :title="t('djs.warehouse.return.confirmDialogTitle')" destroy-on-close append-to-body width="480px">
       <el-form ref="confirmFormRef" :model="confirmForm" :rules="confirmRules" label-width="120px">
         <el-form-item label="退货单号">
           <span>{{ currentRow?.returnNo }}</span>
@@ -127,20 +120,12 @@
 <script setup name="ReturnProduct" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import {
-  addReturn,
-  confirmReturn,
-  delReturn,
-  exportReturn,
-  listReturn,
-  updateReturn
-} from '@/api/djs-warehouse/return';
-import type {
-  ReturnConfirmBody,
-  ReturnProductForm,
-  ReturnProductQuery,
-  ReturnProductVO
-} from '@/api/djs-warehouse/return/types';
+import { addReturn, confirmReturn, delReturn, exportReturn, listReturn, updateReturn } from '@/api/djs-warehouse/return';
+import type { ReturnConfirmBody, ReturnProductForm, ReturnProductQuery, ReturnProductVO } from '@/api/djs-warehouse/return/types';
+import { listStore } from '@/api/djs-common/store';
+import type { StoreVO } from '@/api/djs-common/store/types';
+import { listProduct } from '@/api/djs-warehouse/product';
+import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import type { FormInstance, FormRules } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 
@@ -192,6 +177,25 @@ const dictDirectionOptions = [
 ];
 
 const dictDirectionTags = dictDirectionOptions.map((o) => ({ label: o.label, value: o.value }));
+
+// 门店 / 产品 下拉数据源（替代手输 snowflake）
+const storeOptions = ref<StoreVO[]>([]);
+const productOptions = ref<ProductInfoVO[]>([]);
+
+async function loadStoreOptions() {
+  const res: any = await listStore({ pageNum: 1, pageSize: 500 });
+  storeOptions.value = res.rows ?? [];
+}
+
+async function loadProductOptions() {
+  const res: any = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
+  productOptions.value = res.rows ?? [];
+}
+
+function onProductChange(id: string) {
+  const p = productOptions.value.find((x) => String(x.id) === String(id));
+  form.productName = p?.productName;
+}
 
 // 新增 / 编辑
 const dialogVisible = ref(false);
@@ -357,5 +361,7 @@ function handleExport() {
 
 onMounted(() => {
   loadList();
+  loadStoreOptions();
+  loadProductOptions();
 });
 </script>

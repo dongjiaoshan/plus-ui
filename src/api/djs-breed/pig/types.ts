@@ -15,8 +15,7 @@
  *  - djs_pig_breed / djs_pig_strain  品种 / 品系
  *
  * 注意：`pigSex` 走 DB 实际值 `'F' | 'M'`（domain `Pig.pigSex` 字符列），
- *      与字典 `djs_pig_gender` (`male` / `female`) 不一致 — FE 不走该字典，自行映射。
- *      见 D05 `_open-issues.md` 后续 raise。
+ *      与字典 `djs_pig_sex`（dict_value `F` / `M`）一致；FE 直接映射 F/M，不走 useDict。
  */
 
 /** 性别（DB 列值；F=母 / M=公） */

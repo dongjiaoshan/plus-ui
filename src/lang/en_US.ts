@@ -522,6 +522,8 @@ export default {
         basic: 'Basic info',
         performance: 'Performance',
         history: 'History',
+        breeding: 'Breeding / farrow',
+        med: 'Medication',
         growth: 'Growth curve',
         health: 'Health'
       },
@@ -533,9 +535,160 @@ export default {
       performanceEmpty: 'No performance data yet (filled by BRD-DASH-001 cron)',
       performanceDataHint: 'Data sourced from t_farm_sow_performance, populated by farrow / wean events or nightly job.',
       growthEmpty: 'No growth measurements',
-      relatedNotFound: 'No pig found with ear no. {earNo}'
+      relatedNotFound: 'No pig found with ear no. {earNo}',
+      breedingEmpty: 'No breeding / farrow / wean records',
+      medEmpty: 'No medication / treatment records',
+      breedingCol: {
+        changeTime: 'Time',
+        eventType: 'Event',
+        transition: 'State change',
+        relatedEventId: 'Related ID'
+      },
+      medCol: {
+        useDate: 'Use date',
+        medicineName: 'Medicine',
+        medicineType: 'Use type',
+        medicineDosage: 'Dosage',
+        medicineWay: 'Method',
+        medicineReason: 'Reason',
+        operatorName: 'Operator'
+      }
     },
     exportTodo: 'Export will be wired in BRD-LIST-001'
+  },
+  // Breed event ledgers (admin read-only: introduce / piglet ear-tag / event ledger / growth)
+  breedEvent: {
+    sex: {
+      female: 'F',
+      male: 'M',
+      femaleOption: 'Female (F)',
+      maleOption: 'Male (M)'
+    },
+    intro: {
+      readonlyTip:
+        'Introduction records are read-only history. Create entries in the mini-program "Introduction" (worker scans + photo in the barn).',
+      type: {
+        external: 'External',
+        internal: 'Internal transfer'
+      },
+      column: {
+        introduceNo: 'Introduce No.',
+        introduceType: 'Type',
+        introduceDate: 'Introduce date',
+        pigCount: 'Pig count',
+        startEarNo: 'Start ear no.',
+        pigSex: 'Sex',
+        pigBreedCode: 'Breed',
+        pigStrainCode: 'Strain',
+        supplierCode: 'Supplier code',
+        supplierName: 'Supplier',
+        supplierId: 'Supplier ID',
+        remark: 'Remark',
+        createTime: 'Created'
+      },
+      field: {
+        introduceNo: 'Introduce No.',
+        introduceType: 'Type',
+        pigSex: 'Sex'
+      },
+      placeholder: {
+        introduceNo: 'Prefix e.g. INT2026'
+      }
+    },
+    eartag: {
+      readonlyTip: 'Piglet ear-tag records are read-only history. Create entries in the mini-program "Piglet batch ear-tag".',
+      column: {
+        pigletEarNo: 'Piglet ear no.',
+        pigletSex: 'Sex',
+        motherEarNo: 'Mother ear no.',
+        fatherEarNo: 'Father ear no.',
+        farrowDate: 'Farrow date',
+        farrowId: 'Farrow ID',
+        birthWeight: 'Birth wt (kg)',
+        tagDate: 'Tag date',
+        remark: 'Remark'
+      },
+      field: {
+        pigletEarNo: 'Piglet ear no.',
+        motherEarNo: 'Mother ear no.',
+        pigletSex: 'Sex'
+      },
+      placeholder: {
+        pigletEarNo: 'Full ear no.',
+        motherEarNo: 'Full ear no.'
+      }
+    },
+    ledger: {
+      readonlyTip:
+        'Event ledger · unified state-machine log (t_farm_status_record, all events auto-written). Create each event in the matching mini-program form.',
+      transitionInit: 'Initial',
+      column: {
+        changeTime: 'Change time',
+        earNo: 'Ear No.',
+        eventType: 'Event',
+        transition: 'State change',
+        durationDays: 'Days',
+        relatedEventId: 'Related ID',
+        pigId: 'Pig ID',
+        id: 'Log ID'
+      },
+      field: {
+        earNo: 'Ear No.',
+        eventType: 'Event type',
+        newStatus: 'New state'
+      },
+      placeholder: {
+        earNo: 'Exact match'
+      }
+    },
+    growth: {
+      tip: 'Growth records: worker enters weight in mini-program; admin may add backfat / back height (pro equipment). Delete window: within 3 days of entry.',
+      column: {
+        id: 'ID',
+        earNo: 'Ear No.',
+        measureDate: 'Measure date',
+        weight: 'Weight',
+        backfatThickness: 'Backfat',
+        backHeight: 'Back height',
+        barnName: 'Barn',
+        penName: 'Pen',
+        remark: 'Remark',
+        createTime: 'Entered',
+        action: 'Action'
+      },
+      field: {
+        earNo: 'Ear No.',
+        beginDate: 'Begin date',
+        endDate: 'End date'
+      },
+      placeholder: {
+        earNo: 'e.g. 260520-001'
+      },
+      form: {
+        title: 'New growth record (admin may enter backfat / back height)',
+        pig: 'Pig',
+        pigPlaceholder: 'Search by ear no.',
+        measureDate: 'Measure date',
+        measureDatePlaceholder: 'Pick measure date',
+        weight: 'Weight (kg)',
+        backfatThickness: 'Backfat (mm)',
+        backfatHint: 'Optional, measured by pro equipment',
+        backHeight: 'Back height (cm)',
+        backHeightHint: 'Optional',
+        remark: 'Remark'
+      },
+      rule: {
+        pig: 'Please select a pig',
+        measureDate: 'Please pick measure date',
+        weight: 'Please enter weight (kg)'
+      },
+      msg: {
+        added: 'Growth record saved',
+        delConfirm: 'Delete growth record of ear [{earNo}] on {date}? (deletable within 3 days of entry)',
+        delConfirmTitle: 'Delete confirm',
+        delSuccess: 'Deleted'
+      }
+    }
   },
   // Farm / Barn / Pen (BRD-MD-002) — single farm (ADR-0001), 2-level tree: Barn → Pen
   farm: {
@@ -683,6 +836,7 @@ export default {
     },
     column: {
       medicineId: 'Medicine ID',
+      medicineName: 'Medicine',
       batchNo: 'Batch No.',
       productionDate: 'Production',
       expiryDate: 'Expiry',
@@ -719,44 +873,60 @@ export default {
   },
   // Medicine usage ledger (BRD-MED-002)
   medUsage: {
-    title: { add: 'New usage / return / loss' },
+    readonlyTip:
+      'Usage ledger is read-only history of all pick / return / loss actions. Create entries in the mini-program "Medicine pick" (worker scans + photo in the barn). Soft-delete does NOT revert stock (settled records are irreversible).',
     type: { use: 'Use', return: 'Return', loss: 'Loss' },
     column: {
       medicineId: 'Medicine ID',
       batchId: 'Batch ID',
+      medicineName: 'Medicine',
+      batchNo: 'Batch no.',
       usageType: 'Type',
       usageQty: 'Qty',
       useDate: 'Date',
-      pigId: 'Pig',
-      relatedPenId: 'Pen',
+      earNo: 'Ear No.',
+      penCode: 'Pen',
       remark: 'Remark',
       createBy: 'Operator',
       createTime: 'Created'
     },
     field: {
-      medicineId: 'Medicine ID',
-      batchId: 'Batch',
       usageType: 'Type',
-      usageQty: 'Quantity',
-      useDate: 'Business date',
       useDateFrom: 'Date ≥',
-      useDateTo: 'Date ≤',
-      pigId: 'Pig',
-      relatedPenId: 'Pen',
-      remark: 'Remark'
-    },
-    placeholder: {
-      batchId: 'Search batch by batch no.',
-      useDate: 'Pick date'
-    },
-    rule: {
-      batchId: { required: 'Batch is required' },
-      usageType: { required: 'Type is required' },
-      usageQty: { required: 'Qty must be > 0' },
-      useDate: { required: 'Date is required' }
+      useDateTo: 'Date ≤'
     },
     confirm: {
       del: 'Delete {count} usage record(s)? Stock changes will NOT be reverted.'
+    }
+  },
+  // Medicine treatment ledger (BRD-MED-003)
+  medRecord: {
+    readonlyTip:
+      'Medication treatment log: single + batch (master/detail). Admin is read-only; create entries in the mini-program "Medication treatment" (only batches picked within 3 days are shown). Soft-delete does NOT revert stock.',
+    column: {
+      useDate: 'Use date',
+      earNo: 'Ear No.',
+      drugType: 'Record type',
+      medicineType: 'Use type',
+      medicineReason: 'Reason',
+      medicineWay: 'Method',
+      medicineName: 'Medicine',
+      batchNo: 'Batch no.',
+      batchId: 'Batch ID',
+      medicineDosage: 'Dosage',
+      operatorName: 'Operator',
+      remark: 'Remark',
+      createTime: 'Created'
+    },
+    field: {
+      earNo: 'Ear No.',
+      medicineType: 'Use type',
+      drugType: 'Record type',
+      beginDate: 'Begin date',
+      endDate: 'End date'
+    },
+    confirm: {
+      del: 'Delete {count} medication record(s)?'
     }
   },
   // Warehouse location (WMS-MD-001)

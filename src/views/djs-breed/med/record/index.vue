@@ -1,12 +1,6 @@
 <template>
   <div class="p-2">
-    <el-alert
-      type="info"
-      :closable="false"
-      show-icon
-      class="mb-3"
-      title="用药治疗流水：单只 + 批量（master/detail）。批量用药 admin 端只查不录；新增主要走小程序端「用药治疗」入口（批次仅显示 3 天内已领的）。台账软删不回滚库存。"
-    />
+    <el-alert type="info" :closable="false" show-icon class="mb-3" :title="t('medRecord.readonlyTip')" />
     <BizTable
       ref="tableRef"
       :data="list"
@@ -37,7 +31,7 @@
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { delMedRecord, listMedRecord } from '@/api/djs-breed/med';
-import type { MedRecordQuery, MedRecordVO } from '@/api/djs-breed/med/types';
+import type { MedRecordDrugType, MedRecordQuery, MedRecordVO } from '@/api/djs-breed/med/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -51,51 +45,48 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const searchModel = reactive<Record<string, any>>({
-  pigId: undefined,
+const searchModel = reactive<Record<string, string | undefined>>({
   earNo: undefined,
   medicineType: undefined,
   drugType: undefined,
-  batchId: undefined,
   beginDate: undefined,
   endDate: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'earNo', label: '耳号', type: 'input' },
-  { field: 'medicineType', label: '用药类型', type: 'select', dictType: 'djs_medicine_use_type' },
-  { field: 'drugType', label: '记录类型', type: 'select', dictType: 'djs_drug_type' },
-  { field: 'batchId', label: '批次 ID', type: 'number' },
-  { field: 'beginDate', label: '开始日期', type: 'date' },
-  { field: 'endDate', label: '结束日期', type: 'date' }
+  { field: 'earNo', label: t('medRecord.field.earNo'), type: 'input' },
+  { field: 'medicineType', label: t('medRecord.field.medicineType'), type: 'select', dictType: 'djs_medicine_use_type' },
+  { field: 'drugType', label: t('medRecord.field.drugType'), type: 'select', dictType: 'djs_drug_type' },
+  { field: 'beginDate', label: t('medRecord.field.beginDate'), type: 'date' },
+  { field: 'endDate', label: t('medRecord.field.endDate'), type: 'date' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'useDate', label: '用药日期', width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'earNo', label: '耳号', width: 110 },
-  { prop: 'drugType', label: '记录类型', width: 100, align: 'center', dictType: 'djs_drug_type' },
-  { prop: 'medicineType', label: '用药类型', width: 100, align: 'center', dictType: 'djs_medicine_use_type' },
-  { prop: 'medicineReason', label: '用药原因', width: 110, align: 'center', dictType: 'djs_medicine_reason' },
-  { prop: 'medicineWay', label: '用药方式', width: 100, align: 'center', dictType: 'djs_medicine_way' },
-  { prop: 'medicineName', label: '药品', width: 140 },
-  { prop: 'batchId', label: '批次 ID', width: 120 },
-  { prop: 'medicineDosage', label: '剂量', width: 100, align: 'right' },
-  { prop: 'operatorName', label: '操作人', width: 110 },
-  { prop: 'remark', label: '备注', minWidth: 160, showOverflowTooltip: true },
-  { prop: 'createTime', label: '创建时间', width: 170, align: 'center', formatter: 'datetime' }
+  { prop: 'useDate', label: t('medRecord.column.useDate'), width: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'earNo', label: t('medRecord.column.earNo'), width: 110 },
+  { prop: 'drugType', label: t('medRecord.column.drugType'), width: 100, align: 'center', dictType: 'djs_drug_type' },
+  { prop: 'medicineType', label: t('medRecord.column.medicineType'), width: 100, align: 'center', dictType: 'djs_medicine_use_type' },
+  { prop: 'medicineReason', label: t('medRecord.column.medicineReason'), width: 110, align: 'center', dictType: 'djs_medicine_reason' },
+  { prop: 'medicineWay', label: t('medRecord.column.medicineWay'), width: 100, align: 'center', dictType: 'djs_medicine_way' },
+  { prop: 'medicineName', label: t('medRecord.column.medicineName'), width: 140 },
+  { prop: 'batchNo', label: t('medRecord.column.batchNo'), width: 140, showOverflowTooltip: true },
+  { prop: 'medicineDosage', label: t('medRecord.column.medicineDosage'), width: 100, align: 'right' },
+  { prop: 'operatorName', label: t('medRecord.column.operatorName'), width: 110 },
+  { prop: 'remark', label: t('medRecord.column.remark'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'createTime', label: t('medRecord.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'batchId', label: t('medRecord.column.batchId'), width: 180, visible: false }
 ]);
 
 async function fetchList() {
   loading.value = true;
   try {
+    const drugTypeRaw = searchModel.drugType;
     const query: MedRecordQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
-      pigId: searchModel.pigId || undefined,
       earNo: searchModel.earNo || undefined,
       medicineType: searchModel.medicineType || undefined,
-      drugType: searchModel.drugType || undefined,
-      batchId: searchModel.batchId || undefined,
+      drugType: drugTypeRaw ? (Number(drugTypeRaw) as MedRecordDrugType) : undefined,
       beginDate: searchModel.beginDate || undefined,
       endDate: searchModel.endDate || undefined
     };
@@ -107,7 +98,7 @@ async function fetchList() {
   }
 }
 
-function handleSearch(payload: Record<string, any>) {
+function handleSearch(payload: Record<string, string | undefined>) {
   Object.assign(searchModel, payload);
   pageNum.value = 1;
   fetchList();
@@ -124,20 +115,19 @@ function handlePageChange(p: number, s: number) {
 }
 async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];
-  await proxy?.$modal.confirm(t('common.confirmDelete', { count: ids.length }) || `确定删除 ${ids.length} 条？`);
+  await proxy?.$modal.confirm(t('medRecord.confirm.del', { count: ids.length }));
   await delMedRecord(ids);
-  proxy?.$modal.msgSuccess(t('common.opSuccess') || '操作成功');
+  proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
 }
 function handleExport() {
+  const drugTypeRaw = searchModel.drugType;
   proxy?.download(
     'djs/breed/med-record/export',
     {
-      pigId: searchModel.pigId || undefined,
       earNo: searchModel.earNo || undefined,
       medicineType: searchModel.medicineType || undefined,
-      drugType: searchModel.drugType || undefined,
-      batchId: searchModel.batchId || undefined,
+      drugType: drugTypeRaw ? (Number(drugTypeRaw) as MedRecordDrugType) : undefined,
       beginDate: searchModel.beginDate || undefined,
       endDate: searchModel.endDate || undefined
     },

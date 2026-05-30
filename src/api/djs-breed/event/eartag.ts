@@ -7,6 +7,8 @@ export interface PigletnoVO {
   motherEarNo: string;
   fatherEarNo?: string;
   farrowId: number | string;
+  /** enrich：分娩日期（替代裸 farrowId） */
+  farrowDate?: string;
   tagDate: string;
   pigletSex: 'F' | 'M';
   birthWeight?: number;

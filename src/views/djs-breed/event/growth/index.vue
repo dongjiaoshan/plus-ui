@@ -1,11 +1,6 @@
 <template>
   <div class="p-2">
-    <el-alert type="info" :closable="false" class="mb-2">
-      <template #title>
-        生长记录：mp 端饲养员录 <strong>体重</strong>；admin 端可补录 <strong>背膘</strong> / <strong>背高</strong>（专业设备）。删除窗口：录入后 3
-        天内可删，超期不可删。
-      </template>
-    </el-alert>
+    <el-alert type="info" :closable="false" class="mb-2" :title="t('breedEvent.growth.tip')" />
 
     <BizTable
       ref="tableRef"
@@ -39,47 +34,72 @@
         <span v-else class="muted">—</span>
       </template>
       <template #cell-action="{ row }">
-        <el-button v-hasPermi="['djs:breed:event:growth:remove']" type="danger" link size="small" @click="handleDelete(row)"> 删除 </el-button>
+        <el-button v-hasPermi="['djs:breed:event:growth:remove']" type="danger" link size="small" @click="handleDelete(row)">
+          {{ t('common.delete') }}
+        </el-button>
       </template>
     </BizTable>
 
-    <el-dialog v-model="addVisible" title="新增生长记录（admin 端可录背膘 / 背高）" width="540px">
+    <el-dialog v-model="addVisible" :title="t('breedEvent.growth.form.title')" width="540px">
       <el-form ref="addFormRef" :model="addForm" :rules="addRules" label-width="120px">
-        <el-form-item label="猪只 ID" prop="pigId">
-          <el-input v-model="addForm.pigId" placeholder="t_farm_pig_info.id（数字）" />
+        <el-form-item :label="t('breedEvent.growth.form.pig')" prop="earNo">
+          <el-select
+            v-model="addForm.earNo"
+            filterable
+            remote
+            reserve-keyword
+            :remote-method="searchPig"
+            :loading="pigSearching"
+            :placeholder="t('breedEvent.growth.form.pigPlaceholder')"
+            style="width: 100%"
+            @change="onPigSelected"
+          >
+            <el-option v-for="p in pigOptions" :key="p.id" :label="p.earNo" :value="p.earNo" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="测量日期" prop="measureDate">
-          <el-date-picker v-model="addForm.measureDate" type="date" value-format="YYYY-MM-DD" placeholder="选择测量日期" style="width: 100%" />
+        <el-form-item :label="t('breedEvent.growth.form.measureDate')" prop="measureDate">
+          <el-date-picker
+            v-model="addForm.measureDate"
+            type="date"
+            value-format="YYYY-MM-DD"
+            :placeholder="t('breedEvent.growth.form.measureDatePlaceholder')"
+            style="width: 100%"
+          />
         </el-form-item>
-        <el-form-item label="体重 (kg)" prop="weight">
+        <el-form-item :label="t('breedEvent.growth.form.weight')" prop="weight">
           <el-input-number v-model="addForm.weight" :min="0.01" :max="999.99" :precision="2" :step="1" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="背膘厚 (mm)">
+        <el-form-item :label="t('breedEvent.growth.form.backfatThickness')">
           <el-input-number v-model="addForm.backfatThickness" :min="0" :max="999.99" :precision="2" :step="0.5" style="width: 100%" />
-          <span class="form-hint">可选，admin 端专业设备测得</span>
+          <span class="form-hint">{{ t('breedEvent.growth.form.backfatHint') }}</span>
         </el-form-item>
-        <el-form-item label="背高 (cm)">
+        <el-form-item :label="t('breedEvent.growth.form.backHeight')">
           <el-input-number v-model="addForm.backHeight" :min="0" :max="999.99" :precision="2" :step="1" style="width: 100%" />
-          <span class="form-hint">可选</span>
+          <span class="form-hint">{{ t('breedEvent.growth.form.backHeightHint') }}</span>
         </el-form-item>
-        <el-form-item label="备注">
+        <el-form-item :label="t('breedEvent.growth.form.remark')">
           <el-input v-model="addForm.remark" type="textarea" :rows="2" maxlength="500" show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="addVisible = false">取消</el-button>
-        <el-button type="primary" :loading="addSubmitting" @click="submitAdd">提交</el-button>
+        <el-button @click="addVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="addSubmitting" @click="submitAdd">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup name="DjsBreedEventGrowth" lang="ts">
+import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { addGrowth, delGrowth, listGrowth } from '@/api/djs-breed/event/growth';
 import type { PigGrowthBody, PigGrowthQuery, PigGrowthVO } from '@/api/djs-breed/event/growth';
-import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import { listPig } from '@/api/djs-breed/pig';
+import type { PigVO } from '@/api/djs-breed/pig/types';
+import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+
+const { t } = useI18n();
 
 const tableRef = ref<BizTableExpose>();
 const list = ref<PigGrowthVO[]>([]);
@@ -89,44 +109,56 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 const searchModel = reactive<PigGrowthQuery>({
-  pigId: undefined,
   earNo: undefined,
   beginDate: undefined,
   endDate: undefined
 });
 
-const searchSchema: SearchFieldSchema[] = [
-  { field: 'earNo', label: '耳号', type: 'input', placeholder: '如 260520-001', clearable: true },
-  { field: 'pigId', label: '猪只 ID', type: 'input', placeholder: 'pig_info.id', clearable: true },
-  { field: 'beginDate', label: '起始日期', type: 'date', clearable: true },
-  { field: 'endDate', label: '结束日期', type: 'date', clearable: true }
-];
+const searchSchema = computed<SearchFieldSchema[]>(() => [
+  {
+    field: 'earNo',
+    label: t('breedEvent.growth.field.earNo'),
+    type: 'input',
+    placeholder: t('breedEvent.growth.placeholder.earNo'),
+    clearable: true
+  },
+  { field: 'beginDate', label: t('breedEvent.growth.field.beginDate'), type: 'date', clearable: true },
+  { field: 'endDate', label: t('breedEvent.growth.field.endDate'), type: 'date', clearable: true }
+]);
 
-const columns: BizTableColumn[] = [
-  { prop: 'id', label: 'ID', width: 90, fixed: 'left' },
-  { prop: 'earNo', label: '耳号', minWidth: 140, fixed: 'left' },
-  { prop: 'measureDate', label: '测量日期', width: 120, align: 'center', formatter: 'date' },
-  { prop: 'weight', label: '体重', width: 110, align: 'right' },
-  { prop: 'backfatThickness', label: '背膘', width: 100, align: 'right' },
-  { prop: 'backHeight', label: '背高', width: 100, align: 'right' },
-  { prop: 'barnName', label: '栋舍', width: 100, align: 'center' },
-  { prop: 'penName', label: '栏位', width: 100, align: 'center' },
-  { prop: 'remark', label: '备注', minWidth: 160 },
-  { prop: 'createTime', label: '录入时间', width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'action', label: '操作', width: 90, align: 'center', fixed: 'right' }
-];
+const columns = computed<BizTableColumn[]>(() => [
+  { prop: 'id', label: t('breedEvent.growth.column.id'), width: 90, fixed: 'left', visible: false },
+  { prop: 'earNo', label: t('breedEvent.growth.column.earNo'), minWidth: 140, fixed: 'left' },
+  { prop: 'measureDate', label: t('breedEvent.growth.column.measureDate'), width: 120, align: 'center', formatter: 'date' },
+  { prop: 'weight', label: t('breedEvent.growth.column.weight'), width: 110, align: 'right' },
+  { prop: 'backfatThickness', label: t('breedEvent.growth.column.backfatThickness'), width: 100, align: 'right' },
+  { prop: 'backHeight', label: t('breedEvent.growth.column.backHeight'), width: 100, align: 'right' },
+  { prop: 'barnName', label: t('breedEvent.growth.column.barnName'), width: 100, align: 'center' },
+  { prop: 'penName', label: t('breedEvent.growth.column.penName'), width: 100, align: 'center' },
+  { prop: 'remark', label: t('breedEvent.growth.column.remark'), minWidth: 160 },
+  { prop: 'createTime', label: t('breedEvent.growth.column.createTime'), width: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'action', label: t('breedEvent.growth.column.action'), width: 90, align: 'center', fixed: 'right' }
+]);
 
 const addVisible = ref(false);
 const addSubmitting = ref(false);
 const addFormRef = ref<FormInstance>();
-const addForm = reactive<{
+
+const pigOptions = ref<PigVO[]>([]);
+const pigSearching = ref(false);
+
+interface GrowthAddForm {
+  earNo: string;
   pigId: string;
   measureDate: string;
   weight: number | undefined;
   backfatThickness: number | undefined;
   backHeight: number | undefined;
   remark: string;
-}>({
+}
+
+const addForm = reactive<GrowthAddForm>({
+  earNo: '',
   pigId: '',
   measureDate: '',
   weight: undefined,
@@ -136,9 +168,9 @@ const addForm = reactive<{
 });
 
 const addRules: FormRules = {
-  pigId: [{ required: true, message: '请输入猪只 ID', trigger: 'blur' }],
-  measureDate: [{ required: true, message: '请选择测量日期', trigger: 'change' }],
-  weight: [{ required: true, message: '请输入体重 (kg)', trigger: 'blur' }]
+  earNo: [{ required: true, message: t('breedEvent.growth.rule.pig'), trigger: 'change' }],
+  measureDate: [{ required: true, message: t('breedEvent.growth.rule.measureDate'), trigger: 'change' }],
+  weight: [{ required: true, message: t('breedEvent.growth.rule.weight'), trigger: 'blur' }]
 };
 
 async function load() {
@@ -149,7 +181,7 @@ async function load() {
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
-    const res: any = await listGrowth(params);
+    const res = await listGrowth(params);
     list.value = (res.rows ?? []) as PigGrowthVO[];
     total.value = res.total ?? 0;
   } finally {
@@ -157,14 +189,18 @@ async function load() {
   }
 }
 
-function handleSearch(payload: PigGrowthQuery) {
+function handleSearch(payload: Record<string, string | undefined>) {
   Object.assign(searchModel, payload);
   pageNum.value = 1;
   load();
 }
 
 function handleReset() {
-  Object.keys(searchModel).forEach((k) => ((searchModel as any)[k] = undefined));
+  Object.assign(searchModel, {
+    earNo: undefined,
+    beginDate: undefined,
+    endDate: undefined
+  });
   pageNum.value = 1;
   load();
 }
@@ -175,13 +211,34 @@ function handlePageChange(p: number, s: number) {
   load();
 }
 
+async function searchPig(query: string) {
+  if (!query) {
+    pigOptions.value = [];
+    return;
+  }
+  pigSearching.value = true;
+  try {
+    const res = await listPig({ earNo: query, pageNum: 1, pageSize: 20, excludeEnd: true });
+    pigOptions.value = (res.rows ?? []) as PigVO[];
+  } finally {
+    pigSearching.value = false;
+  }
+}
+
+function onPigSelected(earNo: string) {
+  const target = pigOptions.value.find((p) => p.earNo === earNo);
+  addForm.pigId = target ? String(target.id) : '';
+}
+
 function openAdd() {
+  addForm.earNo = '';
   addForm.pigId = '';
   addForm.measureDate = new Date().toISOString().slice(0, 10);
   addForm.weight = undefined;
   addForm.backfatThickness = undefined;
   addForm.backHeight = undefined;
   addForm.remark = '';
+  pigOptions.value = [];
   addVisible.value = true;
 }
 
@@ -200,7 +257,7 @@ async function submitAdd() {
         remark: addForm.remark || undefined
       };
       await addGrowth(body);
-      ElMessage.success('生长记录已录入');
+      ElMessage.success(t('breedEvent.growth.msg.added'));
       addVisible.value = false;
       load();
     } finally {
@@ -209,17 +266,22 @@ async function submitAdd() {
   });
 }
 
-async function handleDelete(row: PigGrowthVO) {
+async function handleDelete(row: BizRow) {
   try {
-    await ElMessageBox.confirm(`确定删除耳号 [${row.earNo}] 在 ${row.measureDate} 的生长记录？（录入后 3 天内可删，超期会失败）`, '删除确认', {
-      type: 'warning'
-    });
+    await ElMessageBox.confirm(
+      t('breedEvent.growth.msg.delConfirm', { earNo: row.earNo, date: row.measureDate }),
+      t('breedEvent.growth.msg.delConfirmTitle'),
+      {
+        type: 'warning'
+      }
+    );
     await delGrowth([row.id]);
-    ElMessage.success('删除成功');
+    ElMessage.success(t('breedEvent.growth.msg.delSuccess'));
     load();
-  } catch (e: any) {
-    if (e !== 'cancel' && e?.message) {
-      // 业务异常（如超期）由 service 抛，request 拦截器会弹错
+  } catch (e) {
+    // 取消 / 业务异常（如超期）由 axios 拦截器统一提示；用户主动取消时静默
+    if (e !== 'cancel') {
+      // 非取消的异常已由请求拦截器弹出，这里不重复处理
     }
   }
 }
