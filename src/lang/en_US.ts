@@ -2080,6 +2080,77 @@ export default {
       }
     }
   },
+  // Store stock check (STR-STOCK-001, admin only)
+  storeCheck: {
+    field: {
+      checkId: 'Check No.',
+      store: 'Store',
+      checkStatus: 'Status',
+      checkDateFrom: 'Check Date From',
+      checkDateTo: 'Check Date To'
+    },
+    column: {
+      checkId: 'Check No.',
+      storeName: 'Store',
+      checkDate: 'Check Date',
+      checkStatus: 'Status',
+      lineCount: 'Lines',
+      diffSum: 'Net Diff',
+      createTime: 'Created'
+    },
+    action: {
+      detail: 'Detail',
+      complete: 'Complete',
+      cancel: 'Cancel'
+    },
+    confirm: {
+      complete: 'Complete check "{id}"? Differences will be recorded and the store unlocked; no further edits.',
+      cancel: 'Cancel check "{id}"? The store will be unlocked; recorded differences are not written back to stock.'
+    },
+    form: {
+      title: 'New Check',
+      lockHint:
+        'After creation the store enters "In Progress" and is locked; sales-out of that product is rejected during the check, unlocked on complete or cancel.',
+      store: 'Store',
+      storePlaceholder: 'Select store',
+      checkDate: 'Check Date',
+      checkDatePlaceholder: 'Select check date',
+      remark: 'Remark',
+      submit: 'Create & Enter Counts',
+      storeRequired: 'Please select store',
+      checkDateRequired: 'Please select check date'
+    },
+    detail: {
+      title: 'Check Detail',
+      checkId: 'Check No.',
+      store: 'Store',
+      checkDate: 'Check Date',
+      checkStatus: 'Status',
+      entryTitle: 'Enter Count',
+      product: 'Product',
+      productPlaceholder: 'Select product',
+      productRequired: 'Please select product',
+      checkStock: 'Counted Qty',
+      checkStockRequired: 'Please enter counted qty',
+      diffReason: 'Diff Reason',
+      diffReasonPlaceholder: 'Optional',
+      entrySubmit: 'Add',
+      complete: 'Complete',
+      empty: 'No count lines yet',
+      noCheckId: 'Check No. loading, please retry',
+      noLineToComplete: 'Please enter at least one count line first',
+      confirmRemoveLine: 'Delete count line for product "{name}"?',
+      column: {
+        productName: 'Product',
+        productUnit: 'Unit',
+        sysStock: 'System Qty',
+        checkStock: 'Counted Qty',
+        diffStock: 'Diff',
+        checkResultType: 'Result',
+        diffReason: 'Diff Reason'
+      }
+    }
+  },
   // Plant disaster records (PLT-WORK-003, admin read-only sub-page)
   plantDisaster: {
     column: {

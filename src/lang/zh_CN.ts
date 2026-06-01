@@ -2082,6 +2082,76 @@ export default {
       }
     }
   },
+  // 门店盘点（STR-STOCK-001，admin only）
+  storeCheck: {
+    field: {
+      checkId: '盘点单号',
+      store: '门店',
+      checkStatus: '状态',
+      checkDateFrom: '盘点日期起',
+      checkDateTo: '盘点日期止'
+    },
+    column: {
+      checkId: '盘点单号',
+      storeName: '门店',
+      checkDate: '盘点日期',
+      checkStatus: '状态',
+      lineCount: '明细数',
+      diffSum: '盈亏计',
+      createTime: '创建时间'
+    },
+    action: {
+      detail: '详情',
+      complete: '完成',
+      cancel: '取消'
+    },
+    confirm: {
+      complete: '确认完成盘点单「{id}」？完成后将记录差异并解锁门店，不可再修改。',
+      cancel: '确认取消盘点单「{id}」？取消后解锁门店，已录差异不回写库存。'
+    },
+    form: {
+      title: '新建盘点单',
+      lockHint: '新建后该门店即进入「进行中」并被锁定，盘点期间该门店该产品的销售出库将被拒绝，完成或取消后解锁。',
+      store: '门店',
+      storePlaceholder: '请选择门店',
+      checkDate: '盘点日期',
+      checkDatePlaceholder: '请选择盘点日期',
+      remark: '备注',
+      submit: '新建并录实盘',
+      storeRequired: '请选择门店',
+      checkDateRequired: '请选择盘点日期'
+    },
+    detail: {
+      title: '盘点单详情',
+      checkId: '盘点单号',
+      store: '门店',
+      checkDate: '盘点日期',
+      checkStatus: '状态',
+      entryTitle: '录入实盘',
+      product: '产品',
+      productPlaceholder: '请选择产品',
+      productRequired: '请选择产品',
+      checkStock: '实盘量',
+      checkStockRequired: '请输入实盘量',
+      diffReason: '差异原因',
+      diffReasonPlaceholder: '选填',
+      entrySubmit: '录入',
+      complete: '完成盘点',
+      empty: '暂无实盘明细',
+      noCheckId: '盘点单号加载中，请稍后重试',
+      noLineToComplete: '请先录入至少一条实盘明细',
+      confirmRemoveLine: '确认删除产品「{name}」的实盘明细？',
+      column: {
+        productName: '产品',
+        productUnit: '单位',
+        sysStock: '系统量',
+        checkStock: '实盘量',
+        diffStock: '差异',
+        checkResultType: '结果',
+        diffReason: '差异原因'
+      }
+    }
+  },
   // 种植灾害记录（PLT-WORK-003，admin 只读独立子页）
   plantDisaster: {
     column: {
