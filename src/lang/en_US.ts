@@ -2021,6 +2021,65 @@ export default {
       }
     }
   },
+  // Store operation (product relation + sale records, STR-OP-001)
+  storeOperation: {
+    relation: {
+      store: 'Store',
+      storePlaceholder: 'Select store',
+      save: 'Save',
+      allSku: 'All Products',
+      linkedSku: 'Linked Products',
+      filterPlaceholder: 'Search product name'
+    },
+    sale: {
+      store: 'Store',
+      storePlaceholder: 'Select store',
+      source: 'Source',
+      saleDateFrom: 'Sale Date From',
+      saleDateTo: 'Sale Date To',
+      sourceManual: 'Manual',
+      sourceExcel: 'Excel Import',
+      import: 'Import',
+      downloadTemplate: 'Template',
+      importTitle: 'Import Sale Records',
+      file: 'File',
+      uploadHint: 'Drop Excel file here or click to select',
+      importTip: 'Only SKUs linked to this store can be imported; columns: Product Name / Sale Date / Qty / Amount',
+      confirmImport: 'Import',
+      importFail: 'Import failed',
+      confirmDel: 'Delete {count} selected sale record(s)?',
+      column: {
+        storeName: 'Store',
+        productName: 'Product',
+        saleDate: 'Sale Date',
+        saleQty: 'Qty',
+        saleUnit: 'Unit',
+        saleAmount: 'Amount',
+        source: 'Source',
+        operator: 'Operator',
+        createTime: 'Created'
+      },
+      form: {
+        title: 'Manual Sale Record',
+        store: 'Store',
+        product: 'Product',
+        productPlaceholder: 'Select product',
+        selectStoreFirst: 'Select store first',
+        noRelation: 'No product linked for this store, configure in "Product Relation" first',
+        unit: 'Unit',
+        unitAuto: 'Auto-filled after selecting product',
+        saleDate: 'Sale Date',
+        saleQty: 'Qty',
+        saleAmount: 'Amount',
+        remark: 'Remark',
+        storeRequired: 'Please select store',
+        productRequired: 'Please select product',
+        saleDateRequired: 'Please select sale date',
+        saleQtyRequired: 'Please enter qty',
+        saleAmountRequired: 'Please enter amount'
+      }
+    }
+  },
   // Plant disaster records (PLT-WORK-003, admin read-only sub-page)
   plantDisaster: {
     column: {

@@ -2023,6 +2023,65 @@ export default {
       }
     }
   },
+  // 门店经营（产品关联 + 销售明细，STR-OP-001）
+  storeOperation: {
+    relation: {
+      store: '门店',
+      storePlaceholder: '请选择门店',
+      save: '保存关联',
+      allSku: '全部产品',
+      linkedSku: '已关联产品',
+      filterPlaceholder: '搜索产品名称'
+    },
+    sale: {
+      store: '门店',
+      storePlaceholder: '请选择门店',
+      source: '数据来源',
+      saleDateFrom: '销售日期起',
+      saleDateTo: '销售日期止',
+      sourceManual: '手录',
+      sourceExcel: 'Excel导入',
+      import: '导入',
+      downloadTemplate: '下载模板',
+      importTitle: '导入销售流水',
+      file: '选择文件',
+      uploadHint: '将 Excel 文件拖到此处，或点击选择',
+      importTip: '仅支持导入该门店已配置「产品关联」的 SKU；列：产品名称 / 销售日期 / 销售数量 / 销售总额',
+      confirmImport: '开始导入',
+      importFail: '导入失败',
+      confirmDel: '确认删除选中的 {count} 条销售流水？',
+      column: {
+        storeName: '门店',
+        productName: '产品名称',
+        saleDate: '销售日期',
+        saleQty: '销售数量',
+        saleUnit: '单位',
+        saleAmount: '销售总额',
+        source: '数据来源',
+        operator: '录入人',
+        createTime: '创建时间'
+      },
+      form: {
+        title: '手录销售流水',
+        store: '门店',
+        product: '产品',
+        productPlaceholder: '请选择产品',
+        selectStoreFirst: '请先选择门店',
+        noRelation: '该门店暂无产品关联，请先在「产品关联」配置',
+        unit: '单位',
+        unitAuto: '选择产品后自动带出',
+        saleDate: '销售日期',
+        saleQty: '销售数量',
+        saleAmount: '销售总额',
+        remark: '备注',
+        storeRequired: '请选择门店',
+        productRequired: '请选择产品',
+        saleDateRequired: '请选择销售日期',
+        saleQtyRequired: '请输入销售数量',
+        saleAmountRequired: '请输入销售总额'
+      }
+    }
+  },
   // 种植灾害记录（PLT-WORK-003，admin 只读独立子页）
   plantDisaster: {
     column: {
