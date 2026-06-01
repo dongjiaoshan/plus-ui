@@ -203,7 +203,14 @@ export default {
     empty: {
       deals: 'No deal records yet'
     },
-    must_be_breed_type: 'Introduction only accepts breed-type suppliers'
+    must_be_breed_type: 'Introduction only accepts breed-type suppliers',
+    deal: {
+      dealDate: 'Deal Date',
+      dealProduct: 'Product',
+      dealQuantity: 'Quantity',
+      dealUnit: 'Unit',
+      empty: 'No deal records'
+    }
   },
   // Store master data (SYS-MD-002 + SYS-MD-FIX-002)
   store: {
@@ -1701,7 +1708,92 @@ export default {
         deleteConfirm: 'Delete return [{no}]?',
         deleteSuccess: 'Return deleted',
         confirmSuccess: 'Return confirmed'
+      },
+      check: {
+        checkId: 'Check No.',
+        locationName: 'Location',
+        checkDate: 'Check Date',
+        checkStatus: 'Status',
+        lineCount: 'Lines',
+        diffSum: 'Net Diff',
+        createTime: 'Created',
+        detail: 'Detail',
+        complete: 'Complete',
+        cancel: 'Cancel',
+        createTitle: 'New Stock Check',
+        lockHint: 'Creating will lock this location; in/out-bound blocked during check',
+        locationPlaceholder: 'Select location',
+        locationRequired: 'Location is required',
+        checkDatePlaceholder: 'Select check date',
+        checkDateRequired: 'Check date is required',
+        remark: 'Remark',
+        detailTitle: 'Check Detail',
+        productName: 'Product',
+        productUnit: 'Unit',
+        sysStock: 'System Qty',
+        checkStock: 'Actual Qty',
+        diffStock: 'Diff',
+        checkResultType: 'Result',
+        diffReason: 'Diff Reason',
+        checkBy: 'Checked By',
+        createSuccess: 'Stock check created, location locked',
+        completeConfirm: 'Complete check {no}? Diff flows written and stock updated',
+        completeSuccess: 'Check completed',
+        cancelConfirm: 'Cancel check {no}? Only unlock location, stock unchanged',
+        cancelSuccess: 'Check cancelled'
+      },
+      flowIn: {
+        flowNo: 'Flow No.',
+        flowDate: 'Time',
+        flowType: 'Type',
+        matType: 'Material Type',
+        productCode: 'Product Code',
+        productName: 'Product',
+        belongType: 'Category',
+        changeQuantity: 'Quantity',
+        productUnit: 'Unit',
+        location: 'Location',
+        earNo: 'Ear No.',
+        operator: 'Operator',
+        remark: 'Remark'
+      },
+      flowOut: {
+        flowNo: 'Flow No.',
+        flowDate: 'Time',
+        flowType: 'Type',
+        matType: 'Material Type',
+        stockOutDest: 'Out Dest',
+        productCode: 'Product Code',
+        productName: 'Product',
+        belongType: 'Category',
+        changeQuantity: 'Quantity',
+        productUnit: 'Unit',
+        location: 'Location',
+        earNo: 'Ear No.',
+        operator: 'Operator',
+        remark: 'Remark'
       }
+    }
+  },
+  // Warehouse dashboard placeholder (DJS-FIX-ADMIN-W22-006)
+  warehouse: {
+    dashboard: {
+      todayDemand: "Today's Demand",
+      todayDemandUnit: 'White-bar segment',
+      todayProduction: "Today's Production",
+      todayProductionUnit: 'items inbound',
+      stockCheck: 'Latest Check (Normal / Abnormal / Loss)',
+      monthAbnormalLocation: '{count} abnormal location(s) this month',
+      locationOverview: 'Location Overview (Top 20)',
+      refresh: 'Refresh',
+      colLocation: 'Location',
+      colType: 'Type',
+      colStock: 'Current Stock',
+      colStatus: 'Status',
+      statusNormal: 'Normal',
+      statusAbnormal: 'Abnormal',
+      emptyLocation: 'No location data',
+      fullVersionHint: 'Full dashboard (trend lines / inbound-outbound pie / 4-segment comparison) lands in V1.x WMS-DASH-001.'
     }
   },
   demand: {
@@ -1822,6 +1914,97 @@ export default {
       operator: 'Operator',
       remark: 'Remark',
       empty: 'No status changes yet'
+    },
+    kpi: {
+      pigDemand: 'Today Pig Demand',
+      assigned: 'Assigned',
+      vegDemand: 'Today Veg Demand',
+      otherDemand: 'Other Demand',
+      unitHead: 'head',
+      unitSpecies: 'species',
+      unitItem: 'item'
+    }
+  },
+  // Plant disaster records (PLT-WORK-003, admin read-only sub-page)
+  plantDisaster: {
+    column: {
+      recordNo: 'Record No.',
+      farmDate: 'Date',
+      disasterType: 'Disaster Type',
+      plotName: 'Plot',
+      plotCode: 'Plot Code',
+      cropName: 'Crop',
+      lossRate: 'Loss Rate',
+      lossYield: 'Loss Yield',
+      isWarning: 'Warning',
+      teamName: 'Work Team',
+      createTime: 'Created At'
+    },
+    field: {
+      recordNo: 'Record No.',
+      dateRange: 'Date Range',
+      plot: 'Plot',
+      disasterType: 'Disaster Type',
+      isWarning: 'Warning'
+    },
+    tag: {
+      warning: 'Warning',
+      normal: 'Normal'
+    },
+    action: {
+      detail: 'Detail'
+    },
+    empty: 'No disaster records',
+    detail: {
+      title: 'Disaster Record Detail',
+      remark: 'Remark',
+      proof: 'Proof Photos',
+      noProof: 'No proof photo',
+      notFound: 'Record not found'
+    }
+  },
+  plantWork: {
+    tab: {
+      tillage: 'Tillage',
+      irrigate: 'Irrigation',
+      fertilize: 'Fertilize',
+      weed: 'Weeding',
+      disaster: 'Disaster'
+    },
+    column: {
+      recordNo: 'Record No.',
+      farmDate: 'Farm Date',
+      farmType: 'Farm Work',
+      plotName: 'Plot',
+      plotCode: 'Plot Code',
+      cropName: 'Crop',
+      teamName: 'Work Team',
+      remark: 'Remark',
+      createTime: 'Created At',
+      disasterType: 'Disaster Type',
+      lossRate: 'Loss Rate',
+      lossYield: 'Loss Yield'
+    },
+    field: {
+      recordNo: 'Record No.',
+      dateRange: 'Farm Date',
+      plot: 'Plot',
+      team: 'Work Team'
+    },
+    action: {
+      detail: 'Detail'
+    },
+    empty: 'No farm records',
+    detail: {
+      title: 'Farm Record Detail',
+      tillageType: 'Tillage Type',
+      tillageMethod: 'Tillage Method',
+      transplantPlotName: 'Transplant Plot',
+      transplantPercent: 'Transplant %',
+      remark: 'Remark',
+      proof: 'Proof Photos',
+      noProof: 'No proof photo',
+      notFound: 'Record not found'
     }
   }
 };

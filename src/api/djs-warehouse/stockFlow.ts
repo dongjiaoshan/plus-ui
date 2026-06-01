@@ -37,3 +37,28 @@ export const exportStockFlow = (query: StockFlowQuery) => {
     responseType: 'blob'
   });
 };
+
+/**
+ * D11 WMS-FLOW-001：入库记录 / 出库记录两页（后端强制 inout_type=IN / OT）。
+ *
+ * 复用 StockFlowVO / StockFlowQuery；inoutType 由后端锁定，前端无需传。
+ * 导出走 proxy.download 直接打 /in/export、/out/export，不在此封装。
+ */
+
+/** 入库记录分页 */
+export const listFlowIn = (query: StockFlowQuery): AxiosPromise<StockFlowVO[]> => {
+  return request({
+    url: '/djs/warehouse/stockFlow/in/list',
+    method: 'get',
+    params: query
+  });
+};
+
+/** 出库记录分页 */
+export const listFlowOut = (query: StockFlowQuery): AxiosPromise<StockFlowVO[]> => {
+  return request({
+    url: '/djs/warehouse/stockFlow/out/list',
+    method: 'get',
+    params: query
+  });
+};

@@ -203,7 +203,14 @@ export default {
     empty: {
       deals: '暂无交易记录'
     },
-    must_be_breed_type: '引种只能选择种猪类供应商'
+    must_be_breed_type: '引种只能选择种猪类供应商',
+    deal: {
+      dealDate: '交易日期',
+      dealProduct: '交易商品',
+      dealQuantity: '交易量',
+      dealUnit: '单位',
+      empty: '暂无交易明细'
+    }
   },
   // 门店主数据（SYS-MD-002 + SYS-MD-FIX-002）
   store: {
@@ -1703,7 +1710,92 @@ export default {
         deleteConfirm: '确认删除退货单【{no}】？',
         deleteSuccess: '退货已删除',
         confirmSuccess: '退货已确认'
+      },
+      check: {
+        checkId: '盘点单号',
+        locationName: '盘点库位',
+        checkDate: '盘点日期',
+        checkStatus: '状态',
+        lineCount: '明细数',
+        diffSum: '盈亏计',
+        createTime: '创建时间',
+        detail: '详情',
+        complete: '完成盘点',
+        cancel: '取消盘点',
+        createTitle: '新建盘点单',
+        lockHint: '新建后该库位将进入盘点锁定，期间禁止出入库',
+        locationPlaceholder: '请选择盘点库位',
+        locationRequired: '请选择盘点库位',
+        checkDatePlaceholder: '请选择盘点日期',
+        checkDateRequired: '请选择盘点日期',
+        remark: '备注',
+        detailTitle: '盘点明细',
+        productName: '产品',
+        productUnit: '单位',
+        sysStock: '系统量',
+        checkStock: '实盘量',
+        diffStock: '差异',
+        checkResultType: '结果',
+        diffReason: '差异原因',
+        checkBy: '盘点人',
+        createSuccess: '盘点单已创建，库位已锁定',
+        completeConfirm: '确认完成盘点单 {no}？将写入差异流水并回写库存',
+        completeSuccess: '盘点已完成',
+        cancelConfirm: '确认取消盘点单 {no}？将仅解锁库位、不回写库存',
+        cancelSuccess: '盘点已取消'
+      },
+      flowIn: {
+        flowNo: '流水号',
+        flowDate: '业务时间',
+        flowType: '类型',
+        matType: '物资类型',
+        productCode: '产品码',
+        productName: '产品',
+        belongType: '归属',
+        changeQuantity: '数量',
+        productUnit: '单位',
+        location: '库位',
+        earNo: '耳号',
+        operator: '操作人',
+        remark: '备注'
+      },
+      flowOut: {
+        flowNo: '流水号',
+        flowDate: '业务时间',
+        flowType: '类型',
+        matType: '物资类型',
+        stockOutDest: '出库去向',
+        productCode: '产品码',
+        productName: '产品',
+        belongType: '归属',
+        changeQuantity: '数量',
+        productUnit: '单位',
+        location: '库位',
+        earNo: '耳号',
+        operator: '操作人',
+        remark: '备注'
       }
+    }
+  },
+  // 仓库 dashboard 占位版（DJS-FIX-ADMIN-W22-006）
+  warehouse: {
+    dashboard: {
+      todayDemand: '今日需求量',
+      todayDemandUnit: '白条业态',
+      todayProduction: '今日生产',
+      todayProductionUnit: '件入库',
+      stockCheck: '最近盘点（正常 / 异常 / 计损）',
+      monthAbnormalLocation: '当月异常库位 {count} 处',
+      locationOverview: '库位概览（Top 20）',
+      refresh: '刷新',
+      colLocation: '库位',
+      colType: '类型',
+      colStock: '当前库存',
+      colStatus: '状态',
+      statusNormal: '正常',
+      statusAbnormal: '异常',
+      emptyLocation: '暂无库位数据',
+      fullVersionHint: '完整版看板（趋势折线 / 出入库饼图 / 4 业态对比）将在 V1.x WMS-DASH-001 落地。'
     }
   },
   demand: {
@@ -1824,6 +1916,97 @@ export default {
       operator: '操作人',
       remark: '备注',
       empty: '暂无状态变更记录'
+    },
+    kpi: {
+      pigDemand: '今日猪需求',
+      assigned: '已调配',
+      vegDemand: '今日果蔬需求',
+      otherDemand: '其他需求',
+      unitHead: '头',
+      unitSpecies: '品种',
+      unitItem: '条'
+    }
+  },
+  // 种植灾害记录（PLT-WORK-003，admin 只读独立子页）
+  plantDisaster: {
+    column: {
+      recordNo: '灾害记录号',
+      farmDate: '发生日期',
+      disasterType: '灾害类型',
+      plotName: '地块',
+      plotCode: '地块编码',
+      cropName: '作物',
+      lossRate: '损失率',
+      lossYield: '损失产量',
+      isWarning: '预警',
+      teamName: '处理班组',
+      createTime: '登记时间'
+    },
+    field: {
+      recordNo: '灾害记录号',
+      dateRange: '发生日期',
+      plot: '地块',
+      disasterType: '灾害类型',
+      isWarning: '是否预警'
+    },
+    tag: {
+      warning: '预警',
+      normal: '正常'
+    },
+    action: {
+      detail: '详情'
+    },
+    empty: '暂无灾害记录',
+    detail: {
+      title: '灾害记录详情',
+      remark: '备注',
+      proof: '现场凭证',
+      noProof: '无凭证图',
+      notFound: '记录不存在'
+    }
+  },
+  plantWork: {
+    tab: {
+      tillage: '整地',
+      irrigate: '浇灌',
+      fertilize: '施肥',
+      weed: '除草',
+      disaster: '灾害'
+    },
+    column: {
+      recordNo: '记录号',
+      farmDate: '农事日期',
+      farmType: '农事类型',
+      plotName: '地块',
+      plotCode: '地块编码',
+      cropName: '作物',
+      teamName: '处理班组',
+      remark: '备注',
+      createTime: '登记时间',
+      disasterType: '灾害类型',
+      lossRate: '损失率',
+      lossYield: '损失产量'
+    },
+    field: {
+      recordNo: '记录号',
+      dateRange: '农事日期',
+      plot: '地块',
+      team: '处理班组'
+    },
+    action: {
+      detail: '详情'
+    },
+    empty: '暂无农事记录',
+    detail: {
+      title: '农事记录详情',
+      tillageType: '整地类型',
+      tillageMethod: '整地方式',
+      transplantPlotName: '转移地块',
+      transplantPercent: '移栽百分比',
+      remark: '备注',
+      proof: '现场凭证',
+      noProof: '无凭证图',
+      notFound: '记录不存在'
     }
   }
 };

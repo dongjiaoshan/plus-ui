@@ -123,3 +123,23 @@ export interface AuditHistoryEntryVO {
   ts?: string;
   remark?: string;
 }
+
+/**
+ * 需求管理页顶部「今日全局」KPI 横条（DJS-FIX-ADMIN-W22-007）。
+ *
+ * 6 个跨业态聚合数字（非 ID，用 number 安全）。当日无 demand → 6 数全 0。
+ */
+export interface DemandTodayKpiVO {
+  /** 今日白条猪需求头数。 */
+  todayPigDemand: number;
+  /** 今日白条猪已调配头数（去重耳号数）。 */
+  todayPigAssigned: number;
+  /** 今日果蔬需求品种数。 */
+  todayVegSpeciesDemand: number;
+  /** 今日果蔬已调配品种数。 */
+  todayVegSpeciesAssigned: number;
+  /** 今日其他需求条数（other + gift_box）。 */
+  todayOtherDemand: number;
+  /** 今日其他已调配条数。 */
+  todayOtherAssigned: number;
+}
