@@ -202,7 +202,8 @@ export default {
     },
     empty: {
       deals: 'No deal records yet'
-    }
+    },
+    must_be_breed_type: 'Introduction only accepts breed-type suppliers'
   },
   // Store master data (SYS-MD-002 + SYS-MD-FIX-002)
   store: {

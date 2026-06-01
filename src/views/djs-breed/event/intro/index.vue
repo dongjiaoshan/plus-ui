@@ -21,9 +21,10 @@
       @page-change="handlePageChange"
     >
       <template #cell-introduceType="{ row }">
-        <el-tag :type="row.introduceType === 'external' ? 'warning' : 'success'" size="small">
-          {{ row.introduceType === 'external' ? t('breedEvent.intro.type.external') : t('breedEvent.intro.type.internal') }}
-        </el-tag>
+        <dict-tag :options="djs_introduce_type" :value="row.introduceType" />
+      </template>
+      <template #cell-pigStrainCode="{ row }">
+        <dict-tag :options="djs_pig_strain" :value="row.pigStrainCode" />
       </template>
       <template #cell-pigSex="{ row }">
         <el-tag v-if="row.pigSex" :type="row.pigSex === 'F' ? 'success' : 'primary'" size="small">
@@ -42,6 +43,9 @@ import type { PigIntroduceVO, PigIntroQuery } from '@/api/djs-breed/event/intro'
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// ADR-0004 §2.4 Vue3 字典消费范式
+const { djs_introduce_type, djs_pig_strain } = toRefs<any>(proxy?.useDict('djs_introduce_type', 'djs_pig_strain'));
 
 const tableRef = ref<BizTableExpose>();
 const list = ref<PigIntroduceVO[]>([]);
@@ -70,10 +74,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
     field: 'introduceType',
     label: t('breedEvent.intro.field.introduceType'),
     type: 'select',
-    options: [
-      { label: t('breedEvent.intro.type.external'), value: 'external' },
-      { label: t('breedEvent.intro.type.internal'), value: 'internal' }
-    ],
+    options: (djs_introduce_type.value || []).map((d: { label: string; value: string }) => ({ label: d.label, value: d.value })),
     clearable: true
   },
   {

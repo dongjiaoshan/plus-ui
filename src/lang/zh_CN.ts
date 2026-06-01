@@ -202,7 +202,8 @@ export default {
     },
     empty: {
       deals: '暂无交易记录'
-    }
+    },
+    must_be_breed_type: '引种只能选择种猪类供应商'
   },
   // 门店主数据（SYS-MD-002 + SYS-MD-FIX-002）
   store: {
