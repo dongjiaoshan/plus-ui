@@ -41,7 +41,7 @@
         <el-table-column prop="recordWeight" :label="t('djs.warehouse.vegHandle.recordWeight')" min-width="120" />
         <el-table-column prop="handleTarget" :label="t('djs.warehouse.vegHandle.handleTarget')" min-width="120">
           <template #default="{ row }">
-            {{ handleTargetLabel(row.handleTarget) }}
+            <dict-tag :options="djs_handle_target" :value="row.handleTarget" />
           </template>
         </el-table-column>
         <el-table-column prop="locationName" :label="t('djs.warehouse.vegHandle.location')" min-width="140" />
@@ -62,6 +62,8 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// ADR-0004 §2.4 Vue3 字典消费范式
+const { djs_handle_target } = toRefs<any>(proxy?.useDict('djs_handle_target'));
 
 const tableRef = ref<BizTableExpose>();
 
@@ -108,13 +110,6 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'handleStatus', label: t('djs.warehouse.vegHandle.handleStatus'), minWidth: 100 },
   { prop: 'remark', label: t('djs.warehouse.vegHandle.remark'), minWidth: 160 }
 ]);
-
-function handleTargetLabel(t: number | undefined) {
-  if (t === 1) return '入库';
-  if (t === 2) return '月台';
-  if (t === 3) return '饲料';
-  return '';
-}
 
 async function loadList() {
   loading.value = true;
