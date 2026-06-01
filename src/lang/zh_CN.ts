@@ -980,6 +980,15 @@ export default {
     },
     confirm: {
       del: '是否确认删除选中的 {count} 条库位？删除前需先确保库位无在用库存。'
+    },
+    summary: {
+      locationCount: '库位数',
+      productCount: '产品数',
+      currentStock: '当前库存',
+      todayIn: '今日入库',
+      todayOut: '今日出库',
+      lastCheck: '最近盘点',
+      noCheck: '暂无盘点'
     }
   },
   // 商品主数据 / 自产 / 外购 / 礼盒（WMS-MD-002，共表 3 形态）
@@ -1073,6 +1082,11 @@ export default {
       checkResult: '盘点结果',
       operatorName: '操作人',
       createTime: '创建时间'
+    },
+    action: {
+      flowIn: '入库记录',
+      flowOut: '出库记录',
+      checkRecord: '盘点记录'
     }
   },
   // 种植 - 片区（PLT-MD-001）

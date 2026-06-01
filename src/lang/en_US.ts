@@ -978,6 +978,15 @@ export default {
     },
     confirm: {
       del: 'Delete {count} location(s)? Make sure they have no active stock.'
+    },
+    summary: {
+      locationCount: 'Locations',
+      productCount: 'Products',
+      currentStock: 'Current stock',
+      todayIn: 'In today',
+      todayOut: 'Out today',
+      lastCheck: 'Last check',
+      noCheck: 'No check yet'
     }
   },
   // Warehouse commodity master data / self-produce / purchase / gift box (WMS-MD-002, 3-form shared table)
@@ -1071,6 +1080,11 @@ export default {
       checkResult: 'Check result',
       operatorName: 'Operator',
       createTime: 'Created'
+    },
+    action: {
+      flowIn: 'Inbound',
+      flowOut: 'Outbound',
+      checkRecord: 'Check log'
     }
   },
   // Planting - Zone (PLT-MD-001)

@@ -60,9 +60,11 @@ import type { StockCheckHeaderVO, StockCheckQuery } from '@/api/djs-warehouse/ch
 import CheckCreateDialog from './components/CheckCreateDialog.vue';
 import CheckDetailDialog from './components/CheckDetailDialog.vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const route = useRoute();
 
 const tableRef = ref<BizTableExpose>();
 
@@ -74,7 +76,9 @@ const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
   checkId: undefined,
-  checkStatus: undefined
+  checkStatus: undefined,
+  // 从库存查询页钻取而来时由 route.query 注入（盘点单为库位级，按 locationId 隐式过滤）
+  locationId: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -166,6 +170,10 @@ function handleExport() {
 }
 
 onMounted(() => {
+  // 从库存查询页"盘点记录"钻取而来：按库位预过滤
+  if (route.query.locationId) {
+    searchModel.locationId = Number(route.query.locationId);
+  }
   loadList();
 });
 </script>

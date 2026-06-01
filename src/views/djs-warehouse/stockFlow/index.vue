@@ -44,9 +44,11 @@ import { listStockFlow } from '@/api/djs-warehouse/stockFlow';
 import type { StockFlowQuery, StockFlowVO } from '@/api/djs-warehouse/stockFlow/types';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
+import { useRoute } from 'vue-router';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const route = useRoute();
 
 const tableRef = ref<BizTableExpose>();
 
@@ -61,6 +63,7 @@ const searchModel = reactive<Record<string, any>>({
   flowType: undefined,
   inoutType: undefined,
   matType: undefined,
+  productId: undefined,
   productCode: undefined,
   earNo: undefined,
   stockOutDest: undefined,
@@ -138,6 +141,13 @@ function handleAdjust(row: StockFlowVO) {
 }
 
 onMounted(() => {
+  // 从库存查询页钻取而来：用 query 预过滤（productId 精确 + inoutType IN/OT）
+  if (route.query.productId) {
+    searchModel.productId = Number(route.query.productId);
+  }
+  if (route.query.inoutType) {
+    searchModel.inoutType = String(route.query.inoutType);
+  }
   loadList();
 });
 </script>

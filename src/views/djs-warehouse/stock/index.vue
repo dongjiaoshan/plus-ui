@@ -21,8 +21,18 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <!-- 覆盖默认行级操作 slot 为空：库存查询只读，无 edit / del 入口 -->
-      <template #action><span /></template>
+      <!-- 库存查询只读，无 edit / del；操作列改为 3 钻取链接（入库 / 出库 / 盘点记录） -->
+      <template #action="{ row }">
+        <el-button link type="primary" size="small" @click="drillTo('in', row as LocationStockVO)">
+          {{ t('stock.action.flowIn') }}
+        </el-button>
+        <el-button link type="primary" size="small" @click="drillTo('out', row as LocationStockVO)">
+          {{ t('stock.action.flowOut') }}
+        </el-button>
+        <el-button link type="warning" size="small" @click="drillTo('check', row as LocationStockVO)">
+          {{ t('stock.action.checkRecord') }}
+        </el-button>
+      </template>
     </BizTable>
   </div>
 </template>
@@ -33,9 +43,11 @@ import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/compon
 import { listStock } from '@/api/djs-warehouse/stock';
 import type { LocationStockQuery, LocationStockVO } from '@/api/djs-warehouse/stock/types';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const router = useRouter();
 
 const tableRef = ref<BizTableExpose>();
 
@@ -85,6 +97,24 @@ async function fetchList() {
     total.value = res.total ?? 0;
   } finally {
     loading.value = false;
+  }
+}
+
+/**
+ * 行级钻取：入库 / 出库 → 出入库流水页（带 productId + inoutType 预过滤）；
+ * 盘点 → 库存盘点页（带 locationId 预过滤，盘点单为库位级）。
+ *
+ * 路由 path 按 plus-ui 动态路由：父菜单 path `djs-warehouse`(9000) + 子 path `stockFlow`(9110) / `check`(9250)。
+ * inoutType 字典值：IN 入 / OT 出（后端 djs_inout_type）。
+ */
+function drillTo(kind: 'in' | 'out' | 'check', row: LocationStockVO) {
+  if (kind === 'check') {
+    router.push({ path: '/djs-warehouse/check', query: { locationId: row.locationId } });
+  } else {
+    router.push({
+      path: '/djs-warehouse/stockFlow',
+      query: { productId: row.productId, inoutType: kind === 'in' ? 'IN' : 'OT' }
+    });
   }
 }
 
