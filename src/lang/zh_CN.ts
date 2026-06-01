@@ -1927,6 +1927,102 @@ export default {
       unitItem: '条'
     }
   },
+  // 门店端发起需求（STR-DEMAND-001，复用 WMS demand 表）
+  storeDemand: {
+    not_found_msg: '需求单不存在或已删除',
+    productType: {
+      white_bar: '白条',
+      vegetable: '蔬菜',
+      gift_box: '礼盒',
+      other: '其他'
+    },
+    filter: {
+      store: '门店',
+      storePlaceholder: '请选择门店'
+    },
+    tip: {
+      selectStoreFirst: '请先在顶部选择门店再新增需求'
+    },
+    field: {
+      demandNo: '需求单号',
+      demandDate: '需求日期',
+      'demandDate.required': '需求日期不能为空',
+      storeId: '提单门店',
+      'storeId.required': '提单门店不能为空',
+      productId: '产品',
+      'productId.required': '产品不能为空',
+      productName: '产品名称',
+      'productName.required': '产品名称不能为空',
+      productType: '业态',
+      productSpec: '规格',
+      demandQuantity: '需求量',
+      'demandQuantity.required': '需求量不能为空',
+      productUnit: '单位',
+      'productUnit.required': '单位不能为空',
+      rawMaterial: '原材料描述',
+      materialQty: '原材料计算量',
+      demandRemark: '需求备注',
+      demandExplain: '需求说明',
+      demandStatus: '状态',
+      expectedArriveDate: '期望到货日',
+      beginDate: '开始日期',
+      endDate: '结束日期'
+    },
+    column: {
+      demandNo: '需求单号',
+      demandDate: '需求日期',
+      productName: '产品',
+      demandQuantity: '需求量',
+      productUnit: '单位',
+      demandStatus: '状态',
+      expectedArriveDate: '期望到货',
+      createTime: '创建时间',
+      actions: '操作'
+    },
+    placeholder: {
+      demandNoAuto: '提交后自动生成',
+      storeId: '请选择提单门店',
+      productId: '请选择产品（按业态过滤）',
+      demandQuantity: '请输入需求量',
+      productUnit: '如 头 / kg / 盒',
+      rawMaterial: '如 "需要 5 头猪"',
+      demandExplain: '如 "25 号之前每天 1 头猪送到矿业 / 背膘不要太厚"'
+    },
+    form: {
+      addTitle: '新增需求',
+      editTitle: '编辑需求',
+      detailTitle: '需求详情'
+    },
+    action: {
+      edit: '编辑',
+      cancel: '撤回',
+      assignPig: '指定猪只',
+      detail: '详情'
+    },
+    confirm: {
+      del: '确认删除选中的 {count} 条需求？仅未确认需求可删'
+    },
+    prompt: {
+      cancelRemark: '请输入撤回原因（可选）',
+      cancelRemarkPh: '如下错单 / 门店临时取消等'
+    },
+    assignPig: {
+      title: '指定猪只 - {no}（需 {required} 头）',
+      selectedTip: '已选 {selected} / {required} 头',
+      confirmBtn: '确认指定（{count} 头）',
+      assignSuccess: '已指定 {count} 头',
+      assignedTitle: '已指定（{count}）',
+      overLimit: '最多指定 {required} 头，请先取消多余勾选',
+      emptyAvailable: '当前没有可出栏育肥猪',
+      column: {
+        earNo: '耳号',
+        pigSex: '性别',
+        pigBreed: '品种品系',
+        ageDays: '日龄（天）',
+        lastBackfat: '最新背膘 (mm)'
+      }
+    }
+  },
   // 种植灾害记录（PLT-WORK-003，admin 只读独立子页）
   plantDisaster: {
     column: {

@@ -1925,6 +1925,102 @@ export default {
       unitItem: 'item'
     }
   },
+  // Store-side demand (STR-DEMAND-001, reuses WMS demand table)
+  storeDemand: {
+    not_found_msg: 'Demand not found or deleted',
+    productType: {
+      white_bar: 'White bar',
+      vegetable: 'Vegetable',
+      gift_box: 'Gift box',
+      other: 'Other'
+    },
+    filter: {
+      store: 'Store',
+      storePlaceholder: 'Select store'
+    },
+    tip: {
+      selectStoreFirst: 'Select a store at the top before adding a demand'
+    },
+    field: {
+      demandNo: 'Demand No.',
+      demandDate: 'Demand date',
+      'demandDate.required': 'Demand date is required',
+      storeId: 'Store',
+      'storeId.required': 'Store is required',
+      productId: 'Product',
+      'productId.required': 'Product is required',
+      productName: 'Product name',
+      'productName.required': 'Product name is required',
+      productType: 'Type',
+      productSpec: 'Spec',
+      demandQuantity: 'Quantity',
+      'demandQuantity.required': 'Quantity is required',
+      productUnit: 'Unit',
+      'productUnit.required': 'Unit is required',
+      rawMaterial: 'Raw material',
+      materialQty: 'Material qty',
+      demandRemark: 'Remark',
+      demandExplain: 'Explanation',
+      demandStatus: 'Status',
+      expectedArriveDate: 'Expected arrival',
+      beginDate: 'Begin date',
+      endDate: 'End date'
+    },
+    column: {
+      demandNo: 'Demand No.',
+      demandDate: 'Demand date',
+      productName: 'Product',
+      demandQuantity: 'Quantity',
+      productUnit: 'Unit',
+      demandStatus: 'Status',
+      expectedArriveDate: 'Expected arrival',
+      createTime: 'Created',
+      actions: 'Actions'
+    },
+    placeholder: {
+      demandNoAuto: 'Auto-generated after submit',
+      storeId: 'Select store',
+      productId: 'Select product (filtered by type)',
+      demandQuantity: 'Enter quantity',
+      productUnit: 'e.g. head / kg / box',
+      rawMaterial: 'e.g. "need 5 pigs"',
+      demandExplain: 'e.g. "deliver 1 pig daily to the mine before the 25th"'
+    },
+    form: {
+      addTitle: 'New demand',
+      editTitle: 'Edit demand',
+      detailTitle: 'Demand detail'
+    },
+    action: {
+      edit: 'Edit',
+      cancel: 'Withdraw',
+      assignPig: 'Assign pigs',
+      detail: 'Detail'
+    },
+    confirm: {
+      del: 'Delete {count} selected demand(s)? Only unconfirmed demands can be deleted'
+    },
+    prompt: {
+      cancelRemark: 'Enter withdraw reason (optional)',
+      cancelRemarkPh: 'e.g. wrong order / store cancelled'
+    },
+    assignPig: {
+      title: 'Assign pigs - {no} (need {required})',
+      selectedTip: 'Selected {selected} / {required}',
+      confirmBtn: 'Confirm ({count})',
+      assignSuccess: 'Assigned {count}',
+      assignedTitle: 'Assigned ({count})',
+      overLimit: 'At most {required}, please unselect extras',
+      emptyAvailable: 'No pigs available for outbound',
+      column: {
+        earNo: 'Ear No.',
+        pigSex: 'Sex',
+        pigBreed: 'Breed',
+        ageDays: 'Age (days)',
+        lastBackfat: 'Backfat (mm)'
+      }
+    }
+  },
   // Plant disaster records (PLT-WORK-003, admin read-only sub-page)
   plantDisaster: {
     column: {
