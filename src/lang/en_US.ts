@@ -2232,5 +2232,50 @@ export default {
       noProof: 'No proof photo',
       notFound: 'Record not found'
     }
+  },
+  // Plant - Team Performance (PLT-PERF-001)
+  plantPerformance: {
+    pageTitle: 'Team Performance',
+    toolbar: {
+      statMonth: 'Settle Month',
+      pickMonth: 'Select month',
+      generate: 'Generate',
+      hint: 'Computed by harvest weight x crop unit-price snapshot; re-generating overwrites the month'
+    },
+    field: {
+      statMonth: 'Month',
+      team: 'Team',
+      crop: 'Crop'
+    },
+    column: {
+      statMonth: 'Month',
+      team: 'Team',
+      crop: 'Crop',
+      pickWeight: 'Harvest Total',
+      unitPrice: 'Unit Price',
+      amount: 'Payable',
+      action: 'Action'
+    },
+    action: {
+      detail: 'Work Detail'
+    },
+    confirm: {
+      generate: 'Re-generate settlement for {month}? Existing data will be overwritten.'
+    },
+    tip: {
+      monthRequired: 'Please select a settle month first',
+      generateSuccess: 'Settlement generated, {count} rows'
+    },
+    detail: {
+      title: 'Performance Detail',
+      tabYield: 'Yield Performance',
+      tabFarm: 'Farm Records',
+      rule: 'Rule',
+      recordNo: 'Record No.',
+      farmType: 'Farm Type',
+      plot: 'Plot',
+      farmDate: 'Farm Date',
+      farmCount: '{count} farm records'
+    }
   }
 };

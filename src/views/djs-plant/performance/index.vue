@@ -1,0 +1,190 @@
+<template>
+  <div class="p-2">
+    <!-- 顶部操作条：选月份 + 生成结算 + 导出 -->
+    <el-card shadow="never" class="mb-2">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="text-sm">{{ t('plantPerformance.toolbar.statMonth') }}</span>
+        <el-date-picker
+          v-model="genMonth"
+          type="month"
+          value-format="YYYY-MM"
+          :placeholder="t('plantPerformance.toolbar.pickMonth')"
+          style="width: 160px"
+        />
+        <el-button v-hasPermi="['djs:plantPerformance:generate']" type="primary" :loading="generating" @click="handleGenerate">
+          {{ t('plantPerformance.toolbar.generate') }}
+        </el-button>
+        <span class="text-xs text-gray-400">{{ t('plantPerformance.toolbar.hint') }}</span>
+      </div>
+    </el-card>
+
+    <BizTable
+      ref="tableRef"
+      :data="list"
+      :total="total"
+      :loading="loading"
+      :columns="columns"
+      :search-schema="searchSchema"
+      :search-model="searchModel"
+      :page-num="pageNum"
+      :page-size="pageSize"
+      row-key="id"
+      show-export
+      perm-prefix="djs:plantPerformance"
+      @search="handleSearch"
+      @reset="handleReset"
+      @export="handleExport"
+      @page-change="handlePageChange"
+    >
+      <template #cell-action="{ row }">
+        <el-button link type="primary" size="small" @click="handleDetail(row)">
+          {{ t('plantPerformance.action.detail') }}
+        </el-button>
+      </template>
+    </BizTable>
+
+    <PerformanceDetailDrawer ref="drawerRef" />
+  </div>
+</template>
+
+<script setup name="PlantPerformanceIndex" lang="ts">
+import BizTable from '@/components/BizTable/index.vue';
+import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import PerformanceDetailDrawer from './components/PerformanceDetailDrawer.vue';
+import { generatePerformance, listPerformance } from '@/api/djs-plant/performance';
+import type { PlantWorkPerformanceQuery, PlantWorkPerformanceVO } from '@/api/djs-plant/performance/types';
+import { listAllTeam } from '@/api/djs-plant/team';
+import { listCrop } from '@/api/djs-plant/crop';
+import { useI18n } from 'vue-i18n';
+import { getCurrentInstance } from 'vue';
+import type { ComponentInternalInstance } from 'vue';
+
+const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+const tableRef = ref<BizTableExpose>();
+const drawerRef = ref<InstanceType<typeof PerformanceDetailDrawer>>();
+
+const list = ref<PlantWorkPerformanceVO[]>([]);
+const total = ref(0);
+const loading = ref(false);
+const generating = ref(false);
+const pageNum = ref(1);
+const pageSize = ref(10);
+
+/** 顶部"生成结算"独立月份（与筛选月份解耦）。 */
+const genMonth = ref<string>('');
+
+/** 班组 / 作物筛选下拉数据。 */
+const teamOptions = ref<Array<{ label: string; value: string | number }>>([]);
+const cropOptions = ref<Array<{ label: string; value: string | number }>>([]);
+
+const searchModel = reactive<Record<string, unknown>>({
+  statMonth: undefined,
+  teamId: undefined,
+  cropId: undefined
+});
+
+const searchSchema = computed<SearchFieldSchema[]>(() => [
+  { field: 'statMonth', label: t('plantPerformance.field.statMonth'), type: 'input', placeholder: t('plantPerformance.toolbar.pickMonth') },
+  { field: 'teamId', label: t('plantPerformance.field.team'), type: 'select', options: teamOptions.value },
+  { field: 'cropId', label: t('plantPerformance.field.crop'), type: 'select', options: cropOptions.value }
+]);
+
+const columns = computed<BizTableColumn[]>(() => [
+  { prop: 'statMonth', label: t('plantPerformance.column.statMonth'), width: 110, align: 'center' },
+  { prop: 'teamName', label: t('plantPerformance.column.team'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'cropName', label: t('plantPerformance.column.crop'), minWidth: 140, showOverflowTooltip: true },
+  {
+    prop: 'pickWeight',
+    label: t('plantPerformance.column.pickWeight'),
+    width: 140,
+    align: 'right',
+    formatter: (r: BizRow) => (r.pickWeight != null ? `${r.pickWeight} 斤` : '-')
+  },
+  {
+    prop: 'unitPriceSnapshot',
+    label: t('plantPerformance.column.unitPrice'),
+    width: 130,
+    align: 'right',
+    formatter: (r: BizRow) => (r.unitPriceSnapshot != null ? `¥${r.unitPriceSnapshot}/斤` : '-')
+  },
+  {
+    prop: 'performanceAmount',
+    label: t('plantPerformance.column.amount'),
+    width: 140,
+    align: 'right',
+    formatter: (r: BizRow) => (r.performanceAmount != null ? `¥${r.performanceAmount}` : '-')
+  },
+  { prop: 'action', label: t('plantPerformance.column.action'), width: 100, align: 'center', fixed: 'right' }
+]);
+
+async function loadList() {
+  loading.value = true;
+  try {
+    const params: PlantWorkPerformanceQuery = { ...searchModel, pageNum: pageNum.value, pageSize: pageSize.value };
+    const res = await listPerformance(params);
+    list.value = (res.rows as PlantWorkPerformanceVO[]) || [];
+    total.value = res.total || 0;
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function loadOptions() {
+  const teamRes = await listAllTeam();
+  teamOptions.value = (teamRes.data || []).map((it) => ({ label: it.teamName, value: it.id }));
+  const cropRes = await listCrop({ pageNum: 1, pageSize: 200 } as never);
+  cropOptions.value = (cropRes.rows || []).map((it) => ({ label: it.cropName, value: it.id }));
+}
+
+const handleSearch = (payload?: Record<string, any>) => {
+  Object.assign(searchModel, payload ?? {});
+  pageNum.value = 1;
+  loadList();
+};
+
+const handleReset = () => {
+  Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
+  handleSearch();
+};
+
+const handlePageChange = ({ pageNum: pn, pageSize: ps }: { pageNum: number; pageSize: number }) => {
+  pageNum.value = pn;
+  pageSize.value = ps;
+  loadList();
+};
+
+const handleGenerate = async () => {
+  if (!genMonth.value) {
+    ElMessage.warning(t('plantPerformance.tip.monthRequired'));
+    return;
+  }
+  await ElMessageBox.confirm(t('plantPerformance.confirm.generate', { month: genMonth.value }), t('common.tip'), { type: 'warning' });
+  generating.value = true;
+  try {
+    const res = await generatePerformance(genMonth.value);
+    const count = (res.data as number) ?? 0;
+    ElMessage.success(t('plantPerformance.tip.generateSuccess', { count }));
+    // 生成后把筛选月份对齐到刚生成的月，刷新列表
+    searchModel.statMonth = genMonth.value;
+    pageNum.value = 1;
+    await loadList();
+  } finally {
+    generating.value = false;
+  }
+};
+
+const handleDetail = (row: BizRow) => {
+  drawerRef.value?.open(row.id as string);
+};
+
+const handleExport = () => {
+  proxy?.download('djs/plant/work-performance/export', { ...searchModel }, `${t('plantPerformance.pageTitle')}_${new Date().getTime()}.xlsx`);
+};
+
+onMounted(() => {
+  loadOptions();
+  loadList();
+});
+</script>

@@ -2233,5 +2233,50 @@ export default {
       noProof: '无凭证图',
       notFound: '记录不存在'
     }
+  },
+  // 种植 - 班组绩效（PLT-PERF-001）
+  plantPerformance: {
+    pageTitle: '班组绩效',
+    toolbar: {
+      statMonth: '结算月份',
+      pickMonth: '请选择月份',
+      generate: '生成结算',
+      hint: '按采摘量 × 作物单价快照生成，重复生成会覆盖该月数据'
+    },
+    field: {
+      statMonth: '月份',
+      team: '班组',
+      crop: '作物'
+    },
+    column: {
+      statMonth: '月份',
+      team: '班组',
+      crop: '作物',
+      pickWeight: '采摘总量',
+      unitPrice: '单价快照',
+      amount: '应付金额',
+      action: '操作'
+    },
+    action: {
+      detail: '工作详情'
+    },
+    confirm: {
+      generate: '将重新生成 {month} 月结算，已有数据会被覆盖，是否继续？'
+    },
+    tip: {
+      monthRequired: '请先选择结算月份',
+      generateSuccess: '结算生成成功，共 {count} 条'
+    },
+    detail: {
+      title: '绩效详情',
+      tabYield: '产量绩效',
+      tabFarm: '农事记录',
+      rule: '绩效规则',
+      recordNo: '记录号',
+      farmType: '农事类型',
+      plot: '地块',
+      farmDate: '农事日期',
+      farmCount: '共 {count} 条农事记录'
+    }
   }
 };
