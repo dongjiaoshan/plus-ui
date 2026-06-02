@@ -2165,6 +2165,77 @@ export default {
       }
     }
   },
+  // Store member archive + manual consumption (STR-MEMBER-001; V1 archive + manual entry only, no marketing analytics)
+  storeMember: {
+    kpi: {
+      monthlyMember: 'New Members This Month',
+      monthlyConsumption: 'Consumption Records This Month'
+    },
+    field: {
+      phone: 'Phone',
+      memberName: 'Member Name',
+      memberLevel: 'Level',
+      store: 'Store'
+    },
+    column: {
+      memberNo: 'Member No.',
+      memberName: 'Member Name',
+      phone: 'Phone',
+      memberLevel: 'Level',
+      joinDate: 'Join Date',
+      storeName: 'Store',
+      memberTags: 'Tags',
+      memberStatus: 'Status',
+      createTime: 'Created At'
+    },
+    status: {
+      normal: 'Active',
+      disabled: 'Disabled'
+    },
+    action: {
+      consumeRecord: 'Consumption'
+    },
+    confirm: {
+      delete: 'Delete member "{name}"? Archive and consumption records will be hidden.'
+    },
+    form: {
+      addTitle: 'Add Member',
+      editTitle: 'Edit Member',
+      memberName: 'Member Name',
+      memberNamePlaceholder: 'Enter member name',
+      memberNameRequired: 'Member name is required',
+      phone: 'Phone',
+      phonePlaceholder: 'Enter phone number',
+      phoneRequired: 'Phone is required',
+      phoneInvalid: 'Invalid phone number',
+      memberLevel: 'Level',
+      memberLevelPlaceholder: 'Select level',
+      joinDate: 'Join Date',
+      joinDatePlaceholder: 'Select join date',
+      store: 'Store',
+      storePlaceholder: 'Select store (optional)',
+      memberTags: 'Tags',
+      memberTagsPlaceholder: 'Comma-separated, e.g. regular,family',
+      memberStatus: 'Status',
+      remark: 'Remark'
+    },
+    consume: {
+      title: 'Consumption of "{name}"',
+      add: 'Add Record',
+      entryTitle: 'Add Consumption Record',
+      consumeDate: 'Consume Date',
+      consumeDatePlaceholder: 'Select consume date',
+      consumeDateRequired: 'Consume date is required',
+      sku: 'SKU',
+      skuPlaceholder: 'Product name / code (free text)',
+      quantity: 'Qty',
+      amountManual: 'Amount (CNY)',
+      notes: 'Notes',
+      operator: 'Operator',
+      createTime: 'Created At',
+      empty: 'No consumption records'
+    }
+  },
   // Store white-bar split (STR-SPLIT-001, admin only, reuse inhouse table source='store')
   storeSplit: {
     field: {

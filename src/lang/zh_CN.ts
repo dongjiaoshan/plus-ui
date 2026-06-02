@@ -2166,6 +2166,77 @@ export default {
       }
     }
   },
+  // 门店会员档案 + 手录消费（STR-MEMBER-001，V1 只做档案 + 手录，不做营销分析）
+  storeMember: {
+    kpi: {
+      monthlyMember: '本月新增会员',
+      monthlyConsumption: '本月录入消费记录'
+    },
+    field: {
+      phone: '手机号',
+      memberName: '会员姓名',
+      memberLevel: '会员等级',
+      store: '所属门店'
+    },
+    column: {
+      memberNo: '会员编号',
+      memberName: '会员姓名',
+      phone: '手机号',
+      memberLevel: '会员等级',
+      joinDate: '入会日期',
+      storeName: '所属门店',
+      memberTags: '会员标签',
+      memberStatus: '状态',
+      createTime: '创建时间'
+    },
+    status: {
+      normal: '正常',
+      disabled: '停用'
+    },
+    action: {
+      consumeRecord: '消费记录'
+    },
+    confirm: {
+      delete: '确认删除会员「{name}」？删除后档案与消费记录将隐藏。'
+    },
+    form: {
+      addTitle: '新增会员',
+      editTitle: '编辑会员',
+      memberName: '会员姓名',
+      memberNamePlaceholder: '请输入会员姓名',
+      memberNameRequired: '请输入会员姓名',
+      phone: '手机号',
+      phonePlaceholder: '请输入手机号',
+      phoneRequired: '请输入手机号',
+      phoneInvalid: '手机号格式不正确',
+      memberLevel: '会员等级',
+      memberLevelPlaceholder: '请选择会员等级',
+      joinDate: '入会日期',
+      joinDatePlaceholder: '请选择入会日期',
+      store: '所属门店',
+      storePlaceholder: '请选择门店（选填）',
+      memberTags: '会员标签',
+      memberTagsPlaceholder: '逗号分隔，如 常客,亲子',
+      memberStatus: '状态',
+      remark: '备注'
+    },
+    consume: {
+      title: '会员「{name}」消费记录',
+      add: '录入消费',
+      entryTitle: '录入消费记录',
+      consumeDate: '消费日期',
+      consumeDatePlaceholder: '请选择消费日期',
+      consumeDateRequired: '请选择消费日期',
+      sku: '商品SKU',
+      skuPlaceholder: '商品名称 / 编码（自由填写）',
+      quantity: '数量',
+      amountManual: '金额(元)',
+      notes: '备注',
+      operator: '录入人',
+      createTime: '创建时间',
+      empty: '暂无消费记录'
+    }
+  },
   // 门店白条分割（STR-SPLIT-001，admin only 复用 inhouse 表 source='store'）
   storeSplit: {
     field: {
