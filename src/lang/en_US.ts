@@ -2291,5 +2291,36 @@ export default {
       farmDate: 'Farm Date',
       farmCount: '{count} farm records'
     }
+  },
+  // Plant dashboard (PLT-DASH-001)
+  plantDashboard: {
+    title: {
+      overview: 'Land Overview',
+      todayFarm: 'Today Farm Work',
+      monthCompletion: 'Monthly Plan Completion Rate',
+      gantt: 'Plant / Harvest Gantt'
+    },
+    kpi: {
+      idle: 'Idle Plots',
+      planting: 'Planting',
+      harvesting: 'Harvesting',
+      pending: 'Pending Plots',
+      total: 'Total Plots',
+      totalArea: 'Total Area',
+      areaUnit: 'mu',
+      todayFarmTotal: 'Today Farm Total',
+      farmUnit: ''
+    },
+    chart: {
+      completionRate: 'Completion',
+      cropAxis: 'Crop',
+      plantSegment: 'Plant',
+      pickSegment: 'Harvest',
+      noData: 'No Data'
+    },
+    action: {
+      refresh: 'Refresh',
+      lastRefresh: 'Last Refresh'
+    }
   }
 };

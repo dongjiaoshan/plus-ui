@@ -2292,5 +2292,36 @@ export default {
       farmDate: '农事日期',
       farmCount: '共 {count} 条农事记录'
     }
+  },
+  // 种植首页 dashboard（PLT-DASH-001）
+  plantDashboard: {
+    title: {
+      overview: '土地总览',
+      todayFarm: '今日农事',
+      monthCompletion: '当月种植任务完成率',
+      gantt: '种植 / 采摘进度甘特图'
+    },
+    kpi: {
+      idle: '空闲地块',
+      planting: '种植中',
+      harvesting: '采摘中',
+      pending: '待种地块',
+      total: '地块总数',
+      totalArea: '土地总面积',
+      areaUnit: '亩',
+      todayFarmTotal: '今日农事总数',
+      farmUnit: '条'
+    },
+    chart: {
+      completionRate: '完成率',
+      cropAxis: '作物',
+      plantSegment: '种植',
+      pickSegment: '采摘',
+      noData: '暂无数据'
+    },
+    action: {
+      refresh: '刷新',
+      lastRefresh: '最近刷新'
+    }
   }
 };
