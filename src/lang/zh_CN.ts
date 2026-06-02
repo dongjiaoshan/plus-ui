@@ -2480,5 +2480,45 @@ export default {
       refresh: '刷新',
       lastRefresh: '最近刷新'
     }
+  },
+  storeDashboard: {
+    title: {
+      home: '门店首页',
+      productStructure: '当日产品结构（按业态）',
+      top10: '当月 TOP10 产品排行',
+      trend: '近 10 日趋势'
+    },
+    kpi: {
+      todaySale: '今日销售额',
+      monthSale: '本月累计销售额',
+      todayOrder: '今日订单数',
+      monthOrder: '本月订单数',
+      pendingShip: '待发货',
+      pendingPurchase: '待采购',
+      amountUnit: '元',
+      orderUnit: '单'
+    },
+    column: {
+      productType: '业态',
+      qty: '需求量',
+      productName: '产品名称',
+      saleAmount: '销售额',
+      saleQty: '销售数量',
+      date: '日期',
+      orderCount: '订单数',
+      avgPrice: '客单价'
+    },
+    filter: {
+      store: '门店',
+      allStores: '全部门店'
+    },
+    action: {
+      refresh: '刷新'
+    },
+    empty: {
+      productStructure: '当日暂无产品结构数据',
+      top10: '当月暂无销售记录',
+      trend: '近 10 日暂无销售记录'
+    }
   }
 };

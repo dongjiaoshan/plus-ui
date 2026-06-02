@@ -2479,5 +2479,45 @@ export default {
       refresh: 'Refresh',
       lastRefresh: 'Last Refresh'
     }
+  },
+  storeDashboard: {
+    title: {
+      home: 'Store Home',
+      productStructure: 'Today Product Structure (by Category)',
+      top10: 'Monthly TOP10 Products',
+      trend: 'Last 10 Days Trend'
+    },
+    kpi: {
+      todaySale: 'Today Sales',
+      monthSale: 'Monthly Sales',
+      todayOrder: 'Today Orders',
+      monthOrder: 'Monthly Orders',
+      pendingShip: 'Pending Shipment',
+      pendingPurchase: 'Pending Purchase',
+      amountUnit: 'CNY',
+      orderUnit: 'orders'
+    },
+    column: {
+      productType: 'Category',
+      qty: 'Demand Qty',
+      productName: 'Product',
+      saleAmount: 'Sales',
+      saleQty: 'Sale Qty',
+      date: 'Date',
+      orderCount: 'Orders',
+      avgPrice: 'Avg Price'
+    },
+    filter: {
+      store: 'Store',
+      allStores: 'All Stores'
+    },
+    action: {
+      refresh: 'Refresh'
+    },
+    empty: {
+      productStructure: 'No product structure data today',
+      top10: 'No sales records this month',
+      trend: 'No sales records in last 10 days'
+    }
   }
 };
