@@ -140,14 +140,35 @@ function handleAdjust(row: StockFlowVO) {
   ElMessage.warning(t('djs.warehouse.stockFlow.adjustNotImpl', { flowNo: row.flowNo }));
 }
 
+/**
+ * 从库存查询页钻取而来：用 query 预过滤（productId 精确 + inoutType IN/OT）。
+ *
+ * productId 是雪花 ID，必须保持 string —— Number() 会丢精度（19 位 > MAX_SAFE_INTEGER，
+ * 末位被舍入 → 后端查不到，coder-djs-cross-layer-contract）。
+ * 返回是否应用了新的钻取参数（同一份参数不重复覆盖用户手动筛选）。
+ */
+let appliedDrillKey: string | null = null;
+function syncDrillFromQuery(): boolean {
+  const key = `${route.query.productId ?? ''}|${route.query.inoutType ?? ''}`;
+  if (key === appliedDrillKey) {
+    return false;
+  }
+  appliedDrillKey = key;
+  searchModel.productId = route.query.productId ? String(route.query.productId) : undefined;
+  searchModel.inoutType = route.query.inoutType ? String(route.query.inoutType) : undefined;
+  return true;
+}
+
 onMounted(() => {
-  // 从库存查询页钻取而来：用 query 预过滤（productId 精确 + inoutType IN/OT）
-  if (route.query.productId) {
-    searchModel.productId = Number(route.query.productId);
-  }
-  if (route.query.inoutType) {
-    searchModel.inoutType = String(route.query.inoutType);
-  }
+  syncDrillFromQuery();
   loadList();
+});
+
+// keep-alive 标签缓存：标签已开着再带新 query 钻入时 onMounted 不重跑，靠 onActivated 兜底
+onActivated(() => {
+  if (syncDrillFromQuery()) {
+    pageNum.value = 1;
+    loadList();
+  }
 });
 </script>

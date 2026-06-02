@@ -37,7 +37,8 @@ export interface StockFlowQuery {
   flowType?: string;
   inoutType?: string;
   matType?: string;
-  productId?: number;
+  /** 雪花 ID 全链路 string —— Number() 会丢精度（coder-djs-cross-layer-contract） */
+  productId?: string;
   productCode?: string;
   earNo?: string;
   plotId?: number;
