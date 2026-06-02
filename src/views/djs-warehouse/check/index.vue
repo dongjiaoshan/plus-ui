@@ -169,11 +169,32 @@ function handleExport() {
   proxy?.download('/djs/warehouse/check/export', { ...searchModel }, `库存盘点_${new Date().getTime()}.xlsx`);
 }
 
-onMounted(() => {
-  // 从库存查询页"盘点记录"钻取而来：按库位预过滤
-  if (route.query.locationId) {
-    searchModel.locationId = Number(route.query.locationId);
+/**
+ * 从库存查询页"盘点记录"钻取而来：按库位预过滤。
+ * locationId 是雪花 ID，保持 string —— Number() 会丢精度（coder-djs-cross-layer-contract）。
+ * 返回是否应用了新的钻取参数（同一份参数不重复覆盖用户手动筛选）。
+ */
+let appliedDrillKey: string | null = null;
+function syncDrillFromQuery(): boolean {
+  const key = String(route.query.locationId ?? '');
+  if (key === appliedDrillKey) {
+    return false;
   }
+  appliedDrillKey = key;
+  searchModel.locationId = route.query.locationId ? String(route.query.locationId) : undefined;
+  return true;
+}
+
+onMounted(() => {
+  syncDrillFromQuery();
   loadList();
+});
+
+// keep-alive 标签缓存：标签已开着再带新 query 钻入时 onMounted 不重跑，靠 onActivated 兜底
+onActivated(() => {
+  if (syncDrillFromQuery()) {
+    pageNum.value = 1;
+    loadList();
+  }
 });
 </script>
