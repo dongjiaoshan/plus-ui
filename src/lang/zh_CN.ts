@@ -2520,5 +2520,64 @@ export default {
       top10: '当月暂无销售记录',
       trend: '近 10 日暂无销售记录'
     }
+  },
+  warehouseTrace: {
+    tab: {
+      pork: '猪肉',
+      veg: '果蔬',
+      gift: '礼盒'
+    },
+    giftPlaceholder: '礼盒追溯 V1 预留，子码下钻待后续版本开放',
+    field: {
+      produceCode: '追溯码',
+      codeType: '类型',
+      productName: '产品名',
+      productSpec: '规格',
+      pigEarNo: '猪只耳号',
+      plotName: '地块',
+      farmName: '农场',
+      storeName: '门店',
+      harvestDate: '采收日期',
+      plantDays: '种植天数',
+      creatorName: '生成人',
+      createTime: '生成时间',
+      remark: '备注',
+      beginDate: '开始时间',
+      endDate: '结束时间'
+    },
+    column: {
+      produceCode: '追溯码',
+      codeType: '类型',
+      productName: '产品名',
+      pigEarNo: '猪只耳号',
+      storeName: '门店',
+      farmName: '农场',
+      creatorName: '生成人',
+      createTime: '生成时间'
+    },
+    action: {
+      detail: '详情',
+      print: '打印',
+      batchPrint: '批量打印'
+    },
+    detail: {
+      title: '追溯码详情',
+      groupBasic: '基本信息',
+      groupRelation: '关联信息',
+      groupImage: '产品图',
+      groupTimeline: '追溯链时间轴'
+    },
+    timeline: {
+      empty: '暂无追溯事件',
+      operator: '操作人'
+    },
+    print: {
+      empty: '所选追溯码无可打印数据',
+      failed: '生成打印文件失败，请重试'
+    },
+    pdf: {
+      title: '产品追溯码',
+      serialNo: '序号'
+    }
   }
 };

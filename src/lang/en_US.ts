@@ -2519,5 +2519,64 @@ export default {
       top10: 'No sales records this month',
       trend: 'No sales records in last 10 days'
     }
+  },
+  warehouseTrace: {
+    tab: {
+      pork: 'Pork',
+      veg: 'Vegetable',
+      gift: 'Gift Box'
+    },
+    giftPlaceholder: 'Gift-box trace is reserved for V1; sub-code drilldown opens in a later release',
+    field: {
+      produceCode: 'Trace Code',
+      codeType: 'Type',
+      productName: 'Product',
+      productSpec: 'Spec',
+      pigEarNo: 'Pig Ear No.',
+      plotName: 'Plot',
+      farmName: 'Farm',
+      storeName: 'Store',
+      harvestDate: 'Harvest Date',
+      plantDays: 'Plant Days',
+      creatorName: 'Creator',
+      createTime: 'Create Time',
+      remark: 'Remark',
+      beginDate: 'Begin Time',
+      endDate: 'End Time'
+    },
+    column: {
+      produceCode: 'Trace Code',
+      codeType: 'Type',
+      productName: 'Product',
+      pigEarNo: 'Pig Ear No.',
+      storeName: 'Store',
+      farmName: 'Farm',
+      creatorName: 'Creator',
+      createTime: 'Create Time'
+    },
+    action: {
+      detail: 'Detail',
+      print: 'Print',
+      batchPrint: 'Batch Print'
+    },
+    detail: {
+      title: 'Trace Code Detail',
+      groupBasic: 'Basic Info',
+      groupRelation: 'Related Info',
+      groupImage: 'Product Image',
+      groupTimeline: 'Trace Timeline'
+    },
+    timeline: {
+      empty: 'No trace events',
+      operator: 'Operator'
+    },
+    print: {
+      empty: 'No printable data for selected codes',
+      failed: 'Failed to generate print file, please retry'
+    },
+    pdf: {
+      title: 'Product Trace Code',
+      serialNo: 'No.'
+    }
   }
 };
