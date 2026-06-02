@@ -12,13 +12,7 @@
         <span class="ml-2 text-gray-400">kg</span>
       </el-form-item>
       <el-form-item :label="t('storeSplit.form.location')" prop="locationId">
-        <el-select
-          v-model="form.locationId"
-          filterable
-          clearable
-          :placeholder="t('storeSplit.form.locationPlaceholder')"
-          style="width: 100%"
-        >
+        <el-select v-model="form.locationId" filterable clearable :placeholder="t('storeSplit.form.locationPlaceholder')" style="width: 100%">
           <el-option v-for="l in locationOptions" :key="String(l.id)" :label="l.locationName" :value="String(l.id)" />
         </el-select>
       </el-form-item>
