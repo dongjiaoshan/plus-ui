@@ -2271,6 +2271,57 @@ export default {
       submit: 'Submit'
     }
   },
+  // Store return management (STR-RETURN-001, store-domain thin impl, admin only)
+  storeReturn: {
+    field: {
+      returnNo: 'Return No.',
+      returnDirection: 'Direction',
+      store: 'Return Store',
+      product: 'Product',
+      returnQuantity: 'Quantity',
+      returnReason: 'Reason',
+      traceCode: 'Trace Code',
+      member: 'Member',
+      returnDate: 'Return Date',
+      returnDateFrom: 'Return Date From',
+      returnDateTo: 'Return Date To',
+      remark: 'Remark'
+    },
+    column: {
+      returnNo: 'Return No.',
+      returnDirection: 'Direction',
+      storeName: 'Return Store',
+      productName: 'Product',
+      returnQuantity: 'Quantity',
+      returnReason: 'Reason',
+      traceCode: 'Trace Code',
+      memberId: 'Member ID',
+      returnDate: 'Return Date',
+      operatorName: 'Operator',
+      createTime: 'Created'
+    },
+    placeholder: {
+      returnDirection: 'Select direction',
+      store: 'Select store (required for customer return)',
+      product: 'Select product',
+      returnReason: 'Enter return reason',
+      traceCode: 'Attached trace code, if any',
+      member: 'Member ID for member return, optional',
+      returnDate: 'Select return date'
+    },
+    rule: {
+      returnDirection: 'Direction is required',
+      product: 'Product is required',
+      returnQuantity: 'Quantity is required'
+    },
+    dialog: {
+      add: 'Add Return',
+      edit: 'Edit Return'
+    },
+    confirm: {
+      delete: 'Confirm delete return {no}?'
+    }
+  },
   // Plant disaster records (PLT-WORK-003, admin read-only sub-page)
   plantDisaster: {
     column: {

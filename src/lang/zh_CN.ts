@@ -2272,6 +2272,57 @@ export default {
       submit: '提交'
     }
   },
+  // 门店退回管理（STR-RETURN-001，门店域薄实现，admin only）
+  storeReturn: {
+    field: {
+      returnNo: '退回单号',
+      returnDirection: '退回方向',
+      store: '退回门店',
+      product: '产品',
+      returnQuantity: '退回数量',
+      returnReason: '退回原因',
+      traceCode: '追溯码',
+      member: '会员',
+      returnDate: '退回日期',
+      returnDateFrom: '退回日期起',
+      returnDateTo: '退回日期止',
+      remark: '备注'
+    },
+    column: {
+      returnNo: '退回单号',
+      returnDirection: '退回方向',
+      storeName: '退回门店',
+      productName: '产品',
+      returnQuantity: '退回数量',
+      returnReason: '退回原因',
+      traceCode: '追溯码',
+      memberId: '会员ID',
+      returnDate: '退回日期',
+      operatorName: '经手人',
+      createTime: '创建时间'
+    },
+    placeholder: {
+      returnDirection: '请选择退回方向',
+      store: '请选择退回门店（顾客退回必填）',
+      product: '请选择产品',
+      returnReason: '请输入退回原因',
+      traceCode: '已贴追溯码，如有',
+      member: '会员退回填会员ID，可空',
+      returnDate: '请选择退回日期'
+    },
+    rule: {
+      returnDirection: '请选择退回方向',
+      product: '请选择产品',
+      returnQuantity: '请输入退回数量'
+    },
+    dialog: {
+      add: '新增退回',
+      edit: '编辑退回'
+    },
+    confirm: {
+      delete: '确认删除退回单 {no}？'
+    }
+  },
   // 种植灾害记录（PLT-WORK-003，admin 只读独立子页）
   plantDisaster: {
     column: {
