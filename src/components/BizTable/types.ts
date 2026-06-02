@@ -10,8 +10,8 @@ import type { CSSProperties } from 'vue';
 /** 表格行：业务字段不收敛，每页 vo 不同，统一用 Record<string, any> */
 export type BizRow = Record<string, any>;
 
-/** 查询表单字段类型 */
-export type SearchFieldType = 'input' | 'select' | 'date' | 'daterange' | 'number';
+/** 查询表单字段类型（month=月份选择器，回写 'YYYY-MM'） */
+export type SearchFieldType = 'input' | 'select' | 'date' | 'month' | 'daterange' | 'number';
 
 /**
  * 查询表单字段 schema

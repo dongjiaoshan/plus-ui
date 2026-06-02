@@ -30,13 +30,17 @@
       :page-size="pageSize"
       row-key="id"
       show-export
+      :show-add="false"
+      :show-batch-del="false"
+      :show-row-edit="false"
+      :show-row-del="false"
       perm-prefix="djs:plantPerformance"
       @search="handleSearch"
       @reset="handleReset"
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-action="{ row }">
+      <template #action="{ row }">
         <el-button link type="primary" size="small" @click="handleDetail(row)">
           {{ t('plantPerformance.action.detail') }}
         </el-button>
@@ -86,7 +90,7 @@ const searchModel = reactive<Record<string, unknown>>({
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'statMonth', label: t('plantPerformance.field.statMonth'), type: 'input', placeholder: t('plantPerformance.toolbar.pickMonth') },
+  { field: 'statMonth', label: t('plantPerformance.field.statMonth'), type: 'month', placeholder: t('plantPerformance.toolbar.pickMonth') },
   { field: 'teamId', label: t('plantPerformance.field.team'), type: 'select', options: teamOptions.value },
   { field: 'cropId', label: t('plantPerformance.field.crop'), type: 'select', options: cropOptions.value }
 ]);
@@ -115,8 +119,7 @@ const columns = computed<BizTableColumn[]>(() => [
     width: 140,
     align: 'right',
     formatter: (r: BizRow) => (r.performanceAmount != null ? `¥${r.performanceAmount}` : '-')
-  },
-  { prop: 'action', label: t('plantPerformance.column.action'), width: 100, align: 'center', fixed: 'right' }
+  }
 ]);
 
 async function loadList() {
