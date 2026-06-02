@@ -87,5 +87,4 @@ export const getDemandSummary = (productType: DemandProductType): AxiosPromise<D
 // =========== 今日 KPI 横条（DJS-FIX-ADMIN-W22-007）===========
 
 /** 需求管理页顶部「今日全局」KPI 横条（一次返 6 数；渲染在 SummaryBar 上方）。 */
-export const getDemandTodayKpi = (): AxiosPromise<DemandTodayKpiVO> =>
-  request({ url: '/djs/warehouse/demand/kpi/today', method: 'get' });
+export const getDemandTodayKpi = (): AxiosPromise<DemandTodayKpiVO> => request({ url: '/djs/warehouse/demand/kpi/today', method: 'get' });

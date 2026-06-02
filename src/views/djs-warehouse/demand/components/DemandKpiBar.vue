@@ -12,37 +12,49 @@
     <el-col :span="4">
       <div class="kpi-item">
         <div class="kpi-label">{{ t('demand.kpi.pigDemand') }}</div>
-        <div class="kpi-value">{{ display(kpi?.todayPigDemand) }} <span class="kpi-unit">{{ t('demand.kpi.unitHead') }}</span></div>
+        <div class="kpi-value">
+          {{ display(kpi?.todayPigDemand) }} <span class="kpi-unit">{{ t('demand.kpi.unitHead') }}</span>
+        </div>
       </div>
     </el-col>
     <el-col :span="4">
       <div class="kpi-item">
         <div class="kpi-label">{{ t('demand.kpi.assigned') }}</div>
-        <div class="kpi-value">{{ display(kpi?.todayPigAssigned) }} <span class="kpi-unit">{{ t('demand.kpi.unitHead') }}</span></div>
+        <div class="kpi-value">
+          {{ display(kpi?.todayPigAssigned) }} <span class="kpi-unit">{{ t('demand.kpi.unitHead') }}</span>
+        </div>
       </div>
     </el-col>
     <el-col :span="4">
       <div class="kpi-item">
         <div class="kpi-label">{{ t('demand.kpi.vegDemand') }}</div>
-        <div class="kpi-value">{{ display(kpi?.todayVegSpeciesDemand) }} <span class="kpi-unit">{{ t('demand.kpi.unitSpecies') }}</span></div>
+        <div class="kpi-value">
+          {{ display(kpi?.todayVegSpeciesDemand) }} <span class="kpi-unit">{{ t('demand.kpi.unitSpecies') }}</span>
+        </div>
       </div>
     </el-col>
     <el-col :span="4">
       <div class="kpi-item">
         <div class="kpi-label">{{ t('demand.kpi.assigned') }}</div>
-        <div class="kpi-value">{{ display(kpi?.todayVegSpeciesAssigned) }} <span class="kpi-unit">{{ t('demand.kpi.unitSpecies') }}</span></div>
+        <div class="kpi-value">
+          {{ display(kpi?.todayVegSpeciesAssigned) }} <span class="kpi-unit">{{ t('demand.kpi.unitSpecies') }}</span>
+        </div>
       </div>
     </el-col>
     <el-col :span="4">
       <div class="kpi-item">
         <div class="kpi-label">{{ t('demand.kpi.otherDemand') }}</div>
-        <div class="kpi-value">{{ display(kpi?.todayOtherDemand) }} <span class="kpi-unit">{{ t('demand.kpi.unitItem') }}</span></div>
+        <div class="kpi-value">
+          {{ display(kpi?.todayOtherDemand) }} <span class="kpi-unit">{{ t('demand.kpi.unitItem') }}</span>
+        </div>
       </div>
     </el-col>
     <el-col :span="4">
       <div class="kpi-item">
         <div class="kpi-label">{{ t('demand.kpi.assigned') }}</div>
-        <div class="kpi-value">{{ display(kpi?.todayOtherAssigned) }} <span class="kpi-unit">{{ t('demand.kpi.unitItem') }}</span></div>
+        <div class="kpi-value">
+          {{ display(kpi?.todayOtherAssigned) }} <span class="kpi-unit">{{ t('demand.kpi.unitItem') }}</span>
+        </div>
       </div>
     </el-col>
   </el-row>

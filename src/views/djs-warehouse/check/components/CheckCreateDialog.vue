@@ -1,12 +1,5 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="t('djs.warehouse.check.createTitle')"
-    destroy-on-close
-    append-to-body
-    width="520px"
-    @closed="handleClosed"
-  >
+  <el-dialog v-model="visible" :title="t('djs.warehouse.check.createTitle')" destroy-on-close append-to-body width="520px" @closed="handleClosed">
     <el-alert type="warning" :title="t('djs.warehouse.check.lockHint')" :closable="false" class="mb-3" />
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-form-item :label="t('djs.warehouse.check.locationName')" prop="locationId">

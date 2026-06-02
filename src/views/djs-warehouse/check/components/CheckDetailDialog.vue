@@ -1,11 +1,5 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="t('djs.warehouse.check.detailTitle')"
-    destroy-on-close
-    append-to-body
-    width="820px"
-  >
+  <el-dialog v-model="visible" :title="t('djs.warehouse.check.detailTitle')" destroy-on-close append-to-body width="820px">
     <el-descriptions :column="3" border class="mb-3">
       <el-descriptions-item :label="t('djs.warehouse.check.checkId')">{{ header?.checkId }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.locationName')">{{ header?.locationName }}</el-descriptions-item>

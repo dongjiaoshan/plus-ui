@@ -33,9 +33,7 @@
         <el-descriptions-item v-if="detail.disasterType" :label="t('plantWork.column.disasterType')">
           <dict-tag :options="djs_disaster_type" :value="detail.disasterType" />
         </el-descriptions-item>
-        <el-descriptions-item v-if="detail.lossRate != null" :label="t('plantWork.column.lossRate')">
-          {{ detail.lossRate }}%
-        </el-descriptions-item>
+        <el-descriptions-item v-if="detail.lossRate != null" :label="t('plantWork.column.lossRate')"> {{ detail.lossRate }}% </el-descriptions-item>
         <el-descriptions-item v-if="detail.lossYield != null" :label="t('plantWork.column.lossYield')">
           {{ detail.lossYield }} kg
         </el-descriptions-item>

@@ -32,10 +32,7 @@ export const getSupplier = (id: number | string): AxiosPromise<SupplierVO> => {
  * 后端跨模块聚合 breed 药品入库批次 + warehouse 物资入库流水，按交易日期倒序假分页。
  * 返回 TableDataInfo：rows = SupplierDealVO[]，total = 全量条数。
  */
-export const listSupplierDeals = (
-  id: number | string,
-  query: { pageNum: number; pageSize: number }
-): AxiosPromise<SupplierDealVO[]> => {
+export const listSupplierDeals = (id: number | string, query: { pageNum: number; pageSize: number }): AxiosPromise<SupplierDealVO[]> => {
   return request({
     url: `/djs/common/supplier/${id}/deals`,
     method: 'get',

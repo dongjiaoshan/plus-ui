@@ -1,12 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type {
-  StockCheckCreateForm,
-  StockCheckHeaderVO,
-  StockCheckLineQuery,
-  StockCheckQuery,
-  StockCheckRecordVO
-} from './check/types';
+import type { StockCheckCreateForm, StockCheckHeaderVO, StockCheckLineQuery, StockCheckQuery, StockCheckRecordVO } from './check/types';
 
 /**
  * 库存盘点 admin API（WMS-STOCK-001）。

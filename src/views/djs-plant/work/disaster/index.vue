@@ -108,8 +108,7 @@ function buildQuery(): DisasterRecordQuery {
     recordNo: searchModel.recordNo || undefined,
     plotId: searchModel.plotId || undefined,
     disasterType: searchModel.disasterType || undefined,
-    isWarning:
-      searchModel.isWarning === undefined || searchModel.isWarning === '' ? undefined : Number(searchModel.isWarning),
+    isWarning: searchModel.isWarning === undefined || searchModel.isWarning === '' ? undefined : Number(searchModel.isWarning),
     farmDateBegin: Array.isArray(range) && range[0] ? range[0] : undefined,
     farmDateEnd: Array.isArray(range) && range[1] ? range[1] : undefined
   };
@@ -164,8 +163,7 @@ function handleExport() {
       recordNo: searchModel.recordNo || undefined,
       plotId: searchModel.plotId || undefined,
       disasterType: searchModel.disasterType || undefined,
-      isWarning:
-        searchModel.isWarning === undefined || searchModel.isWarning === '' ? undefined : Number(searchModel.isWarning),
+      isWarning: searchModel.isWarning === undefined || searchModel.isWarning === '' ? undefined : Number(searchModel.isWarning),
       farmDateBegin: Array.isArray(range) && range[0] ? range[0] : undefined,
       farmDateEnd: Array.isArray(range) && range[1] ? range[1] : undefined
     },
