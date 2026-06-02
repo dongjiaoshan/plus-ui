@@ -2165,6 +2165,41 @@ export default {
       }
     }
   },
+  // Store white-bar split (STR-SPLIT-001, admin only, reuse inhouse table source='store')
+  storeSplit: {
+    field: {
+      cutPart: 'Cut Part',
+      produceDateStart: 'Produce Date From',
+      produceDateEnd: 'Produce Date To'
+    },
+    column: {
+      cutPart: 'Cut Part',
+      productName: 'Product',
+      productWeight: 'Weight (kg)',
+      produceDate: 'Produce Date',
+      source: 'Source',
+      createByName: 'Created By',
+      createTime: 'Created Time'
+    },
+    tag: {
+      store: 'Store Re-split'
+    },
+    form: {
+      title: 'Store Re-split Entry',
+      hint: 'Re-split a white-bar / cut product already stored from warehouse splitting, on the store side; resolve standard SKU by cut part.',
+      cutPart: 'Cut Part',
+      cutPartPlaceholder: 'Select cut part',
+      cutPartRequired: 'Please select cut part',
+      productWeight: 'Re-split Weight',
+      productWeightRequired: 'Please enter re-split weight',
+      location: 'Location',
+      locationPlaceholder: 'Select location (optional)',
+      whiteBarId: 'Source White-bar',
+      whiteBarIdPlaceholder: 'Source white-bar id (optional, for trace)',
+      remark: 'Remark',
+      submit: 'Submit'
+    }
+  },
   // Plant disaster records (PLT-WORK-003, admin read-only sub-page)
   plantDisaster: {
     column: {

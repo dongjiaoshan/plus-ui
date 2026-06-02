@@ -2166,6 +2166,41 @@ export default {
       }
     }
   },
+  // 门店白条分割（STR-SPLIT-001，admin only 复用 inhouse 表 source='store'）
+  storeSplit: {
+    field: {
+      cutPart: '部位',
+      produceDateStart: '生产日期起',
+      produceDateEnd: '生产日期止'
+    },
+    column: {
+      cutPart: '部位',
+      productName: '产品',
+      productWeight: '重量(kg)',
+      produceDate: '生产日期',
+      source: '来源',
+      createByName: '录入人',
+      createTime: '创建时间'
+    },
+    tag: {
+      store: '门店再分'
+    },
+    form: {
+      title: '门店再分录入',
+      hint: '将仓库已分割入库的白条 / 部位品在门店端再分一次，按部位反查标准产品入门店库位。',
+      cutPart: '分割部位',
+      cutPartPlaceholder: '请选择分割部位',
+      cutPartRequired: '请选择分割部位',
+      productWeight: '再分重量',
+      productWeightRequired: '请输入再分重量',
+      location: '入库库位',
+      locationPlaceholder: '请选择库位（选填）',
+      whiteBarId: '源白条',
+      whiteBarIdPlaceholder: '源白条标识（选填，溯源用）',
+      remark: '备注',
+      submit: '提交'
+    }
+  },
   // 种植灾害记录（PLT-WORK-003，admin 只读独立子页）
   plantDisaster: {
     column: {
