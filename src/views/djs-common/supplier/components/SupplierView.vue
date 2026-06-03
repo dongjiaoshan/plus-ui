@@ -70,7 +70,7 @@ const open = async (id: number | string) => {
   const ossId = data.value.licenseImageOssId;
   if (ossId) {
     try {
-      const ossRes = await listOssByIds(ossId as number);
+      const ossRes = await listOssByIds(ossId);
       licenseImageUrl.value = ossRes.data?.[0]?.url ?? '';
     } catch (e) {
       console.warn('[SupplierView] listOssByIds failed for licenseImageOssId', ossId, e);

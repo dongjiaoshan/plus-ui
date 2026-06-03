@@ -12,6 +12,7 @@
       :page-size="pageSize"
       row-key="id"
       :selectable="false"
+      :show-batch-del="false"
       :show-row-edit="false"
       :show-export="true"
       perm-prefix="djs:store:check"

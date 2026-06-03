@@ -115,6 +115,7 @@ export default {
     detail: '详 情',
     edit: '编 辑',
     delete: '删 除',
+    operate: '操作',
     back: '返 回',
     createTime: '创建时间',
     opSuccess: '操作成功',
@@ -2091,6 +2092,7 @@ export default {
         storeRequired: '请选择门店',
         productRequired: '请选择产品',
         saleDateRequired: '请选择销售日期',
+        saleDateFuture: '销售日期不能晚于今天',
         saleQtyRequired: '请输入销售数量',
         saleAmountRequired: '请输入销售总额'
       }

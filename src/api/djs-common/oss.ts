@@ -22,9 +22,9 @@ export const getOssStsCredential = (bizType: string): AxiosPromise<OssStsCredent
  * 后端：POST /djs/oss/sts/notify
  *   权限：djs:common:oss:sts
  *
- * @returns 返回新 ossId（业务字段保存此值）
+ * @returns 返回新 ossId（雪花 string，业务字段保存此值；后端 R<Long> 经全局 Jackson 序列化为 string）
  */
-export const notifyOssUploaded = (body: OssNotifyBO): AxiosPromise<number> => {
+export const notifyOssUploaded = (body: OssNotifyBO): AxiosPromise<string> => {
   return request({
     url: '/djs/oss/sts/notify',
     method: 'post',

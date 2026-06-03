@@ -120,9 +120,9 @@
                 <el-input v-model="row.componentUnit" maxlength="16" />
               </template>
             </el-table-column>
-            <el-table-column :label="t('product.field.componentSort')" width="100">
+            <el-table-column :label="t('product.field.componentSort')" width="130">
               <template #default="{ row }">
-                <el-input-number v-model="row.componentSort" :min="0" style="width: 100%" />
+                <el-input-number v-model="row.componentSort" :min="0" controls-position="right" style="width: 100%" />
               </template>
             </el-table-column>
             <el-table-column label="" width="80" align="center">
@@ -241,22 +241,16 @@ const defaultForm = (): ProductInfoForm => ({
 
 const form = ref<ProductInfoForm>(defaultForm());
 
-// OssUpload v-model 期望 number[]；业务字段 productThumb 是单 ossId 字符串 / productImg 是逗号分隔字符串
-const thumbOssIdsModel = computed<number[]>({
-  get: () => (form.value.productThumb ? [Number(form.value.productThumb)] : []),
-  set: (val: number[]) => {
-    form.value.productThumb = val && val.length > 0 ? String(val[0]) : undefined;
+// OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段 productThumb 是单 ossId 字符串 / productImg 是逗号分隔字符串
+const thumbOssIdsModel = computed<string[]>({
+  get: () => (form.value.productThumb ? [form.value.productThumb] : []),
+  set: (val: string[]) => {
+    form.value.productThumb = val && val.length > 0 ? val[0] : undefined;
   }
 });
-const imgOssIdsModel = computed<number[]>({
-  get: () =>
-    form.value.productImg
-      ? form.value.productImg
-          .split(',')
-          .map((x) => Number(x))
-          .filter((x) => !Number.isNaN(x))
-      : [],
-  set: (val: number[]) => {
+const imgOssIdsModel = computed<string[]>({
+  get: () => (form.value.productImg ? form.value.productImg.split(',').filter(Boolean) : []),
+  set: (val: string[]) => {
     form.value.productImg = val && val.length > 0 ? val.join(',') : undefined;
   }
 });
@@ -329,7 +323,7 @@ const openEdit = async (id: number | string) => {
     try {
       const ossRes = await listOssByIds(form.value.productThumb);
       const items = (ossRes.data || []).map((o) => ({
-        ossId: Number(o.ossId),
+        ossId: String(o.ossId),
         url: o.url,
         originalName: o.originalName
       }));
@@ -342,7 +336,7 @@ const openEdit = async (id: number | string) => {
     try {
       const ossRes = await listOssByIds(form.value.productImg);
       const items = (ossRes.data || []).map((o) => ({
-        ossId: Number(o.ossId),
+        ossId: String(o.ossId),
         url: o.url,
         originalName: o.originalName
       }));

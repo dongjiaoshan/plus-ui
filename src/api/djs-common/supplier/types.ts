@@ -9,8 +9,8 @@ export interface SupplierVO extends BaseEntity {
   supplierName: string;
   /** 营业执照编号 */
   licenseNo?: string;
-  /** 营业执照图片 OSS oss_id */
-  licenseImageOssId?: number | null;
+  /** 营业执照图片 OSS oss_id（雪花 string，禁 Number） */
+  licenseImageOssId?: string | null;
   /** 经营许可证编号 */
   businessLicenseNo?: string;
   /** ISO 日期 yyyy-MM-dd */
@@ -40,7 +40,7 @@ export interface SupplierForm {
   id?: number | string;
   supplierName: string;
   licenseNo?: string;
-  licenseImageOssId?: number | null;
+  licenseImageOssId?: string | null;
   businessLicenseNo?: string;
   cooperationStartDate?: string;
   supplierType: string;

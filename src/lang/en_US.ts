@@ -115,6 +115,7 @@ export default {
     detail: 'Detail',
     edit: 'Edit',
     delete: 'Delete',
+    operate: 'Operate',
     back: 'Back',
     createTime: 'Created at',
     opSuccess: 'Operation succeeded',
@@ -2089,6 +2090,7 @@ export default {
         storeRequired: 'Please select store',
         productRequired: 'Please select product',
         saleDateRequired: 'Please select sale date',
+        saleDateFuture: 'Sale date cannot be in the future',
         saleQtyRequired: 'Please enter qty',
         saleAmountRequired: 'Please enter amount'
       }

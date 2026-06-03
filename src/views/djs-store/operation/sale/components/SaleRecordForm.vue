@@ -31,7 +31,7 @@
         <el-input v-model="saleUnit" disabled :placeholder="t('storeOperation.sale.form.unitAuto')" />
       </el-form-item>
       <el-form-item :label="t('storeOperation.sale.form.saleDate')" prop="saleDate">
-        <el-date-picker v-model="form.saleDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
+        <el-date-picker v-model="form.saleDate" type="date" value-format="YYYY-MM-DD" :disabled-date="disableFutureDate" style="width: 100%" />
       </el-form-item>
       <el-form-item :label="t('storeOperation.sale.form.saleQty')" prop="saleQty">
         <el-input-number v-model="form.saleQty" :precision="3" :min="0" :step="1" controls-position="right" style="width: 100%" />
@@ -87,10 +87,27 @@ const productPlaceholder = computed(() =>
   form.storeId ? t('storeOperation.sale.form.productPlaceholder') : t('storeOperation.sale.form.selectStoreFirst')
 );
 
+// 禁选未来日期：今天及以前可选，明天起灰显不可点
+function disableFutureDate(date: Date): boolean {
+  return date.getTime() > Date.now();
+}
+
 const rules: FormRules = {
   storeId: [{ required: true, message: t('storeOperation.sale.form.storeRequired'), trigger: 'change' }],
   productId: [{ required: true, message: t('storeOperation.sale.form.productRequired'), trigger: 'change' }],
-  saleDate: [{ required: true, message: t('storeOperation.sale.form.saleDateRequired'), trigger: 'change' }],
+  saleDate: [
+    { required: true, message: t('storeOperation.sale.form.saleDateRequired'), trigger: 'change' },
+    {
+      validator: (_rule, value, callback) => {
+        if (value && new Date(value).getTime() > Date.now()) {
+          callback(new Error(t('storeOperation.sale.form.saleDateFuture')));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'change'
+    }
+  ],
   saleQty: [{ required: true, message: t('storeOperation.sale.form.saleQtyRequired'), trigger: 'blur' }],
   saleAmount: [{ required: true, message: t('storeOperation.sale.form.saleAmountRequired'), trigger: 'blur' }]
 };
