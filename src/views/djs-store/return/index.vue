@@ -21,9 +21,6 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-returnDirection="{ row }">
-        <dict-tag :options="djs_return_direction" :value="row.returnDirection" />
-      </template>
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:store:return:edit']" link type="primary" icon="Edit" @click="handleEdit(row)">
           {{ t('common.edit') }}
@@ -36,32 +33,27 @@
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="560px" append-to-body @closed="resetForm">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item :label="t('storeReturn.field.returnDirection')" prop="returnDirection">
-          <el-select v-model="form.returnDirection" :placeholder="t('storeReturn.placeholder.returnDirection')" style="width: 100%">
-            <el-option v-for="d in djs_return_direction" :key="d.value" :label="d.label" :value="d.value" />
-          </el-select>
-        </el-form-item>
+        <el-alert v-if="isEdit" :title="t('storeReturn.tip.editLock')" type="info" :closable="false" show-icon class="mb-2" />
         <el-form-item :label="t('storeReturn.field.store')" prop="storeId">
           <el-select v-model="form.storeId" clearable filterable :placeholder="t('storeReturn.placeholder.store')" style="width: 100%">
             <el-option v-for="s in storeOptions" :key="s.id" :label="s.storeName" :value="String(s.id)" />
           </el-select>
         </el-form-item>
         <el-form-item :label="t('storeReturn.field.product')" prop="productId">
-          <el-select v-model="form.productId" filterable :placeholder="t('storeReturn.placeholder.product')" style="width: 100%">
+          <el-select v-model="form.productId" filterable :disabled="isEdit" :placeholder="t('storeReturn.placeholder.product')" style="width: 100%">
             <el-option v-for="p in productOptions" :key="p.id" :label="p.productName" :value="String(p.id)" />
           </el-select>
         </el-form-item>
+        <el-form-item :label="t('storeReturn.field.location')" prop="locationId">
+          <el-select v-model="form.locationId" filterable :disabled="isEdit" :placeholder="t('storeReturn.placeholder.location')" style="width: 100%">
+            <el-option v-for="l in locationOptions" :key="l.id" :label="l.locationName" :value="String(l.id)" />
+          </el-select>
+        </el-form-item>
         <el-form-item :label="t('storeReturn.field.returnQuantity')" prop="returnQuantity">
-          <el-input-number v-model="form.returnQuantity" :min="0" :precision="2" :step="1" style="width: 100%" />
+          <el-input-number v-model="form.returnQuantity" :min="0.01" :precision="2" :step="1" :disabled="isEdit" style="width: 100%" />
         </el-form-item>
         <el-form-item :label="t('storeReturn.field.returnReason')" prop="returnReason">
           <el-input v-model="form.returnReason" type="textarea" :rows="2" maxlength="255" :placeholder="t('storeReturn.placeholder.returnReason')" />
-        </el-form-item>
-        <el-form-item :label="t('storeReturn.field.traceCode')" prop="traceCode">
-          <el-input v-model="form.traceCode" maxlength="64" :placeholder="t('storeReturn.placeholder.traceCode')" />
-        </el-form-item>
-        <el-form-item :label="t('storeReturn.field.member')" prop="memberId">
-          <el-input v-model="form.memberId" :placeholder="t('storeReturn.placeholder.member')" />
         </el-form-item>
         <el-form-item :label="t('storeReturn.field.returnDate')" prop="returnDate">
           <el-date-picker
@@ -94,12 +86,12 @@ import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import { listLocation } from '@/api/djs-warehouse/location';
+import type { LocationInfoVO } from '@/api/djs-warehouse/location/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_return_direction } = toRefs<any>(proxy?.useDict('djs_return_direction'));
-
 const tableRef = ref<BizTableExpose>();
 const formRef = ref<FormInstance>();
 
@@ -110,6 +102,7 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 const storeOptions = ref<StoreVO[]>([]);
 const productOptions = ref<ProductInfoVO[]>([]);
+const locationOptions = ref<LocationInfoVO[]>([]);
 
 const dialogVisible = ref(false);
 const submitLoading = ref(false);
@@ -121,6 +114,7 @@ const defaultForm = (): StoreReturnForm => ({
   returnDirection: 'customer_to_store',
   storeId: undefined,
   productId: undefined,
+  locationId: undefined,
   returnQuantity: undefined,
   returnReason: undefined,
   traceCode: undefined,
@@ -131,9 +125,13 @@ const defaultForm = (): StoreReturnForm => ({
 const form = reactive<StoreReturnForm>(defaultForm());
 
 const rules = computed<FormRules>(() => ({
-  returnDirection: [{ required: true, message: t('storeReturn.rule.returnDirection'), trigger: 'change' }],
+  storeId: [{ required: true, message: t('storeReturn.placeholder.store'), trigger: 'change' }],
   productId: [{ required: true, message: t('storeReturn.rule.product'), trigger: 'change' }],
-  returnQuantity: [{ required: true, message: t('storeReturn.rule.returnQuantity'), trigger: 'blur' }]
+  locationId: [{ required: true, message: t('storeReturn.rule.location'), trigger: 'change' }],
+  returnQuantity: [
+    { required: true, message: t('storeReturn.rule.returnQuantity'), trigger: 'blur' },
+    { type: 'number', min: 0.01, message: t('storeReturn.rule.returnQuantityMin'), trigger: 'blur' }
+  ]
 }));
 
 const searchModel = reactive<Record<string, unknown>>({
@@ -153,20 +151,17 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
     type: 'select',
     options: storeOptions.value.map((s) => ({ label: s.storeName, value: String(s.id) }))
   },
-  { field: 'returnDirection', label: t('storeReturn.field.returnDirection'), type: 'select', dictType: 'djs_return_direction' },
   { field: 'returnDateFrom', label: t('storeReturn.field.returnDateFrom'), type: 'date' },
   { field: 'returnDateTo', label: t('storeReturn.field.returnDateTo'), type: 'date' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'returnNo', label: t('storeReturn.column.returnNo'), width: 170, showOverflowTooltip: true },
-  { prop: 'returnDirection', label: t('storeReturn.column.returnDirection'), width: 120, align: 'center' },
   { prop: 'storeName', label: t('storeReturn.column.storeName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 130, showOverflowTooltip: true },
+  { prop: 'locationName', label: t('storeReturn.column.locationName'), minWidth: 120, showOverflowTooltip: true },
   { prop: 'returnQuantity', label: t('storeReturn.column.returnQuantity'), width: 100, align: 'right' },
   { prop: 'returnReason', label: t('storeReturn.column.returnReason'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'traceCode', label: t('storeReturn.column.traceCode'), width: 150, showOverflowTooltip: true },
-  { prop: 'memberId', label: t('storeReturn.column.memberId'), width: 120, showOverflowTooltip: true },
   { prop: 'returnDate', label: t('storeReturn.column.returnDate'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'operatorName', label: t('storeReturn.column.operatorName'), width: 100, align: 'center' },
   { prop: 'createTime', label: t('storeReturn.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
@@ -189,6 +184,16 @@ async function loadProductOptions() {
   } catch (e) {
     console.warn('[StoreReturn] loadProductOptions failed', e);
     productOptions.value = [];
+  }
+}
+
+async function loadLocationOptions() {
+  try {
+    const res = await listLocation({ pageNum: 1, pageSize: 200 });
+    locationOptions.value = ((res as unknown as { rows?: LocationInfoVO[]; data?: LocationInfoVO[] }).rows ?? []) as LocationInfoVO[];
+  } catch (e) {
+    console.warn('[StoreReturn] loadLocationOptions failed', e);
+    locationOptions.value = [];
   }
 }
 
@@ -252,6 +257,7 @@ async function handleEdit(row: BizRow) {
     returnDirection: vo.returnDirection,
     storeId: vo.storeId,
     productId: vo.productId,
+    locationId: vo.locationId,
     returnQuantity: vo.returnQuantity,
     returnReason: vo.returnReason,
     traceCode: vo.traceCode,
@@ -287,7 +293,7 @@ async function handleDelete(row: BizRow) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadStoreOptions(), loadProductOptions()]);
+  await Promise.all([loadStoreOptions(), loadProductOptions(), loadLocationOptions()]);
   fetchList();
 });
 </script>

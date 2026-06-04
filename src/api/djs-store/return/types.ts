@@ -16,6 +16,10 @@ export interface StoreReturnVO {
   productId: string;
   /** 产品名称（后端内存聚合填） */
   productName?: string;
+  /** 退回入库库位（K4 联动外购入库目标库位） */
+  locationId?: string;
+  /** 库位名称（后端内存聚合填） */
+  locationName?: string;
   returnQuantity: number;
   returnReason?: string;
   /** 已贴追溯码字符串，V1 仅存值无 FK */
@@ -35,6 +39,8 @@ export interface StoreReturnForm {
   returnDirection: string;
   storeId?: string;
   productId?: string;
+  /** 退回入库库位（K4 联动外购入库必填） */
+  locationId?: string;
   returnQuantity?: number;
   returnReason?: string;
   traceCode?: string;

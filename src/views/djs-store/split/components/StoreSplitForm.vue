@@ -8,7 +8,7 @@
         </el-select>
       </el-form-item>
       <el-form-item :label="t('storeSplit.form.productWeight')" prop="productWeight">
-        <el-input-number v-model="form.productWeight" :min="0.001" :precision="3" :step="0.5" controls-position="right" style="width: 100%" />
+        <el-input-number v-model="form.productWeight" :min="0" :precision="3" :step="0.5" controls-position="right" style="width: 100%" />
         <span class="ml-2 text-gray-400">kg</span>
       </el-form-item>
       <el-form-item :label="t('storeSplit.form.location')" prop="locationId">
@@ -60,7 +60,10 @@ const form = reactive<StoreSplitForm>(defaultForm());
 
 const rules: FormRules = {
   cutPart: [{ required: true, message: t('storeSplit.form.cutPartRequired'), trigger: 'change' }],
-  productWeight: [{ required: true, message: t('storeSplit.form.productWeightRequired'), trigger: 'change' }]
+  productWeight: [
+    { required: true, message: t('storeSplit.form.productWeightRequired'), trigger: 'change' },
+    { type: 'number', min: 0.001, message: t('storeSplit.form.productWeightMin'), trigger: 'change' }
+  ]
 };
 
 async function loadLocationOptions() {

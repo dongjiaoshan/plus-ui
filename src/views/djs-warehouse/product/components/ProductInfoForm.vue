@@ -96,6 +96,14 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
+          <!-- WMS-BELONGTYPE-001：外购发货品（如外购白条）需选归属业态，否则发货按业态匹配落空；物资类可留空 -->
+          <el-col :span="12">
+            <el-form-item :label="t('product.field.belongType')" prop="belongType">
+              <el-select v-model="form.belongType" clearable>
+                <el-option v-for="d in djs_belong_type" :key="d.value" :label="d.label" :value="d.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
       </template>
 

@@ -2265,6 +2265,7 @@ export default {
       cutPartRequired: 'Please select cut part',
       productWeight: 'Re-split Weight',
       productWeightRequired: 'Please enter re-split weight',
+      productWeightMin: 'Re-split weight must be greater than 0',
       location: 'Location',
       locationPlaceholder: 'Select location (optional)',
       whiteBarId: 'Source White-bar',
@@ -2280,6 +2281,7 @@ export default {
       returnDirection: 'Direction',
       store: 'Return Store',
       product: 'Product',
+      location: 'Inbound Location',
       returnQuantity: 'Quantity',
       returnReason: 'Reason',
       traceCode: 'Trace Code',
@@ -2294,6 +2296,7 @@ export default {
       returnDirection: 'Direction',
       storeName: 'Return Store',
       productName: 'Product',
+      locationName: 'Inbound Location',
       returnQuantity: 'Quantity',
       returnReason: 'Reason',
       traceCode: 'Trace Code',
@@ -2306,6 +2309,7 @@ export default {
       returnDirection: 'Select direction',
       store: 'Select store (required for customer return)',
       product: 'Select product',
+      location: 'Select inbound location',
       returnReason: 'Enter return reason',
       traceCode: 'Attached trace code, if any',
       member: 'Member ID for member return, optional',
@@ -2314,7 +2318,12 @@ export default {
     rule: {
       returnDirection: 'Direction is required',
       product: 'Product is required',
-      returnQuantity: 'Quantity is required'
+      location: 'Inbound location is required',
+      returnQuantity: 'Quantity is required',
+      returnQuantityMin: 'Quantity must be greater than 0'
+    },
+    tip: {
+      editLock: 'Product / Inbound Location / Quantity drive the inbound and cannot be changed after creation'
     },
     dialog: {
       add: 'Add Return',
