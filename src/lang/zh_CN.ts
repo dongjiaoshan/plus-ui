@@ -2266,6 +2266,7 @@ export default {
       cutPartRequired: '请选择分割部位',
       productWeight: '再分重量',
       productWeightRequired: '请输入再分重量',
+      productWeightMin: '再分重量须大于 0',
       location: '入库库位',
       locationPlaceholder: '请选择库位（选填）',
       whiteBarId: '源白条',
@@ -2281,6 +2282,7 @@ export default {
       returnDirection: '退回方向',
       store: '退回门店',
       product: '产品',
+      location: '入库库位',
       returnQuantity: '退回数量',
       returnReason: '退回原因',
       traceCode: '追溯码',
@@ -2295,6 +2297,7 @@ export default {
       returnDirection: '退回方向',
       storeName: '退回门店',
       productName: '产品',
+      locationName: '入库库位',
       returnQuantity: '退回数量',
       returnReason: '退回原因',
       traceCode: '追溯码',
@@ -2307,6 +2310,7 @@ export default {
       returnDirection: '请选择退回方向',
       store: '请选择退回门店（顾客退回必填）',
       product: '请选择产品',
+      location: '请选择退回入库库位',
       returnReason: '请输入退回原因',
       traceCode: '已贴追溯码，如有',
       member: '会员退回填会员ID，可空',
@@ -2315,7 +2319,12 @@ export default {
     rule: {
       returnDirection: '请选择退回方向',
       product: '请选择产品',
-      returnQuantity: '请输入退回数量'
+      location: '请选择退回入库库位',
+      returnQuantity: '请输入退回数量',
+      returnQuantityMin: '退回数量必须大于 0'
+    },
+    tip: {
+      editLock: '产品 / 入库库位 / 退回数量为入库驱动字段，建后不可修改'
     },
     dialog: {
       add: '新增退回',
