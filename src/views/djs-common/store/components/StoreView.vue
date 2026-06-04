@@ -55,7 +55,7 @@ const open = async (id: number | string) => {
   const ossId = data.value.imageOssId;
   if (ossId) {
     try {
-      const ossRes = await listOssByIds(ossId as number);
+      const ossRes = await listOssByIds(ossId);
       imageUrl.value = ossRes.data?.[0]?.url ?? '';
     } catch (e) {
       console.warn('[StoreView] listOssByIds failed for imageOssId', ossId, e);

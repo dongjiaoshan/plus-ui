@@ -11,7 +11,8 @@
     />
 
   数据契约：
-    - v-model 绑定 ossId 数组（number[]），业务表保存这个，不存 URL
+    - v-model 绑定 ossId 数组（string[]），业务表保存这个，不存 URL
+      （ossId 是 19 位雪花，> 2^53，必须全链路 string，禁 Number()——见 coder-djs-cross-layer-contract 契约 1）
     - 内部通过 GET /djs/oss/sts/credential 拿预签名 URL，浏览器 fetch PUT 直传 OSS
     - 上传成功后调 POST /djs/oss/sts/notify 回写 sys_oss 表拿 ossId
     - emit('uploaded', OssUploadResult) — 每张图上传成功后触发，含 ossId + url
@@ -75,8 +76,8 @@ import { getOssStsCredential, notifyOssUploaded } from '@/api/djs-common/oss';
 import type { OssStsCredentialVO, OssUploadResult } from '@/api/djs-common/oss/types';
 
 interface Props {
-  /** v-model：ossId 数组（业务表保存的值） */
-  modelValue?: number | number[] | null;
+  /** v-model：ossId 数组（业务表保存的值，雪花 string 全链路） */
+  modelValue?: string | string[] | null;
   /** 业务类型（决定 OSS 目录前缀），见后端 OssStsServiceImpl.ALLOWED_BIZ_TYPES */
   bizType: string;
   /** 最大文件数 */
@@ -98,9 +99,9 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', val: number[]): void;
+  (e: 'update:modelValue', val: string[]): void;
   (e: 'uploaded', result: OssUploadResult): void;
-  (e: 'removed', ossId: number): void;
+  (e: 'removed', ossId: string): void;
 }>();
 
 const { t } = useI18n();
@@ -109,8 +110,10 @@ const fileList = ref<UploadUserFile[]>([]);
 const previewVisible = ref(false);
 const previewUrl = ref('');
 
-/** 内部 ossId → UploadResult 映射（删除时取 url） */
-const resultMap = ref<Map<number, OssUploadResult>>(new Map());
+/** 内部 ossId(string) → UploadResult 映射（删除时取 url） */
+const resultMap = ref<Map<string, OssUploadResult>>(new Map());
+/** el-upload 内部 file.uid(number) → ossId(string) 映射（onRemove 时用 uid 反查雪花 ossId，雪花 > 2^53 不能直接当 uid） */
+const uidToOssId = ref<Map<number, string>>(new Map());
 
 const acceptAttr = computed(() => props.fileTypes.map((t) => '.' + t).join(','));
 
@@ -199,7 +202,8 @@ async function doUpload(file: File): Promise<void> {
     mime: file.type || 'application/octet-stream',
     bizType: props.bizType
   });
-  const ossId = notifyRes.data as unknown as number;
+  // 后端 R<Long>，ruoyi 全局 JacksonConfig 把 Long 序列化成 string（雪花防精度丢失），到前端即是 string
+  const ossId = String(notifyRes.data);
 
   // 4. URL = OSS public URL（minio dev 桶 access_policy=public）
   // notify 端点已经在后端构造好 sys_oss.url，但端点返回只有 ossId；前端用前端拼回 + 显示用
@@ -216,18 +220,20 @@ async function doUpload(file: File): Promise<void> {
   resultMap.value.set(ossId, result);
 
   // 让 el-upload 内部 uploadFiles 中刚 push 的临时 file 显示我们拿到的 OSS URL。
-  // element-plus picture-card 默认 file.url = createObjectURL(blob)；OSS 上传完后我们覆盖为 OSS 公网 URL，
-  // 并把 uid 改成 ossId 便于 onRemove 时定位 resultMap。直接修改 file 字段是 element-plus reactive 数组，会触发模板重渲染。
+  // element-plus picture-card 默认 file.url = createObjectURL(blob)；OSS 上传完后我们覆盖为 OSS 公网 URL。
+  // element 的 file.uid 是自增 number，雪花 ossId(19 位 > 2^53) 不能塞进 uid，改用 uidToOssId 映射关联。
+  // 直接修改 file 字段是 element-plus reactive 数组，会触发模板重渲染。
   const internal = (uploadRef.value as any)?.uploadFiles?.find((f: any) => f.raw === file) as UploadUserFile | undefined;
+  const uid = internal?.uid ?? Date.now();
   if (internal) {
     internal.url = publicUrl;
-    internal.uid = ossId;
     internal.status = 'success';
   }
+  uidToOssId.value.set(uid, ossId);
   // 同步外部 fileList ref（v-model 反查删除用）
   fileList.value = [
-    ...fileList.value.filter((f) => Number(f.uid) !== ossId),
-    { name: file.name, url: publicUrl, uid: ossId, status: 'success' } as UploadUserFile
+    ...fileList.value.filter((f) => uidToOssId.value.get(Number(f.uid)) !== ossId),
+    { name: file.name, url: publicUrl, uid, status: 'success' } as UploadUserFile
   ];
 
   emit('uploaded', result);
@@ -246,9 +252,10 @@ function buildPublicUrlFallback(cred: OssStsCredentialVO, key: string): string {
 }
 
 function onRemove(file: UploadFile) {
-  const ossId = file.uid as number;
-  if (resultMap.value.has(ossId)) {
+  const ossId = uidToOssId.value.get(file.uid);
+  if (ossId && resultMap.value.has(ossId)) {
     resultMap.value.delete(ossId);
+    uidToOssId.value.delete(file.uid);
     emit('removed', ossId);
     syncModel();
   }
@@ -264,11 +271,14 @@ function onPreview(file: UploadFile) {
   previewVisible.value = true;
 }
 
-/** 暴露给父组件：编辑场景时手动塞已上传的 ossId+url 列表（外层从 /resource/oss/listByIds 拉到） */
-function setExistingFiles(items: { ossId: number; url: string; originalName: string }[]) {
-  fileList.value = items.map((i) => ({ name: i.originalName, url: i.url, uid: i.ossId, status: 'success' }) as UploadUserFile);
-  // 同步到 resultMap 让删除路径生效
-  items.forEach((i) =>
+/** 暴露给父组件：编辑场景时手动塞已上传的 ossId+url 列表（外层从 /resource/oss/listByIds 拉到，ossId 是雪花 string） */
+function setExistingFiles(items: { ossId: string; url: string; originalName: string }[]) {
+  resultMap.value.clear();
+  uidToOssId.value.clear();
+  // element 的 file.uid 必须是 number 且唯一；雪花 ossId 不能直接当 uid，逐项分配本地自增 uid 并用 uidToOssId 关联
+  fileList.value = items.map((i, idx) => {
+    const uid = Date.now() + idx;
+    uidToOssId.value.set(uid, i.ossId);
     resultMap.value.set(i.ossId, {
       ossId: i.ossId,
       url: i.url,
@@ -276,8 +286,9 @@ function setExistingFiles(items: { ossId: number; url: string; originalName: str
       originalName: i.originalName,
       size: 0,
       mime: ''
-    })
-  );
+    });
+    return { name: i.originalName, url: i.url, uid, status: 'success' } as UploadUserFile;
+  });
   syncModel();
 }
 

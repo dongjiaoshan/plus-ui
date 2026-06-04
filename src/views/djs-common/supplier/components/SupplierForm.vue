@@ -155,10 +155,10 @@ const defaultForm = (): SupplierForm => ({
 
 const form = ref<SupplierForm>(defaultForm());
 
-// OssUpload v-model 期望 number[]，业务字段是单值 licenseImageOssId
-const licenseImageIdsModel = computed<number[]>({
-  get: () => (form.value.licenseImageOssId ? [form.value.licenseImageOssId as number] : []),
-  set: (val: number[]) => {
+// OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段是单值 licenseImageOssId
+const licenseImageIdsModel = computed<string[]>({
+  get: () => (form.value.licenseImageOssId ? [form.value.licenseImageOssId] : []),
+  set: (val: string[]) => {
     form.value.licenseImageOssId = val && val.length > 0 ? val[0] : null;
   }
 });
@@ -196,9 +196,9 @@ const openEdit = async (id: number | string) => {
   const ossId = form.value.licenseImageOssId;
   if (ossId) {
     try {
-      const ossRes = await listOssByIds(ossId as number);
+      const ossRes = await listOssByIds(ossId);
       const items = (ossRes.data || []).map((o) => ({
-        ossId: Number(o.ossId),
+        ossId: String(o.ossId),
         url: o.url,
         originalName: o.originalName
       }));

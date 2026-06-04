@@ -51,7 +51,8 @@ export interface OssNotifyBO {
  * OssUpload 组件 emit('uploaded') 的 payload。
  */
 export interface OssUploadResult {
-  ossId: number;
+  /** 雪花 ossId，19 位 > 2^53，全链路 string 禁 Number()（coder-djs-cross-layer-contract 契约 1） */
+  ossId: string;
   url: string;
   ossKey: string;
   originalName: string;

@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { SupplierForm, SupplierQuery, SupplierVO } from './supplier/types';
+import type { SupplierDealVO, SupplierForm, SupplierQuery, SupplierVO } from './supplier/types';
 
 /**
  * 供应商主数据 API（SYS-MD-003）。
@@ -23,6 +23,20 @@ export const getSupplier = (id: number | string): AxiosPromise<SupplierVO> => {
   return request({
     url: '/djs/common/supplier/getInfo/' + id,
     method: 'get'
+  });
+};
+
+/**
+ * 查询供应商交易明细（分页，DJS-FIX-ADMIN-W22-005）。
+ *
+ * 后端跨模块聚合 breed 药品入库批次 + warehouse 物资入库流水，按交易日期倒序假分页。
+ * 返回 TableDataInfo：rows = SupplierDealVO[]，total = 全量条数。
+ */
+export const listSupplierDeals = (id: number | string, query: { pageNum: number; pageSize: number }): AxiosPromise<SupplierDealVO[]> => {
+  return request({
+    url: `/djs/common/supplier/${id}/deals`,
+    method: 'get',
+    params: query
   });
 };
 

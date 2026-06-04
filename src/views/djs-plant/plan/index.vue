@@ -105,7 +105,8 @@ async function loadList() {
   }
 }
 
-const handleSearch = () => {
+const handleSearch = (payload?: Record<string, any>) => {
+  Object.assign(searchModel, payload ?? {});
   pageNum.value = 1;
   loadList();
 };

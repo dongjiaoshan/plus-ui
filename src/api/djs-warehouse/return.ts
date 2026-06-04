@@ -6,12 +6,7 @@
  */
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type {
-  ReturnConfirmBody,
-  ReturnProductForm,
-  ReturnProductQuery,
-  ReturnProductVO
-} from './return/types';
+import type { ReturnConfirmBody, ReturnProductForm, ReturnProductQuery, ReturnProductVO } from './return/types';
 
 /** 列表（分页） */
 export const listReturn = (query?: ReturnProductQuery): AxiosPromise<ReturnProductVO[]> => {

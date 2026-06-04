@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { LocationInfoForm, LocationInfoQuery, LocationInfoVO } from './location/types';
+import type { LocationCardSummaryVO, LocationInfoForm, LocationInfoQuery, LocationInfoVO } from './location/types';
 
 /**
  * 库位 API（WMS-MD-001）。
@@ -14,6 +14,14 @@ export const listLocation = (query: LocationInfoQuery): AxiosPromise<LocationInf
     url: '/djs/warehouse/location/list',
     method: 'get',
     params: query
+  });
+};
+
+/** 库位类型卡片汇总（顶部 2×4 网格，固定返 8 类） */
+export const getLocationSummary = (): AxiosPromise<LocationCardSummaryVO[]> => {
+  return request({
+    url: '/djs/warehouse/location/summary',
+    method: 'get'
   });
 };
 

@@ -43,6 +43,17 @@
               :style="resolveWidth(field.width)"
             />
 
+            <!-- month（回写 'YYYY-MM'） -->
+            <el-date-picker
+              v-else-if="field.type === 'month'"
+              v-model="innerModel[field.field]"
+              type="month"
+              :placeholder="field.placeholder ?? `${t('biz.table.search.selectPrefix')}${field.label}`"
+              value-format="YYYY-MM"
+              :clearable="field.clearable ?? true"
+              :style="resolveWidth(field.width)"
+            />
+
             <!-- daterange -->
             <el-date-picker
               v-else-if="field.type === 'daterange'"

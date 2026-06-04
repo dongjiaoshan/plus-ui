@@ -1,5 +1,6 @@
 <template>
   <div class="p-2">
+    <DemandKpiBar />
     <SummaryBar product-type="vegetable" />
     <BizTable
       ref="tableRef"
@@ -44,6 +45,7 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import DemandForm from '../components/DemandForm.vue';
 import HistoryDialog from '../components/HistoryDialog.vue';
 import SummaryBar from '../components/SummaryBar.vue';
+import DemandKpiBar from '../components/DemandKpiBar.vue';
 import { useDemandList } from '../composables/useDemandList';
 import type { DemandManageVO, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
 import { useI18n } from 'vue-i18n';

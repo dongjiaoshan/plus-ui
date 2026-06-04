@@ -1,0 +1,77 @@
+import request from '@/utils/request';
+import { AxiosPromise } from 'axios';
+
+/**
+ * 门店看板 API（STR-DASH-001，纯只读聚合）。
+ *
+ * 后端：org.dromara.djs.store.dashboard.controller.StoreDashboardController
+ *   - GET /djs/store/dashboard/summary?storeId=  6 KPI + 产品结构 + TOP10 + 近10日趋势
+ *   - GET /djs/store/dashboard/daily?storeId=    猪肉/果蔬速览 + 需求/发货统计（mp 主用）
+ *
+ * 数据源 t_store_sale_record（STR-OP-001）+ t_warehouse_demand_manage（WMS-DEMAND-001），无新表。
+ *
+ * 跨层契约：productId 是 snowflake，类型 string（不可 number，防 19 位截断）。
+ */
+
+/** 通用"分组 : 数量"项（产品结构 / 需求统计 / 发货统计 复用） */
+export interface StoreGroupCount {
+  /** 分组键（业态 / 状态字面量） */
+  key: string;
+  /** 聚合值（需求量 / 笔数） */
+  value: number;
+}
+
+/** 当月 TOP10 产品排行单行（与后端 StoreProductRankItemVo 对齐） */
+export interface StoreProductRankItem {
+  /** 产品 ID（snowflake，string） */
+  productId: string;
+  /** 产品名称 */
+  productName: string;
+  /** 当月销售额 */
+  saleAmount: number;
+  /** 当月销售数量 */
+  saleQty: number;
+}
+
+/** 近 10 日趋势单点（与后端 StoreTrendPointVo 对齐） */
+export interface StoreTrendPoint {
+  /** 日期 'YYYY-MM-DD' */
+  date: string;
+  /** 当日订单数 */
+  orderCount: number;
+  /** 当日销售额 */
+  saleAmount: number;
+  /** 当日客单价 */
+  avgPrice: number;
+}
+
+/** 门店看板汇总（与后端 StoreDashboardSummaryVo 对齐） */
+export interface StoreDashboardSummaryVo {
+  /** 今日销售额 */
+  todaySaleAmount: number;
+  /** 本月累计销售额 */
+  monthSaleAmount: number;
+  /** 今日订单数 */
+  todayOrderCount: number;
+  /** 本月订单数 */
+  monthOrderCount: number;
+  /** 待发货数 */
+  pendingShipCount: number;
+  /** 待采购数 */
+  pendingPurchaseCount: number;
+  /** 当日产品结构（业态:需求量） */
+  productStructure: StoreGroupCount[];
+  /** 当月 TOP10 产品排行 */
+  top10Products: StoreProductRankItem[];
+  /** 近 10 日趋势 */
+  trend10Days: StoreTrendPoint[];
+}
+
+/** 门店看板汇总（storeId 可选，不传按数据权限范围聚合） */
+export const getStoreDashboardSummary = (storeId?: string): AxiosPromise<StoreDashboardSummaryVo> => {
+  return request({
+    url: '/djs/store/dashboard/summary',
+    method: 'get',
+    params: storeId ? { storeId } : undefined
+  });
+};

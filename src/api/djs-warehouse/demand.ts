@@ -9,6 +9,7 @@ import type {
   DemandPigVO,
   DemandProductType,
   DemandSummaryVO,
+  DemandTodayKpiVO,
   PigAvailableVO
 } from './demand/types';
 
@@ -82,3 +83,8 @@ export const getDemandHistory = (id: string | number): AxiosPromise<AuditHistory
 /** 业态 SummaryBar 摘要（4 业态 union DTO；按 productType 填字段）。 */
 export const getDemandSummary = (productType: DemandProductType): AxiosPromise<DemandSummaryVO> =>
   request({ url: '/djs/warehouse/demand/summary', method: 'get', params: { productType } });
+
+// =========== 今日 KPI 横条（DJS-FIX-ADMIN-W22-007）===========
+
+/** 需求管理页顶部「今日全局」KPI 横条（一次返 6 数；渲染在 SummaryBar 上方）。 */
+export const getDemandTodayKpi = (): AxiosPromise<DemandTodayKpiVO> => request({ url: '/djs/warehouse/demand/kpi/today', method: 'get' });

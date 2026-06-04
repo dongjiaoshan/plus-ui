@@ -9,8 +9,8 @@ export interface SupplierVO extends BaseEntity {
   supplierName: string;
   /** 营业执照编号 */
   licenseNo?: string;
-  /** 营业执照图片 OSS oss_id */
-  licenseImageOssId?: number | null;
+  /** 营业执照图片 OSS oss_id（雪花 string，禁 Number） */
+  licenseImageOssId?: string | null;
   /** 经营许可证编号 */
   businessLicenseNo?: string;
   /** ISO 日期 yyyy-MM-dd */
@@ -40,7 +40,7 @@ export interface SupplierForm {
   id?: number | string;
   supplierName: string;
   licenseNo?: string;
-  licenseImageOssId?: number | null;
+  licenseImageOssId?: string | null;
   businessLicenseNo?: string;
   cooperationStartDate?: string;
   supplierType: string;
@@ -52,6 +52,24 @@ export interface SupplierForm {
   bankAccount?: string;
   bankName?: string;
   remark?: string;
+}
+
+/**
+ * 供应商交易明细行（DJS-FIX-ADMIN-W22-005）。
+ *
+ * 后端 SupplierDealVo：跨模块聚合 breed 药品入库批次 + warehouse 物资入库流水。
+ */
+export interface SupplierDealVO {
+  /** 交易日期 yyyy-MM-dd */
+  dealDate: string;
+  /** 交易商品名称 */
+  dealProduct: string;
+  /** 交易量 */
+  dealQuantity: number | string;
+  /** 计量单位 */
+  dealUnit?: string;
+  /** 来源类型 medicine / material（前端不展示，仅调试） */
+  sourceType?: string;
 }
 
 /** 列表查询入参（继承 PageQuery 拿 pageNum/pageSize） */

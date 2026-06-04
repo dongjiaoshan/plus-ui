@@ -115,6 +115,7 @@ export default {
     detail: 'Detail',
     edit: 'Edit',
     delete: 'Delete',
+    operate: 'Operate',
     back: 'Back',
     createTime: 'Created at',
     opSuccess: 'Operation succeeded',
@@ -203,7 +204,14 @@ export default {
     empty: {
       deals: 'No deal records yet'
     },
-    must_be_breed_type: 'Introduction only accepts breed-type suppliers'
+    must_be_breed_type: 'Introduction only accepts breed-type suppliers',
+    deal: {
+      dealDate: 'Deal Date',
+      dealProduct: 'Product',
+      dealQuantity: 'Quantity',
+      dealUnit: 'Unit',
+      empty: 'No deal records'
+    }
   },
   // Store master data (SYS-MD-002 + SYS-MD-FIX-002)
   store: {
@@ -971,6 +979,15 @@ export default {
     },
     confirm: {
       del: 'Delete {count} location(s)? Make sure they have no active stock.'
+    },
+    summary: {
+      locationCount: 'Locations',
+      productCount: 'Products',
+      currentStock: 'Current stock',
+      todayIn: 'In today',
+      todayOut: 'Out today',
+      lastCheck: 'Last check',
+      noCheck: 'No check yet'
     }
   },
   // Warehouse commodity master data / self-produce / purchase / gift box (WMS-MD-002, 3-form shared table)
@@ -1064,6 +1081,11 @@ export default {
       checkResult: 'Check result',
       operatorName: 'Operator',
       createTime: 'Created'
+    },
+    action: {
+      flowIn: 'Inbound',
+      flowOut: 'Outbound',
+      checkRecord: 'Check log'
     }
   },
   // Planting - Zone (PLT-MD-001)
@@ -1701,7 +1723,92 @@ export default {
         deleteConfirm: 'Delete return [{no}]?',
         deleteSuccess: 'Return deleted',
         confirmSuccess: 'Return confirmed'
+      },
+      check: {
+        checkId: 'Check No.',
+        locationName: 'Location',
+        checkDate: 'Check Date',
+        checkStatus: 'Status',
+        lineCount: 'Lines',
+        diffSum: 'Net Diff',
+        createTime: 'Created',
+        detail: 'Detail',
+        complete: 'Complete',
+        cancel: 'Cancel',
+        createTitle: 'New Stock Check',
+        lockHint: 'Creating will lock this location; in/out-bound blocked during check',
+        locationPlaceholder: 'Select location',
+        locationRequired: 'Location is required',
+        checkDatePlaceholder: 'Select check date',
+        checkDateRequired: 'Check date is required',
+        remark: 'Remark',
+        detailTitle: 'Check Detail',
+        productName: 'Product',
+        productUnit: 'Unit',
+        sysStock: 'System Qty',
+        checkStock: 'Actual Qty',
+        diffStock: 'Diff',
+        checkResultType: 'Result',
+        diffReason: 'Diff Reason',
+        checkBy: 'Checked By',
+        createSuccess: 'Stock check created, location locked',
+        completeConfirm: 'Complete check {no}? Diff flows written and stock updated',
+        completeSuccess: 'Check completed',
+        cancelConfirm: 'Cancel check {no}? Only unlock location, stock unchanged',
+        cancelSuccess: 'Check cancelled'
+      },
+      flowIn: {
+        flowNo: 'Flow No.',
+        flowDate: 'Time',
+        flowType: 'Type',
+        matType: 'Material Type',
+        productCode: 'Product Code',
+        productName: 'Product',
+        belongType: 'Category',
+        changeQuantity: 'Quantity',
+        productUnit: 'Unit',
+        location: 'Location',
+        earNo: 'Ear No.',
+        operator: 'Operator',
+        remark: 'Remark'
+      },
+      flowOut: {
+        flowNo: 'Flow No.',
+        flowDate: 'Time',
+        flowType: 'Type',
+        matType: 'Material Type',
+        stockOutDest: 'Out Dest',
+        productCode: 'Product Code',
+        productName: 'Product',
+        belongType: 'Category',
+        changeQuantity: 'Quantity',
+        productUnit: 'Unit',
+        location: 'Location',
+        earNo: 'Ear No.',
+        operator: 'Operator',
+        remark: 'Remark'
       }
+    }
+  },
+  // Warehouse dashboard placeholder (DJS-FIX-ADMIN-W22-006)
+  warehouse: {
+    dashboard: {
+      todayDemand: "Today's Demand",
+      todayDemandUnit: 'White-bar segment',
+      todayProduction: "Today's Production",
+      todayProductionUnit: 'items inbound',
+      stockCheck: 'Latest Check (Normal / Abnormal / Loss)',
+      monthAbnormalLocation: '{count} abnormal location(s) this month',
+      locationOverview: 'Location Overview (Top 20)',
+      refresh: 'Refresh',
+      colLocation: 'Location',
+      colType: 'Type',
+      colStock: 'Current Stock',
+      colStatus: 'Status',
+      statusNormal: 'Normal',
+      statusAbnormal: 'Abnormal',
+      emptyLocation: 'No location data',
+      fullVersionHint: 'Full dashboard (trend lines / inbound-outbound pie / 4-segment comparison) lands in V1.x WMS-DASH-001.'
     }
   },
   demand: {
@@ -1822,6 +1929,656 @@ export default {
       operator: 'Operator',
       remark: 'Remark',
       empty: 'No status changes yet'
+    },
+    kpi: {
+      pigDemand: 'Today Pig Demand',
+      assigned: 'Assigned',
+      vegDemand: 'Today Veg Demand',
+      otherDemand: 'Other Demand',
+      unitHead: 'head',
+      unitSpecies: 'species',
+      unitItem: 'item'
+    }
+  },
+  // Store-side demand (STR-DEMAND-001, reuses WMS demand table)
+  storeDemand: {
+    not_found_msg: 'Demand not found or deleted',
+    productType: {
+      white_bar: 'White bar',
+      vegetable: 'Vegetable',
+      gift_box: 'Gift box',
+      other: 'Other'
+    },
+    filter: {
+      store: 'Store',
+      storePlaceholder: 'Select store'
+    },
+    tip: {
+      selectStoreFirst: 'Select a store at the top before adding a demand'
+    },
+    field: {
+      demandNo: 'Demand No.',
+      demandDate: 'Demand date',
+      'demandDate.required': 'Demand date is required',
+      storeId: 'Store',
+      'storeId.required': 'Store is required',
+      productId: 'Product',
+      'productId.required': 'Product is required',
+      productName: 'Product name',
+      'productName.required': 'Product name is required',
+      productType: 'Type',
+      productSpec: 'Spec',
+      demandQuantity: 'Quantity',
+      'demandQuantity.required': 'Quantity is required',
+      productUnit: 'Unit',
+      'productUnit.required': 'Unit is required',
+      rawMaterial: 'Raw material',
+      materialQty: 'Material qty',
+      demandRemark: 'Remark',
+      demandExplain: 'Explanation',
+      demandStatus: 'Status',
+      expectedArriveDate: 'Expected arrival',
+      beginDate: 'Begin date',
+      endDate: 'End date'
+    },
+    column: {
+      demandNo: 'Demand No.',
+      demandDate: 'Demand date',
+      productName: 'Product',
+      demandQuantity: 'Quantity',
+      productUnit: 'Unit',
+      demandStatus: 'Status',
+      expectedArriveDate: 'Expected arrival',
+      createTime: 'Created',
+      actions: 'Actions'
+    },
+    placeholder: {
+      demandNoAuto: 'Auto-generated after submit',
+      storeId: 'Select store',
+      productId: 'Select product (filtered by type)',
+      demandQuantity: 'Enter quantity',
+      productUnit: 'e.g. head / kg / box',
+      rawMaterial: 'e.g. "need 5 pigs"',
+      demandExplain: 'e.g. "deliver 1 pig daily to the mine before the 25th"'
+    },
+    form: {
+      addTitle: 'New demand',
+      editTitle: 'Edit demand',
+      detailTitle: 'Demand detail'
+    },
+    action: {
+      edit: 'Edit',
+      cancel: 'Withdraw',
+      assignPig: 'Assign pigs',
+      detail: 'Detail'
+    },
+    confirm: {
+      del: 'Delete {count} selected demand(s)? Only unconfirmed demands can be deleted'
+    },
+    prompt: {
+      cancelRemark: 'Enter withdraw reason (optional)',
+      cancelRemarkPh: 'e.g. wrong order / store cancelled'
+    },
+    assignPig: {
+      title: 'Assign pigs - {no} (need {required})',
+      selectedTip: 'Selected {selected} / {required}',
+      confirmBtn: 'Confirm ({count})',
+      assignSuccess: 'Assigned {count}',
+      assignedTitle: 'Assigned ({count})',
+      overLimit: 'At most {required}, please unselect extras',
+      emptyAvailable: 'No pigs available for outbound',
+      column: {
+        earNo: 'Ear No.',
+        pigSex: 'Sex',
+        pigBreed: 'Breed',
+        ageDays: 'Age (days)',
+        lastBackfat: 'Backfat (mm)'
+      }
+    }
+  },
+  // Store operation (product relation + sale records, STR-OP-001)
+  storeOperation: {
+    relation: {
+      store: 'Store',
+      storePlaceholder: 'Select store',
+      save: 'Save',
+      allSku: 'All Products',
+      linkedSku: 'Linked Products',
+      filterPlaceholder: 'Search product name'
+    },
+    sale: {
+      store: 'Store',
+      storePlaceholder: 'Select store',
+      source: 'Source',
+      saleDateFrom: 'Sale Date From',
+      saleDateTo: 'Sale Date To',
+      sourceManual: 'Manual',
+      sourceExcel: 'Excel Import',
+      import: 'Import',
+      downloadTemplate: 'Template',
+      importTitle: 'Import Sale Records',
+      file: 'File',
+      uploadHint: 'Drop Excel file here or click to select',
+      importTip: 'Only SKUs linked to this store can be imported; columns: Product Name / Sale Date / Qty / Amount',
+      confirmImport: 'Import',
+      importFail: 'Import failed',
+      confirmDel: 'Delete {count} selected sale record(s)?',
+      column: {
+        storeName: 'Store',
+        productName: 'Product',
+        saleDate: 'Sale Date',
+        saleQty: 'Qty',
+        saleUnit: 'Unit',
+        saleAmount: 'Amount',
+        source: 'Source',
+        operator: 'Operator',
+        createTime: 'Created'
+      },
+      form: {
+        title: 'Manual Sale Record',
+        store: 'Store',
+        product: 'Product',
+        productPlaceholder: 'Select product',
+        selectStoreFirst: 'Select store first',
+        noRelation: 'No product linked for this store, configure in "Product Relation" first',
+        unit: 'Unit',
+        unitAuto: 'Auto-filled after selecting product',
+        saleDate: 'Sale Date',
+        saleQty: 'Qty',
+        saleAmount: 'Amount',
+        remark: 'Remark',
+        storeRequired: 'Please select store',
+        productRequired: 'Please select product',
+        saleDateRequired: 'Please select sale date',
+        saleDateFuture: 'Sale date cannot be in the future',
+        saleQtyRequired: 'Please enter qty',
+        saleAmountRequired: 'Please enter amount'
+      }
+    }
+  },
+  // Store stock check (STR-STOCK-001, admin only)
+  storeCheck: {
+    field: {
+      checkId: 'Check No.',
+      store: 'Store',
+      checkStatus: 'Status',
+      checkDateFrom: 'Check Date From',
+      checkDateTo: 'Check Date To'
+    },
+    column: {
+      checkId: 'Check No.',
+      storeName: 'Store',
+      checkDate: 'Check Date',
+      checkStatus: 'Status',
+      lineCount: 'Lines',
+      diffSum: 'Net Diff',
+      createTime: 'Created'
+    },
+    action: {
+      detail: 'Detail',
+      complete: 'Complete',
+      cancel: 'Cancel'
+    },
+    confirm: {
+      complete: 'Complete check "{id}"? Differences will be recorded and the store unlocked; no further edits.',
+      cancel: 'Cancel check "{id}"? The store will be unlocked; recorded differences are not written back to stock.'
+    },
+    form: {
+      title: 'New Check',
+      lockHint:
+        'After creation the store enters "In Progress" and is locked; sales-out of that product is rejected during the check, unlocked on complete or cancel.',
+      store: 'Store',
+      storePlaceholder: 'Select store',
+      checkDate: 'Check Date',
+      checkDatePlaceholder: 'Select check date',
+      remark: 'Remark',
+      submit: 'Create & Enter Counts',
+      storeRequired: 'Please select store',
+      checkDateRequired: 'Please select check date'
+    },
+    detail: {
+      title: 'Check Detail',
+      checkId: 'Check No.',
+      store: 'Store',
+      checkDate: 'Check Date',
+      checkStatus: 'Status',
+      entryTitle: 'Enter Count',
+      product: 'Product',
+      productPlaceholder: 'Select product',
+      productRequired: 'Please select product',
+      checkStock: 'Counted Qty',
+      checkStockRequired: 'Please enter counted qty',
+      diffReason: 'Diff Reason',
+      diffReasonPlaceholder: 'Optional',
+      entrySubmit: 'Add',
+      complete: 'Complete',
+      empty: 'No count lines yet',
+      noCheckId: 'Check No. loading, please retry',
+      noLineToComplete: 'Please enter at least one count line first',
+      confirmRemoveLine: 'Delete count line for product "{name}"?',
+      column: {
+        productName: 'Product',
+        productUnit: 'Unit',
+        sysStock: 'System Qty',
+        checkStock: 'Counted Qty',
+        diffStock: 'Diff',
+        checkResultType: 'Result',
+        diffReason: 'Diff Reason'
+      }
+    }
+  },
+  // Store member archive + manual consumption (STR-MEMBER-001; V1 archive + manual entry only, no marketing analytics)
+  storeMember: {
+    kpi: {
+      monthlyMember: 'New Members This Month',
+      monthlyConsumption: 'Consumption Records This Month'
+    },
+    field: {
+      phone: 'Phone',
+      memberName: 'Member Name',
+      memberLevel: 'Level',
+      store: 'Store'
+    },
+    column: {
+      memberNo: 'Member No.',
+      memberName: 'Member Name',
+      phone: 'Phone',
+      memberLevel: 'Level',
+      joinDate: 'Join Date',
+      storeName: 'Store',
+      memberTags: 'Tags',
+      memberStatus: 'Status',
+      createTime: 'Created At'
+    },
+    status: {
+      normal: 'Active',
+      disabled: 'Disabled'
+    },
+    action: {
+      consumeRecord: 'Consumption'
+    },
+    confirm: {
+      delete: 'Delete member "{name}"? Archive and consumption records will be hidden.'
+    },
+    form: {
+      addTitle: 'Add Member',
+      editTitle: 'Edit Member',
+      memberName: 'Member Name',
+      memberNamePlaceholder: 'Enter member name',
+      memberNameRequired: 'Member name is required',
+      phone: 'Phone',
+      phonePlaceholder: 'Enter phone number',
+      phoneRequired: 'Phone is required',
+      phoneInvalid: 'Invalid phone number',
+      memberLevel: 'Level',
+      memberLevelPlaceholder: 'Select level',
+      joinDate: 'Join Date',
+      joinDatePlaceholder: 'Select join date',
+      store: 'Store',
+      storePlaceholder: 'Select store (optional)',
+      memberTags: 'Tags',
+      memberTagsPlaceholder: 'Comma-separated, e.g. regular,family',
+      memberStatus: 'Status',
+      remark: 'Remark'
+    },
+    consume: {
+      title: 'Consumption of "{name}"',
+      add: 'Add Record',
+      entryTitle: 'Add Consumption Record',
+      consumeDate: 'Consume Date',
+      consumeDatePlaceholder: 'Select consume date',
+      consumeDateRequired: 'Consume date is required',
+      sku: 'SKU',
+      skuPlaceholder: 'Product name / code (free text)',
+      quantity: 'Qty',
+      amountManual: 'Amount (CNY)',
+      notes: 'Notes',
+      operator: 'Operator',
+      createTime: 'Created At',
+      empty: 'No consumption records'
+    }
+  },
+  // Store white-bar split (STR-SPLIT-001, admin only, reuse inhouse table source='store')
+  storeSplit: {
+    field: {
+      cutPart: 'Cut Part',
+      produceDateStart: 'Produce Date From',
+      produceDateEnd: 'Produce Date To'
+    },
+    column: {
+      cutPart: 'Cut Part',
+      productName: 'Product',
+      productWeight: 'Weight (kg)',
+      produceDate: 'Produce Date',
+      source: 'Source',
+      createByName: 'Created By',
+      createTime: 'Created Time'
+    },
+    tag: {
+      store: 'Store Re-split'
+    },
+    form: {
+      title: 'Store Re-split Entry',
+      hint: 'Re-split a white-bar / cut product already stored from warehouse splitting, on the store side; resolve standard SKU by cut part.',
+      cutPart: 'Cut Part',
+      cutPartPlaceholder: 'Select cut part',
+      cutPartRequired: 'Please select cut part',
+      productWeight: 'Re-split Weight',
+      productWeightRequired: 'Please enter re-split weight',
+      location: 'Location',
+      locationPlaceholder: 'Select location (optional)',
+      whiteBarId: 'Source White-bar',
+      whiteBarIdPlaceholder: 'Source white-bar id (optional, for trace)',
+      remark: 'Remark',
+      submit: 'Submit'
+    }
+  },
+  // Store return management (STR-RETURN-001, store-domain thin impl, admin only)
+  storeReturn: {
+    field: {
+      returnNo: 'Return No.',
+      returnDirection: 'Direction',
+      store: 'Return Store',
+      product: 'Product',
+      returnQuantity: 'Quantity',
+      returnReason: 'Reason',
+      traceCode: 'Trace Code',
+      member: 'Member',
+      returnDate: 'Return Date',
+      returnDateFrom: 'Return Date From',
+      returnDateTo: 'Return Date To',
+      remark: 'Remark'
+    },
+    column: {
+      returnNo: 'Return No.',
+      returnDirection: 'Direction',
+      storeName: 'Return Store',
+      productName: 'Product',
+      returnQuantity: 'Quantity',
+      returnReason: 'Reason',
+      traceCode: 'Trace Code',
+      memberId: 'Member ID',
+      returnDate: 'Return Date',
+      operatorName: 'Operator',
+      createTime: 'Created'
+    },
+    placeholder: {
+      returnDirection: 'Select direction',
+      store: 'Select store (required for customer return)',
+      product: 'Select product',
+      returnReason: 'Enter return reason',
+      traceCode: 'Attached trace code, if any',
+      member: 'Member ID for member return, optional',
+      returnDate: 'Select return date'
+    },
+    rule: {
+      returnDirection: 'Direction is required',
+      product: 'Product is required',
+      returnQuantity: 'Quantity is required'
+    },
+    dialog: {
+      add: 'Add Return',
+      edit: 'Edit Return'
+    },
+    confirm: {
+      delete: 'Confirm delete return {no}?'
+    }
+  },
+  // Plant disaster records (PLT-WORK-003, admin read-only sub-page)
+  plantDisaster: {
+    column: {
+      recordNo: 'Record No.',
+      farmDate: 'Date',
+      disasterType: 'Disaster Type',
+      plotName: 'Plot',
+      plotCode: 'Plot Code',
+      cropName: 'Crop',
+      lossRate: 'Loss Rate',
+      lossYield: 'Loss Yield',
+      isWarning: 'Warning',
+      teamName: 'Work Team',
+      createTime: 'Created At'
+    },
+    field: {
+      recordNo: 'Record No.',
+      dateRange: 'Date Range',
+      plot: 'Plot',
+      disasterType: 'Disaster Type',
+      isWarning: 'Warning'
+    },
+    tag: {
+      warning: 'Warning',
+      normal: 'Normal'
+    },
+    action: {
+      detail: 'Detail'
+    },
+    empty: 'No disaster records',
+    detail: {
+      title: 'Disaster Record Detail',
+      remark: 'Remark',
+      proof: 'Proof Photos',
+      noProof: 'No proof photo',
+      notFound: 'Record not found'
+    }
+  },
+  plantWork: {
+    tab: {
+      tillage: 'Tillage',
+      irrigate: 'Irrigation',
+      fertilize: 'Fertilize',
+      weed: 'Weeding',
+      disaster: 'Disaster'
+    },
+    column: {
+      recordNo: 'Record No.',
+      farmDate: 'Farm Date',
+      farmType: 'Farm Work',
+      plotName: 'Plot',
+      plotCode: 'Plot Code',
+      cropName: 'Crop',
+      teamName: 'Work Team',
+      remark: 'Remark',
+      createTime: 'Created At',
+      disasterType: 'Disaster Type',
+      lossRate: 'Loss Rate',
+      lossYield: 'Loss Yield'
+    },
+    field: {
+      recordNo: 'Record No.',
+      dateRange: 'Farm Date',
+      plot: 'Plot',
+      team: 'Work Team'
+    },
+    action: {
+      detail: 'Detail'
+    },
+    empty: 'No farm records',
+    detail: {
+      title: 'Farm Record Detail',
+      tillageType: 'Tillage Type',
+      tillageMethod: 'Tillage Method',
+      transplantPlotName: 'Transplant Plot',
+      transplantPercent: 'Transplant %',
+      remark: 'Remark',
+      proof: 'Proof Photos',
+      noProof: 'No proof photo',
+      notFound: 'Record not found'
+    }
+  },
+  // Plant - Team Performance (PLT-PERF-001)
+  plantPerformance: {
+    pageTitle: 'Team Performance',
+    toolbar: {
+      statMonth: 'Settle Month',
+      pickMonth: 'Select month',
+      generate: 'Generate',
+      hint: 'Computed by harvest weight x crop unit-price snapshot; re-generating overwrites the month'
+    },
+    field: {
+      statMonth: 'Month',
+      team: 'Team',
+      crop: 'Crop'
+    },
+    column: {
+      statMonth: 'Month',
+      team: 'Team',
+      crop: 'Crop',
+      pickWeight: 'Harvest Total',
+      unitPrice: 'Unit Price',
+      amount: 'Payable',
+      action: 'Action'
+    },
+    action: {
+      detail: 'Work Detail'
+    },
+    confirm: {
+      generate: 'Re-generate settlement for {month}? Existing data will be overwritten.'
+    },
+    tip: {
+      monthRequired: 'Please select a settle month first',
+      generateSuccess: 'Settlement generated, {count} rows'
+    },
+    detail: {
+      title: 'Performance Detail',
+      tabYield: 'Yield Performance',
+      tabFarm: 'Farm Records',
+      rule: 'Rule',
+      recordNo: 'Record No.',
+      farmType: 'Farm Type',
+      plot: 'Plot',
+      farmDate: 'Farm Date',
+      farmCount: '{count} farm records'
+    }
+  },
+  // Plant dashboard (PLT-DASH-001)
+  plantDashboard: {
+    title: {
+      overview: 'Land Overview',
+      todayFarm: 'Today Farm Work',
+      monthCompletion: 'Monthly Plan Completion Rate',
+      gantt: 'Plant / Harvest Gantt'
+    },
+    kpi: {
+      idle: 'Idle Plots',
+      planting: 'Planting',
+      harvesting: 'Harvesting',
+      pending: 'Pending Plots',
+      total: 'Total Plots',
+      totalArea: 'Total Area',
+      areaUnit: 'mu',
+      todayFarmTotal: 'Today Farm Total',
+      farmUnit: ''
+    },
+    chart: {
+      completionRate: 'Completion',
+      cropAxis: 'Crop',
+      plantSegment: 'Plant',
+      pickSegment: 'Harvest',
+      noData: 'No Data'
+    },
+    action: {
+      refresh: 'Refresh',
+      lastRefresh: 'Last Refresh'
+    }
+  },
+  storeDashboard: {
+    title: {
+      home: 'Store Home',
+      productStructure: 'Today Product Structure (by Category)',
+      top10: 'Monthly TOP10 Products',
+      trend: 'Last 10 Days Trend'
+    },
+    kpi: {
+      todaySale: 'Today Sales',
+      monthSale: 'Monthly Sales',
+      todayOrder: 'Today Orders',
+      monthOrder: 'Monthly Orders',
+      pendingShip: 'Pending Shipment',
+      pendingPurchase: 'Pending Purchase',
+      amountUnit: 'CNY',
+      orderUnit: 'orders'
+    },
+    column: {
+      productType: 'Category',
+      qty: 'Demand Qty',
+      productName: 'Product',
+      saleAmount: 'Sales',
+      saleQty: 'Sale Qty',
+      date: 'Date',
+      orderCount: 'Orders',
+      avgPrice: 'Avg Price'
+    },
+    filter: {
+      store: 'Store',
+      allStores: 'All Stores'
+    },
+    action: {
+      refresh: 'Refresh'
+    },
+    empty: {
+      productStructure: 'No product structure data today',
+      top10: 'No sales records this month',
+      trend: 'No sales records in last 10 days'
+    }
+  },
+  warehouseTrace: {
+    tab: {
+      pork: 'Pork',
+      veg: 'Vegetable',
+      gift: 'Gift Box'
+    },
+    giftPlaceholder: 'Gift-box trace is reserved for V1; sub-code drilldown opens in a later release',
+    field: {
+      produceCode: 'Trace Code',
+      codeType: 'Type',
+      productName: 'Product',
+      productSpec: 'Spec',
+      pigEarNo: 'Pig Ear No.',
+      plotName: 'Plot',
+      farmName: 'Farm',
+      storeName: 'Store',
+      harvestDate: 'Harvest Date',
+      plantDays: 'Plant Days',
+      creatorName: 'Creator',
+      createTime: 'Create Time',
+      remark: 'Remark',
+      beginDate: 'Begin Time',
+      endDate: 'End Time'
+    },
+    column: {
+      produceCode: 'Trace Code',
+      codeType: 'Type',
+      productName: 'Product',
+      pigEarNo: 'Pig Ear No.',
+      storeName: 'Store',
+      farmName: 'Farm',
+      creatorName: 'Creator',
+      createTime: 'Create Time'
+    },
+    action: {
+      detail: 'Detail',
+      print: 'Print',
+      batchPrint: 'Batch Print'
+    },
+    detail: {
+      title: 'Trace Code Detail',
+      groupBasic: 'Basic Info',
+      groupRelation: 'Related Info',
+      groupImage: 'Product Image',
+      groupTimeline: 'Trace Timeline'
+    },
+    timeline: {
+      empty: 'No trace events',
+      operator: 'Operator'
+    },
+    print: {
+      empty: 'No printable data for selected codes',
+      failed: 'Failed to generate print file, please retry'
+    },
+    pdf: {
+      title: 'Product Trace Code',
+      serialNo: 'No.'
     }
   }
 };

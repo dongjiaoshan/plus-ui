@@ -115,6 +115,7 @@ export default {
     detail: '详 情',
     edit: '编 辑',
     delete: '删 除',
+    operate: '操作',
     back: '返 回',
     createTime: '创建时间',
     opSuccess: '操作成功',
@@ -203,7 +204,14 @@ export default {
     empty: {
       deals: '暂无交易记录'
     },
-    must_be_breed_type: '引种只能选择种猪类供应商'
+    must_be_breed_type: '引种只能选择种猪类供应商',
+    deal: {
+      dealDate: '交易日期',
+      dealProduct: '交易商品',
+      dealQuantity: '交易量',
+      dealUnit: '单位',
+      empty: '暂无交易明细'
+    }
   },
   // 门店主数据（SYS-MD-002 + SYS-MD-FIX-002）
   store: {
@@ -973,6 +981,15 @@ export default {
     },
     confirm: {
       del: '是否确认删除选中的 {count} 条库位？删除前需先确保库位无在用库存。'
+    },
+    summary: {
+      locationCount: '库位数',
+      productCount: '产品数',
+      currentStock: '当前库存',
+      todayIn: '今日入库',
+      todayOut: '今日出库',
+      lastCheck: '最近盘点',
+      noCheck: '暂无盘点'
     }
   },
   // 商品主数据 / 自产 / 外购 / 礼盒（WMS-MD-002，共表 3 形态）
@@ -1066,6 +1083,11 @@ export default {
       checkResult: '盘点结果',
       operatorName: '操作人',
       createTime: '创建时间'
+    },
+    action: {
+      flowIn: '入库记录',
+      flowOut: '出库记录',
+      checkRecord: '盘点记录'
     }
   },
   // 种植 - 片区（PLT-MD-001）
@@ -1703,7 +1725,92 @@ export default {
         deleteConfirm: '确认删除退货单【{no}】？',
         deleteSuccess: '退货已删除',
         confirmSuccess: '退货已确认'
+      },
+      check: {
+        checkId: '盘点单号',
+        locationName: '盘点库位',
+        checkDate: '盘点日期',
+        checkStatus: '状态',
+        lineCount: '明细数',
+        diffSum: '盈亏计',
+        createTime: '创建时间',
+        detail: '详情',
+        complete: '完成盘点',
+        cancel: '取消盘点',
+        createTitle: '新建盘点单',
+        lockHint: '新建后该库位将进入盘点锁定，期间禁止出入库',
+        locationPlaceholder: '请选择盘点库位',
+        locationRequired: '请选择盘点库位',
+        checkDatePlaceholder: '请选择盘点日期',
+        checkDateRequired: '请选择盘点日期',
+        remark: '备注',
+        detailTitle: '盘点明细',
+        productName: '产品',
+        productUnit: '单位',
+        sysStock: '系统量',
+        checkStock: '实盘量',
+        diffStock: '差异',
+        checkResultType: '结果',
+        diffReason: '差异原因',
+        checkBy: '盘点人',
+        createSuccess: '盘点单已创建，库位已锁定',
+        completeConfirm: '确认完成盘点单 {no}？将写入差异流水并回写库存',
+        completeSuccess: '盘点已完成',
+        cancelConfirm: '确认取消盘点单 {no}？将仅解锁库位、不回写库存',
+        cancelSuccess: '盘点已取消'
+      },
+      flowIn: {
+        flowNo: '流水号',
+        flowDate: '业务时间',
+        flowType: '类型',
+        matType: '物资类型',
+        productCode: '产品码',
+        productName: '产品',
+        belongType: '归属',
+        changeQuantity: '数量',
+        productUnit: '单位',
+        location: '库位',
+        earNo: '耳号',
+        operator: '操作人',
+        remark: '备注'
+      },
+      flowOut: {
+        flowNo: '流水号',
+        flowDate: '业务时间',
+        flowType: '类型',
+        matType: '物资类型',
+        stockOutDest: '出库去向',
+        productCode: '产品码',
+        productName: '产品',
+        belongType: '归属',
+        changeQuantity: '数量',
+        productUnit: '单位',
+        location: '库位',
+        earNo: '耳号',
+        operator: '操作人',
+        remark: '备注'
       }
+    }
+  },
+  // 仓库 dashboard 占位版（DJS-FIX-ADMIN-W22-006）
+  warehouse: {
+    dashboard: {
+      todayDemand: '今日需求量',
+      todayDemandUnit: '白条业态',
+      todayProduction: '今日生产',
+      todayProductionUnit: '件入库',
+      stockCheck: '最近盘点（正常 / 异常 / 计损）',
+      monthAbnormalLocation: '当月异常库位 {count} 处',
+      locationOverview: '库位概览（Top 20）',
+      refresh: '刷新',
+      colLocation: '库位',
+      colType: '类型',
+      colStock: '当前库存',
+      colStatus: '状态',
+      statusNormal: '正常',
+      statusAbnormal: '异常',
+      emptyLocation: '暂无库位数据',
+      fullVersionHint: '完整版看板（趋势折线 / 出入库饼图 / 4 业态对比）将在 V1.x WMS-DASH-001 落地。'
     }
   },
   demand: {
@@ -1824,6 +1931,655 @@ export default {
       operator: '操作人',
       remark: '备注',
       empty: '暂无状态变更记录'
+    },
+    kpi: {
+      pigDemand: '今日猪需求',
+      assigned: '已调配',
+      vegDemand: '今日果蔬需求',
+      otherDemand: '其他需求',
+      unitHead: '头',
+      unitSpecies: '品种',
+      unitItem: '条'
+    }
+  },
+  // 门店端发起需求（STR-DEMAND-001，复用 WMS demand 表）
+  storeDemand: {
+    not_found_msg: '需求单不存在或已删除',
+    productType: {
+      white_bar: '白条',
+      vegetable: '蔬菜',
+      gift_box: '礼盒',
+      other: '其他'
+    },
+    filter: {
+      store: '门店',
+      storePlaceholder: '请选择门店'
+    },
+    tip: {
+      selectStoreFirst: '请先在顶部选择门店再新增需求'
+    },
+    field: {
+      demandNo: '需求单号',
+      demandDate: '需求日期',
+      'demandDate.required': '需求日期不能为空',
+      storeId: '提单门店',
+      'storeId.required': '提单门店不能为空',
+      productId: '产品',
+      'productId.required': '产品不能为空',
+      productName: '产品名称',
+      'productName.required': '产品名称不能为空',
+      productType: '业态',
+      productSpec: '规格',
+      demandQuantity: '需求量',
+      'demandQuantity.required': '需求量不能为空',
+      productUnit: '单位',
+      'productUnit.required': '单位不能为空',
+      rawMaterial: '原材料描述',
+      materialQty: '原材料计算量',
+      demandRemark: '需求备注',
+      demandExplain: '需求说明',
+      demandStatus: '状态',
+      expectedArriveDate: '期望到货日',
+      beginDate: '开始日期',
+      endDate: '结束日期'
+    },
+    column: {
+      demandNo: '需求单号',
+      demandDate: '需求日期',
+      productName: '产品',
+      demandQuantity: '需求量',
+      productUnit: '单位',
+      demandStatus: '状态',
+      expectedArriveDate: '期望到货',
+      createTime: '创建时间',
+      actions: '操作'
+    },
+    placeholder: {
+      demandNoAuto: '提交后自动生成',
+      storeId: '请选择提单门店',
+      productId: '请选择产品（按业态过滤）',
+      demandQuantity: '请输入需求量',
+      productUnit: '如 头 / kg / 盒',
+      rawMaterial: '如 "需要 5 头猪"',
+      demandExplain: '如 "25 号之前每天 1 头猪送到矿业 / 背膘不要太厚"'
+    },
+    form: {
+      addTitle: '新增需求',
+      editTitle: '编辑需求',
+      detailTitle: '需求详情'
+    },
+    action: {
+      edit: '编辑',
+      cancel: '撤回',
+      assignPig: '指定猪只',
+      detail: '详情'
+    },
+    confirm: {
+      del: '确认删除选中的 {count} 条需求？仅未确认需求可删'
+    },
+    prompt: {
+      cancelRemark: '请输入撤回原因（可选）',
+      cancelRemarkPh: '如下错单 / 门店临时取消等'
+    },
+    assignPig: {
+      title: '指定猪只 - {no}（需 {required} 头）',
+      selectedTip: '已选 {selected} / {required} 头',
+      confirmBtn: '确认指定（{count} 头）',
+      assignSuccess: '已指定 {count} 头',
+      assignedTitle: '已指定（{count}）',
+      overLimit: '最多指定 {required} 头，请先取消多余勾选',
+      emptyAvailable: '当前没有可出栏育肥猪',
+      column: {
+        earNo: '耳号',
+        pigSex: '性别',
+        pigBreed: '品种品系',
+        ageDays: '日龄（天）',
+        lastBackfat: '最新背膘 (mm)'
+      }
+    }
+  },
+  // 门店经营（产品关联 + 销售明细，STR-OP-001）
+  storeOperation: {
+    relation: {
+      store: '门店',
+      storePlaceholder: '请选择门店',
+      save: '保存关联',
+      allSku: '全部产品',
+      linkedSku: '已关联产品',
+      filterPlaceholder: '搜索产品名称'
+    },
+    sale: {
+      store: '门店',
+      storePlaceholder: '请选择门店',
+      source: '数据来源',
+      saleDateFrom: '销售日期起',
+      saleDateTo: '销售日期止',
+      sourceManual: '手录',
+      sourceExcel: 'Excel导入',
+      import: '导入',
+      downloadTemplate: '下载模板',
+      importTitle: '导入销售流水',
+      file: '选择文件',
+      uploadHint: '将 Excel 文件拖到此处，或点击选择',
+      importTip: '仅支持导入该门店已配置「产品关联」的 SKU；列：产品名称 / 销售日期 / 销售数量 / 销售总额',
+      confirmImport: '开始导入',
+      importFail: '导入失败',
+      confirmDel: '确认删除选中的 {count} 条销售流水？',
+      column: {
+        storeName: '门店',
+        productName: '产品名称',
+        saleDate: '销售日期',
+        saleQty: '销售数量',
+        saleUnit: '单位',
+        saleAmount: '销售总额',
+        source: '数据来源',
+        operator: '录入人',
+        createTime: '创建时间'
+      },
+      form: {
+        title: '手录销售流水',
+        store: '门店',
+        product: '产品',
+        productPlaceholder: '请选择产品',
+        selectStoreFirst: '请先选择门店',
+        noRelation: '该门店暂无产品关联，请先在「产品关联」配置',
+        unit: '单位',
+        unitAuto: '选择产品后自动带出',
+        saleDate: '销售日期',
+        saleQty: '销售数量',
+        saleAmount: '销售总额',
+        remark: '备注',
+        storeRequired: '请选择门店',
+        productRequired: '请选择产品',
+        saleDateRequired: '请选择销售日期',
+        saleDateFuture: '销售日期不能晚于今天',
+        saleQtyRequired: '请输入销售数量',
+        saleAmountRequired: '请输入销售总额'
+      }
+    }
+  },
+  // 门店盘点（STR-STOCK-001，admin only）
+  storeCheck: {
+    field: {
+      checkId: '盘点单号',
+      store: '门店',
+      checkStatus: '状态',
+      checkDateFrom: '盘点日期起',
+      checkDateTo: '盘点日期止'
+    },
+    column: {
+      checkId: '盘点单号',
+      storeName: '门店',
+      checkDate: '盘点日期',
+      checkStatus: '状态',
+      lineCount: '明细数',
+      diffSum: '盈亏计',
+      createTime: '创建时间'
+    },
+    action: {
+      detail: '详情',
+      complete: '完成',
+      cancel: '取消'
+    },
+    confirm: {
+      complete: '确认完成盘点单「{id}」？完成后将记录差异并解锁门店，不可再修改。',
+      cancel: '确认取消盘点单「{id}」？取消后解锁门店，已录差异不回写库存。'
+    },
+    form: {
+      title: '新建盘点单',
+      lockHint: '新建后该门店即进入「进行中」并被锁定，盘点期间该门店该产品的销售出库将被拒绝，完成或取消后解锁。',
+      store: '门店',
+      storePlaceholder: '请选择门店',
+      checkDate: '盘点日期',
+      checkDatePlaceholder: '请选择盘点日期',
+      remark: '备注',
+      submit: '新建并录实盘',
+      storeRequired: '请选择门店',
+      checkDateRequired: '请选择盘点日期'
+    },
+    detail: {
+      title: '盘点单详情',
+      checkId: '盘点单号',
+      store: '门店',
+      checkDate: '盘点日期',
+      checkStatus: '状态',
+      entryTitle: '录入实盘',
+      product: '产品',
+      productPlaceholder: '请选择产品',
+      productRequired: '请选择产品',
+      checkStock: '实盘量',
+      checkStockRequired: '请输入实盘量',
+      diffReason: '差异原因',
+      diffReasonPlaceholder: '选填',
+      entrySubmit: '录入',
+      complete: '完成盘点',
+      empty: '暂无实盘明细',
+      noCheckId: '盘点单号加载中，请稍后重试',
+      noLineToComplete: '请先录入至少一条实盘明细',
+      confirmRemoveLine: '确认删除产品「{name}」的实盘明细？',
+      column: {
+        productName: '产品',
+        productUnit: '单位',
+        sysStock: '系统量',
+        checkStock: '实盘量',
+        diffStock: '差异',
+        checkResultType: '结果',
+        diffReason: '差异原因'
+      }
+    }
+  },
+  // 门店会员档案 + 手录消费（STR-MEMBER-001，V1 只做档案 + 手录，不做营销分析）
+  storeMember: {
+    kpi: {
+      monthlyMember: '本月新增会员',
+      monthlyConsumption: '本月录入消费记录'
+    },
+    field: {
+      phone: '手机号',
+      memberName: '会员姓名',
+      memberLevel: '会员等级',
+      store: '所属门店'
+    },
+    column: {
+      memberNo: '会员编号',
+      memberName: '会员姓名',
+      phone: '手机号',
+      memberLevel: '会员等级',
+      joinDate: '入会日期',
+      storeName: '所属门店',
+      memberTags: '会员标签',
+      memberStatus: '状态',
+      createTime: '创建时间'
+    },
+    status: {
+      normal: '正常',
+      disabled: '停用'
+    },
+    action: {
+      consumeRecord: '消费记录'
+    },
+    confirm: {
+      delete: '确认删除会员「{name}」？删除后档案与消费记录将隐藏。'
+    },
+    form: {
+      addTitle: '新增会员',
+      editTitle: '编辑会员',
+      memberName: '会员姓名',
+      memberNamePlaceholder: '请输入会员姓名',
+      memberNameRequired: '请输入会员姓名',
+      phone: '手机号',
+      phonePlaceholder: '请输入手机号',
+      phoneRequired: '请输入手机号',
+      phoneInvalid: '手机号格式不正确',
+      memberLevel: '会员等级',
+      memberLevelPlaceholder: '请选择会员等级',
+      joinDate: '入会日期',
+      joinDatePlaceholder: '请选择入会日期',
+      store: '所属门店',
+      storePlaceholder: '请选择门店（选填）',
+      memberTags: '会员标签',
+      memberTagsPlaceholder: '逗号分隔，如 常客,亲子',
+      memberStatus: '状态',
+      remark: '备注'
+    },
+    consume: {
+      title: '会员「{name}」消费记录',
+      add: '录入消费',
+      entryTitle: '录入消费记录',
+      consumeDate: '消费日期',
+      consumeDatePlaceholder: '请选择消费日期',
+      consumeDateRequired: '请选择消费日期',
+      sku: '商品SKU',
+      skuPlaceholder: '商品名称 / 编码（自由填写）',
+      quantity: '数量',
+      amountManual: '金额(元)',
+      notes: '备注',
+      operator: '录入人',
+      createTime: '创建时间',
+      empty: '暂无消费记录'
+    }
+  },
+  // 门店白条分割（STR-SPLIT-001，admin only 复用 inhouse 表 source='store'）
+  storeSplit: {
+    field: {
+      cutPart: '部位',
+      produceDateStart: '生产日期起',
+      produceDateEnd: '生产日期止'
+    },
+    column: {
+      cutPart: '部位',
+      productName: '产品',
+      productWeight: '重量(kg)',
+      produceDate: '生产日期',
+      source: '来源',
+      createByName: '录入人',
+      createTime: '创建时间'
+    },
+    tag: {
+      store: '门店再分'
+    },
+    form: {
+      title: '门店再分录入',
+      hint: '将仓库已分割入库的白条 / 部位品在门店端再分一次，按部位反查标准产品入门店库位。',
+      cutPart: '分割部位',
+      cutPartPlaceholder: '请选择分割部位',
+      cutPartRequired: '请选择分割部位',
+      productWeight: '再分重量',
+      productWeightRequired: '请输入再分重量',
+      location: '入库库位',
+      locationPlaceholder: '请选择库位（选填）',
+      whiteBarId: '源白条',
+      whiteBarIdPlaceholder: '源白条标识（选填，溯源用）',
+      remark: '备注',
+      submit: '提交'
+    }
+  },
+  // 门店退回管理（STR-RETURN-001，门店域薄实现，admin only）
+  storeReturn: {
+    field: {
+      returnNo: '退回单号',
+      returnDirection: '退回方向',
+      store: '退回门店',
+      product: '产品',
+      returnQuantity: '退回数量',
+      returnReason: '退回原因',
+      traceCode: '追溯码',
+      member: '会员',
+      returnDate: '退回日期',
+      returnDateFrom: '退回日期起',
+      returnDateTo: '退回日期止',
+      remark: '备注'
+    },
+    column: {
+      returnNo: '退回单号',
+      returnDirection: '退回方向',
+      storeName: '退回门店',
+      productName: '产品',
+      returnQuantity: '退回数量',
+      returnReason: '退回原因',
+      traceCode: '追溯码',
+      memberId: '会员ID',
+      returnDate: '退回日期',
+      operatorName: '经手人',
+      createTime: '创建时间'
+    },
+    placeholder: {
+      returnDirection: '请选择退回方向',
+      store: '请选择退回门店（顾客退回必填）',
+      product: '请选择产品',
+      returnReason: '请输入退回原因',
+      traceCode: '已贴追溯码，如有',
+      member: '会员退回填会员ID，可空',
+      returnDate: '请选择退回日期'
+    },
+    rule: {
+      returnDirection: '请选择退回方向',
+      product: '请选择产品',
+      returnQuantity: '请输入退回数量'
+    },
+    dialog: {
+      add: '新增退回',
+      edit: '编辑退回'
+    },
+    confirm: {
+      delete: '确认删除退回单 {no}？'
+    }
+  },
+  // 种植灾害记录（PLT-WORK-003，admin 只读独立子页）
+  plantDisaster: {
+    column: {
+      recordNo: '灾害记录号',
+      farmDate: '发生日期',
+      disasterType: '灾害类型',
+      plotName: '地块',
+      plotCode: '地块编码',
+      cropName: '作物',
+      lossRate: '损失率',
+      lossYield: '损失产量',
+      isWarning: '预警',
+      teamName: '处理班组',
+      createTime: '登记时间'
+    },
+    field: {
+      recordNo: '灾害记录号',
+      dateRange: '发生日期',
+      plot: '地块',
+      disasterType: '灾害类型',
+      isWarning: '是否预警'
+    },
+    tag: {
+      warning: '预警',
+      normal: '正常'
+    },
+    action: {
+      detail: '详情'
+    },
+    empty: '暂无灾害记录',
+    detail: {
+      title: '灾害记录详情',
+      remark: '备注',
+      proof: '现场凭证',
+      noProof: '无凭证图',
+      notFound: '记录不存在'
+    }
+  },
+  plantWork: {
+    tab: {
+      tillage: '整地',
+      irrigate: '浇灌',
+      fertilize: '施肥',
+      weed: '除草',
+      disaster: '灾害'
+    },
+    column: {
+      recordNo: '记录号',
+      farmDate: '农事日期',
+      farmType: '农事类型',
+      plotName: '地块',
+      plotCode: '地块编码',
+      cropName: '作物',
+      teamName: '处理班组',
+      remark: '备注',
+      createTime: '登记时间',
+      disasterType: '灾害类型',
+      lossRate: '损失率',
+      lossYield: '损失产量'
+    },
+    field: {
+      recordNo: '记录号',
+      dateRange: '农事日期',
+      plot: '地块',
+      team: '处理班组'
+    },
+    action: {
+      detail: '详情'
+    },
+    empty: '暂无农事记录',
+    detail: {
+      title: '农事记录详情',
+      tillageType: '整地类型',
+      tillageMethod: '整地方式',
+      transplantPlotName: '转移地块',
+      transplantPercent: '移栽百分比',
+      remark: '备注',
+      proof: '现场凭证',
+      noProof: '无凭证图',
+      notFound: '记录不存在'
+    }
+  },
+  // 种植 - 班组绩效（PLT-PERF-001）
+  plantPerformance: {
+    pageTitle: '班组绩效',
+    toolbar: {
+      statMonth: '结算月份',
+      pickMonth: '请选择月份',
+      generate: '生成结算',
+      hint: '按采摘量 × 作物单价快照生成，重复生成会覆盖该月数据'
+    },
+    field: {
+      statMonth: '月份',
+      team: '班组',
+      crop: '作物'
+    },
+    column: {
+      statMonth: '月份',
+      team: '班组',
+      crop: '作物',
+      pickWeight: '采摘总量',
+      unitPrice: '单价快照',
+      amount: '应付金额',
+      action: '操作'
+    },
+    action: {
+      detail: '工作详情'
+    },
+    confirm: {
+      generate: '将重新生成 {month} 月结算，已有数据会被覆盖，是否继续？'
+    },
+    tip: {
+      monthRequired: '请先选择结算月份',
+      generateSuccess: '结算生成成功，共 {count} 条'
+    },
+    detail: {
+      title: '绩效详情',
+      tabYield: '产量绩效',
+      tabFarm: '农事记录',
+      rule: '绩效规则',
+      recordNo: '记录号',
+      farmType: '农事类型',
+      plot: '地块',
+      farmDate: '农事日期',
+      farmCount: '共 {count} 条农事记录'
+    }
+  },
+  // 种植首页 dashboard（PLT-DASH-001）
+  plantDashboard: {
+    title: {
+      overview: '土地总览',
+      todayFarm: '今日农事',
+      monthCompletion: '当月种植任务完成率',
+      gantt: '种植 / 采摘进度甘特图'
+    },
+    kpi: {
+      idle: '空闲地块',
+      planting: '种植中',
+      harvesting: '采摘中',
+      pending: '待种地块',
+      total: '地块总数',
+      totalArea: '土地总面积',
+      areaUnit: '亩',
+      todayFarmTotal: '今日农事总数',
+      farmUnit: '条'
+    },
+    chart: {
+      completionRate: '完成率',
+      cropAxis: '作物',
+      plantSegment: '种植',
+      pickSegment: '采摘',
+      noData: '暂无数据'
+    },
+    action: {
+      refresh: '刷新',
+      lastRefresh: '最近刷新'
+    }
+  },
+  storeDashboard: {
+    title: {
+      home: '门店首页',
+      productStructure: '当日产品结构（按业态）',
+      top10: '当月 TOP10 产品排行',
+      trend: '近 10 日趋势'
+    },
+    kpi: {
+      todaySale: '今日销售额',
+      monthSale: '本月累计销售额',
+      todayOrder: '今日订单数',
+      monthOrder: '本月订单数',
+      pendingShip: '待发货',
+      pendingPurchase: '待采购',
+      amountUnit: '元',
+      orderUnit: '单'
+    },
+    column: {
+      productType: '业态',
+      qty: '需求量',
+      productName: '产品名称',
+      saleAmount: '销售额',
+      saleQty: '销售数量',
+      date: '日期',
+      orderCount: '订单数',
+      avgPrice: '客单价'
+    },
+    filter: {
+      store: '门店',
+      allStores: '全部门店'
+    },
+    action: {
+      refresh: '刷新'
+    },
+    empty: {
+      productStructure: '当日暂无产品结构数据',
+      top10: '当月暂无销售记录',
+      trend: '近 10 日暂无销售记录'
+    }
+  },
+  warehouseTrace: {
+    tab: {
+      pork: '猪肉',
+      veg: '果蔬',
+      gift: '礼盒'
+    },
+    giftPlaceholder: '礼盒追溯 V1 预留，子码下钻待后续版本开放',
+    field: {
+      produceCode: '追溯码',
+      codeType: '类型',
+      productName: '产品名',
+      productSpec: '规格',
+      pigEarNo: '猪只耳号',
+      plotName: '地块',
+      farmName: '农场',
+      storeName: '门店',
+      harvestDate: '采收日期',
+      plantDays: '种植天数',
+      creatorName: '生成人',
+      createTime: '生成时间',
+      remark: '备注',
+      beginDate: '开始时间',
+      endDate: '结束时间'
+    },
+    column: {
+      produceCode: '追溯码',
+      codeType: '类型',
+      productName: '产品名',
+      pigEarNo: '猪只耳号',
+      storeName: '门店',
+      farmName: '农场',
+      creatorName: '生成人',
+      createTime: '生成时间'
+    },
+    action: {
+      detail: '详情',
+      print: '打印',
+      batchPrint: '批量打印'
+    },
+    detail: {
+      title: '追溯码详情',
+      groupBasic: '基本信息',
+      groupRelation: '关联信息',
+      groupImage: '产品图',
+      groupTimeline: '追溯链时间轴'
+    },
+    timeline: {
+      empty: '暂无追溯事件',
+      operator: '操作人'
+    },
+    print: {
+      empty: '所选追溯码无可打印数据',
+      failed: '生成打印文件失败，请重试'
+    },
+    pdf: {
+      title: '产品追溯码',
+      serialNo: '序号'
     }
   }
 };

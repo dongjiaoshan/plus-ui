@@ -33,8 +33,7 @@
       </el-tab-pane>
 
       <el-tab-pane :label="t('supplier.title.deals')" name="deals">
-        <!-- V1 stub：交易明细预留 tab，下游 BRD-MED / WMS-PURCHASE 落地后接 GET /djs/common/supplier/{id}/deals -->
-        <el-empty :description="t('supplier.empty.deals')" />
+        <DealHistoryTab v-if="activeTab === 'deals'" :supplier-id="data.id" />
       </el-tab-pane>
     </el-tabs>
 
@@ -49,6 +48,7 @@ import { getSupplier } from '@/api/djs-common/supplier';
 import type { SupplierVO } from '@/api/djs-common/supplier/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
+import DealHistoryTab from './DealHistoryTab.vue';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -70,7 +70,7 @@ const open = async (id: number | string) => {
   const ossId = data.value.licenseImageOssId;
   if (ossId) {
     try {
-      const ossRes = await listOssByIds(ossId as number);
+      const ossRes = await listOssByIds(ossId);
       licenseImageUrl.value = ossRes.data?.[0]?.url ?? '';
     } catch (e) {
       console.warn('[SupplierView] listOssByIds failed for licenseImageOssId', ossId, e);

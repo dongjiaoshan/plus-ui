@@ -179,7 +179,7 @@ const plantingSeasonArr = computed<string[]>({
   }
 });
 
-// OssUpload v-model 期望 number[]；业务字段是单/多 ossId 字符串（useOssBridge 桥接）
+// OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段是单/多 ossId 字符串（useOssBridge 桥接）
 const thumbOssIdsModel = useOssBridge(form, 'cropImagePreview', 'single');
 const imgOssIdsModel = useOssBridge(form, 'cropImageUrl', 'multi');
 
@@ -214,8 +214,8 @@ const openEdit = async (id: number | string) => {
   if (form.value.cropImagePreview) {
     try {
       const ossRes = await listOssByIds(form.value.cropImagePreview);
-      const items = (ossRes.data || []).map((o: any) => ({
-        ossId: Number(o.ossId),
+      const items = (ossRes.data || []).map((o) => ({
+        ossId: String(o.ossId),
         url: o.url,
         originalName: o.originalName
       }));
@@ -227,8 +227,8 @@ const openEdit = async (id: number | string) => {
   if (form.value.cropImageUrl) {
     try {
       const ossRes = await listOssByIds(form.value.cropImageUrl);
-      const items = (ossRes.data || []).map((o: any) => ({
-        ossId: Number(o.ossId),
+      const items = (ossRes.data || []).map((o) => ({
+        ossId: String(o.ossId),
         url: o.url,
         originalName: o.originalName
       }));
