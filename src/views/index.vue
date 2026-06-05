@@ -1,164 +1,214 @@
 <template>
   <div class="app-container home">
-    <el-row :gutter="20">
-      <el-col :sm="24" :lg="12" style="padding-left: 20px">
-        <h2>RuoYi-Vue-Plus多租户管理系统</h2>
-        <p>
-          RuoYi-Vue-Plus 是基于 RuoYi-Vue 针对 分布式集群 场景升级(不兼容原框架)
-          <br />
-          * 前端开发框架 Vue3、TS、Element Plus<br />
-          * 后端开发框架 Spring Boot<br />
-          * 容器框架 Undertow 基于 Netty 的高性能容器<br />
-          * 权限认证框架 Sa-Token 支持多终端认证系统<br />
-          * 关系数据库 MySQL 适配 8.X 最低 5.7<br />
-          * 缓存数据库 Redis 适配 6.X 最低 4.X<br />
-          * 数据库框架 Mybatis-Plus 快速 CRUD 增加开发效率<br />
-          * 数据库框架 p6spy 更强劲的 SQL 分析<br />
-          * 多数据源框架 dynamic-datasource 支持主从与多种类数据库异构<br />
-          * 序列化框架 Jackson 统一使用 jackson 高效可靠<br />
-          * Redis客户端 Redisson 性能强劲、API丰富<br />
-          * 分布式限流 Redisson 全局、请求IP、集群ID 多种限流<br />
-          * 分布式锁 Lock4j 注解锁、工具锁 多种多样<br />
-          * 分布式幂等 Lock4j 基于分布式锁实现<br />
-          * 分布式链路追踪 SkyWalking 支持链路追踪、网格分析、度量聚合、可视化<br />
-          * 分布式任务调度 SnailJob 高性能 高可靠 易扩展<br />
-          * 文件存储 Minio 本地存储<br />
-          * 文件存储 七牛、阿里、腾讯 云存储<br />
-          * 监控框架 SpringBoot-Admin 全方位服务监控<br />
-          * 校验框架 Validation 增强接口安全性 严谨性<br />
-          * Excel框架 FastExcel(原Alibaba EasyExcel) 性能优异 扩展性强<br />
-          * 文档框架 SpringDoc、javadoc 无注解零入侵基于java注释<br />
-          * 工具类框架 Hutool、Lombok 减少代码冗余 增加安全性<br />
-          * 代码生成器 适配MP、SpringDoc规范化代码 一键生成前后端代码<br />
-          * 部署方式 Docker 容器编排 一键部署业务集群<br />
-          * 国际化 SpringMessage Spring标准国际化方案<br />
-        </p>
-        <p><b>当前版本:</b> <span>v5.6.1</span></p>
-        <p>
-          <el-tag type="danger">&yen;免费开源</el-tag>
-        </p>
-        <p>
-          <el-button type="primary" icon="Cloudy" plain @click="goTarget('https://gitee.com/dromara/RuoYi-Vue-Plus')">访问码云</el-button>
-          <el-button type="primary" icon="Cloudy" plain @click="goTarget('https://github.com/dromara/RuoYi-Vue-Plus')">访问GitHub</el-button>
-          <el-button type="primary" icon="Cloudy" plain @click="goTarget('https://plus-doc.dromara.org/#/ruoyi-vue-plus/changlog')"
-            >更新日志</el-button
-          >
-        </p>
-      </el-col>
+    <!-- 东角山品牌条 -->
+    <div class="home-brand">
+      <div class="home-brand__logo">
+        <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true">
+          <circle cx="24" cy="24" r="22" fill="#2f7c44" />
+          <path
+            d="M24 12 C16 12 12 20 12 26 C12 33 18 38 24 38 C30 38 36 33 36 26 C36 20 32 12 24 12 Z M24 18 C28 18 31 22 31 26 C31 30 28 33 24 33 C20 33 17 30 17 26 C17 22 20 18 24 18 Z"
+            fill="#ffffff"
+            opacity="0.95"
+          />
+          <path d="M24 22 L24 30 M20 26 L28 26" stroke="#2f7c44" stroke-width="2.4" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="home-brand__text">
+        <h1 class="home-brand__title">{{ t('home.title') }}</h1>
+        <p class="home-brand__subtitle">{{ t('home.subtitle') }}</p>
+      </div>
+    </div>
 
-      <el-col :sm="24" :lg="12" style="padding-left: 20px">
-        <h2>RuoYi-Cloud-Plus多租户微服务管理系统</h2>
-        <p>
-          RuoYi-Cloud-Plus 微服务通用权限管理系统 重写 RuoYi-Cloud 全方位升级(不兼容原框架)
-          <br />
-          * 前端开发框架 Vue3、TS、Element UI<br />
-          * 后端开发框架 Spring Boot<br />
-          * 微服务开发框架 Spring Cloud、Spring Cloud Alibaba<br />
-          * 容器框架 Undertow 基于 XNIO 的高性能容器<br />
-          * 权限认证框架 Sa-Token、Jwt 支持多终端认证系统<br />
-          * 关系数据库 MySQL 适配 8.X 最低 5.7<br />
-          * 关系数据库 Oracle 适配 11g 12c<br />
-          * 关系数据库 PostgreSQL 适配 13 14<br />
-          * 关系数据库 SQLServer 适配 2017 2019<br />
-          * 缓存数据库 Redis 适配 6.X 最低 5.X<br />
-          * 分布式注册中心 Alibaba Nacos 采用2.X 基于GRPC通信高性能<br />
-          * 分布式配置中心 Alibaba Nacos 采用2.X 基于GRPC通信高性能<br />
-          * 服务网关 Spring Cloud Gateway 响应式高性能网关<br />
-          * 负载均衡 Spring Cloud Loadbalancer 负载均衡处理<br />
-          * RPC远程调用 Apache Dubbo 原生态使用体验、高性能<br />
-          * 分布式限流熔断 Alibaba Sentinel 无侵入、高扩展<br />
-          * 分布式事务 Alibaba Seata 无侵入、高扩展 支持 四种模式<br />
-          * 分布式消息队列 Apache Kafka 高性能高速度<br />
-          * 分布式消息队列 Apache RocketMQ 高可用功能多样<br />
-          * 分布式消息队列 RabbitMQ 支持各种扩展插件功能多样性<br />
-          * 分布式搜索引擎 ElasticSearch 业界知名<br />
-          * 分布式链路追踪 Apache SkyWalking 链路追踪、网格分析、度量聚合、可视化<br />
-          * 分布式日志中心 ELK 业界成熟解决方案<br />
-          * 分布式监控 Prometheus、Grafana 全方位性能监控<br />
-          * 其余与 Vue 版本一致<br />
-        </p>
-        <p><b>当前版本:</b> <span>v2.6.1</span></p>
-        <p>
-          <el-tag type="danger">&yen;免费开源</el-tag>
-        </p>
-        <p>
-          <el-button type="primary" icon="Cloudy" plain @click="goTarget('https://gitee.com/dromara/RuoYi-Cloud-Plus')">访问码云</el-button>
-          <el-button type="primary" icon="Cloudy" plain @click="goTarget('https://github.com/dromara/RuoYi-Cloud-Plus')">访问GitHub</el-button>
-          <el-button type="primary" icon="Cloudy" plain @click="goTarget('https://plus-doc.dromara.org/#/ruoyi-cloud-plus/changlog')"
-            >更新日志</el-button
-          >
-        </p>
+    <!-- 板块卡片 -->
+    <el-row v-if="visibleCards.length > 0" :gutter="20" class="home-boards">
+      <el-col v-for="card in visibleCards" :key="card.key" :xs="24" :sm="12" :md="8" :lg="8" :xl="8" class="home-boards__col">
+        <el-card class="board-card" shadow="hover" :body-style="{ padding: '0' }" @click="goBoard(card)">
+          <div class="board-card__img">
+            <img :src="card.img" :alt="t(card.labelKey)" loading="lazy" />
+          </div>
+          <div class="board-card__body">
+            <span class="board-card__label">{{ t(card.labelKey) }}</span>
+            <el-icon class="board-card__arrow"><ArrowRightBold /></el-icon>
+          </div>
+        </el-card>
       </el-col>
     </el-row>
-    <el-divider />
+
+    <!-- 空态：当前账号未分配任何板块 -->
+    <el-empty v-else :description="t('home.board.empty')" class="home-empty" />
   </div>
 </template>
 
 <script setup name="Index" lang="ts">
-const goTarget = (url: string) => {
-  window.open(url, '__blank');
-};
+import { ArrowRightBold } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
+import { useUserStore } from '@/store/modules/user';
+import breedImg from '@/assets/images/boards/breed.svg';
+import plantImg from '@/assets/images/boards/plant.svg';
+import warehouseImg from '@/assets/images/boards/warehouse.svg';
+import storeImg from '@/assets/images/boards/store.svg';
+import dashboardImg from '@/assets/images/boards/dashboard.svg';
+
+interface BoardCard {
+  /** 板块标识 */
+  key: string;
+  /** i18n 文案 key */
+  labelKey: string;
+  /** 卡片配图（URL，占位 SVG，实景图到位后替换 assets/images/boards/* 不改逻辑） */
+  img: string;
+  /** 点击跳转的板块首页路由 */
+  route: string;
+  /** 可见角色 role_key（命中其一即展示该卡） */
+  roles: string[];
+}
+
+/** 5 板块卡片定义：后续新增板块在此追加一项即可（admin 端角色过滤范式） */
+const BOARD_CARDS: BoardCard[] = [
+  { key: 'breed', labelKey: 'home.board.breed', img: breedImg, route: '/djs-breed/dashboard', roles: ['breed_admin'] },
+  { key: 'plant', labelKey: 'home.board.plant', img: plantImg, route: '/djs-plant/dashboard', roles: ['plant_admin'] },
+  { key: 'warehouse', labelKey: 'home.board.warehouse', img: warehouseImg, route: '/djs-warehouse/dashboard', roles: ['warehouse_admin'] },
+  { key: 'store', labelKey: 'home.board.store', img: storeImg, route: '/djs-store/dashboard', roles: ['store_admin'] },
+  { key: 'dashboard', labelKey: 'home.board.system', img: dashboardImg, route: '/system/user', roles: ['system_admin'] }
+];
+
+/** boss / 超管 / manager 类角色：看到全部板块（对齐 mp BoardPicker 全展示逻辑） */
+const FULL_ACCESS_ROLES = ['superadmin', 'admin', 'boss', 'manager'];
+
+const { t } = useI18n();
+const router = useRouter();
+const userStore = useUserStore();
+
+function hasFullAccess(roles: string[]): boolean {
+  return roles.some((role) => FULL_ACCESS_ROLES.some((full) => role.includes(full)));
+}
+
+function filterByRoles(cards: BoardCard[], roles: string[]): BoardCard[] {
+  if (hasFullAccess(roles)) {
+    return cards;
+  }
+  return cards.filter((card) => card.roles.some((r) => roles.includes(r)));
+}
+
+const visibleCards = computed<BoardCard[]>(() => filterByRoles(BOARD_CARDS, userStore.roles));
+
+function goBoard(card: BoardCard) {
+  router.push(card.route);
+}
+
+// 单板块用户直接进入唯一板块（不停首页，对齐 mp BoardPicker 单板块直入）
+onMounted(() => {
+  if (visibleCards.value.length === 1) {
+    router.replace(visibleCards.value[0].route);
+  }
+});
 </script>
 
 <style lang="scss" scoped>
 .home {
-  blockquote {
-    padding: 10px 20px;
-    margin: 0 0 20px;
-    font-size: 17.5px;
-    border-left: 5px solid #eee;
-  }
-  hr {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 1px solid #eee;
-  }
-  .col-item {
-    margin-bottom: 20px;
+  padding: 24px;
+}
+
+.home-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #3a9659 0%, #2f7c44 100%);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(47, 124, 68, 0.18);
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
   }
 
-  ul {
-    padding: 0;
+  &__title {
     margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #ffffff;
   }
 
-  font-family: 'open sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 13px;
-  color: #676a6c;
-  overflow-x: hidden;
-
-  ul {
-    list-style-type: none;
+  &__subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.82);
   }
+}
 
-  h4 {
-    margin-top: 0px;
+.home-boards {
+  &__col {
+    margin-bottom: 20px;
   }
+}
 
-  h2 {
-    margin-top: 10px;
-    font-size: 26px;
-    font-weight: 100;
-  }
+.board-card {
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 10px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 
-  p {
-    margin-top: 10px;
+  &:hover {
+    transform: translateY(-4px);
 
-    b {
-      font-weight: 700;
+    .board-card__arrow {
+      transform: translateX(4px);
     }
   }
 
-  .update-log {
-    ol {
+  &__img {
+    width: 100%;
+    height: 140px;
+    overflow: hidden;
+
+    img {
       display: block;
-      list-style-type: decimal;
-      margin-block-start: 1em;
-      margin-block-end: 1em;
-      margin-inline-start: 0;
-      margin-inline-end: 0;
-      padding-inline-start: 40px;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+  }
+
+  &__label {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--el-text-color-primary);
+  }
+
+  &__arrow {
+    color: var(--el-text-color-secondary);
+    transition: transform 0.2s ease;
+  }
+}
+
+.home-empty {
+  padding: 80px 0;
+}
+
+// 桌面大屏：5 卡平铺一行（栅格 24 不整除 5，大屏覆盖为 20% 等分）
+@media (min-width: 1400px) {
+  .home-boards {
+    flex-wrap: nowrap;
+
+    &__col {
+      flex: 0 0 20%;
+      max-width: 20%;
     }
   }
 }

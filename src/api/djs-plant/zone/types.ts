@@ -11,6 +11,8 @@ export interface PlotZoneVO extends BaseEntity {
   zoneDesc?: string;
   zoneBelong?: string;
   zoneStatus: number;
+  /** 更新人姓名（后端 @Translation 回填） */
+  updateByName?: string;
 }
 
 /**

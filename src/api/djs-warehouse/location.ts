@@ -59,3 +59,12 @@ export const delLocation = (ids: number | string | (number | string)[]) => {
     method: 'delete'
   });
 };
+
+/** 行内切换库位状态（locationStatus：1=启用 / 2=停用；仅改单字段，复用 location:edit 权限） */
+export const changeLocationStatus = (id: number | string, locationStatus: number) => {
+  return request({
+    url: '/djs/warehouse/location/changeStatus',
+    method: 'put',
+    data: { id, locationStatus }
+  });
+};

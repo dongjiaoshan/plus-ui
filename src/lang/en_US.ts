@@ -4,6 +4,19 @@ export default {
     dashboard: 'Dashboard',
     document: 'Document'
   },
+  // 功能选择页（首页）国际化
+  home: {
+    title: 'Dongjiaoshan Organic Farm System',
+    subtitle: 'Select a module to enter',
+    board: {
+      breed: 'Breeding',
+      plant: 'Planting',
+      warehouse: 'Warehouse',
+      store: 'Store',
+      system: 'System',
+      empty: 'No module assigned to this account. Please contact the administrator.'
+    }
+  },
   // 登录页面国际化
   login: {
     selectPlaceholder: 'Please select/enter a company name',
@@ -28,13 +41,7 @@ export default {
         required: 'Please enter a verification code'
       }
     },
-    social: {
-      wechat: 'Wechat Login',
-      maxkey: 'MaxKey Login',
-      topiam: 'TopIam Login',
-      gitee: 'Gitee Login',
-      github: 'Github Login'
-    }
+    copyright: '© 2026 Dongjiaoshan Organic Farm. All Rights Reserved.'
   },
   // 注册页面国际化
   register: {
@@ -113,11 +120,14 @@ export default {
     cancel: 'Cancel',
     close: 'Close',
     detail: 'Detail',
+    view: 'View',
     edit: 'Edit',
     delete: 'Delete',
+    del: 'Delete',
     operate: 'Operate',
     back: 'Back',
     createTime: 'Created at',
+    updateByName: 'Updated by',
     opSuccess: 'Operation succeeded',
     search: 'Search',
     reset: 'Reset',
@@ -126,6 +136,9 @@ export default {
     empty: 'No data',
     tip: 'Tip',
     deleteSuccess: 'Deleted',
+    disable: 'Disable',
+    enable: 'Enable',
+    disabled: 'Disabled',
     to: 'to',
     prev: 'Prev',
     next: 'Next'
@@ -540,8 +553,8 @@ export default {
       historyInit: 'Initial',
       duration: '{days} day(s)',
       relatedEvent: 'Related event ID: {id}',
-      healthPlaceholder: 'Health log will be wired in BRD-MED-003',
-      performanceEmpty: 'No performance data yet (filled by BRD-DASH-001 cron)',
+      healthPlaceholder: 'Health log will be available in a future release',
+      performanceEmpty: 'No performance data yet (populated by system aggregation)',
       performanceDataHint: 'Data sourced from t_farm_sow_performance, populated by farrow / wean events or nightly job.',
       growthEmpty: 'No growth measurements',
       relatedNotFound: 'No pig found with ear no. {earNo}',
@@ -563,7 +576,7 @@ export default {
         operatorName: 'Operator'
       }
     },
-    exportTodo: 'Export will be wired in BRD-LIST-001'
+    exportTodo: 'Export will be available in a future release'
   },
   // Breed event ledgers (admin read-only: introduce / piglet ear-tag / event ledger / growth)
   breedEvent: {
@@ -951,7 +964,8 @@ export default {
       locationThumb: 'Image',
       capacity: 'Capacity',
       locationStatus: 'Status',
-      createTime: 'Created'
+      createTime: 'Created',
+      updateTime: 'Updated'
     },
     field: {
       locationCode: 'Code',
@@ -967,8 +981,8 @@ export default {
       locationCode: 'e.g. L0001 / FROZEN-01',
       locationName: 'Location name',
       locationType: 'Pick type',
-      locationThumb: 'OSS objectName (single)',
-      locationImg: 'OSS objectNames comma-separated',
+      locationThumb: 'Upload thumbnail (single, ≤ 10MB)',
+      locationImg: 'Upload images (up to 5, ≤ 10MB each)',
       capacity: 'Capacity (kg / m³)'
     },
     rule: {
@@ -995,8 +1009,12 @@ export default {
   product: {
     title: {
       add: 'New commodity',
-      edit: 'Edit commodity'
+      edit: 'Edit commodity',
+      view: 'Product detail',
+      baseInfo: 'Product info',
+      giftComponents: 'Gift box list'
     },
+    giftEmpty: 'No components in this gift box',
     column: {
       productId: 'Code',
       productName: 'Name',
@@ -1008,7 +1026,9 @@ export default {
       productUnit: 'Unit',
       productSpec: 'Spec',
       productStatus: 'Status',
-      createTime: 'Created'
+      createTime: 'Created',
+      updateTime: 'Updated',
+      index: 'No.'
     },
     field: {
       productId: 'Product code',
@@ -1032,6 +1052,7 @@ export default {
       remark: 'Remark',
       giftComponents: 'Gift components',
       componentProduct: 'Component product',
+      componentProductName: 'Component product',
       componentCount: 'Count',
       componentUnit: 'Unit',
       componentSort: 'Sort'
@@ -1106,7 +1127,8 @@ export default {
   },
   // Planting - Plot (PLT-MD-001)
   plantPlot: {
-    title: { add: 'Add Plot', edit: 'Edit Plot', view: 'Plot Detail' },
+    title: { add: 'Add Plot', edit: 'Edit Plot', view: 'Plot Detail', baseInfo: 'Basic Info', zoneInfo: 'Zone Info' },
+    zoneEmpty: 'No zone linked',
     tab: { basic: 'Basic', location: 'Location & Area', soil: 'Soil & Environment' },
     column: {
       plotCode: 'Code',
@@ -1119,7 +1141,8 @@ export default {
       plotArea: 'Area',
       isLease: 'Lease',
       plotImage: 'Image',
-      createTime: 'Created'
+      createTime: 'Created',
+      updateTime: 'Updated'
     },
     field: {
       plotCode: 'Plot Code',
@@ -1140,7 +1163,8 @@ export default {
       soilPh: 'Soil PH',
       terrainCondition: 'Terrain',
       lightCondition: 'Light',
-      drainCondition: 'Drainage'
+      drainCondition: 'Drainage',
+      currentCropName: 'Current Crop'
     },
     placeholder: {
       plotCode: 'Enter plot code (e.g. P001)',
@@ -1248,7 +1272,8 @@ export default {
   },
   // Planting - Crop (PLT-MD-001)
   plantCrop: {
-    title: { add: 'Add Crop', edit: 'Edit Crop', view: 'Crop Detail' },
+    title: { add: 'Add Crop', edit: 'Edit Crop', view: 'Crop Detail', baseInfo: 'Basic Info', related: 'Related Info' },
+    organicEmpty: 'Organic certification details not available yet (backend aggregation pending)',
     tab: { basic: 'Basic', growth: 'Growth Cycle', yield: 'Yield & Quality' },
     column: {
       cropCode: 'Code',
@@ -1654,7 +1679,7 @@ export default {
         remark: 'Remark',
         adjust: 'Adjust',
         adjustHint: 'Flow adjust (D11)',
-        adjustNotImpl: 'Adjust not implemented yet (D11 WMS-FLOW-001) — flowNo={flowNo}'
+        adjustNotImpl: 'Stock adjustment will be available in a future release — flowNo={flowNo}'
       },
       matPack: {
         title: 'Package Flow'
@@ -1808,7 +1833,7 @@ export default {
       statusNormal: 'Normal',
       statusAbnormal: 'Abnormal',
       emptyLocation: 'No location data',
-      fullVersionHint: 'Full dashboard (trend lines / inbound-outbound pie / 4-segment comparison) lands in V1.x WMS-DASH-001.'
+      fullVersionHint: 'More visualization charts (trend lines / inbound-outbound pie / segment comparison) will be available in a future release.'
     }
   },
   demand: {
@@ -2521,6 +2546,19 @@ export default {
     filter: {
       store: 'Store',
       allStores: 'All Stores'
+    },
+    legend: {
+      orderCount: 'Orders',
+      productSale: 'Sales',
+      saleAmount: 'Sales',
+      avgPrice: 'Avg Price'
+    },
+    axis: {
+      saleAmount: 'Sales (CNY)',
+      avgPrice: 'Avg Price (CNY)'
+    },
+    chart: {
+      noData: 'No data'
     },
     action: {
       refresh: 'Refresh'

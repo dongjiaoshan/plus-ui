@@ -4,7 +4,7 @@
       <el-descriptions-item :label="t('djs.warehouse.check.checkId')">{{ header?.checkId }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.locationName')">{{ header?.locationName }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.checkStatus')">
-        <dict-tag :options="checkStatusDict" :value="header?.checkStatus" />
+        <dict-tag :options="djs_check_status" :value="header?.checkStatus" />
       </el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.lineCount')">{{ header?.lineCount ?? 0 }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.diffSum')">{{ header?.diffSum ?? 0 }}</el-descriptions-item>
@@ -24,7 +24,7 @@
       </el-table-column>
       <el-table-column :label="t('djs.warehouse.check.checkResultType')" width="90" align="center">
         <template #default="{ row }">
-          <dict-tag :options="checkResultDict" :value="String(row.checkResultType)" />
+          <dict-tag :options="djs_check_result" :value="String(row.checkResultType)" />
         </template>
       </el-table-column>
       <el-table-column :label="t('djs.warehouse.check.diffReason')" prop="diffReason" min-width="140" show-overflow-tooltip />
@@ -43,23 +43,15 @@ import type { StockCheckHeaderVO, StockCheckRecordVO } from '@/api/djs-warehouse
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// ADR-0004 §2.4 Vue3 字典消费范式：状态 / 结果走全局字典（消除本地双源）
+const { djs_check_status, djs_check_result } = toRefs<any>(proxy?.useDict('djs_check_status', 'djs_check_result'));
 
 const visible = defineModel<boolean>({ required: true });
 const props = defineProps<{ header: StockCheckHeaderVO | null }>();
 
 const lines = ref<StockCheckRecordVO[]>([]);
 const loading = ref(false);
-
-const checkStatusDict = [
-  { label: '草稿', value: 'draft' },
-  { label: '进行中', value: 'in_progress' },
-  { label: '已完成', value: 'done' }
-];
-const checkResultDict = [
-  { label: '正常', value: '1' },
-  { label: '异常', value: '2' },
-  { label: '计损', value: '3' }
-];
 
 function diffClass(diff: number | string): string {
   const n = Number(diff);

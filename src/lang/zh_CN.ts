@@ -4,6 +4,19 @@ export default {
     dashboard: '首页',
     document: '项目文档'
   },
+  // 功能选择页（首页）国际化
+  home: {
+    title: '东角山有机生态农场系统',
+    subtitle: '请选择要进入的业务板块',
+    board: {
+      breed: '养殖管理',
+      plant: '种植管理',
+      warehouse: '仓库管理',
+      store: '门店管理',
+      system: '系统管理',
+      empty: '当前账号未分配任何板块，请联系管理员'
+    }
+  },
   // 登录页面国际化
   login: {
     selectPlaceholder: '请选择/输入公司名称',
@@ -28,13 +41,7 @@ export default {
         required: '请输入验证码'
       }
     },
-    social: {
-      wechat: '微信登录',
-      maxkey: 'MaxKey登录',
-      topiam: 'TopIam登录',
-      gitee: 'Gitee登录',
-      github: 'Github登录'
-    }
+    copyright: '© 2026 东角山有机生态农场 版权所有'
   },
   // 注册页面国际化
   register: {
@@ -113,11 +120,14 @@ export default {
     cancel: '取 消',
     close: '关 闭',
     detail: '详 情',
+    view: '查看',
     edit: '编 辑',
     delete: '删 除',
+    del: '删除',
     operate: '操作',
     back: '返 回',
     createTime: '创建时间',
+    updateByName: '更新人',
     opSuccess: '操作成功',
     search: '搜索',
     reset: '重置',
@@ -126,6 +136,9 @@ export default {
     empty: '暂无数据',
     tip: '提示',
     deleteSuccess: '删除成功',
+    disable: '停用',
+    enable: '启用',
+    disabled: '已停用',
     to: '至',
     prev: '上一步',
     next: '下一步'
@@ -540,8 +553,8 @@ export default {
       historyInit: '初始',
       duration: '停留 {days} 天',
       relatedEvent: '关联业务事件 ID：{id}',
-      healthPlaceholder: '健康记录将由 BRD-MED-003 接入后展示',
-      performanceEmpty: '该母猪暂无生产指标（数据由 BRD-DASH-001 定时任务汇总写入）',
+      healthPlaceholder: '健康记录将在后续版本接入后展示',
+      performanceEmpty: '该母猪暂无生产指标（数据由系统汇总写入）',
       performanceDataHint: '该数据来自 t_farm_sow_performance，由分娩 / 断奶事件回写或夜间批处理生成。',
       growthEmpty: '暂无生长测量记录',
       relatedNotFound: '未找到耳号为 {earNo} 的猪只',
@@ -563,7 +576,7 @@ export default {
         operatorName: '操作人'
       }
     },
-    exportTodo: '导出能力将在 BRD-LIST-001 中接入'
+    exportTodo: '导出能力将在后续版本中接入'
   },
   // 养殖事件台账（admin 只读：引种 / 仔猪耳标 / 事件台账 / 生长记录）
   breedEvent: {
@@ -953,7 +966,8 @@ export default {
       locationThumb: '图片',
       capacity: '容量',
       locationStatus: '状态',
-      createTime: '创建时间'
+      createTime: '创建时间',
+      updateTime: '更新时间'
     },
     field: {
       locationCode: '库位编码',
@@ -969,8 +983,8 @@ export default {
       locationCode: '请输入库位编码（如 L0001 / FROZEN-01）',
       locationName: '请输入库位名称',
       locationType: '请选择库位类型',
-      locationThumb: 'OSS objectName 单张',
-      locationImg: 'OSS objectName 多张逗号分隔',
+      locationThumb: '点击上传缩略图（单张，≤ 10MB）',
+      locationImg: '点击上传原图（最多 5 张，≤ 10MB/张）',
       capacity: '请输入容量（kg / m³）'
     },
     rule: {
@@ -997,8 +1011,12 @@ export default {
   product: {
     title: {
       add: '新增商品',
-      edit: '编辑商品'
+      edit: '编辑商品',
+      view: '产品详情',
+      baseInfo: '产品属性',
+      giftComponents: '礼盒清单'
     },
+    giftEmpty: '该礼盒暂无组件',
     column: {
       productId: '编码',
       productName: '名称',
@@ -1010,7 +1028,9 @@ export default {
       productUnit: '单位',
       productSpec: '规格',
       productStatus: '状态',
-      createTime: '创建时间'
+      createTime: '创建时间',
+      updateTime: '更新时间',
+      index: '序号'
     },
     field: {
       productId: '产品编码',
@@ -1034,6 +1054,7 @@ export default {
       remark: '备注',
       giftComponents: '礼盒组件',
       componentProduct: '组件产品',
+      componentProductName: '组件产品',
       componentCount: '数量',
       componentUnit: '单位',
       componentSort: '排序'
@@ -1108,7 +1129,8 @@ export default {
   },
   // 种植 - 地块（PLT-MD-001）
   plantPlot: {
-    title: { add: '新增地块', edit: '编辑地块', view: '地块详情' },
+    title: { add: '新增地块', edit: '编辑地块', view: '地块详情', baseInfo: '基础信息', zoneInfo: '片区信息' },
+    zoneEmpty: '未关联片区',
     tab: { basic: '基础信息', location: '位置面积', soil: '土壤环境' },
     column: {
       plotCode: '地块编码',
@@ -1121,7 +1143,8 @@ export default {
       plotArea: '面积',
       isLease: '租赁',
       plotImage: '图片',
-      createTime: '创建时间'
+      createTime: '创建时间',
+      updateTime: '更新时间'
     },
     field: {
       plotCode: '地块编码',
@@ -1142,7 +1165,8 @@ export default {
       soilPh: '土壤 PH',
       terrainCondition: '地势',
       lightCondition: '光照',
-      drainCondition: '排水'
+      drainCondition: '排水',
+      currentCropName: '当前作物'
     },
     placeholder: {
       plotCode: '请输入地块编码（如 P001 / EAST-01）',
@@ -1250,7 +1274,8 @@ export default {
   },
   // 种植 - 作物（PLT-MD-001）
   plantCrop: {
-    title: { add: '新增作物', edit: '编辑作物', view: '作物详情' },
+    title: { add: '新增作物', edit: '编辑作物', view: '作物详情', baseInfo: '基础信息', related: '关联信息' },
+    organicEmpty: '有机认证明细暂未提供（后端聚合待补）',
     tab: { basic: '基础信息', growth: '生长周期', yield: '产量品质' },
     column: {
       cropCode: '作物编码',
@@ -1656,7 +1681,7 @@ export default {
         remark: '备注',
         adjust: '调账',
         adjustHint: '流水调账 (D11 完整实现)',
-        adjustNotImpl: '调账功能 D11 WMS-FLOW-001 实现 (flowNo={flowNo})'
+        adjustNotImpl: '调账功能将在后续版本中提供 (flowNo={flowNo})'
       },
       matPack: {
         title: '包材流水'
@@ -1810,7 +1835,7 @@ export default {
       statusNormal: '正常',
       statusAbnormal: '异常',
       emptyLocation: '暂无库位数据',
-      fullVersionHint: '完整版看板（趋势折线 / 出入库饼图 / 4 业态对比）将在 V1.x WMS-DASH-001 落地。'
+      fullVersionHint: '更多可视化图表（趋势折线 / 出入库饼图 / 业态对比）将在后续版本中提供。'
     }
   },
   demand: {
@@ -2522,6 +2547,19 @@ export default {
     filter: {
       store: '门店',
       allStores: '全部门店'
+    },
+    legend: {
+      orderCount: '订单数',
+      productSale: '销售额',
+      saleAmount: '销售额',
+      avgPrice: '客单价'
+    },
+    axis: {
+      saleAmount: '销售额（元）',
+      avgPrice: '客单价（元）'
+    },
+    chart: {
+      noData: '暂无数据'
     },
     action: {
       refresh: '刷新'

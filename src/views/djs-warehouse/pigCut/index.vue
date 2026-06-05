@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_bar_status', 'djs_pig_cut_part']"
+      :dict-types="['djs_bar_status', 'djs_pig_cut_part', 'djs_pig_cut_status']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -54,18 +54,11 @@ const searchModel = reactive<Record<string, any>>({
   pickupTimeTo: undefined
 });
 
-const cutStatusOptions = [
-  { label: '待领用', value: 'pending_pickup' },
-  { label: '已领用', value: 'picked' },
-  { label: '分割中', value: 'cutting' },
-  { label: '已完成', value: 'done' }
-];
-
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { key: 'cutId', label: t('djs.warehouse.pigCut.cutId'), type: 'input' },
-  { key: 'barId', label: t('djs.warehouse.pigCut.barId'), type: 'input' },
-  { key: 'earNo', label: t('djs.warehouse.pigCut.earNo'), type: 'input' },
-  { key: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), type: 'select', options: cutStatusOptions }
+  { field: 'cutId', label: t('djs.warehouse.pigCut.cutId'), type: 'input' },
+  { field: 'barId', label: t('djs.warehouse.pigCut.barId'), type: 'input' },
+  { field: 'earNo', label: t('djs.warehouse.pigCut.earNo'), type: 'input' },
+  { field: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), type: 'select', dictType: 'djs_pig_cut_status' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -78,7 +71,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'pickupWeight', label: t('djs.warehouse.pigCut.pickupWeight'), minWidth: 100 },
   { prop: 'dripLoss', label: t('djs.warehouse.pigCut.dripLoss'), minWidth: 100 },
   { prop: 'acidRemoveMinutes', label: t('djs.warehouse.pigCut.acidRemoveMinutes'), minWidth: 100 },
-  { prop: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), minWidth: 100 },
+  { prop: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), minWidth: 100, dictType: 'djs_pig_cut_status' },
   { prop: 'operatorName', label: t('djs.warehouse.pigCut.operator'), minWidth: 100 },
   { prop: 'locationName', label: t('djs.warehouse.pigCut.location'), minWidth: 120 },
   { prop: 'remark', label: t('djs.warehouse.pigCut.remark'), minWidth: 160 }

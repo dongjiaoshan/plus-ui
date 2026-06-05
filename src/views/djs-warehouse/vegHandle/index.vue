@@ -20,7 +20,6 @@
       @reset="handleReset"
       @export="handleExport"
       @page-change="handlePageChange"
-      @row-click="handleRowClick"
     >
       <!-- 只读，无 edit / del；提供「详情」按钮显式入口（行点击为辅助入口） -->
       <template #action="{ row }">
@@ -84,16 +83,10 @@ const searchModel = reactive<Record<string, any>>({
   pickStartTimeTo: undefined
 });
 
-const statusOptions = [
-  { label: t('djs.warehouse.vegHandle.statusPending'), value: 'pending' },
-  { label: t('djs.warehouse.vegHandle.statusProcessing'), value: 'processing' },
-  { label: t('djs.warehouse.vegHandle.statusDone'), value: 'done' }
-];
-
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { key: 'plotId', label: t('djs.warehouse.vegHandle.plot'), type: 'input' },
-  { key: 'cropId', label: t('djs.warehouse.vegHandle.crop'), type: 'input' },
-  { key: 'handleStatus', label: t('djs.warehouse.vegHandle.handleStatus'), type: 'select', options: statusOptions }
+  { field: 'plotId', label: t('djs.warehouse.vegHandle.plot'), type: 'input' },
+  { field: 'cropId', label: t('djs.warehouse.vegHandle.crop'), type: 'input' },
+  { field: 'handleStatus', label: t('djs.warehouse.vegHandle.handleStatus'), type: 'select', dictType: 'djs_veg_handle_status' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -107,7 +100,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'sendPlatformWeight', label: t('djs.warehouse.vegHandle.sendPlatformWeight'), minWidth: 110 },
   { prop: 'stockInWeight', label: t('djs.warehouse.vegHandle.stockInWeight'), minWidth: 110 },
   { prop: 'lossWeight', label: t('djs.warehouse.vegHandle.lossWeight'), minWidth: 110 },
-  { prop: 'handleStatus', label: t('djs.warehouse.vegHandle.handleStatus'), minWidth: 100 },
+  { prop: 'handleStatus', label: t('djs.warehouse.vegHandle.handleStatus'), minWidth: 100, dictType: 'djs_veg_handle_status' },
   { prop: 'remark', label: t('djs.warehouse.vegHandle.remark'), minWidth: 160 }
 ]);
 
@@ -140,9 +133,9 @@ function handleReset() {
   handleSearch();
 }
 
-function handlePageChange(p: { pageNum: number; pageSize: number }) {
-  pageNum.value = p.pageNum;
-  pageSize.value = p.pageSize;
+function handlePageChange(pn: number, ps: number) {
+  pageNum.value = pn;
+  pageSize.value = ps;
   loadList();
 }
 

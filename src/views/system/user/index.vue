@@ -102,6 +102,11 @@
             <el-table-column v-if="columns[2].visible" key="nickName" label="用户昵称" align="center" prop="nickName" :show-overflow-tooltip="true" />
             <el-table-column v-if="columns[3].visible" key="deptName" label="部门" align="center" prop="deptName" :show-overflow-tooltip="true" />
             <el-table-column v-if="columns[4].visible" key="phonenumber" label="手机号码" align="center" prop="phonenumber" width="120" />
+            <el-table-column v-if="columns[7].visible" key="sex" label="性别" align="center" prop="sex" width="80">
+              <template #default="scope">
+                <dict-tag :options="sys_user_sex" :value="scope.row.sex" />
+              </template>
+            </el-table-column>
             <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center">
               <template #default="scope">
                 <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
@@ -111,6 +116,12 @@
             <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="160">
               <template #default="scope">
                 <span>{{ scope.row.createTime }}</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column v-if="columns[8].visible" label="更新时间" align="center" prop="updateTime" width="160">
+              <template #default="scope">
+                <span>{{ scope.row.updateTime }}</span>
               </template>
             </el-table-column>
 
@@ -359,7 +370,9 @@ const columns = ref<FieldOption[]>([
   { key: 3, label: `部门`, visible: true, children: [] },
   { key: 4, label: `手机号码`, visible: true, children: [] },
   { key: 5, label: `状态`, visible: true, children: [] },
-  { key: 6, label: `创建时间`, visible: true, children: [] }
+  { key: 6, label: `创建时间`, visible: true, children: [] },
+  { key: 7, label: `性别`, visible: true, children: [] },
+  { key: 8, label: `更新时间`, visible: true, children: [] }
 ]);
 
 const deptTreeRef = ref<ElTreeInstance>();

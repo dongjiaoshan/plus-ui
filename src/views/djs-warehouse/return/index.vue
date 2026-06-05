@@ -48,7 +48,7 @@
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item :label="t('djs.warehouse.return.returnDirection')" prop="returnDirection">
           <el-select v-model="form.returnDirection" style="width: 100%">
-            <el-option v-for="opt in dictDirectionOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option v-for="opt in djs_return_direction" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
         <el-form-item :label="t('djs.warehouse.return.storeId')" prop="storeId">
@@ -89,7 +89,7 @@
           <span>{{ currentRow?.returnNo }}</span>
         </el-form-item>
         <el-form-item label="退货方向">
-          <dict-tag :options="dictDirectionTags" :value="currentRow?.returnDirection" />
+          <dict-tag :options="djs_return_direction" :value="currentRow?.returnDirection" />
         </el-form-item>
         <el-form-item label="退货重量">
           <span>{{ currentRow?.returnWeight }} kg</span>
@@ -131,6 +131,8 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// ADR-0004 §2.4 Vue3 字典消费范式：弹窗下拉 / dict-tag 走全局字典（消除本地双源）
+const { djs_return_direction } = toRefs<any>(proxy?.useDict('djs_return_direction'));
 
 const tableRef = ref<BizTableExpose>();
 
@@ -169,14 +171,6 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'confirmTime', label: t('djs.warehouse.return.confirmTime'), minWidth: 160 },
   { prop: 'remark', label: t('djs.warehouse.return.remark'), minWidth: 160 }
 ]);
-
-const dictDirectionOptions = [
-  { label: '门店→仓库', value: 'store_to_warehouse' },
-  { label: '顾客→门店', value: 'customer_to_store' },
-  { label: '仓库→供应商', value: 'warehouse_to_supplier' }
-];
-
-const dictDirectionTags = dictDirectionOptions.map((o) => ({ label: o.label, value: o.value }));
 
 // 门店 / 产品 下拉数据源（替代手输 snowflake）
 const storeOptions = ref<StoreVO[]>([]);

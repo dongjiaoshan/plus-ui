@@ -25,12 +25,20 @@
           >
             <template #default="{ data }">
               <div class="zone-node flex justify-between items-center w-full">
-                <span :class="{ 'is-disabled-zone': data.zoneStatus === 2 }">
+                <span :class="{ 'is-disabled-zone': data.zoneStatus === 1 }">
                   {{ data.zoneName }}
-                  <el-tag v-if="data.zoneStatus === 2" size="small" type="info">{{ t('common.disabled') }}</el-tag>
+                  <el-tag v-if="data.zoneStatus === 1" size="small" type="info">{{ t('common.disabled') }}</el-tag>
                 </span>
                 <div class="zone-actions">
                   <el-button v-hasPermi="['djs:plant:zone:edit']" link type="primary" :icon="Edit" @click.stop="handleEditZone(data)" />
+                  <el-button
+                    v-hasPermi="['djs:plant:zone:edit']"
+                    link
+                    :type="data.zoneStatus === 0 ? 'warning' : 'success'"
+                    @click.stop="handleToggleZoneStatus(data)"
+                  >
+                    {{ data.zoneStatus === 0 ? t('common.disable') : t('common.enable') }}
+                  </el-button>
                   <el-button v-hasPermi="['djs:plant:zone:remove']" link type="danger" :icon="Delete" @click.stop="handleDelZone(data)" />
                 </div>
               </div>
@@ -76,6 +84,17 @@
             />
             <span v-else class="text-gray-400">—</span>
           </template>
+          <template #action="{ row }">
+            <el-tooltip :content="t('biz.table.action.view')" placement="top">
+              <el-button v-hasPermi="['djs:plant:plot:list']" link type="primary" icon="View" @click="handleViewPlot(row)" />
+            </el-tooltip>
+            <el-tooltip :content="t('biz.table.action.edit')" placement="top">
+              <el-button v-hasPermi="['djs:plant:plot:edit']" link type="primary" icon="Edit" @click="handleEditPlot(row)" />
+            </el-tooltip>
+            <el-tooltip :content="t('biz.table.action.del')" placement="top">
+              <el-button v-hasPermi="['djs:plant:plot:remove']" link type="danger" icon="Delete" @click="handleDelPlot(row)" />
+            </el-tooltip>
+          </template>
           <template #empty>
             <el-empty :description="selectedZoneId ? t('plantPlot.empty') : t('plantPlot.selectZoneFirst')" :image-size="80" />
           </template>
@@ -83,6 +102,7 @@
 
         <PlotForm ref="plotFormRef" :zone-list="zoneTreeData" :default-zone-id="selectedZoneId" @success="fetchPlots" />
         <ZoneForm ref="zoneFormRef" @success="refreshZoneTree" />
+        <PlotView ref="plotViewRef" />
       </el-col>
     </el-row>
   </div>
@@ -93,8 +113,9 @@ import BizTable from '@/components/BizTable/index.vue';
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import PlotForm from './components/PlotForm.vue';
+import PlotView from './components/PlotView.vue';
 import ZoneForm from './components/ZoneForm.vue';
-import { listAllZone, delZone } from '@/api/djs-plant/zone';
+import { listAllZone, delZone, changeZoneStatus } from '@/api/djs-plant/zone';
 import { listPlot, delPlot } from '@/api/djs-plant/plot';
 import type { PlotZoneVO } from '@/api/djs-plant/zone/types';
 import type { PlotInfoQuery, PlotInfoVO } from '@/api/djs-plant/plot/types';
@@ -161,10 +182,18 @@ async function handleDelZone(data: PlotZoneVO) {
     }
   }
 }
+/** 片区行内启停：sys_normal_disable 0=正常 / 1=停用，toggle 当前值 */
+async function handleToggleZoneStatus(data: PlotZoneVO) {
+  const next = data.zoneStatus === 0 ? 1 : 0;
+  await changeZoneStatus(data.id, next);
+  proxy?.$modal.msgSuccess(t('common.opSuccess'));
+  refreshZoneTree();
+}
 
 // ===== 地块右栏 =====
 const plotTableRef = ref<BizTableExpose>();
 const plotFormRef = ref<{ openCreate: (zoneId?: number | string) => void; openEdit: (id: number | string) => void }>();
+const plotViewRef = ref<{ open: (id: number | string) => void }>();
 
 const plotList = ref<PlotInfoVO[]>([]);
 const plotTotal = ref(0);
@@ -206,7 +235,9 @@ const plotColumns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.plotArea != null ? `${r.plotArea} 亩` : '-')
   },
   { prop: 'isLease', label: t('plantPlot.column.isLease'), width: 80, align: 'center', dictType: 'djs_yes_no' },
-  { prop: 'createTime', label: t('plantPlot.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
+  { prop: 'createTime', label: t('plantPlot.column.createTime'), width: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'updateTime', label: t('plantPlot.column.updateTime'), width: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'updateByName', label: t('common.updateByName'), width: 100, align: 'center' }
 ]);
 
 async function fetchPlots() {
@@ -279,6 +310,9 @@ function handleAddPlot() {
 }
 function handleEditPlot(row: BizRow) {
   plotFormRef.value?.openEdit(row.id);
+}
+function handleViewPlot(row: BizRow) {
+  plotViewRef.value?.open(row.id);
 }
 async function handleDelPlot(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];

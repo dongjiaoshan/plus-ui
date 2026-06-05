@@ -44,23 +44,6 @@
         </div>
       </el-form-item>
       <el-checkbox v-model="loginForm.rememberMe" style="margin: 0 0 25px 0">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
-      <el-form-item style="float: right">
-        <el-button circle :title="proxy.$t('login.social.wechat')" @click="doSocialLogin('wechat')">
-          <svg-icon icon-class="wechat" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.maxkey')" @click="doSocialLogin('maxkey')">
-          <svg-icon icon-class="maxkey" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.topiam')" @click="doSocialLogin('topiam')">
-          <svg-icon icon-class="topiam" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.gitee')" @click="doSocialLogin('gitee')">
-          <svg-icon icon-class="gitee" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.github')" @click="doSocialLogin('github')">
-          <svg-icon icon-class="github" />
-        </el-button>
-      </el-form-item>
       <el-form-item style="width: 100%">
         <el-button :loading="loading" size="large" type="primary" style="width: 100%" @click.prevent="handleLogin">
           <span v-if="!loading">{{ proxy.$t('login.login') }}</span>
@@ -73,18 +56,16 @@
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
-      <span>Copyright © 2018-2026 疯狂的狮子Li All Rights Reserved.</span>
+      <span>{{ proxy.$t('login.copyright') }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { getCodeImg, getTenantList } from '@/api/login';
-import { authRouterUrl } from '@/api/system/social/auth';
 import { useUserStore } from '@/store/modules/user';
 import { LoginData, TenantVO } from '@/api/types';
 import { to } from 'await-to-js';
-import { HttpStatus } from '@/enums/RespEnum';
 import { useI18n } from 'vue-i18n';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -96,8 +77,8 @@ const { t } = useI18n();
 
 const loginForm = ref<LoginData>({
   tenantId: '1001',
-  username: 'admin',
-  password: 'admin123',
+  username: '',
+  password: '',
   rememberMe: false,
   code: '',
   uuid: ''
@@ -115,7 +96,7 @@ const loading = ref(false);
 // 验证码开关
 const captchaEnabled = ref(true);
 // 租户开关
-const tenantEnabled = ref(true);
+const tenantEnabled = ref(false);
 
 // 注册开关
 const register = ref(false);
@@ -200,29 +181,12 @@ const getLoginData = () => {
  * 获取租户列表
  */
 const initTenantList = async () => {
+  // V1 单农场：租户下拉隐藏（ADR-0001），仅预载列表 + 默认租户，不开启选择
   const { data } = await getTenantList(false);
-  tenantEnabled.value = data.tenantEnabled === undefined ? true : data.tenantEnabled;
-  if (tenantEnabled.value) {
-    tenantList.value = data.voList;
-    if (tenantList.value != null && tenantList.value.length !== 0) {
-      loginForm.value.tenantId = tenantList.value[0].tenantId;
-    }
+  tenantList.value = data.voList ?? [];
+  if (tenantList.value.length !== 0) {
+    loginForm.value.tenantId = tenantList.value[0].tenantId;
   }
-};
-
-/**
- * 第三方登录
- * @param type
- */
-const doSocialLogin = (type: string) => {
-  authRouterUrl(type, loginForm.value.tenantId).then((res: any) => {
-    if (res.code === HttpStatus.SUCCESS) {
-      // 获取授权地址跳转
-      window.location.href = res.data;
-    } else {
-      ElMessage.error(res.msg);
-    }
-  });
 };
 
 onMounted(() => {
@@ -238,9 +202,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url('../assets/images/login-background.jpg');
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
 }
 
 .title-box {
@@ -305,17 +267,6 @@ onMounted(() => {
   box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
 }
 
-.login-form :deep(.el-button.is-circle) {
-  background: rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  color: var(--el-text-color-regular);
-}
-
-.login-form :deep(.el-button.is-circle:hover) {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.2);
-}
-
 .login-code {
   width: calc(37% - 10px);
   height: 40px;
@@ -363,12 +314,6 @@ onMounted(() => {
 
   .login-form :deep(.el-input__wrapper) {
     background-color: rgba(17, 24, 39, 0.7);
-  }
-
-  .login-form :deep(.el-button.is-circle) {
-    background: rgba(148, 163, 184, 0.12);
-    border-color: rgba(148, 163, 184, 0.25);
-    color: #e5e7eb;
   }
 
   .el-login-footer {

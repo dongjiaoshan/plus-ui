@@ -33,9 +33,22 @@
         />
         <span v-else class="text-gray-400">—</span>
       </template>
+
+      <template #action="{ row }">
+        <el-tooltip :content="t('biz.table.action.view')" placement="top">
+          <el-button v-hasPermi="['djs:plant:crop:list']" link type="primary" icon="View" @click="handleView(row)" />
+        </el-tooltip>
+        <el-tooltip :content="t('biz.table.action.edit')" placement="top">
+          <el-button v-hasPermi="['djs:plant:crop:edit']" link type="primary" icon="Edit" @click="handleEdit(row)" />
+        </el-tooltip>
+        <el-tooltip :content="t('biz.table.action.del')" placement="top">
+          <el-button v-hasPermi="['djs:plant:crop:remove']" link type="danger" icon="Delete" @click="handleDel(row)" />
+        </el-tooltip>
+      </template>
     </BizTable>
 
     <CropForm ref="formRef" @success="handleFormSuccess" />
+    <CropView ref="cropViewRef" />
   </div>
 </template>
 
@@ -44,6 +57,7 @@ import BizTable from '@/components/BizTable/index.vue';
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import CropForm from './components/CropForm.vue';
+import CropView from './components/CropView.vue';
 import { delCrop, listCrop } from '@/api/djs-plant/crop';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { CropInfoQuery, CropInfoVO } from '@/api/djs-plant/crop/types';
@@ -54,6 +68,7 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
 const formRef = ref<{ openCreate: () => void; openEdit: (id: number | string) => void }>();
+const cropViewRef = ref<{ open: (id: number | string) => void }>();
 
 const list = ref<CropInfoVO[]>([]);
 const total = ref(0);
@@ -169,6 +184,9 @@ function handleAdd() {
 }
 function handleEdit(row: BizRow) {
   formRef.value?.openEdit(row.id);
+}
+function handleView(row: BizRow) {
+  cropViewRef.value?.open(row.id);
 }
 async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];

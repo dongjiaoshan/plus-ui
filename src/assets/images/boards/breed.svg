@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="养殖管理">
+  <defs>
+    <linearGradient id="bg-breed" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f9897b"/>
+      <stop offset="1" stop-color="#c0392b"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="200" fill="url(#bg-breed)"/>
+  <g fill="#ffffff" opacity="0.92">
+    <!-- 简化猪头轮廓 -->
+    <ellipse cx="200" cy="108" rx="62" ry="48"/>
+    <ellipse cx="200" cy="128" rx="26" ry="18" fill="#c0392b"/>
+    <circle cx="192" cy="128" r="4" fill="#ffffff"/>
+    <circle cx="208" cy="128" r="4" fill="#ffffff"/>
+    <circle cx="178" cy="98" r="6" fill="#c0392b"/>
+    <circle cx="222" cy="98" r="6" fill="#c0392b"/>
+    <path d="M150 78 l18 -22 16 18 z"/>
+    <path d="M250 78 l-18 -22 -16 18 z"/>
+  </g>
+</svg>

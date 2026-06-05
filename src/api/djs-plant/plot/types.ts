@@ -27,6 +27,8 @@ export interface PlotInfoVO extends BaseEntity {
   drainCondition?: string;
   /** D9+ PLT-PLAN-001 上线后启用，D8 阶段始终 null */
   currentCropName?: string;
+  /** 更新人姓名（后端 @Translation 回填） */
+  updateByName?: string;
 }
 
 export interface PlotInfoForm {

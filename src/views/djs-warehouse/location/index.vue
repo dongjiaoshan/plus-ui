@@ -12,6 +12,7 @@
       :dict-types="['djs_location_type', 'djs_location_status']"
       :page-num="pageNum"
       :page-size="pageSize"
+      :action-width="220"
       row-key="id"
       selectable
       show-export
@@ -34,6 +35,23 @@
         />
         <span v-else class="text-gray-400">—</span>
       </template>
+
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:warehouse:location:edit']" link type="primary" icon="Edit" @click="handleEdit(row)">
+          {{ t('common.edit') }}
+        </el-button>
+        <el-button
+          v-hasPermi="['djs:warehouse:location:edit']"
+          link
+          :type="row.locationStatus === 1 ? 'warning' : 'success'"
+          @click="handleToggleStatus(row)"
+        >
+          {{ row.locationStatus === 1 ? t('common.disable') : t('common.enable') }}
+        </el-button>
+        <el-button v-hasPermi="['djs:warehouse:location:remove']" link type="danger" icon="Delete" @click="handleDel(row)">
+          {{ t('common.del') }}
+        </el-button>
+      </template>
     </BizTable>
 
     <LocationForm ref="formRef" @success="handleFormSuccess" />
@@ -46,7 +64,7 @@ import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import LocationForm from './components/LocationForm.vue';
 import LocationCardGrid from './components/LocationCardGrid.vue';
-import { delLocation, listLocation } from '@/api/djs-warehouse/location';
+import { changeLocationStatus, delLocation, listLocation } from '@/api/djs-warehouse/location';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { LocationInfoQuery, LocationInfoVO } from '@/api/djs-warehouse/location/types';
 import { useI18n } from 'vue-i18n';
@@ -86,7 +104,9 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'locationThumb', label: t('location.column.locationThumb'), width: 90, align: 'center' },
   { prop: 'locationStatus', label: t('location.column.locationStatus'), width: 90, align: 'center', dictType: 'djs_location_status' },
   { prop: 'capacity', label: t('location.column.capacity'), width: 110, align: 'right' },
-  { prop: 'createTime', label: t('location.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
+  { prop: 'createTime', label: t('location.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'updateTime', label: t('location.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'updateByName', label: t('common.updateByName'), width: 100, align: 'center' }
 ]);
 
 async function fetchList() {
@@ -157,6 +177,13 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];
   await proxy?.$modal.confirm(t('location.confirm.del', { count: ids.length }));
   await delLocation(ids);
+  proxy?.$modal.msgSuccess(t('common.opSuccess'));
+  fetchList();
+}
+/** 行内启停：djs_location_status 1=启用 / 2=停用，toggle 当前值 */
+async function handleToggleStatus(row: BizRow) {
+  const next = row.locationStatus === 1 ? 2 : 1;
+  await changeLocationStatus(row.id, next);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
 }

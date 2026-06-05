@@ -60,3 +60,12 @@ export const delZone = (ids: number | string | (number | string)[]) => {
     method: 'delete'
   });
 };
+
+/** 行内切换片区状态（zoneStatus：sys_normal_disable 0=正常 / 1=停用；仅改单字段，复用 zone:edit 权限）。 */
+export const changeZoneStatus = (id: number | string, zoneStatus: number) => {
+  return request({
+    url: '/djs/plant/zone/changeStatus',
+    method: 'put',
+    data: { id, zoneStatus }
+  });
+};

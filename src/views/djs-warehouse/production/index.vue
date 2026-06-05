@@ -53,48 +53,22 @@ const searchModel = reactive<Record<string, any>>({
   produceTimeTo: undefined
 });
 
-const productTypeOptions = [
-  { label: '自产', value: 1 },
-  { label: '外购', value: 2 },
-  { label: '礼盒', value: 3 }
-];
-
-const packStatusOptions = [
-  { label: '待打包', value: 'pending' },
-  { label: '已打包', value: 'packed' },
-  { label: '已出库待发货', value: 'shipped_out' }
-];
-
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { key: 'produceNo', label: '生产编号', type: 'input' },
-  { key: 'productType', label: '产品类型', type: 'select', options: productTypeOptions },
-  { key: 'packStatus', label: '打包状态', type: 'select', options: packStatusOptions },
-  { key: 'earNo', label: '来源耳号', type: 'input' }
+  { field: 'produceNo', label: '生产编号', type: 'input' },
+  { field: 'productType', label: '产品类型', type: 'select', dictType: 'djs_product_type' },
+  { field: 'packStatus', label: '打包状态', type: 'select', dictType: 'djs_pack_status' },
+  { field: 'earNo', label: '来源耳号', type: 'input' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'produceNo', label: '生产编号', minWidth: 160 },
   { prop: 'produceDate', label: '生产日期', minWidth: 120 },
   { prop: 'productName', label: '产品名称', minWidth: 160 },
-  {
-    prop: 'productType',
-    label: '类型',
-    minWidth: 80,
-    formatter: (row: ProductProductionVO) => {
-      return productTypeOptions.find((o) => o.value === row.productType)?.label || row.productType;
-    }
-  },
+  { prop: 'productType', label: '类型', minWidth: 80, dictType: 'djs_product_type' },
   { prop: 'productUnit', label: '单位', minWidth: 80 },
   { prop: 'productSpec', label: '规格', minWidth: 120 },
   { prop: 'productWeight', label: '重量/数量', minWidth: 100 },
-  {
-    prop: 'packStatus',
-    label: '打包状态',
-    minWidth: 120,
-    formatter: (row: ProductProductionVO) => {
-      return packStatusOptions.find((o) => o.value === row.packStatus)?.label || row.packStatus;
-    }
-  },
+  { prop: 'packStatus', label: '打包状态', minWidth: 120, dictType: 'djs_pack_status' },
   { prop: 'earNo', label: '来源耳号', minWidth: 120 },
   { prop: 'plotId', label: '来源地块', minWidth: 100 },
   { prop: 'storeId', label: '需求门店', minWidth: 100 },

@@ -51,3 +51,12 @@ export const delProduct = (ids: number | string | (number | string)[]) => {
     method: 'delete'
   });
 };
+
+/** 行内切换产品状态（productStatus：sys_normal_disable 0=正常 / 1=停用；仅改单字段，复用 product:edit 权限） */
+export const changeProductStatus = (id: number | string, productStatus: number) => {
+  return request({
+    url: '/djs/warehouse/product/changeStatus',
+    method: 'put',
+    data: { id, productStatus }
+  });
+};

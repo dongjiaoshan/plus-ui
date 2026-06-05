@@ -29,6 +29,8 @@ export interface ProductInfoVO extends BaseEntity {
   isBuyOut: number;
   remark?: string;
   giftComponents?: GiftBoxVO[];
+  /** 更新人姓名（后端 @Translation 回填） */
+  updateByName?: string;
 }
 
 export interface GiftBoxVO {

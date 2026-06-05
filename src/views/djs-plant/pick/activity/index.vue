@@ -1,94 +1,48 @@
 <template>
   <div class="p-2">
-    <el-card shadow="never" class="mb-3">
-      <el-form :inline="true" :model="searchModel">
-        <el-form-item :label="t('pickActivity.field.activityNo')">
-          <el-input v-model="searchModel.activityNo" :placeholder="t('pickActivity.placeholder.activityNo')" clearable style="width: 180px" />
-        </el-form-item>
-        <el-form-item :label="t('pickActivity.field.activityName')">
-          <el-input v-model="searchModel.activityName" :placeholder="t('pickActivity.placeholder.activityName')" clearable style="width: 180px" />
-        </el-form-item>
-        <el-form-item :label="t('pickActivity.field.activityStatus')">
-          <el-select v-model="searchModel.activityStatus" clearable style="width: 140px">
-            <el-option v-for="d in djs_pick_activity_status" :key="d.value" :label="d.label" :value="d.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="t('pickActivity.field.activityDate')">
-          <el-date-picker
-            v-model="dateRange"
-            type="daterange"
-            value-format="YYYY-MM-DD"
-            :range-separator="t('common.to')"
-            :start-placeholder="t('pickActivity.placeholder.dateFrom')"
-            :end-placeholder="t('pickActivity.placeholder.dateTo')"
-            style="width: 240px"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">{{ t('common.search') }}</el-button>
-          <el-button @click="handleReset">{{ t('common.reset') }}</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-
-    <el-card shadow="never">
-      <div class="mb-3 flex justify-end gap-2">
-        <el-button v-hasPermi="['djs:plant:pick:activity:add']" type="primary" @click="handleAdd">
-          {{ t('common.add') }}
+    <BizTable
+      ref="tableRef"
+      :data="list"
+      :total="total"
+      :loading="loading"
+      :columns="columns"
+      :search-schema="searchSchema"
+      :search-model="searchModel"
+      :dict-types="['djs_pick_activity_status']"
+      :page-num="pageNum"
+      :page-size="pageSize"
+      row-key="id"
+      perm-prefix="djs:plant:pick:activity"
+      :show-add="true"
+      :show-batch-del="false"
+      :show-row-edit="false"
+      :show-row-del="false"
+      @search="handleSearch"
+      @reset="handleReset"
+      @add="handleAdd"
+      @page-change="handlePageChange"
+    >
+      <template #cell-totalYield="{ row }">{{ row.totalYield != null ? `${row.totalYield} kg` : '-' }}</template>
+      <template #cell-visitorCount="{ row }">{{ row.visitorCount ?? '-' }}</template>
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:plant:pick:activity:edit']" link type="primary" size="small" @click="handleEdit(row as PickActivityVO)">
+          {{ t('common.edit') }}
         </el-button>
-      </div>
-
-      <el-table v-loading="loading" :data="list" border stripe row-key="id" :empty-text="t('common.empty')">
-        <el-table-column :label="t('pickActivity.column.activityNo')" prop="activityNo" width="160" />
-        <el-table-column :label="t('pickActivity.column.activityName')" prop="activityName" min-width="160" show-overflow-tooltip />
-        <el-table-column :label="t('pickActivity.column.activityDate')" prop="activityDate" width="120" align="center" />
-        <el-table-column :label="t('pickActivity.column.activityStatus')" width="110" align="center">
-          <template #default="{ row }">
-            <dict-tag :options="djs_pick_activity_status" :value="row.activityStatus" />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('pickActivity.column.crop')" prop="cropName" width="120" />
-        <el-table-column :label="t('pickActivity.column.totalPlot')" prop="totalPlot" width="100" align="center" />
-        <el-table-column :label="t('pickActivity.column.totalYield')" prop="totalYield" width="120" align="right">
-          <template #default="{ row }">{{ row.totalYield != null ? `${row.totalYield} kg` : '-' }}</template>
-        </el-table-column>
-        <el-table-column :label="t('pickActivity.column.visitorCount')" prop="visitorCount" width="100" align="center">
-          <template #default="{ row }">{{ row.visitorCount ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column :label="t('pickActivity.column.action')" width="200" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-button v-hasPermi="['djs:plant:pick:activity:edit']" link type="primary" size="small" @click="handleEdit(row)">
-              {{ t('common.edit') }}
-            </el-button>
-            <el-button
-              v-hasPermi="['djs:plant:pick:activity:edit']"
-              v-if="row.activityStatus !== 'ended'"
-              link
-              type="success"
-              size="small"
-              @click="handleSummary(row)"
-            >
-              {{ t('pickActivity.action.summary') }}
-            </el-button>
-            <el-button v-hasPermi="['djs:plant:pick:activity:remove']" link type="danger" size="small" @click="handleDel(row)">
-              {{ t('common.delete') }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div class="mt-3 flex justify-end">
-        <el-pagination
-          v-model:current-page="pageNum"
-          v-model:page-size="pageSize"
-          :total="total"
-          :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next"
-          @size-change="loadList"
-          @current-change="loadList"
-        />
-      </div>
-    </el-card>
+        <el-button
+          v-if="(row as PickActivityVO).activityStatus !== 'ended'"
+          v-hasPermi="['djs:plant:pick:activity:edit']"
+          link
+          type="success"
+          size="small"
+          @click="handleSummary(row as PickActivityVO)"
+        >
+          {{ t('pickActivity.action.summary') }}
+        </el-button>
+        <el-button v-hasPermi="['djs:plant:pick:activity:remove']" link type="danger" size="small" @click="handleDel(row as PickActivityVO)">
+          {{ t('common.delete') }}
+        </el-button>
+      </template>
+    </BizTable>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="520px" destroy-on-close>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
@@ -130,15 +84,19 @@
 </template>
 
 <script setup name="PickActivityIndex" lang="ts">
+import BizTable from '@/components/BizTable/index.vue';
+import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listPickActivity, getPickActivity, addPickActivity, updatePickActivity, delPickActivity, summaryPickActivity } from '@/api/djs-plant/pick';
 import type { PickActivityForm, PickActivityQuery, PickActivityVO } from '@/api/djs-plant/pick/types';
 import { listCrop } from '@/api/djs-plant/crop';
-import { useDict } from '@/utils/dict';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
 
 const { t } = useI18n();
-const { djs_pick_activity_status } = useDict('djs_pick_activity_status');
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const { djs_pick_activity_status } = toRefs<any>(proxy?.useDict('djs_pick_activity_status'));
+
+const tableRef = ref<BizTableExpose>();
 
 const list = ref<PickActivityVO[]>([]);
 const total = ref(0);
@@ -146,14 +104,31 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const searchModel = reactive<PickActivityQuery>({
+const searchModel = reactive<Record<string, any>>({
   activityNo: undefined,
   activityName: undefined,
   activityStatus: undefined,
-  cropId: undefined
+  cropId: undefined,
+  activityDateRange: undefined
 });
 
-const dateRange = ref<[string, string] | null>(null);
+const searchSchema = computed<SearchFieldSchema[]>(() => [
+  { field: 'activityNo', label: t('pickActivity.field.activityNo'), type: 'input' },
+  { field: 'activityName', label: t('pickActivity.field.activityName'), type: 'input' },
+  { field: 'activityStatus', label: t('pickActivity.field.activityStatus'), type: 'select', dictType: 'djs_pick_activity_status' },
+  { field: 'activityDateRange', label: t('pickActivity.field.activityDate'), type: 'daterange' }
+]);
+
+const columns = computed<BizTableColumn[]>(() => [
+  { prop: 'activityNo', label: t('pickActivity.column.activityNo'), width: 160 },
+  { prop: 'activityName', label: t('pickActivity.column.activityName'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'activityDate', label: t('pickActivity.column.activityDate'), width: 120, align: 'center' },
+  { prop: 'activityStatus', label: t('pickActivity.column.activityStatus'), width: 110, align: 'center', dictType: 'djs_pick_activity_status' },
+  { prop: 'cropName', label: t('pickActivity.column.crop'), width: 120 },
+  { prop: 'totalPlot', label: t('pickActivity.column.totalPlot'), width: 100, align: 'center' },
+  { prop: 'totalYield', label: t('pickActivity.column.totalYield'), width: 120, align: 'right' },
+  { prop: 'visitorCount', label: t('pickActivity.column.visitorCount'), width: 100, align: 'center' }
+]);
 
 interface CropOption {
   label: string;
@@ -172,13 +147,17 @@ async function loadList() {
   loading.value = true;
   try {
     const params: PickActivityQuery = {
-      ...searchModel,
+      activityNo: searchModel.activityNo,
+      activityName: searchModel.activityName,
+      activityStatus: searchModel.activityStatus,
+      cropId: searchModel.cropId,
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
-    if (dateRange.value) {
-      params.dateFrom = dateRange.value[0];
-      params.dateTo = dateRange.value[1];
+    const range = searchModel.activityDateRange as [string, string] | undefined;
+    if (range && range.length === 2) {
+      params.dateFrom = range[0];
+      params.dateTo = range[1];
     }
     const res = await listPickActivity(params);
     const r = res as unknown as { rows?: PickActivityVO[]; total?: number };
@@ -189,18 +168,24 @@ async function loadList() {
   }
 }
 
-function handleSearch() {
+function handleSearch(payload?: Record<string, any>) {
+  Object.assign(searchModel, payload ?? {});
   pageNum.value = 1;
   loadList();
 }
 
 function handleReset() {
-  searchModel.activityNo = undefined;
-  searchModel.activityName = undefined;
-  searchModel.activityStatus = undefined;
-  searchModel.cropId = undefined;
-  dateRange.value = null;
-  handleSearch();
+  Object.keys(searchModel).forEach((k) => {
+    searchModel[k] = undefined;
+  });
+  pageNum.value = 1;
+  loadList();
+}
+
+function handlePageChange(pn: number, ps: number) {
+  pageNum.value = pn;
+  pageSize.value = ps;
+  loadList();
 }
 
 // ============================================================

@@ -40,12 +40,12 @@
         </el-col>
         <el-col :span="12">
           <el-form-item :label="t('location.field.locationThumb')" prop="locationThumb">
-            <el-input v-model="form.locationThumb" :placeholder="t('location.placeholder.locationThumb')" maxlength="512" />
+            <OssUpload ref="thumbUploadRef" v-model="thumbOssIdsModel" biz-type="warehouse_location" :limit="1" :file-size="10" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
           <el-form-item :label="t('location.field.locationImg')" prop="locationImg">
-            <el-input v-model="form.locationImg" type="textarea" :rows="2" :placeholder="t('location.placeholder.locationImg')" maxlength="2048" />
+            <OssUpload ref="imgUploadRef" v-model="imgOssIdsModel" biz-type="warehouse_location" :limit="5" :file-size="10" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -67,6 +67,8 @@
 <script setup lang="ts">
 import { addLocation, getLocation, updateLocation } from '@/api/djs-warehouse/location';
 import type { LocationInfoForm } from '@/api/djs-warehouse/location/types';
+import OssUpload from '@/components/OssUpload/index.vue';
+import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -76,6 +78,8 @@ const { djs_location_type, djs_location_status } = toRefs<any>(proxy?.useDict('d
 const visible = ref(false);
 const submitting = ref(false);
 const formRef = ref<ElFormInstance>();
+const thumbUploadRef = ref<InstanceType<typeof OssUpload>>();
+const imgUploadRef = ref<InstanceType<typeof OssUpload>>();
 
 const defaultForm = (): LocationInfoForm => ({
   id: undefined,
@@ -90,6 +94,29 @@ const defaultForm = (): LocationInfoForm => ({
 });
 
 const form = ref<LocationInfoForm>(defaultForm());
+
+// OssUpload v-model 是 string[]（雪花 ossId 全链路 string）。
+// locationThumb 单图：业务字段是单值 ossId 字符串 ↔ string[]（最多 1 个）
+const thumbOssIdsModel = computed<string[]>({
+  get: () => (form.value.locationThumb ? [form.value.locationThumb] : []),
+  set: (val: string[]) => {
+    form.value.locationThumb = val && val.length > 0 ? val[0] : undefined;
+  }
+});
+
+// locationImg 多图：业务字段是逗号分隔 ossId 字符串 ↔ string[]
+const imgOssIdsModel = computed<string[]>({
+  get: () =>
+    form.value.locationImg
+      ? form.value.locationImg
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+      : [],
+  set: (val: string[]) => {
+    form.value.locationImg = val && val.length > 0 ? val.join(',') : undefined;
+  }
+});
 
 const rules = computed(() => ({
   locationCode: [{ required: true, message: t('location.rule.locationCode.required'), trigger: 'blur' }],
@@ -116,6 +143,45 @@ const openEdit = async (id: number | string) => {
     capacity: data.capacity != null ? Number(data.capacity) : undefined
   };
   visible.value = true;
+  // 回填 OssUpload 已有图片（OssUpload 内部不主动反查 URL，必须父组件调 setExistingFiles）
+  await restoreOssThumbs();
+  await restoreOssImgs();
+};
+
+/** 回填缩略图（单 ossId） */
+const restoreOssThumbs = async () => {
+  const ossId = form.value.locationThumb;
+  if (!ossId) return;
+  try {
+    const ossRes = await listOssByIds(ossId);
+    const items = (ossRes.data || []).map((o) => ({
+      ossId: String(o.ossId),
+      url: o.url,
+      originalName: o.originalName
+    }));
+    await nextTick();
+    thumbUploadRef.value?.setExistingFiles(items);
+  } catch (e) {
+    console.warn('[LocationForm] listOssByIds failed for locationThumb', ossId, e);
+  }
+};
+
+/** 回填原图（逗号分隔 ossId） */
+const restoreOssImgs = async () => {
+  const ids = form.value.locationImg;
+  if (!ids) return;
+  try {
+    const ossRes = await listOssByIds(ids);
+    const items = (ossRes.data || []).map((o) => ({
+      ossId: String(o.ossId),
+      url: o.url,
+      originalName: o.originalName
+    }));
+    await nextTick();
+    imgUploadRef.value?.setExistingFiles(items);
+  } catch (e) {
+    console.warn('[LocationForm] listOssByIds failed for locationImg', ids, e);
+  }
 };
 
 defineExpose({ openCreate, openEdit });

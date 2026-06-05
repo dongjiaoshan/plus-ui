@@ -133,6 +133,7 @@ const props = withDefaults(defineProps<BizTableProps>(), {
   showExport: false,
   showRowEdit: true,
   showRowDel: true,
+  actionWidth: 160,
   rowKey: 'id'
 });
 
@@ -149,7 +150,7 @@ const { t } = useI18n();
 /* ---------- 行操作列：受 props.showRowEdit / showRowDel 控制 ---------- */
 const showRowEdit = computed(() => props.showRowEdit);
 const showRowDel = computed(() => props.showRowDel);
-const actionWidth = 160;
+const actionWidth = computed(() => props.actionWidth);
 
 /* ---------- 查询表单 model ---------- */
 const innerSearchModel = ref<Record<string, any>>({ ...props.searchModel });

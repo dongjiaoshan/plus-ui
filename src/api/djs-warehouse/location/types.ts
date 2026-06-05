@@ -15,6 +15,8 @@ export interface LocationInfoVO extends BaseEntity {
   locationStatus: number;
   capacity?: number | string;
   remark?: string;
+  /** 更新人姓名（后端 @Translation 回填） */
+  updateByName?: string;
 }
 
 /**
