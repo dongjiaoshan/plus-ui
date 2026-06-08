@@ -71,12 +71,20 @@ import { changeProductStatus, delProduct, listProduct } from '@/api/djs-warehous
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { ProductInfoQuery, ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const route = useRoute();
+
+/**
+ * 菜单入口预过滤：query_param 注入 productType=1|2|3（产品/商品/礼盒三入口共用本组件）。
+ * 存在时 productType 被该入口锁定，搜索/重置不可覆盖，搜索区下拉项隐藏，新增态预置并锁 type。
+ */
+const presetType = route.query.productType ? Number(route.query.productType) : undefined;
 
 const tableRef = ref<BizTableExpose>();
-const formRef = ref<{ openCreate: () => void; openEdit: (id: number | string) => void }>();
+const formRef = ref<{ openCreate: (presetType?: number) => void; openEdit: (id: number | string) => void }>();
 const productViewRef = ref<{ open: (id: number | string) => void }>();
 
 const list = ref<ProductInfoVO[]>([]);
@@ -90,20 +98,24 @@ const thumbUrlMap = ref<Record<string, string>>({});
 const searchModel = reactive<Record<string, any>>({
   productId: undefined,
   productName: undefined,
-  productType: undefined,
+  productType: presetType,
   belongType: undefined,
   buyClass: undefined,
   productStatus: undefined
 });
 
-const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'productId', label: t('product.field.productId'), type: 'input' },
-  { field: 'productName', label: t('product.field.productName'), type: 'input' },
-  { field: 'productType', label: t('product.field.productType'), type: 'select', dictType: 'djs_product_type' },
-  { field: 'belongType', label: t('product.field.belongType'), type: 'select', dictType: 'djs_belong_type' },
-  { field: 'buyClass', label: t('product.field.buyClass'), type: 'select', dictType: 'djs_buy_class' },
-  { field: 'productStatus', label: t('product.field.productStatus'), type: 'select', dictType: 'sys_normal_disable' }
-]);
+const searchSchema = computed<SearchFieldSchema[]>(() => {
+  const schema: SearchFieldSchema[] = [
+    { field: 'productId', label: t('product.field.productId'), type: 'input' },
+    { field: 'productName', label: t('product.field.productName'), type: 'input' },
+    { field: 'productType', label: t('product.field.productType'), type: 'select', dictType: 'djs_product_type' },
+    { field: 'belongType', label: t('product.field.belongType'), type: 'select', dictType: 'djs_belong_type' },
+    { field: 'buyClass', label: t('product.field.buyClass'), type: 'select', dictType: 'djs_buy_class' },
+    { field: 'productStatus', label: t('product.field.productStatus'), type: 'select', dictType: 'sys_normal_disable' }
+  ];
+  // 入口已锁定 productType（产品/商品/礼盒），不让用户再选 → 剔除该搜索项
+  return presetType !== undefined ? schema.filter((f) => f.field !== 'productType') : schema;
+});
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productId', label: t('product.column.productId'), width: 140, showOverflowTooltip: true },
@@ -125,7 +137,13 @@ async function fetchList() {
       pageSize: pageSize.value,
       productId: searchModel.productId || undefined,
       productName: searchModel.productName || undefined,
-      productType: searchModel.productType === undefined || searchModel.productType === '' ? undefined : Number(searchModel.productType),
+      // 入口锁定时 productType 强制 = presetType，不被搜索/重置覆盖
+      productType:
+        presetType !== undefined
+          ? presetType
+          : searchModel.productType === undefined || searchModel.productType === ''
+            ? undefined
+            : Number(searchModel.productType),
       belongType: searchModel.belongType || undefined,
       buyClass: searchModel.buyClass || undefined,
       productStatus: searchModel.productStatus === undefined || searchModel.productStatus === '' ? undefined : Number(searchModel.productStatus)
@@ -167,6 +185,8 @@ function handleSearch(payload: Record<string, any>) {
 }
 function handleReset() {
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
+  // 入口锁定时重置后 productType 还原为 presetType（而非 undefined）
+  searchModel.productType = presetType;
   pageNum.value = 1;
   fetchList();
 }
@@ -176,7 +196,7 @@ function handlePageChange(p: number, s: number) {
   fetchList();
 }
 function handleAdd() {
-  formRef.value?.openCreate();
+  formRef.value?.openCreate(presetType);
 }
 function handleEdit(row: BizRow) {
   formRef.value?.openEdit(row.id);
@@ -204,7 +224,13 @@ function handleExport() {
     {
       productId: searchModel.productId || undefined,
       productName: searchModel.productName || undefined,
-      productType: searchModel.productType === undefined || searchModel.productType === '' ? undefined : Number(searchModel.productType),
+      // 入口锁定时导出范围同样限定 presetType
+      productType:
+        presetType !== undefined
+          ? presetType
+          : searchModel.productType === undefined || searchModel.productType === ''
+            ? undefined
+            : Number(searchModel.productType),
       belongType: searchModel.belongType || undefined,
       buyClass: searchModel.buyClass || undefined,
       productStatus: searchModel.productStatus === undefined || searchModel.productStatus === '' ? undefined : Number(searchModel.productStatus)

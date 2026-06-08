@@ -48,6 +48,7 @@
     </BizTable>
 
     <DemandForm ref="formRef" product-type="white_bar" @success="fetchList" />
+    <DemandCart ref="cartRef" product-type="white_bar" @success="fetchList" />
     <PigAssignDialog ref="pigDialogRef" @success="fetchList" />
     <HistoryDialog ref="historyDialogRef" />
   </div>
@@ -57,6 +58,7 @@
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import DemandForm from '../components/DemandForm.vue';
+import DemandCart from '../components/DemandCart.vue';
 import PigAssignDialog from '../components/PigAssignDialog.vue';
 import HistoryDialog from '../components/HistoryDialog.vue';
 import SummaryBar from '../components/SummaryBar.vue';
@@ -70,6 +72,7 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
 const formRef = ref<{ openCreate: () => void; openEdit: (id: string) => void }>();
+const cartRef = ref<{ open: () => void }>();
 const pigDialogRef = ref<{ open: (demandId: string, demandNo: string, requiredCount: number) => void }>();
 const historyDialogRef = ref<{ open: (demandId: string) => void }>();
 
@@ -134,7 +137,7 @@ function handlePageChange(p: number, s: number) {
   fetchList();
 }
 function handleAdd() {
-  formRef.value?.openCreate();
+  cartRef.value?.open();
 }
 function handleEdit(row: BizRow) {
   formRef.value?.openEdit(String(row.id));

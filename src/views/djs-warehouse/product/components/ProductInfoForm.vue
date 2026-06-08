@@ -5,7 +5,7 @@
       <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item :label="t('product.field.productType')" prop="productType">
-            <el-select v-model="form.productType" :disabled="!!form.id" @change="onTypeChange">
+            <el-select v-model="form.productType" :disabled="!!form.id || lockType" @change="onTypeChange">
               <el-option v-for="d in djs_product_type" :key="d.value" :label="d.label" :value="Number(d.value)" />
             </el-select>
           </el-form-item>
@@ -215,6 +215,8 @@ const { djs_product_type, djs_belong_type, djs_buy_class, djs_product_attr, djs_
 
 const visible = ref(false);
 const submitting = ref(false);
+/** 由菜单入口（产品/商品/礼盒）预置并锁定 productType：新增态也禁用类型下拉 */
+const lockType = ref(false);
 const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 const ossImgRef = ref<InstanceType<typeof OssUpload>>();
@@ -298,8 +300,15 @@ const rules = computed(() => ({
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
-const openCreate = async () => {
+const openCreate = async (presetType?: number) => {
   reset();
+  // 入口预置并锁定 productType（产品=1 / 商品=2 / 礼盒=3）
+  if (presetType !== undefined) {
+    form.value.productType = presetType;
+    lockType.value = true;
+    // 触发类型分支字段初始化（如礼盒 belongType='gift_box'）
+    onTypeChange(presetType);
+  }
   await loadSupplierOptions();
   await loadComponentCandidates();
   visible.value = true;
@@ -359,6 +368,7 @@ defineExpose({ openCreate, openEdit });
 
 const reset = () => {
   form.value = defaultForm();
+  lockType.value = false;
 };
 
 const handleClosed = () => {

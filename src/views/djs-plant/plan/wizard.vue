@@ -57,6 +57,7 @@ import { addPlan } from '@/api/djs-plant/plan';
 import type { PlantPlanCreateForm } from '@/api/djs-plant/plan/types';
 import CropPicker from './components/CropPicker.vue';
 import PlotPeriodPicker from './components/PlotPeriodPicker.vue';
+import { PLAN_BASE } from './route';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -142,13 +143,13 @@ async function submit() {
     ElMessage.success(t('plantPlan.wizard.tip.submitSuccess'));
     sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(STORAGE_STEP);
-    router.push(`/djs-plant/plan/detail?id=${newId}`);
+    router.push(`${PLAN_BASE}/detail?id=${newId}`);
   } finally {
     submitting.value = false;
   }
 }
 
 function goList() {
-  router.push('/djs-plant/plan');
+  router.push(PLAN_BASE);
 }
 </script>

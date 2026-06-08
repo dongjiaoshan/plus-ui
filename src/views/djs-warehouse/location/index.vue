@@ -1,6 +1,5 @@
 <template>
   <div class="p-2">
-    <LocationCardGrid />
     <BizTable
       ref="tableRef"
       :data="list"
@@ -63,7 +62,6 @@ import BizTable from '@/components/BizTable/index.vue';
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import LocationForm from './components/LocationForm.vue';
-import LocationCardGrid from './components/LocationCardGrid.vue';
 import { changeLocationStatus, delLocation, listLocation } from '@/api/djs-warehouse/location';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { LocationInfoQuery, LocationInfoVO } from '@/api/djs-warehouse/location/types';

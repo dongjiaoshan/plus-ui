@@ -1817,25 +1817,45 @@ export default {
       }
     }
   },
-  // 仓库 dashboard 占位版（DJS-FIX-ADMIN-W22-006）
+  // 仓库看板
   warehouse: {
     dashboard: {
-      todayDemand: '今日需求量',
-      todayDemandUnit: '白条业态',
-      todayProduction: '今日生产',
-      todayProductionUnit: '件入库',
-      stockCheck: '最近盘点（正常 / 异常 / 计损）',
-      monthAbnormalLocation: '当月异常库位 {count} 处',
-      locationOverview: '库位概览（Top 20）',
+      demandBar: '今日需求',
+      productionBar: '今日生产',
+      lastRefresh: '最近刷新 {time}',
       refresh: '刷新',
+      // 横条 1：今日需求 6 项
+      kpiDemandWhiteBar: '白条需求量',
+      kpiDemandVegetable: '蔬菜需求量',
+      kpiDemandGiftBox: '礼盒需求量',
+      kpiDemandOther: '其他需求量',
+      kpiDemandOrders: '需求单数',
+      kpiDemandTotal: '需求总量',
+      // 横条 2：今日生产 5 项
+      kpiProductionCount: '生产笔数',
+      kpiProductionWeight: '生产重量(kg)',
+      kpiInbound: '入库笔数',
+      kpiOutbound: '出库笔数',
+      kpiLoss: '损耗量(kg)',
+      // 6 图标题
+      chartDemandPie: '需求业态占比',
+      chartReturnRing: '退货构成',
+      chartProductionTrend: '生产趋势（近 7 日，kg）',
+      chartCheckPie: '盘点结果分布',
+      chartLocationRing: '库位健康度（当月）',
+      chartLossTrend: '损耗趋势（近 7 日，kg）',
+      seriesProduction: '生产重量',
+      seriesLoss: '损耗量',
+      noData: '暂无数据',
+      // 库位概览
+      locationOverview: '各库位概况（Top 20）',
       colLocation: '库位',
       colType: '类型',
       colStock: '当前库存',
       colStatus: '状态',
       statusNormal: '正常',
       statusAbnormal: '异常',
-      emptyLocation: '暂无库位数据',
-      fullVersionHint: '更多可视化图表（趋势折线 / 出入库饼图 / 业态对比）将在后续版本中提供。'
+      emptyLocation: '暂无库位数据'
     }
   },
   demand: {
@@ -1965,6 +1985,24 @@ export default {
       unitHead: '头',
       unitSpecies: '品种',
       unitItem: '条'
+    },
+    cart: {
+      title: '新增{type}需求',
+      candidateTitle: '产品候选',
+      cartTitle: '需求产品',
+      searchPlaceholder: '搜索产品名称 / 编码',
+      emptyProducts: '该业态暂无可选产品',
+      emptyCart: '右侧购物车为空，请从左侧选择产品加入',
+      qtyToAdd: '需求量',
+      opAdd: '操作',
+      add: '加入',
+      remove: '移除',
+      itemCount: '共 {count} 项',
+      qtyRequired: '请先填写需求量再加入',
+      submit: '提交需求（{count} 项）',
+      submitAllSuccess: '已提交 {count} 条需求',
+      submitPartial: '成功 {ok} 条，失败 {fail} 条：{names}，请重新提交失败项',
+      submitAllFailed: '提交失败：{names}'
     }
   },
   // 门店端发起需求（STR-DEMAND-001，复用 WMS demand 表）

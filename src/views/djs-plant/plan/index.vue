@@ -37,6 +37,7 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { delPlan, listPlan } from '@/api/djs-plant/plan';
 import type { PlantPlanQuery, PlantPlanVO } from '@/api/djs-plant/plan/types';
+import { PLAN_BASE } from './route';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { getCurrentInstance } from 'vue';
@@ -123,15 +124,15 @@ const handlePageChange = ({ pageNum: pn, pageSize: ps }: { pageNum: number; page
 };
 
 const handleAdd = () => {
-  router.push('/djs-plant/plan/wizard');
+  router.push(`${PLAN_BASE}/wizard`);
 };
 
 const handleEdit = (row: BizRow) => {
-  router.push(`/djs-plant/plan/detail?id=${row.id}&edit=1`);
+  router.push(`${PLAN_BASE}/detail?id=${row.id}&edit=1`);
 };
 
 const handleDetail = (row: BizRow) => {
-  router.push(`/djs-plant/plan/detail?id=${row.id}`);
+  router.push(`${PLAN_BASE}/detail?id=${row.id}`);
 };
 
 const handleDel = async (rows: BizRow[]) => {

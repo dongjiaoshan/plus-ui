@@ -1815,25 +1815,45 @@ export default {
       }
     }
   },
-  // Warehouse dashboard placeholder (DJS-FIX-ADMIN-W22-006)
+  // Warehouse dashboard
   warehouse: {
     dashboard: {
-      todayDemand: "Today's Demand",
-      todayDemandUnit: 'White-bar segment',
-      todayProduction: "Today's Production",
-      todayProductionUnit: 'items inbound',
-      stockCheck: 'Latest Check (Normal / Abnormal / Loss)',
-      monthAbnormalLocation: '{count} abnormal location(s) this month',
-      locationOverview: 'Location Overview (Top 20)',
+      demandBar: "Today's Demand",
+      productionBar: "Today's Production",
+      lastRefresh: 'Last refresh {time}',
       refresh: 'Refresh',
+      // Bar 1: today demand (6 metrics)
+      kpiDemandWhiteBar: 'White-bar Demand',
+      kpiDemandVegetable: 'Vegetable Demand',
+      kpiDemandGiftBox: 'Gift-box Demand',
+      kpiDemandOther: 'Other Demand',
+      kpiDemandOrders: 'Demand Orders',
+      kpiDemandTotal: 'Total Demand',
+      // Bar 2: today production (5 metrics)
+      kpiProductionCount: 'Production Count',
+      kpiProductionWeight: 'Production Weight (kg)',
+      kpiInbound: 'Inbound Count',
+      kpiOutbound: 'Outbound Count',
+      kpiLoss: 'Loss Qty (kg)',
+      // 6 charts
+      chartDemandPie: 'Demand by Segment',
+      chartReturnRing: 'Return Composition',
+      chartProductionTrend: 'Production Trend (last 7 days, kg)',
+      chartCheckPie: 'Stock-check Result',
+      chartLocationRing: 'Location Health (this month)',
+      chartLossTrend: 'Loss Trend (last 7 days, kg)',
+      seriesProduction: 'Production Weight',
+      seriesLoss: 'Loss Qty',
+      noData: 'No data',
+      // Location overview
+      locationOverview: 'Location Overview (Top 20)',
       colLocation: 'Location',
       colType: 'Type',
       colStock: 'Current Stock',
       colStatus: 'Status',
       statusNormal: 'Normal',
       statusAbnormal: 'Abnormal',
-      emptyLocation: 'No location data',
-      fullVersionHint: 'More visualization charts (trend lines / inbound-outbound pie / segment comparison) will be available in a future release.'
+      emptyLocation: 'No location data'
     }
   },
   demand: {
@@ -1963,6 +1983,24 @@ export default {
       unitHead: 'head',
       unitSpecies: 'species',
       unitItem: 'item'
+    },
+    cart: {
+      title: 'Add {type} Demand',
+      candidateTitle: 'Product Candidates',
+      cartTitle: 'Demand Products',
+      searchPlaceholder: 'Search product name / code',
+      emptyProducts: 'No selectable products for this category',
+      emptyCart: 'Cart is empty, add products from the left',
+      qtyToAdd: 'Quantity',
+      opAdd: 'Action',
+      add: 'Add',
+      remove: 'Remove',
+      itemCount: '{count} item(s)',
+      qtyRequired: 'Enter a quantity before adding',
+      submit: 'Submit Demand ({count})',
+      submitAllSuccess: '{count} demand(s) submitted',
+      submitPartial: '{ok} succeeded, {fail} failed: {names}. Please resubmit the failed items',
+      submitAllFailed: 'Submit failed: {names}'
     }
   },
   // Store-side demand (STR-DEMAND-001, reuses WMS demand table)

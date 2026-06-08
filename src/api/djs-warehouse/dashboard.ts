@@ -2,12 +2,11 @@ import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
 
 /**
- * 仓库看板 API（DJS-FIX-ADMIN-W22-006 占位版）。
+ * 仓库看板 API。
  *
  * 后端：org.dromara.djs.warehouse.dashboard.controller.WarehouseDashboardController
  *   - GET /djs/warehouse/dashboard/summary  3 KPI 卡 + 库位概览
- *
- * 完整版（趋势折线 / 出入库饼图 / 4 业态对比）推 V1.x WMS-DASH-001。
+ *   - GET /djs/warehouse/dashboard/charts   6 ECharts 图 + 双 KPI 横条 11 指标
  *
  * 跨层契约：locationId 是 snowflake，类型 string（不可 number，防 19 位截断）。
  */
@@ -44,10 +43,76 @@ export interface WarehouseDashboardSummaryVo {
   locationOverview: LocationOverviewItem[];
 }
 
-/** 仓库看板汇总 */
+/** 饼图 / 环形图 series item（与后端 ChartSeriesItemVo 对齐） */
+export interface ChartSeriesItem {
+  /** 分类标签（已映射中文） */
+  name: string;
+  /** 聚合值 */
+  value: number;
+}
+
+/** 折线图单点（与后端 ChartTrendPointVo 对齐） */
+export interface ChartTrendPoint {
+  /** 日期 yyyy-MM-dd */
+  date: string;
+  /** 当日聚合值 */
+  value: number;
+}
+
+/** 仓库看板可视化（与后端 WarehouseDashboardChartsVo 对齐） */
+export interface WarehouseDashboardChartsVo {
+  /** 图① 需求饼（4 业态需求量占比） */
+  demandByType: ChartSeriesItem[];
+  /** 图② 退货环（退货方向构成） */
+  returnByDirection: ChartSeriesItem[];
+  /** 图③ 生产趋势折线（近 7 日生产重量） */
+  productionTrend: ChartTrendPoint[];
+  /** 图④ 盘点结果饼（正常 / 异常 / 计损） */
+  checkResult: ChartSeriesItem[];
+  /** 图⑤ 异常库位环（异常 vs 正常库位数） */
+  locationHealth: ChartSeriesItem[];
+  /** 图⑥ 损耗折线（近 7 日损耗量） */
+  lossTrend: ChartTrendPoint[];
+
+  // 横条 1「今日需求」6 项
+  /** 白条业态需求量 */
+  todayDemandWhiteBar: number;
+  /** 蔬菜业态需求量 */
+  todayDemandVegetable: number;
+  /** 礼盒业态需求量 */
+  todayDemandGiftBox: number;
+  /** 其他业态需求量 */
+  todayDemandOther: number;
+  /** 今日需求单数 */
+  todayDemandOrderCount: number;
+  /** 今日需求总量 */
+  todayDemandTotal: number;
+
+  // 横条 2「今日生产」5 项
+  /** 今日生产笔数 */
+  todayProductionCount: number;
+  /** 今日生产重量 */
+  todayProductionWeight: number;
+  /** 今日入库笔数 */
+  todayInboundCount: number;
+  /** 今日出库笔数 */
+  todayOutboundCount: number;
+  /** 今日损耗量 */
+  todayLossQuantity: number;
+}
+
+/** 仓库看板汇总（3 KPI 卡 + 库位概览） */
 export const getWarehouseDashboardSummary = (): AxiosPromise<WarehouseDashboardSummaryVo> => {
   return request({
     url: '/djs/warehouse/dashboard/summary',
+    method: 'get'
+  });
+};
+
+/** 仓库看板可视化（6 图 + 双 KPI 横条） */
+export const getWarehouseDashboardCharts = (): AxiosPromise<WarehouseDashboardChartsVo> => {
+  return request({
+    url: '/djs/warehouse/dashboard/charts',
     method: 'get'
   });
 };

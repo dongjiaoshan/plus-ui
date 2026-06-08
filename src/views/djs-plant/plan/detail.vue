@@ -208,6 +208,7 @@ import type {
   PlantPlanUpdateForm,
   PlantDetailInput
 } from '@/api/djs-plant/plan/types';
+import { PLAN_BASE } from './route';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -255,7 +256,7 @@ onMounted(async () => {
   const id = route.query.id as string;
   if (!id) {
     ElMessage.error(t('plantPlan.detail.missingId'));
-    router.replace('/djs-plant/plan');
+    router.replace(PLAN_BASE);
     return;
   }
   await loadAll(id);
@@ -371,7 +372,7 @@ function barStyle(start?: string, end?: string, topOffset = 6) {
 }
 
 function goList() {
-  router.push('/djs-plant/plan');
+  router.push(PLAN_BASE);
 }
 </script>
 

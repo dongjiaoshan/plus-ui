@@ -121,10 +121,7 @@ import { ref, reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { addDemand, getDemand, updateDemand } from '@/api/djs-warehouse/demand';
 import type { DemandManageForm, DemandProductType } from '@/api/djs-warehouse/demand/types';
-import { listProduct } from '@/api/djs-warehouse/product';
-import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { useDemandProducts } from '../composables/useDemandProducts';
 
 const props = defineProps<{ productType: DemandProductType }>();
 const emit = defineEmits<{ (e: 'success'): void }>();
@@ -150,41 +147,18 @@ const baseForm = (): DemandManageForm => ({
 });
 const form = reactive<DemandManageForm>(baseForm());
 
-const storeOptions = ref<StoreVO[]>([]);
-const productOptions = ref<ProductInfoVO[]>([]);
-
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as any).rows ?? (res as any).data ?? []) as StoreVO[];
-  } catch (e) {
-    console.warn('[DemandForm] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
-
-async function loadProductOptions() {
-  try {
-    // 按业态映射 belongType：white_bar / vegetable / gift_box 各取对应字典 key；other 不限定
-    const belongType = props.productType === 'other' ? undefined : props.productType;
-    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0 });
-    productOptions.value = ((res as any).rows ?? (res as any).data ?? []) as ProductInfoVO[];
-  } catch (e) {
-    console.warn('[DemandForm] loadProductOptions failed', e);
-    productOptions.value = [];
-  }
-}
+const { storeOptions, productOptions, loadStoreOptions, loadProductOptions, buildSnapshot } = useDemandProducts(props.productType);
 
 function onProductSelect(productSnowflakeId: string) {
   // productSnowflakeId 是 t_warehouse_product_info.id（snowflake，BIGINT 序列化成 string 避 JS 精度）；
   // 业务码 product_id（如 "P0001"）只用于下拉 label 显示，后端 demand.product_id FK 走 snowflake。
-  const p = productOptions.value.find((x) => String(x.id) === productSnowflakeId);
-  if (!p) return;
-  form.productName = p.productName;
-  form.productUnit = p.productUnit ?? '';
-  form.productSpec = p.productSpec ?? '';
-  if (!form.rawMaterial && (p as any).productMaterial) {
-    form.rawMaterial = String((p as any).productMaterial);
+  const snap = buildSnapshot(productSnowflakeId);
+  if (!snap) return;
+  form.productName = snap.productName;
+  form.productUnit = snap.productUnit;
+  form.productSpec = snap.productSpec;
+  if (!form.rawMaterial && snap.rawMaterial) {
+    form.rawMaterial = snap.rawMaterial;
   }
 }
 
