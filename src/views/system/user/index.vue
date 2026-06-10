@@ -107,6 +107,14 @@
                 <dict-tag :options="sys_user_sex" :value="scope.row.sex" />
               </template>
             </el-table-column>
+            <el-table-column key="wxBind" label="微信" align="center" width="110">
+              <template #default="scope">
+                <el-tag v-if="wxBindMap[scope.row.userId]?.bound" type="success" size="small">
+                  已绑 {{ wxBindMap[scope.row.userId]?.openidTail }}
+                </el-tag>
+                <el-tag v-else type="info" size="small">未绑</el-tag>
+              </template>
+            </el-table-column>
             <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center">
               <template #default="scope">
                 <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
@@ -125,7 +133,7 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="操作" fixed="right" width="180" class-name="small-padding fixed-width">
+            <el-table-column label="操作" fixed="right" width="210" class-name="small-padding fixed-width">
               <template #default="scope">
                 <el-tooltip v-if="scope.row.userId !== 1" content="修改" placement="top">
                   <el-button v-hasPermi="['system:user:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
@@ -140,6 +148,9 @@
 
                 <el-tooltip v-if="scope.row.userId !== 1" content="分配角色" placement="top">
                   <el-button v-hasPermi="['system:user:edit']" link type="primary" icon="CircleCheck" @click="handleAuthRole(scope.row)"></el-button>
+                </el-tooltip>
+                <el-tooltip v-if="scope.row.userId !== 1 && wxBindMap[scope.row.userId]?.bound" content="解绑微信" placement="top">
+                  <el-button v-hasPermi="['system:user:edit']" link type="primary" icon="Unlock" @click="handleUnbindWx(scope.row)"></el-button>
                 </el-tooltip>
               </template>
             </el-table-column>
@@ -327,11 +338,15 @@ import { checkPermi } from '@/utils/permission';
 import { useUserStore } from '@/store/modules/user';
 // SYS-AUTH-001 djs 扩字段：归属农场下拉数据
 import { listAccessibleFarms, FarmVO } from '@/api/djs-common/userFarm';
+// SYS-AUTH-001 真微信登录：员工微信绑定状态 + 解绑
+import { getWxBindStatus, unbindWx, WxBindStatusVO } from '@/api/djs-common/wxBind';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { sys_normal_disable, sys_user_sex } = toRefs<any>(proxy?.useDict('sys_normal_disable', 'sys_user_sex'));
 const userList = ref<UserVO[]>();
+/** userId → 微信绑定状态（列表加载后异步填充，渲染「微信」列） */
+const wxBindMap = ref<Record<string, WxBindStatusVO>>({});
 const loading = ref(true);
 const showSearch = ref(true);
 const ids = ref<Array<number | string>>([]);
@@ -479,6 +494,32 @@ const getList = async () => {
   loading.value = false;
   userList.value = res.rows;
   total.value = res.total;
+  loadWxBindStatus();
+};
+
+/** 拉当前页用户的微信绑定状态（失败静默：仅「微信」列显示为未知，不阻断列表） */
+const loadWxBindStatus = async () => {
+  wxBindMap.value = {};
+  const userIds = (userList.value ?? []).map((u) => u.userId).filter((id) => id != null);
+  if (userIds.length === 0) return;
+  try {
+    const res = await getWxBindStatus(userIds);
+    const map: Record<string, WxBindStatusVO> = {};
+    (res.data ?? []).forEach((s) => {
+      map[String(s.userId)] = s;
+    });
+    wxBindMap.value = map;
+  } catch (e) {
+    console.warn('[djs] 微信绑定状态加载失败', e);
+  }
+};
+
+/** 解绑指定用户的微信（换人 / 误绑时用） */
+const handleUnbindWx = async (row: UserVO) => {
+  await proxy?.$modal.confirm(`确认解绑用户「${row.userName}」的微信登录绑定？解绑后该员工需用员工手机号重新授权登录。`);
+  await unbindWx(row.userId);
+  proxy?.$modal.msgSuccess('解绑成功');
+  loadWxBindStatus();
 };
 
 /** 查询部门下拉树结构 */
