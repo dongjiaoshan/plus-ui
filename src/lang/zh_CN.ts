@@ -357,7 +357,12 @@ export default {
     },
     rule: {
       breedStrain: { required: '请选择类型' },
-      breedStrainCode: { required: '编码不能为空', pattern: '编码仅允许字母、数字、下划线、连字符' },
+      breedStrainCode: {
+        required: '编码不能为空',
+        pattern: '编码仅允许字母、数字、下划线、连字符',
+        len2: '品种编码必须为 2 位数字',
+        len1: '品系编码必须为 1 位数字'
+      },
       breedStrainName: { required: '名称不能为空' },
       motherCode: { required: '请选择母本' },
       fatherCode: { required: '请选择父本' },

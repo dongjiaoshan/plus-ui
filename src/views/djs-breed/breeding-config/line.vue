@@ -71,7 +71,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'breedStrainCode', label: t('breeding.column.breedStrainCode'), width: 160 },
   { prop: 'breedStrainName', label: t('breeding.column.breedStrainName'), minWidth: 160 },
   { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'createBy', label: t('breeding.column.createBy'), width: 120, align: 'center' }
+  { prop: 'createByName', label: t('breeding.column.createBy'), width: 120, align: 'center' }
 ]);
 
 async function loadCodeOptions() {

@@ -357,7 +357,12 @@ export default {
     },
     rule: {
       breedStrain: { required: 'Type is required' },
-      breedStrainCode: { required: 'Code is required', pattern: 'Code allows letters, digits, underscore, hyphen only' },
+      breedStrainCode: {
+        required: 'Code is required',
+        pattern: 'Code allows letters, digits, underscore, hyphen only',
+        len2: 'Breed code must be exactly 2 digits',
+        len1: 'Strain code must be exactly 1 digit'
+      },
       breedStrainName: { required: 'Name is required' },
       motherCode: { required: 'Mother is required' },
       fatherCode: { required: 'Father is required' },

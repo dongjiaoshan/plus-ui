@@ -30,6 +30,8 @@ export interface BreedInfoVO extends BaseEntity {
   remark?: string;
   /** 创建人 sys_user.user_id */
   createBy?: number | string;
+  /** 创建人姓名（USER_ID_TO_NICKNAME 翻译 sys_user.nick_name 中文名） */
+  createByName?: string;
 }
 
 /** 新增 / 编辑表单 */
@@ -69,6 +71,8 @@ export interface BreedConfigVO extends BaseEntity {
   remark?: string;
   /** 创建人 sys_user.user_id */
   createBy?: number | string;
+  /** 创建人姓名（USER_ID_TO_NICKNAME 翻译 sys_user.nick_name 中文名） */
+  createByName?: string;
 }
 
 /** 新增 / 编辑表单 */

@@ -67,7 +67,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'fatherCode', label: t('breeding.column.fatherCode'), width: 160 },
   { prop: 'cubCode', label: t('breeding.column.cubCode'), width: 160 },
   { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'createBy', label: t('breeding.column.createBy'), width: 120, align: 'center' }
+  { prop: 'createByName', label: t('breeding.column.createBy'), width: 120, align: 'center' }
 ]);
 
 async function fetchList() {
