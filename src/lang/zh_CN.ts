@@ -226,6 +226,60 @@ export default {
       empty: '暂无交易明细'
     }
   },
+  // 公共图片库（IMG-LIB-001）
+  image: {
+    title: {
+      add: '新增图片',
+      edit: '编辑图片'
+    },
+    column: {
+      preview: '预览',
+      imageName: '主名',
+      aliases: '别名',
+      sortOrder: '排序',
+      status: '状态',
+      remark: '备注',
+      updateTime: '更新时间'
+    },
+    field: {
+      imageName: '主名',
+      aliases: '别名',
+      image: '图片',
+      sortOrder: '排序',
+      status: '状态',
+      remark: '备注'
+    },
+    placeholder: {
+      imageName: '与作物/商品名称一致，如 番茄',
+      aliases: '别名逗号分隔，如 西红柿,tomato'
+    },
+    rule: {
+      imageName: {
+        required: '请输入图片主名'
+      }
+    },
+    action: {
+      rematch: '批量重新匹配'
+    },
+    confirm: {
+      del: '确认删除选中的 {count} 条图片？',
+      rematch: '将对所有自动匹配（未手动改图）的作物 / 商品按名称重新匹配图库，确认执行？'
+    },
+    rematch: {
+      done: '重新匹配完成（{detail}）'
+    },
+    noImage: '无图'
+  },
+  // 分类默认图（IMG-LIB-001）
+  defaultImage: {
+    title: '分类默认图配置',
+    hint: '主数据无图时按归属类型兜底；图请先传 OSS 再保存。',
+    global: '全局兜底',
+    column: {
+      category: '分类',
+      image: '默认图'
+    }
+  },
   // 门店主数据（SYS-MD-002 + SYS-MD-FIX-002）
   store: {
     title: {
@@ -1051,6 +1105,8 @@ export default {
       materialNum: '原材料计算量',
       productThumb: '缩略图',
       productImg: '详情图',
+      imageOssId: '主图（自动匹配）',
+      imageOssIdTip: '留空则按产品名称从公共图库自动匹配；手动上传后不再自动覆盖',
       productStatus: '状态',
       isDelivery: '是否发货产品',
       isBuyOut: '是否买断',
@@ -1298,6 +1354,8 @@ export default {
       cropName: '作物名称',
       cropImagePreview: '缩略图',
       cropImageUrl: '作物图片',
+      imageOssId: '主图（自动匹配）',
+      imageOssIdTip: '留空则按作物名称从公共图库自动匹配；手动上传后不再自动覆盖',
       varietyName: '品种名',
       varietyOrigin: '品种来源',
       cropFamily: '作物科属',

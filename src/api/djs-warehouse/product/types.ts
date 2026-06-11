@@ -17,6 +17,12 @@ export interface ProductInfoVO extends BaseEntity {
   buyClass?: string;
   productThumb?: string;
   productImg?: string;
+  /** 主图 ossId（IMG-LIB-001 L1） */
+  imageOssId?: string | null;
+  /** 图来源（0 自动 / 1 手动） */
+  imageSource?: number;
+  /** 主图 public URL（resolver 兜底回填） */
+  imageUrl?: string | null;
   productAttr?: number;
   productWorkshop?: number;
   storeLocationId?: string;
@@ -54,6 +60,10 @@ export interface ProductInfoForm {
   buyClass?: string;
   productThumb?: string;
   productImg?: string;
+  /** 主图 ossId（IMG-LIB-001；手选则提交 imageSource=1） */
+  imageOssId?: string | null;
+  /** 图来源（0 自动 / 1 手动） */
+  imageSource?: number;
   productAttr?: number;
   productWorkshop?: number;
   storeLocationId?: string;

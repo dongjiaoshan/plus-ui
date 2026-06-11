@@ -156,6 +156,12 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
+          <el-form-item :label="t('product.field.imageOssId')" prop="imageOssId">
+            <OssUpload ref="ossMainRef" v-model="mainImageIdsModel" biz-type="md_image_library" :limit="1" :file-size="10" />
+            <div class="form-tip">{{ t('product.field.imageOssIdTip') }}</div>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
           <el-form-item :label="t('product.field.isDelivery')">
             <el-radio-group v-model="form.isDelivery">
               <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
@@ -220,6 +226,7 @@ const lockType = ref(false);
 const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 const ossImgRef = ref<InstanceType<typeof OssUpload>>();
+const ossMainRef = ref<InstanceType<typeof OssUpload>>();
 
 const supplierOptions = ref<Array<{ id: number | string; supplierName: string }>>([]);
 const componentCandidates = ref<ProductInfoVO[]>([]);
@@ -235,6 +242,8 @@ const defaultForm = (): ProductInfoForm => ({
   buyClass: undefined,
   productThumb: undefined,
   productImg: undefined,
+  imageOssId: null,
+  imageSource: undefined,
   productAttr: undefined,
   productWorkshop: undefined,
   storeLocationId: undefined,
@@ -262,6 +271,13 @@ const imgOssIdsModel = computed<string[]>({
   get: () => (form.value.productImg ? form.value.productImg.split(',').filter(Boolean) : []),
   set: (val: string[]) => {
     form.value.productImg = val && val.length > 0 ? val.join(',') : undefined;
+  }
+});
+// 主图（IMG-LIB-001）单 ossId
+const mainImageIdsModel = computed<string[]>({
+  get: () => (form.value.imageOssId ? [form.value.imageOssId] : []),
+  set: (val: string[]) => {
+    form.value.imageOssId = val && val.length > 0 ? val[0] : null;
   }
 });
 
@@ -362,6 +378,19 @@ const openEdit = async (id: number | string) => {
       console.warn('[ProductInfoForm] listOssByIds img failed', e);
     }
   }
+  if (form.value.imageOssId) {
+    try {
+      const ossRes = await listOssByIds(form.value.imageOssId);
+      const items = (ossRes.data || []).map((o) => ({
+        ossId: String(o.ossId),
+        url: o.url,
+        originalName: o.originalName
+      }));
+      ossMainRef.value?.setExistingFiles(items);
+    } catch (e) {
+      console.warn('[ProductInfoForm] listOssByIds mainImage failed', e);
+    }
+  }
 };
 
 defineExpose({ openCreate, openEdit });
@@ -454,6 +483,10 @@ const submit = () => {
       proxy?.$modal.msgWarning(t('product.rule.giftComponents.required'));
       return;
     }
+    // IMG-LIB-001：用户手选了主图 → 标记手动（imageSource=1），后端 rematch 不覆盖
+    if (form.value.imageOssId) {
+      form.value.imageSource = 1;
+    }
     submitting.value = true;
     try {
       if (form.value.id) {
@@ -470,3 +503,12 @@ const submit = () => {
   });
 };
 </script>
+
+<style scoped>
+.form-tip {
+  margin-top: 4px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+</style>

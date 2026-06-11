@@ -226,6 +226,60 @@ export default {
       empty: 'No deal records'
     }
   },
+  // Shared image library (IMG-LIB-001)
+  image: {
+    title: {
+      add: 'Add Image',
+      edit: 'Edit Image'
+    },
+    column: {
+      preview: 'Preview',
+      imageName: 'Name',
+      aliases: 'Aliases',
+      sortOrder: 'Sort',
+      status: 'Status',
+      remark: 'Remark',
+      updateTime: 'Update Time'
+    },
+    field: {
+      imageName: 'Name',
+      aliases: 'Aliases',
+      image: 'Image',
+      sortOrder: 'Sort',
+      status: 'Status',
+      remark: 'Remark'
+    },
+    placeholder: {
+      imageName: 'Match crop/product name, e.g. Tomato',
+      aliases: 'Comma-separated aliases, e.g. tomato,xihongshi'
+    },
+    rule: {
+      imageName: {
+        required: 'Please enter image name'
+      }
+    },
+    action: {
+      rematch: 'Re-match All'
+    },
+    confirm: {
+      del: 'Delete the selected {count} image(s)?',
+      rematch: 'Re-match all auto-matched (not manually overridden) crops / products by name. Continue?'
+    },
+    rematch: {
+      done: 'Re-match done ({detail})'
+    },
+    noImage: 'No image'
+  },
+  // Category default image (IMG-LIB-001)
+  defaultImage: {
+    title: 'Category Default Image',
+    hint: 'Fallback by belong type when master data has no image; upload to OSS first then save.',
+    global: 'Global',
+    column: {
+      category: 'Category',
+      image: 'Default Image'
+    }
+  },
   // Store master data (SYS-MD-002 + SYS-MD-FIX-002)
   store: {
     title: {
@@ -1049,6 +1103,8 @@ export default {
       materialNum: 'Material amount',
       productThumb: 'Thumb',
       productImg: 'Images',
+      imageOssId: 'Main Image (auto)',
+      imageOssIdTip: 'Leave empty to auto-match from the shared library by product name; manual upload is never auto-overridden',
       productStatus: 'Status',
       isDelivery: 'Is delivery',
       isBuyOut: 'Buy-out',
@@ -1296,6 +1352,8 @@ export default {
       cropName: 'Crop Name',
       cropImagePreview: 'Thumbnail',
       cropImageUrl: 'Crop Images',
+      imageOssId: 'Main Image (auto)',
+      imageOssIdTip: 'Leave empty to auto-match from the shared library by crop name; manual upload is never auto-overridden',
       varietyName: 'Variety Name',
       varietyOrigin: 'Variety Origin',
       cropFamily: 'Crop Family',
