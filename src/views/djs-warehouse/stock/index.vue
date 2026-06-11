@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_yes_no', 'djs_check_result']"
+      :dict-types="['djs_check_result']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -60,13 +60,13 @@ const pageSize = ref(10);
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
   earNo: undefined,
-  isEnd: undefined
+  blockNo: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('stock.field.productName'), type: 'input' },
   { field: 'earNo', label: t('stock.field.earNo'), type: 'input' },
-  { field: 'isEnd', label: t('stock.field.isEnd'), type: 'select', dictType: 'djs_yes_no' }
+  { field: 'blockNo', label: t('stock.field.blockNo'), type: 'input' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -75,11 +75,9 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productStock', label: t('stock.column.productStock'), width: 110, align: 'right' },
   { prop: 'productUnit', label: t('stock.column.productUnit'), width: 80, align: 'center' },
   { prop: 'earNo', label: t('stock.column.earNo'), width: 140, align: 'center' },
-  { prop: 'isEnd', label: t('stock.column.isEnd'), width: 90, align: 'center', dictType: 'djs_yes_no' },
+  { prop: 'blockNo', label: t('stock.column.blockNo'), width: 130, align: 'center' },
   { prop: 'latestCheckTime', label: t('stock.column.latestCheckTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'checkResult', label: t('stock.column.checkResult'), width: 90, align: 'center', dictType: 'djs_check_result' },
-  { prop: 'operatorName', label: t('stock.column.operatorName'), width: 100, align: 'center' },
-  { prop: 'createTime', label: t('stock.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
+  { prop: 'checkResult', label: t('stock.column.checkResult'), width: 90, align: 'center', dictType: 'djs_check_result' }
 ]);
 
 async function fetchList() {
@@ -90,7 +88,7 @@ async function fetchList() {
       pageSize: pageSize.value,
       productName: searchModel.productName || undefined,
       earNo: searchModel.earNo || undefined,
-      isEnd: searchModel.isEnd === undefined || searchModel.isEnd === '' ? undefined : Number(searchModel.isEnd)
+      blockNo: searchModel.blockNo || undefined
     };
     const res = await listStock(query);
     list.value = (res.rows ?? res.data ?? []) as LocationStockVO[];
@@ -139,7 +137,7 @@ function handleExport() {
     {
       productName: searchModel.productName || undefined,
       earNo: searchModel.earNo || undefined,
-      isEnd: searchModel.isEnd === undefined || searchModel.isEnd === '' ? undefined : Number(searchModel.isEnd)
+      blockNo: searchModel.blockNo || undefined
     },
     `stock_${new Date().getTime()}.xlsx`
   );

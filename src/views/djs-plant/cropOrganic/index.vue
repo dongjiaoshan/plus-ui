@@ -86,13 +86,13 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'cropCertNo', label: t('plantCropOrganic.column.cropCertNo'), width: 160, showOverflowTooltip: true },
-  { prop: 'cropCertCompany', label: t('plantCropOrganic.column.cropCertCompany'), width: 160, showOverflowTooltip: true },
-  { prop: 'cropCertValid', label: t('plantCropOrganic.column.cropCertValid'), width: 120, align: 'center' },
-  { prop: 'cropName', label: t('plantCropOrganic.column.cropName'), width: 160, showOverflowTooltip: true },
+  { prop: 'cropCertNo', label: t('plantCropOrganic.column.cropCertNo'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'cropCertCompany', label: t('plantCropOrganic.column.cropCertCompany'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'cropCertValid', label: t('plantCropOrganic.column.cropCertValid'), minWidth: 120, align: 'center' },
+  { prop: 'cropName', label: t('plantCropOrganic.column.cropName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'cropImagePreview', label: t('plantCropOrganic.column.image'), width: 80, align: 'center' },
-  { prop: 'isWarning', label: t('plantCropOrganic.column.warning'), width: 100, align: 'center' },
-  { prop: 'createTime', label: t('plantCropOrganic.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
+  { prop: 'isWarning', label: t('plantCropOrganic.column.warning'), minWidth: 100, align: 'center' },
+  { prop: 'createTime', label: t('plantCropOrganic.column.createTime'), minWidth: 160, align: 'center', formatter: 'datetime' }
 ]);
 
 async function fetchList() {

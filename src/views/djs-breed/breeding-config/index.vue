@@ -161,17 +161,19 @@ const configSearchSchema = computed<SearchFieldSchema[]>(() => [
 const infoColumns = computed<BizTableColumn[]>(() => [
   { prop: 'breedStrainCode', label: t('breeding.column.breedStrainCode'), width: 140 },
   { prop: 'breedStrainName', label: t('breeding.column.breedStrainName'), minWidth: 140 },
-  { prop: 'parentCode', label: t('breeding.column.parentCode'), width: 140 },
   { prop: 'description', label: t('breeding.column.description'), minWidth: 200, showOverflowTooltip: true },
   { prop: 'remark', label: t('breeding.column.remark'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
 ]);
 
 const configColumns = computed<BizTableColumn[]>(() => [
-  { prop: 'motherCode', label: t('breeding.column.motherCode'), width: 160 },
-  { prop: 'fatherCode', label: t('breeding.column.fatherCode'), width: 160 },
-  { prop: 'cubCode', label: t('breeding.column.cubCode'), width: 160 },
-  { prop: 'remark', label: t('breeding.column.remark'), minWidth: 200, showOverflowTooltip: true },
+  { prop: 'motherCode', label: t('breeding.column.motherCode'), width: 140 },
+  { prop: 'motherName', label: t('breeding.column.motherName'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'fatherCode', label: t('breeding.column.fatherCode'), width: 140 },
+  { prop: 'fatherName', label: t('breeding.column.fatherName'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'cubCode', label: t('breeding.column.cubCode'), width: 140 },
+  { prop: 'offspringName', label: t('breeding.column.offspringName'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'remark', label: t('breeding.column.remark'), minWidth: 180, showOverflowTooltip: true },
   { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
 ]);
 

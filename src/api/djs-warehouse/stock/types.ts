@@ -13,6 +13,8 @@ export interface LocationStockVO extends BaseEntity {
   productId?: number | string;
   earNo?: string;
   plotId?: number | string;
+  /** service 层 JOIN 地块表回填的地块编号（plot_code） */
+  blockNo?: string;
   productName: string;
   productStock: number | string;
   productUnit: string;
@@ -31,5 +33,6 @@ export interface LocationStockQuery extends PageQuery {
   productName?: string;
   earNo?: string;
   plotId?: number | string;
+  blockNo?: string;
   isEnd?: number;
 }

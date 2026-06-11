@@ -25,7 +25,7 @@
         <dict-tag :options="commonStatusDict" :value="String(row.teamStatus)" />
       </template>
       <template #cell-leaderName="{ row }">
-        <span v-if="row.leaderName">{{ row.leaderName }}</span>
+        <span v-if="row.leaderName">{{ pureName(row.leaderName) }}</span>
         <span v-else class="muted">{{ t('plantTeam.member.noLeader') }}</span>
       </template>
       <template #cell-memberCount="{ row }">
@@ -89,13 +89,19 @@ const searchSchema: SearchFieldSchema[] = [
 ];
 
 const columns: BizTableColumn[] = [
-  { prop: 'teamName', label: t('plantTeam.column.teamName'), minWidth: 160, fixed: 'left' },
-  { prop: 'leaderName', label: t('plantTeam.column.leader'), width: 140, align: 'center' },
-  { prop: 'teamStatus', label: t('plantTeam.column.teamStatus'), width: 100, align: 'center' },
-  { prop: 'memberCount', label: t('plantTeam.column.memberCount'), width: 100, align: 'center' },
+  { prop: 'teamName', label: t('plantTeam.column.teamName'), minWidth: 160, fixed: 'left', showOverflowTooltip: true },
+  { prop: 'leaderName', label: t('plantTeam.column.leader'), minWidth: 160, align: 'center', showOverflowTooltip: true },
+  { prop: 'teamStatus', label: t('plantTeam.column.teamStatus'), minWidth: 120, align: 'center' },
+  { prop: 'memberCount', label: t('plantTeam.column.memberCount'), minWidth: 120, align: 'center' },
   { prop: 'remark', label: t('plantTeam.column.remark'), minWidth: 200, showOverflowTooltip: true },
-  { prop: 'createTime', label: t('plantTeam.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
+  { prop: 'createTime', label: t('plantTeam.column.createTime'), minWidth: 170, align: 'center', formatter: 'datetime' }
 ];
+
+// 负责人列只显姓名：去掉 nick_name 末尾「（角色）」后缀（兼容全/半角括号）。
+function pureName(name?: string): string {
+  if (!name) return '';
+  return name.replace(/[（(][^（）()]*[）)]\s*$/, '').trim() || name;
+}
 
 const teamFormRef = ref<{ openCreate: () => void; openEdit: (row: PlantWorkTeamVO) => void }>();
 const memberDialogRef = ref<{ open: (team: PlantWorkTeamVO) => void }>();

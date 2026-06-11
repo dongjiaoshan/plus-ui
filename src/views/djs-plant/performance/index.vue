@@ -96,27 +96,27 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'statMonth', label: t('plantPerformance.column.statMonth'), width: 110, align: 'center' },
+  { prop: 'statMonth', label: t('plantPerformance.column.statMonth'), minWidth: 120, align: 'center' },
   { prop: 'teamName', label: t('plantPerformance.column.team'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'cropName', label: t('plantPerformance.column.crop'), minWidth: 140, showOverflowTooltip: true },
   {
     prop: 'pickWeight',
     label: t('plantPerformance.column.pickWeight'),
-    width: 140,
+    minWidth: 140,
     align: 'right',
     formatter: (r: BizRow) => (r.pickWeight != null ? `${r.pickWeight} 斤` : '-')
   },
   {
     prop: 'unitPriceSnapshot',
     label: t('plantPerformance.column.unitPrice'),
-    width: 130,
+    minWidth: 140,
     align: 'right',
     formatter: (r: BizRow) => (r.unitPriceSnapshot != null ? `¥${r.unitPriceSnapshot}/斤` : '-')
   },
   {
     prop: 'performanceAmount',
     label: t('plantPerformance.column.amount'),
-    width: 140,
+    minWidth: 140,
     align: 'right',
     formatter: (r: BizRow) => (r.performanceAmount != null ? `¥${r.performanceAmount}` : '-')
   }

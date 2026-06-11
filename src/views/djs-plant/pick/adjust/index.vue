@@ -19,31 +19,27 @@
         <el-table-column :label="t('pickPlan.adjust.col.plotArea')" prop="plotArea" width="100" align="right">
           <template #default="{ row }">{{ row.plotArea }} 亩</template>
         </el-table-column>
-        <el-table-column :label="t('pickPlan.adjust.col.planEarliest')" prop="earliestHarvestdate" width="120" align="center" />
-        <el-table-column :label="t('pickPlan.adjust.col.planLatest')" prop="lastHarvestdate" width="120" align="center" />
-        <el-table-column :label="t('pickPlan.adjust.col.beginHarvestdate')" width="160">
+        <el-table-column :label="t('pickPlan.adjust.col.planEarliest')" width="160">
           <template #default="{ row }">
             <el-date-picker
-              v-model="row.beginHarvestdate"
+              v-model="row.earliestHarvestdate"
               type="date"
               size="small"
               format="YYYY-MM-DD"
               value-format="YYYY-MM-DD"
               style="width: 140px"
+              @change="onEarliestChange(row)"
             />
           </template>
         </el-table-column>
-        <el-table-column :label="t('pickPlan.adjust.col.endHarvestdate')" width="160">
-          <template #default="{ row }">
-            <el-date-picker
-              v-model="row.endHarvestdate"
-              type="date"
-              size="small"
-              format="YYYY-MM-DD"
-              value-format="YYYY-MM-DD"
-              style="width: 140px"
-            />
-          </template>
+        <el-table-column :label="t('pickPlan.adjust.col.planLatest')" prop="lastHarvestdate" width="120" align="center">
+          <template #default="{ row }">{{ row.lastHarvestdate || '-' }}</template>
+        </el-table-column>
+        <el-table-column :label="t('pickPlan.adjust.col.beginHarvestdate')" prop="beginHarvestdate" width="120" align="center">
+          <template #default="{ row }">{{ row.beginHarvestdate || '-' }}</template>
+        </el-table-column>
+        <el-table-column :label="t('pickPlan.adjust.col.endHarvestdate')" prop="endHarvestdate" width="120" align="center">
+          <template #default="{ row }">{{ row.endHarvestdate || '-' }}</template>
         </el-table-column>
         <el-table-column :label="t('pickPlan.adjust.col.isPick')" width="140" align="center">
           <template #default="{ row }">
@@ -94,6 +90,32 @@ const { djs_pick_status } = useDict('djs_pick_status');
 
 interface AdjustRow extends PlantDetailsVO {
   _isPickBool: boolean;
+  /** 计划最早→最晚的窗口天数（= 作物 maxCycle-minCycle，创建时固化）；编辑最早日期后据此重算最晚。 */
+  _windowDays: number;
+}
+
+/** 计算两个 YYYY-MM-DD 字符串相差天数（b - a）。 */
+function diffDays(a?: string, b?: string): number {
+  if (!a || !b) return 0;
+  const ms = new Date(b).getTime() - new Date(a).getTime();
+  return Math.round(ms / 86400000);
+}
+
+/** earliest 加 days 天，返回 YYYY-MM-DD。 */
+function addDays(date: string, days: number): string {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
+/** 编辑「计划最早」后，按固化窗口天数重算「计划最晚」（只读派生）。 */
+function onEarliestChange(row: AdjustRow) {
+  if (row.earliestHarvestdate) {
+    row.lastHarvestdate = addDays(row.earliestHarvestdate, row._windowDays);
+  }
 }
 
 const planId = ref<string>(String(route.query.planId || ''));
@@ -120,7 +142,11 @@ async function loadRows() {
   try {
     const res = await listPickPlanDetails(planId.value, cropId.value);
     const data = (res.data || []) as PlantDetailsVO[];
-    rows.value = data.map((d) => ({ ...d, _isPickBool: d.isPick === 1 }));
+    rows.value = data.map((d) => ({
+      ...d,
+      _isPickBool: d.isPick === 1,
+      _windowDays: diffDays(d.earliestHarvestdate, d.lastHarvestdate)
+    }));
     // 收集已出现的班组到选项（V1 简化：从当前数据带出）
     const seen = new Map<string, string>();
     data.forEach((d) => {
@@ -150,8 +176,8 @@ async function submit() {
     cropId: cropId.value,
     rows: rows.value.map((r) => ({
       id: String(r.id),
-      beginHarvestdate: r.beginHarvestdate,
-      endHarvestdate: r.endHarvestdate,
+      earliestHarvestdate: r.earliestHarvestdate,
+      lastHarvestdate: r.lastHarvestdate,
       isPick: r._isPickBool ? 1 : 2,
       harvestBy: r.harvestBy ? String(r.harvestBy) : undefined
     }))

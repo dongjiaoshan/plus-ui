@@ -50,7 +50,15 @@
             </el-col>
             <el-col :span="12">
               <el-form-item :label="t('plantCrop.field.relatedProduct')" prop="relatedProduct">
-                <el-input-number v-model="form.relatedProduct as any" :min="0" :precision="0" style="width: 100%" />
+                <el-select
+                  v-model="form.relatedProduct"
+                  filterable
+                  clearable
+                  :placeholder="t('plantCrop.placeholder.relatedProduct')"
+                  style="width: 100%"
+                >
+                  <el-option v-for="p in productOptions" :key="p.id" :label="p.productName" :value="p.id" />
+                </el-select>
               </el-form-item>
             </el-col>
           </el-row>
@@ -138,6 +146,8 @@
 import { addCrop, getCrop, updateCrop } from '@/api/djs-plant/crop';
 import OssUpload from '@/components/OssUpload/index.vue';
 import { listByIds as listOssByIds } from '@/api/system/oss';
+import { listProduct } from '@/api/djs-warehouse/product';
+import type { ProductInfoVO, ProductInfoQuery } from '@/api/djs-warehouse/product/types';
 import type { CropInfoForm } from '@/api/djs-plant/crop/types';
 import { useI18n } from 'vue-i18n';
 import { useOssBridge } from '@/composables/useOssBridge';
@@ -180,6 +190,21 @@ const defaultForm = (): CropInfoForm => ({
 
 const form = ref<CropInfoForm>(defaultForm());
 
+// 关联产品选项（productType=1 自产产品；relatedProduct 存产品主键 id BIGINT FK）
+const productOptions = ref<ProductInfoVO[]>([]);
+let productsLoaded = false;
+const loadProductOptions = async () => {
+  if (productsLoaded) return;
+  try {
+    const query: ProductInfoQuery = { pageNum: 1, pageSize: 1000, productType: 1 };
+    const res = await listProduct(query);
+    productOptions.value = (res.rows ?? (res as any).data ?? []) as ProductInfoVO[];
+    productsLoaded = true;
+  } catch (e) {
+    console.warn('[CropForm] listProduct failed', e);
+  }
+};
+
 // 多选 季节 ↔ 逗号分隔字符串
 const plantingSeasonArr = computed<string[]>({
   get: () => (form.value.plantingSeason ? form.value.plantingSeason.split(',').filter(Boolean) : []),
@@ -206,9 +231,11 @@ const openCreate = () => {
   form.value = defaultForm();
   activeTab.value = 'basic';
   visible.value = true;
+  loadProductOptions();
 };
 
 const openEdit = async (id: number | string) => {
+  loadProductOptions();
   const res = await getCrop(id);
   const data = res.data;
   form.value = {

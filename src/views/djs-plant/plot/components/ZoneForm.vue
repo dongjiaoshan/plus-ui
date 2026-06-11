@@ -14,7 +14,9 @@
         </el-col>
         <el-col :span="12">
           <el-form-item :label="t('plantZone.field.zoneBelong')" prop="zoneBelong">
-            <el-input v-model="form.zoneBelong" :placeholder="t('plantZone.placeholder.zoneBelong')" maxlength="64" />
+            <el-select v-model="form.zoneBelong" clearable :placeholder="t('plantZone.placeholder.zoneBelong')" style="width: 100%">
+              <el-option v-for="dict in djs_zone_belong" :key="dict.value" :label="dict.label" :value="dict.value" />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -49,7 +51,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { sys_normal_disable } = toRefs<any>(proxy?.useDict('sys_normal_disable'));
+const { sys_normal_disable, djs_zone_belong } = toRefs<any>(proxy?.useDict('sys_normal_disable', 'djs_zone_belong'));
 
 const visible = ref(false);
 const submitting = ref(false);

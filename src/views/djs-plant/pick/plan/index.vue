@@ -62,25 +62,31 @@ const searchModel = reactive<Record<string, any>>({
   harvestStatus: undefined
 });
 
+// 计划年份下拉：当前年起往前 6 年（K203 改计数器为下拉）
+const yearOptions = computed(() => {
+  const cur = new Date().getFullYear();
+  return Array.from({ length: 6 }, (_, i) => ({ label: String(cur - i), value: cur - i }));
+});
+
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'planYear', label: t('pickPlan.field.planYear'), type: 'number' },
+  { field: 'planYear', label: t('pickPlan.field.planYear'), type: 'select', options: yearOptions.value },
   { field: 'planSeason', label: t('pickPlan.field.planSeason'), type: 'select', dictType: 'djs_planting_season' },
   { field: 'harvestStatus', label: t('pickPlan.field.harvestStatus'), type: 'select', dictType: 'djs_pick_status' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'planNo', label: t('pickPlan.column.planNo'), width: 160, showOverflowTooltip: true },
-  { prop: 'planYear', label: t('pickPlan.column.planYear'), width: 80, align: 'center' },
-  { prop: 'planSeason', label: t('pickPlan.column.planSeason'), width: 100, align: 'center', dictType: 'djs_planting_season' },
-  { prop: 'cropName', label: t('pickPlan.column.crop'), width: 120, showOverflowTooltip: true },
-  { prop: 'plotCount', label: t('pickPlan.column.plotCount'), width: 80, align: 'center' },
-  { prop: 'planEarliest', label: t('pickPlan.column.planEarliest'), width: 120, align: 'center' },
-  { prop: 'planLatest', label: t('pickPlan.column.planLatest'), width: 120, align: 'center' },
-  { prop: 'actualBegin', label: t('pickPlan.column.actualBegin'), width: 120, align: 'center' },
-  { prop: 'actualEnd', label: t('pickPlan.column.actualEnd'), width: 120, align: 'center' },
-  { prop: 'expectedYield', label: t('pickPlan.column.expectedYield'), width: 120, align: 'right' },
-  { prop: 'actualYield', label: t('pickPlan.column.actualYield'), width: 120, align: 'right' },
-  { prop: 'activityPlotCount', label: t('pickPlan.column.activityPlotCount'), width: 120, align: 'center' }
+  { prop: 'planNo', label: t('pickPlan.column.planNo'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'planYear', label: t('pickPlan.column.planYear'), minWidth: 80, align: 'center' },
+  { prop: 'planSeason', label: t('pickPlan.column.planSeason'), minWidth: 100, align: 'center', dictType: 'djs_planting_season' },
+  { prop: 'cropName', label: t('pickPlan.column.crop'), minWidth: 120, showOverflowTooltip: true },
+  { prop: 'plotCount', label: t('pickPlan.column.plotCount'), minWidth: 80, align: 'center' },
+  { prop: 'planEarliest', label: t('pickPlan.column.planEarliest'), minWidth: 120, align: 'center' },
+  { prop: 'planLatest', label: t('pickPlan.column.planLatest'), minWidth: 120, align: 'center' },
+  { prop: 'actualBegin', label: t('pickPlan.column.actualBegin'), minWidth: 120, align: 'center' },
+  { prop: 'actualEnd', label: t('pickPlan.column.actualEnd'), minWidth: 120, align: 'center' },
+  { prop: 'expectedYield', label: t('pickPlan.column.expectedYield'), minWidth: 120, align: 'right' },
+  { prop: 'actualYield', label: t('pickPlan.column.actualYield'), minWidth: 120, align: 'right' },
+  { prop: 'activityPlotCount', label: t('pickPlan.column.activityPlotCount'), minWidth: 120, align: 'center' }
 ]);
 
 async function loadList() {

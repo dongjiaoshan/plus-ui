@@ -1,9 +1,5 @@
 <template>
   <div class="p-2">
-    <el-tabs v-model="activeTab" class="farm-records-tabs" @tab-change="handleTabChange">
-      <el-tab-pane v-for="tab in tabs" :key="tab.name" :label="t(tab.labelKey)" :name="tab.name" />
-    </el-tabs>
-
     <BizTable
       ref="tableRef"
       :data="list"
@@ -55,28 +51,23 @@ const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 /**
- * 5 Tab 与 farm_work_type 字典值分组（互斥，覆盖全 12 类）。
- *
- * 不直接按 entity 的 farm_type 阶段（empty/grow/disaster）切，因 grow 阶段同时含多类农事；
- * 改按 farm_work_type 12 类字典分 5 大组（PLT-WORK-002 prompt §1.1 推荐方案 a，见 _open-issues PLT-WORK-002-A）。
+ * 农事记录页只列「农事」类（灾害记录 / 采摘活动有独立页，不在此页）。
+ * 默认 farm_work_type 范围 = 全 12 类排除 disaster（灾害）+ harvest_activity（采摘活动）。
+ * 顶部农事类型搜索下拉同此排除集；选中某类则收窄到该单类。
  */
-const TAB_WORK_TYPES: Record<string, string[]> = {
-  tillage: ['tillage_break', 'tillage_prepare', 'rotation', 'transplant', 'harvest_activity'],
-  irrigate: ['irrigation', 'water_fertilize'],
-  fertilize: ['fertilize'],
-  weed: ['weed', 'pest_control', 'pruning'],
-  disaster: ['disaster']
-};
-
-const tabs = [
-  { name: 'tillage', labelKey: 'plantWork.tab.tillage' },
-  { name: 'irrigate', labelKey: 'plantWork.tab.irrigate' },
-  { name: 'fertilize', labelKey: 'plantWork.tab.fertilize' },
-  { name: 'weed', labelKey: 'plantWork.tab.weed' },
-  { name: 'disaster', labelKey: 'plantWork.tab.disaster' }
+const EXCLUDED_WORK_TYPES = ['disaster', 'harvest_activity'];
+const DEFAULT_WORK_TYPES = [
+  'tillage_break',
+  'tillage_prepare',
+  'rotation',
+  'transplant',
+  'water_fertilize',
+  'irrigation',
+  'fertilize',
+  'weed',
+  'pest_control',
+  'pruning'
 ];
-
-const activeTab = ref('tillage');
 
 const tableRef = ref<BizTableExpose>();
 const list = ref<FarmRecordVO[]>([]);
@@ -91,15 +82,21 @@ const currentId = ref<string>('');
 const plotOptions = ref<Array<{ label: string; value: string }>>([]);
 const teamOptions = ref<Array<{ label: string; value: string }>>([]);
 
+// 农事类型下拉（djs_farm_work_type 排除灾害 + 采摘活动 —— 这两类有独立页）
+const { djs_farm_work_type } = toRefs<any>(proxy?.useDict('djs_farm_work_type'));
+const farmTypeOptions = computed<Array<{ label: string; value: string }>>(() =>
+  (djs_farm_work_type?.value ?? []).filter((d: any) => !EXCLUDED_WORK_TYPES.includes(d.value)).map((d: any) => ({ label: d.label, value: d.value }))
+);
+
 const searchModel = reactive<Record<string, any>>({
-  recordNo: undefined,
+  farmType: undefined,
   farmDate: undefined,
   plotId: undefined,
   farmBy: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'recordNo', label: t('plantWork.field.recordNo'), type: 'input' },
+  { field: 'farmType', label: t('plantWork.field.farmType'), type: 'select', options: farmTypeOptions.value },
   { field: 'farmDate', label: t('plantWork.field.dateRange'), type: 'daterange' },
   { field: 'plotId', label: t('plantWork.field.plot'), type: 'select', options: plotOptions.value },
   { field: 'farmBy', label: t('plantWork.field.team'), type: 'select', options: teamOptions.value }
@@ -116,13 +113,17 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'createTime', label: t('plantWork.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 
+// 选了农事类型 → 单类；否则默认全部农事类（排除灾害 + 采摘活动）
+function resolveWorkTypes(): string[] {
+  return searchModel.farmType ? [searchModel.farmType] : DEFAULT_WORK_TYPES;
+}
+
 function buildQuery(): FarmRecordQuery {
   const range = searchModel.farmDate;
   return {
     pageNum: pageNum.value,
     pageSize: pageSize.value,
-    farmWorkTypes: TAB_WORK_TYPES[activeTab.value],
-    recordNo: searchModel.recordNo || undefined,
+    farmWorkTypes: resolveWorkTypes(),
     plotId: searchModel.plotId || undefined,
     farmBy: searchModel.farmBy || undefined,
     farmDateBegin: Array.isArray(range) && range[0] ? range[0] : undefined,
@@ -163,10 +164,6 @@ async function loadTeamOptions() {
   }
 }
 
-function handleTabChange() {
-  pageNum.value = 1;
-  fetchList();
-}
 function handleSearch(payload: Record<string, any>) {
   Object.assign(searchModel, payload);
   pageNum.value = 1;
@@ -191,8 +188,7 @@ function handleExport() {
   proxy?.download(
     'djs/plant/farm/export',
     {
-      farmWorkTypes: TAB_WORK_TYPES[activeTab.value],
-      recordNo: searchModel.recordNo || undefined,
+      farmWorkTypes: resolveWorkTypes(),
       plotId: searchModel.plotId || undefined,
       farmBy: searchModel.farmBy || undefined,
       farmDateBegin: Array.isArray(range) && range[0] ? range[0] : undefined,

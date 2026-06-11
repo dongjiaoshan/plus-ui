@@ -20,7 +20,7 @@
       @page-change="onPageChange"
     />
 
-    <BreedInfoForm ref="formRef" @success="fetchList" />
+    <BreedInfoForm ref="formRef" @success="onFormSuccess" />
   </div>
 </template>
 
@@ -129,6 +129,12 @@ async function onDel(rowOrRows: BizRow | BizRow[]) {
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
   loadCodeOptions();
+}
+
+// 新增/编辑品系成功后：刷新列表 + 重拉筛选下拉选项（K164：新增品系后筛选框立即包含新 code，无需重登）
+async function onFormSuccess() {
+  fetchList();
+  await loadCodeOptions();
 }
 
 onMounted(() => {

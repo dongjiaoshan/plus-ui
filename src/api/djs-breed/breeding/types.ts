@@ -66,8 +66,14 @@ export interface BreedConfigVO extends BaseEntity {
   breedStrain: number;
   /** 引用 t_farm_breed_info.breed_strain_code */
   motherCode: string;
+  /** 母系名称（后端 JOIN t_farm_breed_info 富集） */
+  motherName?: string;
   fatherCode: string;
+  /** 父系名称（后端 JOIN t_farm_breed_info 富集） */
+  fatherName?: string;
   cubCode: string;
+  /** 仔代名称（后端 JOIN t_farm_breed_info 富集） */
+  offspringName?: string;
   remark?: string;
   /** 创建人 sys_user.user_id */
   createBy?: number | string;

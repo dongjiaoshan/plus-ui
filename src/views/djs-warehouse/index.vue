@@ -1,14 +1,19 @@
 <template>
   <div class="warehouse-dashboard p-2">
+    <!-- 统一页头：标题 + 最近刷新 + 全页刷新按钮 -->
+    <div class="page-header">
+      <span class="page-title">{{ t('warehouse.dashboard.title') }}</span>
+      <div class="actions">
+        <el-tag v-if="lastRefreshAt" type="info" size="small">{{ t('warehouse.dashboard.lastRefresh', { time: lastRefreshAt }) }}</el-tag>
+        <el-button size="small" :loading="loading" @click="loadAll">{{ t('warehouse.dashboard.refresh') }}</el-button>
+      </div>
+    </div>
+
     <!-- KPI 横条 1：今日需求（6 项） -->
     <el-card shadow="never" class="kpi-card">
       <template #header>
         <div class="card-header">
           <span class="title">{{ t('warehouse.dashboard.demandBar') }}</span>
-          <div class="actions">
-            <el-tag v-if="lastRefreshAt" type="info" size="small">{{ t('warehouse.dashboard.lastRefresh', { time: lastRefreshAt }) }}</el-tag>
-            <el-button size="small" :loading="loading" @click="loadAll">{{ t('warehouse.dashboard.refresh') }}</el-button>
-          </div>
         </div>
       </template>
       <el-row :gutter="12" class="kpi-row">
@@ -42,13 +47,17 @@
     <el-row :gutter="12" class="chart-row">
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
-          <template #header><span class="title">{{ t('warehouse.dashboard.chartDemandPie') }}</span></template>
+          <template #header
+            ><span class="title">{{ t('warehouse.dashboard.chartDemandPie') }}</span></template
+          >
           <div ref="demandPieEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
-          <template #header><span class="title">{{ t('warehouse.dashboard.chartReturnRing') }}</span></template>
+          <template #header
+            ><span class="title">{{ t('warehouse.dashboard.chartReturnRing') }}</span></template
+          >
           <div ref="returnRingEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
@@ -57,13 +66,17 @@
     <el-row :gutter="12" class="chart-row">
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
-          <template #header><span class="title">{{ t('warehouse.dashboard.chartProductionTrend') }}</span></template>
+          <template #header
+            ><span class="title">{{ t('warehouse.dashboard.chartProductionTrend') }}</span></template
+          >
           <div ref="productionTrendEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
-          <template #header><span class="title">{{ t('warehouse.dashboard.chartCheckPie') }}</span></template>
+          <template #header
+            ><span class="title">{{ t('warehouse.dashboard.chartCheckPie') }}</span></template
+          >
           <div ref="checkPieEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
@@ -72,44 +85,46 @@
     <el-row :gutter="12" class="chart-row">
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
-          <template #header><span class="title">{{ t('warehouse.dashboard.chartLocationRing') }}</span></template>
+          <template #header
+            ><span class="title">{{ t('warehouse.dashboard.chartLocationRing') }}</span></template
+          >
           <div ref="locationRingEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
-          <template #header><span class="title">{{ t('warehouse.dashboard.chartLossTrend') }}</span></template>
+          <template #header
+            ><span class="title">{{ t('warehouse.dashboard.chartLossTrend') }}</span></template
+          >
           <div ref="lossTrendEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- 库位概览 -->
+    <!-- 库位概览：卡片网格（响应式 md 3 / sm 2 / xs 1，与顶部 KPI 卡风格统一） -->
     <el-card shadow="never" class="location-overview">
       <template #header>
         <div class="card-header">
           <span class="title">{{ t('warehouse.dashboard.locationOverview') }}</span>
         </div>
       </template>
-      <el-table v-loading="loading" :data="summary?.locationOverview ?? []" border>
-        <el-table-column prop="locationName" :label="t('warehouse.dashboard.colLocation')" min-width="160" />
-        <el-table-column prop="locationType" :label="t('warehouse.dashboard.colType')" width="120" align="center">
-          <template #default="{ row }">
-            <dict-tag :options="djs_location_type" :value="row.locationType" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="currentStock" :label="t('warehouse.dashboard.colStock')" width="140" align="right" />
-        <el-table-column prop="status" :label="t('warehouse.dashboard.colStatus')" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'abnormal' ? 'danger' : 'success'">
-              {{ row.status === 'abnormal' ? t('warehouse.dashboard.statusAbnormal') : t('warehouse.dashboard.statusNormal') }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty :description="t('warehouse.dashboard.emptyLocation')" />
-        </template>
-      </el-table>
+      <el-row v-loading="loading" :gutter="12" class="location-grid">
+        <el-col v-for="loc in summary?.locationOverview ?? []" :key="String(loc.locationId ?? loc.locationName)" :xs="24" :sm="12" :md="8">
+          <div class="location-tile" :class="{ abnormal: loc.status === 'abnormal' }">
+            <div class="tile-head">
+              <span class="loc-name">{{ loc.locationName }}</span>
+              <el-tag :type="loc.status === 'abnormal' ? 'danger' : 'success'" size="small">
+                {{ loc.status === 'abnormal' ? t('warehouse.dashboard.statusAbnormal') : t('warehouse.dashboard.statusNormal') }}
+              </el-tag>
+            </div>
+            <div class="loc-stock">{{ loc.currentStock }}</div>
+            <div class="tile-foot">
+              <dict-tag :options="djs_location_type" :value="loc.locationType" />
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+      <el-empty v-if="!loading && (summary?.locationOverview ?? []).length === 0" :description="t('warehouse.dashboard.emptyLocation')" />
     </el-card>
   </div>
 </template>
@@ -202,11 +217,33 @@ function nowTimeText(): string {
 
 function renderAll() {
   renderPie(demandPieEl, () => (demandPie ??= echarts.init(demandPieEl.value!)), charts.value?.demandByType, t('warehouse.dashboard.chartDemandPie'));
-  renderRing(returnRingEl, () => (returnRing ??= echarts.init(returnRingEl.value!)), charts.value?.returnByDirection, t('warehouse.dashboard.chartReturnRing'));
-  renderTrend(productionTrendEl, () => (productionTrend ??= echarts.init(productionTrendEl.value!)), charts.value?.productionTrend, t('warehouse.dashboard.seriesProduction'), '#5470c6');
+  renderRing(
+    returnRingEl,
+    () => (returnRing ??= echarts.init(returnRingEl.value!)),
+    charts.value?.returnByDirection,
+    t('warehouse.dashboard.chartReturnRing')
+  );
+  renderTrend(
+    productionTrendEl,
+    () => (productionTrend ??= echarts.init(productionTrendEl.value!)),
+    charts.value?.productionTrend,
+    t('warehouse.dashboard.seriesProduction'),
+    '#5470c6'
+  );
   renderPie(checkPieEl, () => (checkPie ??= echarts.init(checkPieEl.value!)), charts.value?.checkResult, t('warehouse.dashboard.chartCheckPie'));
-  renderRing(locationRingEl, () => (locationRing ??= echarts.init(locationRingEl.value!)), charts.value?.locationHealth, t('warehouse.dashboard.chartLocationRing'));
-  renderTrend(lossTrendEl, () => (lossTrend ??= echarts.init(lossTrendEl.value!)), charts.value?.lossTrend, t('warehouse.dashboard.seriesLoss'), '#e6a23c');
+  renderRing(
+    locationRingEl,
+    () => (locationRing ??= echarts.init(locationRingEl.value!)),
+    charts.value?.locationHealth,
+    t('warehouse.dashboard.chartLocationRing')
+  );
+  renderTrend(
+    lossTrendEl,
+    () => (lossTrend ??= echarts.init(lossTrendEl.value!)),
+    charts.value?.lossTrend,
+    t('warehouse.dashboard.seriesLoss'),
+    '#e6a23c'
+  );
 }
 
 function renderPie(el: typeof demandPieEl, getChart: () => echarts.ECharts, data: ChartSeriesItem[] | undefined, name: string) {
@@ -251,7 +288,13 @@ function renderRing(el: typeof returnRingEl, getChart: () => echarts.ECharts, da
   });
 }
 
-function renderTrend(el: typeof productionTrendEl, getChart: () => echarts.ECharts, data: ChartTrendPoint[] | undefined, name: string, color: string) {
+function renderTrend(
+  el: typeof productionTrendEl,
+  getChart: () => echarts.ECharts,
+  data: ChartTrendPoint[] | undefined,
+  name: string,
+  color: string
+) {
   if (!el.value) return;
   const chart = getChart();
   const points = data ?? [];
@@ -301,6 +344,18 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .page-title {
+      font-weight: 600;
+      font-size: 16px;
+      color: #2c3e50;
+    }
+  }
 
   .card-header {
     display: flex;
@@ -352,6 +407,51 @@ onUnmounted(() => {
     .chart-canvas {
       width: 100%;
       height: 280px;
+    }
+  }
+
+  .location-grid {
+    margin: 0 !important;
+  }
+
+  .location-tile {
+    background: #f9fafc;
+    border: 1px solid #ebeef5;
+    border-left: 4px solid #67c23a;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+
+    &.abnormal {
+      border-left-color: #f56c6c;
+    }
+
+    .tile-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .loc-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2c3e50;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .loc-stock {
+      color: #2c3e50;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin: 6px 0;
+    }
+
+    .tile-foot {
+      color: #888;
+      font-size: 12px;
     }
   }
 }

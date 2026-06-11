@@ -38,8 +38,10 @@ export interface PickPlanGroupVO {
 
 export interface PickDetailAdjustInput {
   id: string;
-  beginHarvestdate?: string;
-  endHarvestdate?: string;
+  /** 计划最早采摘日期（用户可编辑） */
+  earliestHarvestdate?: string;
+  /** 计划最晚采摘日期（按窗口天数由最早派生，后端重算兜底） */
+  lastHarvestdate?: string;
   /** 1=是 / 2=否 */
   isPick?: number;
   harvestBy?: string;

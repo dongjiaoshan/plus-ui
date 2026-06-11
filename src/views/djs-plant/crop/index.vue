@@ -99,7 +99,14 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropName', label: t('plantCrop.column.cropName'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'varietyName', label: t('plantCrop.column.varietyName'), width: 140, showOverflowTooltip: true },
   { prop: 'cropFamily', label: t('plantCrop.column.cropFamily'), width: 100, align: 'center', dictType: 'djs_crop_family' },
-  { prop: 'plantingSeason', label: t('plantCrop.column.plantingSeason'), width: 140, showOverflowTooltip: true },
+  {
+    prop: 'plantingSeason',
+    label: t('plantCrop.column.plantingSeason'),
+    width: 140,
+    align: 'center',
+    dictType: 'djs_planting_season',
+    showOverflowTooltip: true
+  },
   {
     prop: 'maxCycle',
     label: t('plantCrop.column.cycle'),

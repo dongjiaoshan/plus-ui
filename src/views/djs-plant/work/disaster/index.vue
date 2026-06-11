@@ -72,7 +72,6 @@ const currentId = ref<string>('');
 const plotOptions = ref<Array<{ label: string; value: string }>>([]);
 
 const searchModel = reactive<Record<string, any>>({
-  recordNo: undefined,
   farmDate: undefined,
   plotId: undefined,
   disasterType: undefined,
@@ -80,7 +79,6 @@ const searchModel = reactive<Record<string, any>>({
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'recordNo', label: t('plantDisaster.field.recordNo'), type: 'input' },
   { field: 'farmDate', label: t('plantDisaster.field.dateRange'), type: 'daterange' },
   { field: 'plotId', label: t('plantDisaster.field.plot'), type: 'select', options: plotOptions.value },
   { field: 'disasterType', label: t('plantDisaster.field.disasterType'), type: 'select', dictType: 'djs_disaster_type' },
@@ -105,7 +103,6 @@ function buildQuery(): DisasterRecordQuery {
   return {
     pageNum: pageNum.value,
     pageSize: pageSize.value,
-    recordNo: searchModel.recordNo || undefined,
     plotId: searchModel.plotId || undefined,
     disasterType: searchModel.disasterType || undefined,
     isWarning: searchModel.isWarning === undefined || searchModel.isWarning === '' ? undefined : Number(searchModel.isWarning),
@@ -160,7 +157,6 @@ function handleExport() {
   proxy?.download(
     'djs/plant/farm/disaster/export',
     {
-      recordNo: searchModel.recordNo || undefined,
       plotId: searchModel.plotId || undefined,
       disasterType: searchModel.disasterType || undefined,
       isWarning: searchModel.isWarning === undefined || searchModel.isWarning === '' ? undefined : Number(searchModel.isWarning),

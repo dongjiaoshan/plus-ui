@@ -1,8 +1,13 @@
 <template>
   <div class="p-2">
+    <!-- K217 二级分类 tab：猪肉产品 / 果蔬产品（按产品归属类别过滤，对齐原型「退回操作」分类） -->
+    <el-tabs v-model="activeTab" class="return-tabs" @tab-change="handleTabChange">
+      <el-tab-pane :label="t('storeReturn.tab.pork')" name="pork" />
+      <el-tab-pane :label="t('storeReturn.tab.vegetable')" name="vegetable" />
+    </el-tabs>
     <BizTable
       ref="tableRef"
-      :data="list"
+      :data="displayList"
       :total="total"
       :loading="loading"
       :columns="columns"
@@ -104,6 +109,41 @@ const storeOptions = ref<StoreVO[]>([]);
 const productOptions = ref<ProductInfoVO[]>([]);
 const locationOptions = ref<LocationInfoVO[]>([]);
 
+// K217 二级分类 tab：猪肉产品 / 果蔬产品
+const activeTab = ref<'pork' | 'vegetable'>('pork');
+// 猪肉链归属类型（产品 belongType 命中其一 → 归「猪肉产品」tab）；其余按 vegetable 处理
+const PORK_BELONG_TYPES = ['pork', 'white_bar'];
+
+// 产品 snowflake id → { belongType, productCode(业务码), productSpec }
+const productMetaMap = computed(() => {
+  const m = new Map<string, { belongType?: string; productCode?: string; productSpec?: string }>();
+  productOptions.value.forEach((p) => {
+    m.set(String(p.id), { belongType: p.belongType, productCode: p.productId, productSpec: p.productSpec });
+  });
+  return m;
+});
+
+function categoryOf(belongType?: string): 'pork' | 'vegetable' {
+  return belongType && PORK_BELONG_TYPES.includes(belongType) ? 'pork' : 'vegetable';
+}
+
+// 列表行补充 产品类型/产品代码/规格（从产品主数据 join），并按当前 tab 过滤
+const displayList = computed<StoreReturnVO[]>(() => {
+  return list.value
+    .map((row) => {
+      const meta = productMetaMap.value.get(String(row.productId));
+      const cat = categoryOf(meta?.belongType);
+      return {
+        ...row,
+        productCode: meta?.productCode,
+        productSpec: meta?.productSpec,
+        productCategory: cat,
+        productTypeLabel: cat === 'pork' ? t('storeReturn.tab.pork') : t('storeReturn.tab.vegetable')
+      } as StoreReturnVO & { productCategory: 'pork' | 'vegetable'; productTypeLabel: string };
+    })
+    .filter((row) => (row as { productCategory: string }).productCategory === activeTab.value);
+});
+
 const dialogVisible = ref(false);
 const submitLoading = ref(false);
 const isEdit = ref(false);
@@ -157,13 +197,16 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'returnNo', label: t('storeReturn.column.returnNo'), width: 170, showOverflowTooltip: true },
-  { prop: 'storeName', label: t('storeReturn.column.storeName'), minWidth: 130, showOverflowTooltip: true },
+  { prop: 'storeName', label: t('storeReturn.column.storeName'), minWidth: 120, showOverflowTooltip: true },
+  { prop: 'productTypeLabel', label: t('storeReturn.column.productType'), width: 100, align: 'center' },
+  { prop: 'productCode', label: t('storeReturn.column.productCode'), width: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 130, showOverflowTooltip: true },
-  { prop: 'locationName', label: t('storeReturn.column.locationName'), minWidth: 120, showOverflowTooltip: true },
+  { prop: 'productSpec', label: t('storeReturn.column.productSpec'), width: 110, align: 'center', showOverflowTooltip: true },
+  { prop: 'locationName', label: t('storeReturn.column.locationName'), minWidth: 110, showOverflowTooltip: true },
   { prop: 'returnQuantity', label: t('storeReturn.column.returnQuantity'), width: 100, align: 'right' },
-  { prop: 'returnReason', label: t('storeReturn.column.returnReason'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'returnReason', label: t('storeReturn.column.returnReason'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'returnDate', label: t('storeReturn.column.returnDate'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'operatorName', label: t('storeReturn.column.operatorName'), width: 100, align: 'center' },
+  { prop: 'operatorName', label: t('storeReturn.column.operatorName'), width: 90, align: 'center' },
   { prop: 'createTime', label: t('storeReturn.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 
@@ -216,6 +259,11 @@ async function fetchList() {
   } finally {
     loading.value = false;
   }
+}
+
+// tab 切换为客户端视图过滤（displayList 计算属性自动重算），仅滚动回顶部
+function handleTabChange() {
+  tableRef.value?.clearSelection?.();
 }
 
 function handleSearch(payload?: Record<string, unknown>) {

@@ -38,7 +38,7 @@
               style="width: 100%"
               @change="onProductSelect"
             >
-              <el-option v-for="p in productOptions" :key="String(p.id)" :label="`${p.productName} (${p.productId})`" :value="String(p.id)" />
+              <el-option v-for="p in productOptions" :key="String(p.id)" :label="p.productName" :value="String(p.id)" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -71,34 +71,9 @@
           </el-form-item>
         </el-col>
 
-        <template v-if="props.productType === 'white_bar' || props.productType === 'vegetable'">
-          <el-col :span="12">
-            <el-form-item :label="t('storeDemand.field.rawMaterial')" prop="rawMaterial">
-              <el-input v-model="form.rawMaterial" :placeholder="t('storeDemand.placeholder.rawMaterial')" maxlength="255" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('storeDemand.field.materialQty')" prop="materialQty">
-              <el-input-number v-model="form.materialQty" :precision="3" :min="0" :step="1" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-        </template>
-
         <el-col :span="24">
           <el-form-item :label="t('storeDemand.field.demandRemark')" prop="demandRemark">
-            <el-input v-model="form.demandRemark" type="textarea" :rows="2" maxlength="500" show-word-limit />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item :label="t('storeDemand.field.demandExplain')" prop="demandExplain">
-            <el-input
-              v-model="form.demandExplain"
-              type="textarea"
-              :rows="3"
-              maxlength="500"
-              show-word-limit
-              :placeholder="t('storeDemand.placeholder.demandExplain')"
-            />
+            <el-input v-model="form.demandRemark" type="textarea" :rows="3" maxlength="500" show-word-limit />
           </el-form-item>
         </el-col>
       </el-row>
@@ -235,10 +210,7 @@ async function loadDetail(id: string) {
     productSpec: detail.productSpec,
     demandQuantity: detail.demandQuantity != null ? Number(detail.demandQuantity) : undefined,
     productUnit: detail.productUnit,
-    rawMaterial: detail.rawMaterial,
-    materialQty: detail.materialQty != null ? Number(detail.materialQty) : undefined,
     demandRemark: detail.demandRemark,
-    demandExplain: detail.demandExplain,
     expectedArriveDate: detail.expectedArriveDate,
     remark: detail.remark
   });

@@ -14,6 +14,7 @@
       row-key="id"
       selectable
       show-export
+      :show-row-del="false"
       perm-prefix="djs:plant:plan"
       @search="handleSearch"
       @reset="handleReset"
@@ -23,10 +24,12 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-action="{ row }">
-        <el-button link type="primary" size="small" @click="handleDetail(row)">
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:plant:plan:list']" link type="primary" size="small" @click="handleDetail(row)">
           {{ t('plantPlan.action.detail') }}
         </el-button>
+        <el-button v-hasPermi="['djs:plant:plan:edit']" link type="primary" size="small" icon="Edit" @click="handleEdit(row)" />
+        <el-button v-hasPermi="['djs:plant:plan:remove']" link type="danger" size="small" icon="Delete" @click="handleDelOne(row)" />
       </template>
     </BizTable>
   </div>
@@ -70,28 +73,28 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'planNo', label: t('plantPlan.column.planNo'), width: 160, showOverflowTooltip: true },
-  { prop: 'planYear', label: t('plantPlan.column.planYear'), width: 80, align: 'center' },
-  { prop: 'planSeason', label: t('plantPlan.column.planSeason'), width: 100, align: 'center', dictType: 'djs_planting_season' },
-  { prop: 'cropName', label: t('plantPlan.column.crop'), width: 140, showOverflowTooltip: true },
+  { prop: 'planNo', label: t('plantPlan.column.planNo'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'planYear', label: t('plantPlan.column.planYear'), minWidth: 80, align: 'center' },
+  { prop: 'planSeason', label: t('plantPlan.column.planSeason'), minWidth: 100, align: 'center', dictType: 'djs_planting_season' },
+  { prop: 'cropName', label: t('plantPlan.column.crop'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'plantDate', label: t('plantPlan.column.plantDate'), minWidth: 130, align: 'center', showOverflowTooltip: true },
   {
     prop: 'totalArea',
     label: t('plantPlan.column.totalArea'),
-    width: 110,
+    minWidth: 110,
     align: 'right',
     formatter: (r: BizRow) => (r.totalArea != null ? `${r.totalArea} 亩` : '-')
   },
   {
     prop: 'totalPlot',
     label: t('plantPlan.column.totalPlot'),
-    width: 100,
+    minWidth: 100,
     align: 'center',
     formatter: (r: BizRow) => (r.totalPlot != null ? String(r.totalPlot) : '-')
   },
-  { prop: 'earliestHarvestdate', label: t('plantPlan.column.earliestHarvestdate'), width: 130, align: 'center' },
-  { prop: 'lastHarvestdate', label: t('plantPlan.column.lastHarvestdate'), width: 130, align: 'center' },
-  { prop: 'plantStatus', label: t('plantPlan.column.plantStatus'), width: 100, align: 'center', dictType: 'djs_plant_plan_status' },
-  { prop: 'action', label: t('plantPlan.column.action'), width: 100, align: 'center', fixed: 'right' }
+  { prop: 'earliestHarvestdate', label: t('plantPlan.column.earliestHarvestdate'), minWidth: 130, align: 'center' },
+  { prop: 'lastHarvestdate', label: t('plantPlan.column.lastHarvestdate'), minWidth: 130, align: 'center' },
+  { prop: 'plantStatus', label: t('plantPlan.column.plantStatus'), minWidth: 100, align: 'center', dictType: 'djs_plant_plan_status' }
 ]);
 
 async function loadList() {
@@ -139,6 +142,13 @@ const handleDel = async (rows: BizRow[]) => {
   if (!rows.length) return;
   await ElMessageBox.confirm(t('plantPlan.confirm.del', { count: rows.length }), t('common.tip'), { type: 'warning' });
   await delPlan(rows.map((r) => r.id as string));
+  ElMessage.success(t('common.deleteSuccess'));
+  loadList();
+};
+
+const handleDelOne = async (row: BizRow) => {
+  await ElMessageBox.confirm(t('plantPlan.confirm.del', { count: 1 }), t('common.tip'), { type: 'warning' });
+  await delPlan([row.id as string]);
   ElMessage.success(t('common.deleteSuccess'));
   loadList();
 };

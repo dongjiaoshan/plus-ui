@@ -23,14 +23,22 @@
             />
           </el-form-item>
         </el-col>
+        <el-col :span="12" />
         <el-col :span="12">
           <el-form-item :label="t('plantPlotOrganic.field.organicImagePreview')" prop="organicImagePreview">
             <OssUpload ref="ossThumbRef" v-model="thumbOssIdsModel" biz-type="plant_organic" :limit="1" :file-size="10" />
           </el-form-item>
         </el-col>
-        <el-col :span="24">
+        <el-col :span="12">
           <el-form-item :label="t('plantPlotOrganic.field.organicImageUrl')" prop="organicImageUrl">
             <OssUpload ref="ossImgRef" v-model="imgOssIdsModel" biz-type="plant_organic" :limit="9" :file-size="10" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item :label="t('plantPlotOrganic.field.zone')" prop="zoneId">
+            <el-select v-model="selectedZoneId" filterable clearable :placeholder="t('plantPlotOrganic.placeholder.zone')" style="width: 100%">
+              <el-option v-for="z in zoneOptions" :key="z.id" :label="z.zoneName" :value="String(z.id)" />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -43,6 +51,7 @@
               :filter-placeholder="t('plantPlotOrganic.placeholder.search')"
               style="width: 100%"
             />
+            <div class="form-tip">{{ t('plantPlotOrganic.tip.crossZone') }}</div>
           </el-form-item>
         </el-col>
       </el-row>
@@ -60,10 +69,12 @@
 <script setup lang="ts">
 import { addPlotOrganic, getPlotOrganic, updatePlotOrganic } from '@/api/djs-plant/plotOrganic';
 import { listPlot } from '@/api/djs-plant/plot';
+import { listAllZone } from '@/api/djs-plant/zone';
 import OssUpload from '@/components/OssUpload/index.vue';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { PlotOrganicForm } from '@/api/djs-plant/plotOrganic/types';
 import type { PlotInfoVO } from '@/api/djs-plant/plot/types';
+import type { PlotZoneVO } from '@/api/djs-plant/zone/types';
 import { useI18n } from 'vue-i18n';
 import { useOssBridge } from '@/composables/useOssBridge';
 
@@ -77,13 +88,19 @@ const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 const ossImgRef = ref<InstanceType<typeof OssUpload>>();
 
 const allPlots = ref<PlotInfoVO[]>([]);
-const plotTransferData = computed(() =>
-  allPlots.value.map((p) => ({
-    key: String(p.id),
-    label: `${p.plotCode}  ${p.plotName}`,
-    disabled: false
-  }))
-);
+const zoneOptions = ref<PlotZoneVO[]>([]);
+// K179：先选片区再选地块。选了片区只列该片区下地块；G7(a) 已选地块（跨片区）始终保留在右栏可见。
+const selectedZoneId = ref<string>('');
+const plotTransferData = computed(() => {
+  const selected = new Set((form.value.plotIds || []).map(String));
+  return allPlots.value
+    .filter((p) => !selectedZoneId.value || String(p.zoneId) === selectedZoneId.value || selected.has(String(p.id)))
+    .map((p) => ({
+      key: String(p.id),
+      label: `${p.plotCode}  ${p.plotName}`,
+      disabled: false
+    }));
+});
 
 const defaultForm = (): PlotOrganicForm & { plotIds: string[] } => ({
   id: undefined,
@@ -121,14 +138,28 @@ async function ensurePlotList() {
   }
 }
 
+async function ensureZoneList() {
+  if (zoneOptions.value.length > 0) return;
+  try {
+    const res = await listAllZone();
+    const all = (res.rows ?? res.data ?? []) as PlotZoneVO[];
+    // 仅列启用片区（zoneStatus=1）
+    zoneOptions.value = all.filter((z) => z.zoneStatus === 1);
+  } catch (e) {
+    console.warn('[PlotOrganicForm] listAllZone failed', e);
+  }
+}
+
 const openCreate = async () => {
-  await ensurePlotList();
+  await Promise.all([ensurePlotList(), ensureZoneList()]);
+  selectedZoneId.value = '';
   form.value = defaultForm();
   visible.value = true;
 };
 
 const openEdit = async (id: number | string) => {
-  await ensurePlotList();
+  await Promise.all([ensurePlotList(), ensureZoneList()]);
+  selectedZoneId.value = '';
   const res = await getPlotOrganic(id);
   const data = res.data;
   form.value = {
@@ -200,3 +231,12 @@ const submit = () => {
   });
 };
 </script>
+
+<style scoped>
+.form-tip {
+  margin-top: 4px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+</style>

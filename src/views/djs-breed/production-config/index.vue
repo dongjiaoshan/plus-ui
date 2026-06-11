@@ -1,13 +1,6 @@
 <template>
   <div class="p-2">
-    <el-alert
-      class="mb-3"
-      type="info"
-      show-icon
-      :closable="false"
-      :title="t('productionConfig.tip.noAutoTrigger')"
-      :description="t('productionConfig.tip.seedKeys')"
-    />
+    <el-alert class="mb-3" type="info" show-icon :closable="true" :title="t('productionConfig.tip.noAutoTrigger')" />
 
     <el-tabs v-model="activeTab" class="biz-tabs">
       <!-- Tab1 生产周期 -->

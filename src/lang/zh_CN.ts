@@ -389,9 +389,12 @@ export default {
       parentCode: '父级编码',
       description: '描述',
       remark: '备注',
-      motherCode: '母本编码',
-      fatherCode: '父本编码',
+      motherCode: '母系编码',
+      motherName: '母系名称',
+      fatherCode: '父系编码',
+      fatherName: '父系名称',
       cubCode: '仔代编码',
+      offspringName: '仔代名称',
       createTime: '创建时间',
       createBy: '创建人'
     },
@@ -402,8 +405,8 @@ export default {
       parentCode: '父级编码',
       description: '描述',
       remark: '备注',
-      motherCode: '母本编码',
-      fatherCode: '父本编码',
+      motherCode: '母系编码',
+      fatherCode: '父系编码',
       cubCode: '仔代编码',
       createTimeRange: '创建时间'
     },
@@ -411,8 +414,8 @@ export default {
       breedStrainCode: '请输入编码（字母/数字/下划线/连字符）',
       breedStrainName: '请输入名称',
       parentCode: '请输入父级编码（仅品系填）',
-      motherCode: '请选择母本',
-      fatherCode: '请选择父本',
+      motherCode: '请选择母系',
+      fatherCode: '请选择父系',
       cubCode: '请选择仔代'
     },
     option: {
@@ -428,8 +431,8 @@ export default {
         len1: '品系编码必须为 1 位数字'
       },
       breedStrainName: { required: '名称不能为空' },
-      motherCode: { required: '请选择母本' },
-      fatherCode: { required: '请选择父本' },
+      motherCode: { required: '请选择母系' },
+      fatherCode: { required: '请选择父系' },
       cubCode: { required: '请选择仔代' }
     },
     tip: {
@@ -508,9 +511,8 @@ export default {
       daysOffset: { required: '天数偏移不能为空' }
     },
     tip: {
-      noAutoTrigger: 'v1.2：配置只决定建议时间，不会自动改状态，状态变化全靠业务事件触发',
-      customOverridesDefault: '"自定义值"留空时业务读取走默认值',
-      seedKeys: '已 seed 6 项：妊娠 114 / 哺乳 28 / 保育 35 / 育肥 120 / 发情周期 21 / 断奶到配种 7'
+      noAutoTrigger: '配置仅决定建议时间，不自动改状态',
+      customOverridesDefault: '"自定义值"留空时业务读取走默认值'
     },
     confirm: {
       delCycle: '是否确认删除选中的 {count} 条生产周期配置？',
@@ -782,7 +784,7 @@ export default {
   // 农场 / 栋舍 / 栏位（BRD-MD-002）— 单农场（ADR-0001），左侧树两层：栋舍 → 栏位
   farm: {
     section: {
-      farmInfo: '农场信息',
+      farmInfo: '农场栋舍信息配置',
       tree: '栋舍 / 栏位',
       detail: '详情',
       barnDetail: '栋舍详情',
@@ -1162,7 +1164,7 @@ export default {
     field: {
       productName: '产品名称',
       earNo: '耳号',
-      isEnd: '是否完成'
+      blockNo: '地块编号'
     },
     column: {
       locationName: '库位',
@@ -1170,11 +1172,9 @@ export default {
       productStock: '当前库存',
       productUnit: '单位',
       earNo: '耳号',
-      isEnd: '是否完成',
+      blockNo: '地块编号',
       latestCheckTime: '最新盘点',
-      checkResult: '盘点结果',
-      operatorName: '操作人',
-      createTime: '创建时间'
+      checkResult: '盘点结果'
     },
     action: {
       flowIn: '入库记录',
@@ -1283,6 +1283,7 @@ export default {
       organicValid: '有效期至',
       organicImagePreview: '缩略图',
       organicImageUrl: '证书图片',
+      zone: '所属片区',
       relatedPlots: '关联地块',
       isWarning: '预警状态'
     },
@@ -1290,7 +1291,11 @@ export default {
       organicNo: '请输入证书编号（如 GB-2026-001）',
       organicCompany: '颁发单位（如 南京国环）',
       organicValid: '请选择有效期到期日',
+      zone: '请选择片区（筛选下方地块）',
       search: '搜索地块编码 / 名称'
+    },
+    tip: {
+      crossZone: '可切换片区分次选择，已关联地块跨片区保留。'
     },
     rule: {
       organicNo: { required: '证书编号不能为空' },
@@ -1356,7 +1361,7 @@ export default {
       plantingSeason: '种植季节',
       cycle: '生长周期',
       predictedPer: '预计亩产',
-      pickUnitPrice: '采摘单价',
+      pickUnitPrice: '绩效单价',
       createTime: '创建时间'
     },
     field: {
@@ -1378,7 +1383,7 @@ export default {
       irrigationInterval: '浇灌间隔(天)',
       predictedPer: '预计亩产(kg/亩)',
       qualityDesc: '品质描述',
-      pickUnitPrice: '采摘单价(元/斤)'
+      pickUnitPrice: '绩效单价(元/斤)'
     },
     placeholder: {
       cropCode: '请输入作物编码（如 C001）',
@@ -1386,6 +1391,7 @@ export default {
       varietyName: '品种名（如 京白菜 4 号）',
       varietyOrigin: '品种来源/供应商（V1 自由文本）',
       cropFamily: '请选择作物科属',
+      relatedProduct: '请选择关联产品',
       plantingSeason: '多选种植季节',
       sowingPeriod: '例：3 月上旬 - 4 月下旬',
       qualityDesc: '品质描述'
@@ -1472,6 +1478,7 @@ export default {
       planYear: '年份',
       planSeason: '季节',
       crop: '作物',
+      plantDate: '种植开始日期',
       totalArea: '总面积(亩)',
       totalPlot: '地块数',
       earliestHarvestdate: '最早采摘',
@@ -1588,7 +1595,7 @@ export default {
     adjust: {
       title: '调整采摘计划',
       backToList: '返回列表',
-      tip: '按地块设置实际采摘起止日期、是否游客采摘活动、采摘班组；保存后立即生效。',
+      tip: '按地块设置计划最早采摘日期（计划最晚按作物采摘周期自动算）、是否游客采摘活动、采摘班组；实际采摘起止由小程序采收录入回写、此处只读；保存后立即生效。',
       activityYes: '游客采摘',
       activityNo: '常规',
       paramsMissing: '缺少 planId / cropId 参数',
@@ -1777,6 +1784,70 @@ export default {
         dialogTitle: '新增采购入库',
         submitSuccess: '入库成功'
       },
+      packEntry: {
+        meatTitle: '肉品打包',
+        otherTitle: '其他产品打包',
+        vegTitle: '果蔬打包',
+        giftTitle: '礼盒打包',
+        cutTitle: '白条分割管理',
+        otherProductTab: '普通产品',
+        otherGiftTab: '礼盒',
+        source: '来源产品',
+        sourceVeg: '来源地块/蔬菜',
+        sourcePlaceholder: '请选择来源过程产品',
+        sourceRequired: '请选择来源过程产品',
+        targetProduct: '目标产品',
+        targetProductPlaceholder: '请选择目标产品',
+        targetProductRequired: '请选择目标产品',
+        giftBox: '礼盒',
+        packBoxCount: '打包盒数',
+        packBoxCountRequired: '打包盒数必填且 ≥ 1',
+        box: '盒',
+        productWeight: '产品重量',
+        productWeightRequired: '重量必填且 > 0',
+        productUnit: '计量单位',
+        productUnitRequired: '请选择计量单位',
+        unitPiece: '个',
+        productSpec: '规格',
+        productSpecPlaceholder: '如 250g/包',
+        location: '入库库位',
+        locationPlaceholder: '请选择库位',
+        locationRequired: '请选择库位',
+        store: '需求门店',
+        storePlaceholder: '请选择需求门店',
+        proof: '凭证图',
+        remark: '备注',
+        submitSuccess: '打包提交成功',
+        cutHint: '选择已领用的白条分割单，录入各部位重量后确认入库；全部称重完成后点「白条完成分割」。',
+        cutRecord: '分割单（猪只耳号）',
+        cutRecordPlaceholder: '请选择待称重/称重中的分割单',
+        cutRecordRequired: '请选择分割单',
+        parts: '分割部位',
+        cutPart: '部位',
+        cutPartPlaceholder: '请选择部位',
+        cutPartRequired: '请选择部位',
+        addPart: '新增部位',
+        partsRequired: '请至少录入一个部位重量',
+        confirmCutOut: '确认入库',
+        cutOutSuccess: '分割出库入库成功',
+        finishCut: '白条完成分割',
+        dripLoss: '滴水损失',
+        dripLossRequired: '请填写滴水损失（无填 0）',
+        finishCutSuccess: '白条已完成分割',
+        pickupToCut: '领用进分割车间',
+        pickupToShip: '发货领用',
+        bar: '白条（猪只耳号）',
+        barPlaceholder: '请选择待领用白条',
+        barRequired: '请选择待领用白条',
+        cutWorkshop: '出库位置（分割车间）',
+        isHalf: '分割方式',
+        whole: '整只',
+        half: '半扇',
+        confirmPickup: '确认领用',
+        pickupSuccess: '白条已领用进分割车间',
+        confirmShipOut: '确认发货出库',
+        shipOutSuccess: '白条/猪肉已发货出库'
+      },
       shipment: {
         title: '发货流水',
         shipmentNo: '发货单号',
@@ -1893,6 +1964,7 @@ export default {
   // 仓库看板
   warehouse: {
     dashboard: {
+      title: '仓库总览',
       demandBar: '今日需求',
       productionBar: '今日生产',
       lastRefresh: '最近刷新 {time}',
@@ -2432,7 +2504,10 @@ export default {
       returnNo: '退回单号',
       returnDirection: '退回方向',
       storeName: '退回门店',
+      productType: '产品类型',
+      productCode: '产品代码',
       productName: '产品',
+      productSpec: '规格',
       locationName: '入库库位',
       returnQuantity: '退回数量',
       returnReason: '退回原因',
@@ -2441,6 +2516,10 @@ export default {
       returnDate: '退回日期',
       operatorName: '经手人',
       createTime: '创建时间'
+    },
+    tab: {
+      pork: '猪肉产品',
+      vegetable: '果蔬产品'
     },
     placeholder: {
       returnDirection: '请选择退回方向',
@@ -2571,8 +2650,8 @@ export default {
       team: '班组',
       crop: '作物',
       pickWeight: '采摘总量',
-      unitPrice: '单价快照',
-      amount: '应付金额',
+      unitPrice: '绩效单价',
+      amount: '绩效总额',
       action: '操作'
     },
     action: {

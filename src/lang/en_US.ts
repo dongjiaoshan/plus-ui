@@ -389,9 +389,12 @@ export default {
       parentCode: 'Parent Code',
       description: 'Description',
       remark: 'Remark',
-      motherCode: 'Mother Code',
-      fatherCode: 'Father Code',
+      motherCode: 'Maternal Line Code',
+      motherName: 'Maternal Line Name',
+      fatherCode: 'Paternal Line Code',
+      fatherName: 'Paternal Line Name',
       cubCode: 'Cub Code',
+      offspringName: 'Offspring Name',
       createTime: 'Created At',
       createBy: 'Created By'
     },
@@ -402,8 +405,8 @@ export default {
       parentCode: 'Parent Code',
       description: 'Description',
       remark: 'Remark',
-      motherCode: 'Mother Code',
-      fatherCode: 'Father Code',
+      motherCode: 'Maternal Line Code',
+      fatherCode: 'Paternal Line Code',
       cubCode: 'Cub Code',
       createTimeRange: 'Created At'
     },
@@ -411,8 +414,8 @@ export default {
       breedStrainCode: 'Enter code (letters / digits / underscore / hyphen)',
       breedStrainName: 'Enter name',
       parentCode: 'Enter parent code (strain only)',
-      motherCode: 'Select mother',
-      fatherCode: 'Select father',
+      motherCode: 'Select maternal line',
+      fatherCode: 'Select paternal line',
       cubCode: 'Select cub'
     },
     option: {
@@ -428,8 +431,8 @@ export default {
         len1: 'Strain code must be exactly 1 digit'
       },
       breedStrainName: { required: 'Name is required' },
-      motherCode: { required: 'Mother is required' },
-      fatherCode: { required: 'Father is required' },
+      motherCode: { required: 'Maternal line is required' },
+      fatherCode: { required: 'Paternal line is required' },
       cubCode: { required: 'Cub is required' }
     },
     tip: {
@@ -508,9 +511,8 @@ export default {
       daysOffset: { required: 'Days offset is required' }
     },
     tip: {
-      noAutoTrigger: 'v1.2: Config only decides suggested time; state changes are event-driven',
-      customOverridesDefault: 'Empty "Custom" means business reads default value',
-      seedKeys: 'Seeded 6 items: gestation 114 / lactation 28 / nursery 35 / fattening 120 / oestrus 21 / weaning-to-breeding 7'
+      noAutoTrigger: 'Config only decides suggested time; it does not auto-change state',
+      customOverridesDefault: 'Empty "Custom" means business reads default value'
     },
     confirm: {
       delCycle: 'Confirm deletion of {count} cycle config(s)?',
@@ -784,7 +786,7 @@ export default {
   // Farm / Barn / Pen (BRD-MD-002) — single farm (ADR-0001), 2-level tree: Barn → Pen
   farm: {
     section: {
-      farmInfo: 'Farm Info',
+      farmInfo: 'Farm & Barn Info Config',
       tree: 'Barns / Pens',
       detail: 'Detail',
       barnDetail: 'Barn Detail',
@@ -1160,7 +1162,7 @@ export default {
     field: {
       productName: 'Product',
       earNo: 'Ear No.',
-      isEnd: 'Done'
+      blockNo: 'Plot No.'
     },
     column: {
       locationName: 'Location',
@@ -1168,11 +1170,9 @@ export default {
       productStock: 'Stock',
       productUnit: 'Unit',
       earNo: 'Ear No.',
-      isEnd: 'Done',
+      blockNo: 'Plot No.',
       latestCheckTime: 'Last check',
-      checkResult: 'Check result',
-      operatorName: 'Operator',
-      createTime: 'Created'
+      checkResult: 'Check result'
     },
     action: {
       flowIn: 'Inbound',
@@ -1281,6 +1281,7 @@ export default {
       organicValid: 'Valid Until',
       organicImagePreview: 'Thumbnail',
       organicImageUrl: 'Cert Images',
+      zone: 'Zone',
       relatedPlots: 'Related Plots',
       isWarning: 'Warning Status'
     },
@@ -1288,7 +1289,11 @@ export default {
       organicNo: 'Enter cert number (e.g. GB-2026-001)',
       organicCompany: 'Issuer (e.g. CNCA)',
       organicValid: 'Pick expiry date',
+      zone: 'Select a zone to filter plots below',
       search: 'Search plot code / name'
+    },
+    tip: {
+      crossZone: 'Switch zones to pick in batches; already-linked plots are kept across zones.'
     },
     rule: {
       organicNo: { required: 'Cert number is required' },
@@ -1354,7 +1359,7 @@ export default {
       plantingSeason: 'Season',
       cycle: 'Cycle',
       predictedPer: 'Predicted Yield',
-      pickUnitPrice: 'Unit Price',
+      pickUnitPrice: 'Performance Unit Price',
       createTime: 'Created'
     },
     field: {
@@ -1376,7 +1381,7 @@ export default {
       irrigationInterval: 'Irrigation Interval (days)',
       predictedPer: 'Predicted Yield (kg/mu)',
       qualityDesc: 'Quality Description',
-      pickUnitPrice: 'Pick Unit Price (yuan/jin)'
+      pickUnitPrice: 'Performance Unit Price (yuan/jin)'
     },
     placeholder: {
       cropCode: 'Enter crop code (e.g. C001)',
@@ -1384,6 +1389,7 @@ export default {
       varietyName: 'Variety name',
       varietyOrigin: 'Origin / supplier (free text in V1)',
       cropFamily: 'Select family',
+      relatedProduct: 'Select related product',
       plantingSeason: 'Select seasons',
       sowingPeriod: 'e.g. early Mar - late Apr',
       qualityDesc: 'Quality description'
@@ -1470,6 +1476,7 @@ export default {
       planYear: 'Year',
       planSeason: 'Season',
       crop: 'Crop',
+      plantDate: 'Plant Start Date',
       totalArea: 'Total Area (mu)',
       totalPlot: 'Plots',
       earliestHarvestdate: 'Earliest Harvest',
@@ -1586,7 +1593,7 @@ export default {
     adjust: {
       title: 'Adjust Pick Plan',
       backToList: 'Back',
-      tip: 'Adjust actual harvest dates, visitor pick flag and harvest team per plot. Saves immediately.',
+      tip: 'Set the plan earliest harvest date per plot (plan latest is auto-derived from the crop pick cycle), visitor pick flag and harvest team. Actual harvest start/end are written back by the mini-program and read-only here. Saves immediately.',
       activityYes: 'Visitor',
       activityNo: 'Normal',
       paramsMissing: 'planId / cropId missing',
@@ -1775,6 +1782,70 @@ export default {
         dialogTitle: 'New Purchase In',
         submitSuccess: 'Inbound submitted'
       },
+      packEntry: {
+        meatTitle: 'Meat Packing',
+        otherTitle: 'Other Product Packing',
+        vegTitle: 'Vegetable Packing',
+        giftTitle: 'Gift Box Packing',
+        cutTitle: 'White Bar Cutting',
+        otherProductTab: 'Products',
+        otherGiftTab: 'Gift Box',
+        source: 'Source Product',
+        sourceVeg: 'Source Plot/Vegetable',
+        sourcePlaceholder: 'Select source in-house product',
+        sourceRequired: 'Source in-house product is required',
+        targetProduct: 'Target Product',
+        targetProductPlaceholder: 'Select target product',
+        targetProductRequired: 'Target product is required',
+        giftBox: 'Gift Box',
+        packBoxCount: 'Box Count',
+        packBoxCountRequired: 'Box count is required and ≥ 1',
+        box: 'box(es)',
+        productWeight: 'Weight',
+        productWeightRequired: 'Weight is required and > 0',
+        productUnit: 'Unit',
+        productUnitRequired: 'Unit is required',
+        unitPiece: 'piece',
+        productSpec: 'Spec',
+        productSpecPlaceholder: 'e.g. 250g/pack',
+        location: 'Stock Location',
+        locationPlaceholder: 'Select location',
+        locationRequired: 'Location is required',
+        store: 'Demand Store',
+        storePlaceholder: 'Select demand store',
+        proof: 'Proof Images',
+        remark: 'Remark',
+        submitSuccess: 'Packing submitted',
+        cutHint: 'Pick a picked cut record, enter part weights and confirm inbound; click "Finish Cut" when all parts are weighed.',
+        cutRecord: 'Cut Record (Ear No)',
+        cutRecordPlaceholder: 'Select a picked/cutting record',
+        cutRecordRequired: 'Cut record is required',
+        parts: 'Cut Parts',
+        cutPart: 'Part',
+        cutPartPlaceholder: 'Select part',
+        cutPartRequired: 'Part is required',
+        addPart: 'Add Part',
+        partsRequired: 'Enter at least one part weight',
+        confirmCutOut: 'Confirm Inbound',
+        cutOutSuccess: 'Cut output stored',
+        finishCut: 'Finish Cut',
+        dripLoss: 'Drip Loss',
+        dripLossRequired: 'Enter drip loss (0 if none)',
+        finishCutSuccess: 'White bar cut finished',
+        pickupToCut: 'Pick to Cutting',
+        pickupToShip: 'Pick for Shipment',
+        bar: 'White Bar (Ear No)',
+        barPlaceholder: 'Select an available bar',
+        barRequired: 'Bar is required',
+        cutWorkshop: 'Out Location (Cutting)',
+        isHalf: 'Cut Mode',
+        whole: 'Whole',
+        half: 'Half',
+        confirmPickup: 'Confirm Pickup',
+        pickupSuccess: 'Bar picked to cutting',
+        confirmShipOut: 'Confirm Ship Out',
+        shipOutSuccess: 'White bar / pork shipped out'
+      },
       shipment: {
         title: 'Shipment',
         shipmentNo: 'Shipment No',
@@ -1891,6 +1962,7 @@ export default {
   // Warehouse dashboard
   warehouse: {
     dashboard: {
+      title: 'Warehouse Overview',
       demandBar: "Today's Demand",
       productionBar: "Today's Production",
       lastRefresh: 'Last refresh {time}',
@@ -2431,7 +2503,10 @@ export default {
       returnNo: 'Return No.',
       returnDirection: 'Direction',
       storeName: 'Return Store',
+      productType: 'Product Type',
+      productCode: 'Product Code',
       productName: 'Product',
+      productSpec: 'Spec',
       locationName: 'Inbound Location',
       returnQuantity: 'Quantity',
       returnReason: 'Reason',
@@ -2440,6 +2515,10 @@ export default {
       returnDate: 'Return Date',
       operatorName: 'Operator',
       createTime: 'Created'
+    },
+    tab: {
+      pork: 'Pork Products',
+      vegetable: 'Produce Products'
     },
     placeholder: {
       returnDirection: 'Select direction',
@@ -2570,8 +2649,8 @@ export default {
       team: 'Team',
       crop: 'Crop',
       pickWeight: 'Harvest Total',
-      unitPrice: 'Unit Price',
-      amount: 'Payable',
+      unitPrice: 'Performance Unit Price',
+      amount: 'Performance Total',
       action: 'Action'
     },
     action: {
