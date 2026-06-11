@@ -22,6 +22,9 @@
       @page-change="handlePageChange"
     >
       <template #toolbar-extra>
+        <el-button v-hasPermi="['djs:common:image:add']" type="success" plain icon="UploadFilled" @click="handleBatchOpen">
+          {{ t('image.action.batchUpload') }}
+        </el-button>
         <el-button v-hasPermi="['djs:common:image:rematch']" type="warning" plain icon="RefreshRight" :loading="rematching" @click="handleRematch">
           {{ t('image.action.rematch') }}
         </el-button>
@@ -68,6 +71,34 @@
         <el-button type="primary" :loading="submitting" @click="handleSubmit">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
+
+    <!-- 批量上传 + 按文件名自动归档 -->
+    <el-dialog v-model="batchVisible" :title="t('image.batch.title')" destroy-on-close append-to-body width="720px" @closed="handleBatchClosed">
+      <el-alert :title="t('image.batch.tip')" type="info" :closable="false" show-icon class="batch-tip" />
+      <OssUpload
+        ref="batchUploadRef"
+        :model-value="[]"
+        biz-type="md_image_library"
+        :limit="50"
+        :file-size="10"
+        @uploaded="handleBatchUploaded"
+        @removed="handleBatchRemoved"
+      />
+      <el-table v-if="batchItems.length > 0" :data="batchItems" size="small" border class="batch-table" max-height="240">
+        <el-table-column type="index" label="#" width="50" align="center" />
+        <el-table-column prop="originalName" :label="t('image.batch.fileName')" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="imageName" :label="t('image.batch.imageName')" min-width="160" show-overflow-tooltip />
+      </el-table>
+      <template #footer>
+        <div class="batch-footer">
+          <span class="batch-count">{{ t('image.batch.count', { count: batchItems.length }) }}</span>
+          <el-button @click="batchVisible = false">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" :loading="batchSubmitting" :disabled="batchItems.length === 0" @click="handleBatchSubmit">
+            {{ t('image.batch.submit') }}
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -75,8 +106,9 @@
 import BizTable from '@/components/BizTable/index.vue';
 import OssUpload from '@/components/OssUpload/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { addImage, delImage, getImage, listImage, rematchImage, updateImage } from '@/api/djs-common/image';
-import type { ImageLibraryForm, ImageLibraryQuery, ImageLibraryVO } from '@/api/djs-common/image/types';
+import { addImage, batchImportImage, delImage, getImage, listImage, rematchImage, updateImage } from '@/api/djs-common/image';
+import type { ImageBatchItem, ImageLibraryForm, ImageLibraryQuery, ImageLibraryVO } from '@/api/djs-common/image/types';
+import type { OssUploadResult } from '@/api/djs-common/oss/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
@@ -96,6 +128,17 @@ const rematching = ref(false);
 
 const dialogVisible = ref(false);
 const submitting = ref(false);
+
+// 批量上传
+const batchVisible = ref(false);
+const batchSubmitting = ref(false);
+const batchUploadRef = ref<InstanceType<typeof OssUpload>>();
+interface BatchRow {
+  ossId: string;
+  originalName: string;
+  imageName: string;
+}
+const batchItems = ref<BatchRow[]>([]);
 
 const searchModel = reactive<Record<string, any>>({
   imageName: undefined,
@@ -253,6 +296,58 @@ function handleClosed() {
   form.value = defaultForm();
 }
 
+/** 文件名去扩展名当主名：仅剥最后一段 `.ext`，保留中文 / 中点（白条·猪头.jpg → 白条·猪头） */
+function stripExt(fileName: string): string {
+  return fileName.replace(/\.[^.]+$/, '').trim();
+}
+
+function handleBatchOpen() {
+  batchItems.value = [];
+  batchVisible.value = true;
+}
+
+/** OssUpload 每张上传成功回调：拿 originalName 去扩展名当 imageName，配对 ossId */
+function handleBatchUploaded(result: OssUploadResult) {
+  const imageName = stripExt(result.originalName);
+  if (!imageName) return;
+  // 同一 ossId 去重（防重复 emit）
+  if (batchItems.value.some((it) => it.ossId === result.ossId)) return;
+  batchItems.value.push({ ossId: result.ossId, originalName: result.originalName, imageName });
+}
+
+/** OssUpload 删除某张：从待导入列表移除 */
+function handleBatchRemoved(ossId: string) {
+  batchItems.value = batchItems.value.filter((it) => it.ossId !== ossId);
+}
+
+async function handleBatchSubmit() {
+  if (batchItems.value.length === 0) return;
+  const items: ImageBatchItem[] = batchItems.value.map((it) => ({ imageName: it.imageName, ossId: it.ossId }));
+  batchSubmitting.value = true;
+  try {
+    const res = await batchImportImage(items);
+    const data = res.data;
+    const rematched = Object.entries(data?.rematched || {})
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('，');
+    proxy?.$modal.msgSuccess(
+      t('image.batch.done', {
+        imported: data?.imported ?? 0,
+        updated: data?.updated ?? 0,
+        rematched: rematched || '0'
+      })
+    );
+    batchVisible.value = false;
+    fetchList();
+  } finally {
+    batchSubmitting.value = false;
+  }
+}
+
+function handleBatchClosed() {
+  batchItems.value = [];
+}
+
 onMounted(() => {
   fetchList();
 });
@@ -267,5 +362,20 @@ onMounted(() => {
 .img-empty {
   color: var(--el-text-color-placeholder);
   font-size: 12px;
+}
+.batch-tip {
+  margin-bottom: 12px;
+}
+.batch-table {
+  margin-top: 12px;
+}
+.batch-footer {
+  display: flex;
+  align-items: center;
+}
+.batch-count {
+  margin-right: auto;
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
 }
 </style>

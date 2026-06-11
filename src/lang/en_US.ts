@@ -259,7 +259,8 @@ export default {
       }
     },
     action: {
-      rematch: 'Re-match All'
+      rematch: 'Re-match All',
+      batchUpload: 'Batch Upload'
     },
     confirm: {
       del: 'Delete the selected {count} image(s)?',
@@ -267,6 +268,15 @@ export default {
     },
     rematch: {
       done: 'Re-match done ({detail})'
+    },
+    batch: {
+      title: 'Batch Upload & Auto-archive',
+      tip: 'Drop a batch of named images (e.g. Tomato.jpg). The file name (without extension) becomes the image name automatically, then crops / products are re-matched. Re-uploading the same name replaces it.',
+      fileName: 'File Name',
+      imageName: 'Name (auto)',
+      count: '{count} to import',
+      submit: 'Import & Archive',
+      done: 'Imported {imported} / Updated {updated}, re-matched ({rematched})'
     },
     noImage: 'No image'
   },

@@ -60,3 +60,16 @@ export interface DefaultImageForm {
 
 /** 批量重新匹配返回（各域更新条数） */
 export type RematchResult = Record<string, number>;
+
+/** 批量导入单项（imageName = 文件名去扩展名；ossId 雪花 string 禁 Number） */
+export interface ImageBatchItem {
+  imageName: string;
+  ossId: string;
+}
+
+/** 批量导入结果（新建 / 更新 / 各域重新匹配条数） */
+export interface ImageBatchImportResult {
+  imported: number;
+  updated: number;
+  rematched: Record<string, number>;
+}

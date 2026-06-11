@@ -3,6 +3,8 @@ import { AxiosPromise } from 'axios';
 import type {
   DefaultImageForm,
   DefaultImageVO,
+  ImageBatchImportResult,
+  ImageBatchItem,
   ImageLibraryForm,
   ImageLibraryQuery,
   ImageLibraryVO,
@@ -65,6 +67,18 @@ export const rematchImage = (): AxiosPromise<RematchResult> => {
   return request({
     url: '/djs/common/image/rematch',
     method: 'post'
+  });
+};
+
+/**
+ * 批量上传 + 按文件名自动归档：每张图先走 OSS STS 直传拿 ossId，
+ * 文件名去扩展名当 imageName，整批 POST；后端按 image_name upsert 后自动触发重新匹配。
+ */
+export const batchImportImage = (items: ImageBatchItem[]): AxiosPromise<ImageBatchImportResult> => {
+  return request({
+    url: '/djs/common/image/batchImport',
+    method: 'post',
+    data: items
   });
 };
 

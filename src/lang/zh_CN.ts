@@ -259,7 +259,8 @@ export default {
       }
     },
     action: {
-      rematch: '批量重新匹配'
+      rematch: '批量重新匹配',
+      batchUpload: '批量上传'
     },
     confirm: {
       del: '确认删除选中的 {count} 条图片？',
@@ -267,6 +268,15 @@ export default {
     },
     rematch: {
       done: '重新匹配完成（{detail}）'
+    },
+    batch: {
+      title: '批量上传并自动归档',
+      tip: '直接拖入一批已命名的图片（如 番茄.jpg），系统按文件名（去扩展名）作为主名自动建库，并立即重新匹配回填作物 / 商品。同名重传即替换。',
+      fileName: '文件名',
+      imageName: '主名（自动）',
+      count: '待导入 {count} 张',
+      submit: '导入并归档',
+      done: '已导入 {imported} 张 / 更新 {updated} 张，已重新匹配（{rematched}）'
     },
     noImage: '无图'
   },
