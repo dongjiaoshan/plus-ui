@@ -41,6 +41,10 @@ export interface StoreTrendPoint {
   orderCount: number;
   /** 当日销售额 */
   saleAmount: number;
+  /** 当日销售量（原型销售量/退货量柱） */
+  saleQty: number;
+  /** 当日退货量（原型销售量/退货量柱） */
+  returnQty: number;
   /** 当日客单价 */
   avgPrice: number;
 }
@@ -59,9 +63,17 @@ export interface StoreDashboardSummaryVo {
   pendingShipCount: number;
   /** 待采购数 */
   pendingPurchaseCount: number;
-  /** 当日产品结构（业态:需求量） */
+  /** 会员总数（原型客户/会员信息组） */
+  totalMembers: number;
+  /** 今日新增会员（原型客户/会员信息组） */
+  todayNewMembers: number;
+  /** 今日销售额同比 %（上期为 0 时 null） */
+  todaySaleAmountYoy?: number | null;
+  /** 今日订单数同比 %（上期为 0 时 null） */
+  todayOrderCountYoy?: number | null;
+  /** 当日产品结构（业态:需求量，原型已弃用，保留兼容） */
   productStructure: StoreGroupCount[];
-  /** 当月 TOP10 产品排行 */
+  /** 当日热销产品 TOP10 排行 */
   top10Products: StoreProductRankItem[];
   /** 近 10 日趋势 */
   trend10Days: StoreTrendPoint[];

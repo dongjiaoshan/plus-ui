@@ -83,3 +83,21 @@ export interface MedScheduleConfigQuery extends PageQuery {
   medType?: string;
   eventTrigger?: string;
 }
+
+// ============= A1 FattenAgeStage（Tab2 育肥日龄阶段） =============
+
+export interface FattenAgeStageVO extends BaseEntity {
+  id: number | string;
+  startAge: number;
+  endAge: number;
+  recordGrowth: number;
+  remark?: string;
+}
+
+export interface FattenAgeStageForm {
+  id?: number | string;
+  startAge: number | null;
+  endAge: number | null;
+  recordGrowth: number;
+  remark?: string;
+}

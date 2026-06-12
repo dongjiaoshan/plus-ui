@@ -1,66 +1,72 @@
 <template>
   <div class="store-dashboard p-2">
-    <!-- KPI 横条：6 卡（保持原样，不动） -->
+    <!-- KPI 横条：销售订单组 + 客户/会员组（对齐原型门店总览顶部两组卡） -->
     <el-row :gutter="16" class="kpi-row">
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="never" class="kpi-card">
           <div class="kpi-label">{{ t('storeDashboard.kpi.todaySale') }}</div>
           <div class="kpi-value">{{ summary?.todaySaleAmount ?? 0 }}</div>
-          <div class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</div>
+          <div class="kpi-foot">
+            <span class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</span>
+            <span v-if="yoyText(summary?.todaySaleAmountYoy)" class="kpi-yoy" :class="yoyClass(summary?.todaySaleAmountYoy)">{{ yoyText(summary?.todaySaleAmountYoy) }}</span>
+          </div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="never" class="kpi-card">
           <div class="kpi-label">{{ t('storeDashboard.kpi.monthSale') }}</div>
           <div class="kpi-value">{{ summary?.monthSaleAmount ?? 0 }}</div>
-          <div class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</div>
+          <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</span></div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="never" class="kpi-card">
           <div class="kpi-label">{{ t('storeDashboard.kpi.todayOrder') }}</div>
           <div class="kpi-value">{{ summary?.todayOrderCount ?? 0 }}</div>
-          <div class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</div>
+          <div class="kpi-foot">
+            <span class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</span>
+            <span v-if="yoyText(summary?.todayOrderCountYoy)" class="kpi-yoy" :class="yoyClass(summary?.todayOrderCountYoy)">{{ yoyText(summary?.todayOrderCountYoy) }}</span>
+          </div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="never" class="kpi-card">
           <div class="kpi-label">{{ t('storeDashboard.kpi.monthOrder') }}</div>
           <div class="kpi-value">{{ summary?.monthOrderCount ?? 0 }}</div>
-          <div class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</div>
+          <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</span></div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">{{ t('storeDashboard.kpi.pendingShip') }}</div>
-          <div class="kpi-value warn">{{ summary?.pendingShipCount ?? 0 }}</div>
-          <div class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</div>
+          <div class="kpi-label">{{ t('storeDashboard.kpi.totalMembers') }}</div>
+          <div class="kpi-value">{{ summary?.totalMembers ?? 0 }}</div>
+          <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">{{ t('storeDashboard.kpi.pendingPurchase') }}</div>
-          <div class="kpi-value warn">{{ summary?.pendingPurchaseCount ?? 0 }}</div>
-          <div class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</div>
+          <div class="kpi-label">{{ t('storeDashboard.kpi.todayNewMembers') }}</div>
+          <div class="kpi-value accent">{{ summary?.todayNewMembers ?? 0 }}</div>
+          <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
         </el-card>
       </el-col>
     </el-row>
 
     <el-row :gutter="16">
-      <!-- 当日产品结构（按业态）：ECharts 饼图，业态名走字典 label -->
+      <!-- 当日热销产品 TOP10 环形（donut，name=产品名 / value=销售额） -->
       <el-col :xs="24" :md="8">
         <el-card shadow="never" class="block-card">
           <template #header>
             <div class="card-header">
-              <span class="title">{{ t('storeDashboard.title.productStructure') }}</span>
+              <span class="title">{{ t('storeDashboard.title.top10Donut') }}</span>
               <el-button size="small" :loading="loading" @click="load">{{ t('storeDashboard.action.refresh') }}</el-button>
             </div>
           </template>
-          <div ref="productPieEl" v-loading="loading" class="chart-canvas"></div>
+          <div ref="top10DonutEl" v-loading="loading" class="chart-canvas"></div>
         </el-card>
       </el-col>
 
-      <!-- 当月 TOP10 产品排行：ECharts 横条 bar（productName 当类目，saleAmount 为值） -->
+      <!-- 当日热销产品 TOP10 横条 bar（productName 当类目 / saleAmount 为值） -->
       <el-col :xs="24" :md="16">
         <el-card shadow="never" class="block-card">
           <template #header>
@@ -72,23 +78,23 @@
     </el-row>
 
     <el-row :gutter="16">
-      <!-- 近 10 日订单数柱（新会员线待后端扩 VO，见 _open-issues） -->
+      <!-- 销售量与退货量趋势：近 10 日双柱（saleQty / returnQty） -->
       <el-col :xs="24" :md="12">
         <el-card shadow="never" class="block-card">
           <template #header>
-            <span class="title">{{ t('storeDashboard.title.trend') }} · {{ t('storeDashboard.legend.orderCount') }}</span>
+            <span class="title">{{ t('storeDashboard.title.saleReturnTrend') }}</span>
           </template>
-          <div ref="orderComboEl" v-loading="loading" class="chart-canvas"></div>
+          <div ref="saleReturnBarEl" v-loading="loading" class="chart-canvas"></div>
         </el-card>
       </el-col>
 
-      <!-- 销售额 + 客单价双轴折线 -->
+      <!-- 销售额变化趋势：近 10 日单折线（saleAmount） -->
       <el-col :xs="24" :md="12">
         <el-card shadow="never" class="block-card">
           <template #header>
-            <span class="title">{{ t('storeDashboard.legend.saleAmount') }} / {{ t('storeDashboard.legend.avgPrice') }}</span>
+            <span class="title">{{ t('storeDashboard.title.saleAmountTrend') }}</span>
           </template>
-          <div ref="salePriceLineEl" v-loading="loading" class="chart-canvas"></div>
+          <div ref="saleAmountLineEl" v-loading="loading" class="chart-canvas"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -97,14 +103,15 @@
 
 <script setup lang="ts">
 /**
- * 门店看板 admin 端入口（STR-DASH-001 / ADMIN-DASH-CHART-001 ECharts 化）。
+ * 门店总览 admin 端入口（STR-DASH-001 / STORE-REALIGN-DASH-001 对齐原型门店首页）。
  *
- * 4 ECharts（后端 summary 已返序列，本 ticket 只替换渲染层，不改后端 VO）：
- *  1. 当日产品结构饼图（productStructure，业态名走 djs_demand_product_type 字典 label）
- *  2. 当月 TOP10 横条 bar（top10Products，productName 当类目 / saleAmount 为值）
- *  3. 近 10 日订单数柱（trend10Days.orderCount；新会员线缺字段，待后端扩 VO）
- *  4. 销售额 + 客单价双轴折线（trend10Days.saleAmount / avgPrice）
+ * 4 ECharts（后端 summary 已返序列，前端只渲染层）：
+ *  1. 当日热销产品 TOP10 环形 donut（top10Products，name=productName / value=saleAmount）
+ *  2. 当日热销产品 TOP10 横条 bar（top10Products，productName 当类目 / saleAmount 为值）
+ *  3. 销售量与退货量趋势双柱（trend10Days.saleQty / returnQty）
+ *  4. 销售额变化趋势单折线（trend10Days.saleAmount）
  *
+ * KPI：销售订单组（今日/本月 销售额 + 订单数 + 同比）+ 客户/会员组（会员数 + 今日新增）。
  * ECharts 4 件套：onMounted init / onUnmounted dispose+clearInterval / window resize / 5 分钟轮询。
  * 只用现有 echarts 6.0.0，不引新库。snowflake productId 不当数值轴（丢精度）。
  */
@@ -115,28 +122,33 @@ import { getStoreDashboardSummary, type StoreDashboardSummaryVo } from '@/api/dj
 import { STORE_CHART_COLOR, REFRESH_INTERVAL_MS } from './constants';
 
 const { t } = useI18n();
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-// 业态字典（Vue3 toRefs 写法，避免整页空白事故 C-fe；饼图扇区名走字典 label）
-const { djs_demand_product_type } = toRefs<any>(proxy?.useDict('djs_demand_product_type'));
+getCurrentInstance();
 
 const summary = ref<StoreDashboardSummaryVo | null>(null);
 const loading = ref(false);
 
-const productPieEl = ref<HTMLDivElement>();
+const top10DonutEl = ref<HTMLDivElement>();
 const top10BarEl = ref<HTMLDivElement>();
-const orderComboEl = ref<HTMLDivElement>();
-const salePriceLineEl = ref<HTMLDivElement>();
+const saleReturnBarEl = ref<HTMLDivElement>();
+const saleAmountLineEl = ref<HTMLDivElement>();
 
-let productPie: echarts.ECharts | null = null;
+let top10Donut: echarts.ECharts | null = null;
 let top10Bar: echarts.ECharts | null = null;
-let orderCombo: echarts.ECharts | null = null;
-let salePriceLine: echarts.ECharts | null = null;
+let saleReturnBar: echarts.ECharts | null = null;
+let saleAmountLine: echarts.ECharts | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
 
-/** 业态 code → 中文 label：字典优先，缺失落 raw key */
-function productTypeLabel(code: string): string {
-  const dict = djs_demand_product_type?.value as { value: string; label: string }[] | undefined;
-  return dict?.find((d) => d.value === code)?.label ?? code;
+/** 同比角标文案：null/undefined 不显示，正负带箭头 + 百分号 */
+function yoyText(yoy?: number | null): string {
+  if (yoy === null || yoy === undefined) return '';
+  const arrow = Number(yoy) >= 0 ? '↑' : '↓';
+  return `${arrow}${Math.abs(Number(yoy))}%`;
+}
+
+/** 同比角标颜色：涨绿跌红 */
+function yoyClass(yoy?: number | null): string {
+  if (yoy === null || yoy === undefined) return '';
+  return Number(yoy) >= 0 ? 'up' : 'down';
 }
 
 /** 空态 option：图中央显示「暂无数据」 */
@@ -159,25 +171,25 @@ async function load() {
 }
 
 function renderAll() {
-  renderProductPie();
+  renderTop10Donut();
   renderTop10Bar();
-  renderOrderCombo();
-  renderSalePriceLine();
+  renderSaleReturnBar();
+  renderSaleAmountLine();
 }
 
-/** 当日产品结构饼图：扇区名走业态字典 label，value=需求量 */
-function renderProductPie() {
-  if (!productPieEl.value) return;
-  if (!productPie) productPie = echarts.init(productPieEl.value);
-  const list = summary.value?.productStructure ?? [];
+/** 当日热销产品 TOP10 环形 donut：name=产品名，value=销售额 */
+function renderTop10Donut() {
+  if (!top10DonutEl.value) return;
+  if (!top10Donut) top10Donut = echarts.init(top10DonutEl.value);
+  const list = summary.value?.top10Products ?? [];
   if (!list.length) {
-    productPie.clear();
-    productPie.setOption(emptyOption());
+    top10Donut.clear();
+    top10Donut.setOption(emptyOption());
     return;
   }
-  const data = list.map((s) => ({ name: productTypeLabel(s.key), value: s.value }));
-  productPie.setOption({
-    color: STORE_CHART_COLOR.pie,
+  const data = list.map((p) => ({ name: p.productName, value: p.saleAmount }));
+  top10Donut.setOption({
+    color: [...STORE_CHART_COLOR.pie],
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { type: 'scroll', bottom: 0, textStyle: { fontSize: 11 } },
     series: [
@@ -193,7 +205,7 @@ function renderProductPie() {
   });
 }
 
-/** 当月 TOP10 横条 bar：y=productName（类目），x=saleAmount（值）；saleQty 进 tooltip */
+/** 当日热销产品 TOP10 横条 bar：y=productName（类目），x=saleAmount（值）；saleQty 进 tooltip */
 function renderTop10Bar() {
   if (!top10BarEl.value) return;
   if (!top10Bar) top10Bar = echarts.init(top10BarEl.value);
@@ -237,68 +249,55 @@ function renderTop10Bar() {
   });
 }
 
-/** 近 10 日订单数柱（x=date，柱=orderCount）。新会员线缺 VO 字段，本 ticket 仅订单柱。 */
-function renderOrderCombo() {
-  if (!orderComboEl.value) return;
-  if (!orderCombo) orderCombo = echarts.init(orderComboEl.value);
+/** 销售量与退货量趋势：近 10 日双柱（x=date，柱1=saleQty，柱2=returnQty） */
+function renderSaleReturnBar() {
+  if (!saleReturnBarEl.value) return;
+  if (!saleReturnBar) saleReturnBar = echarts.init(saleReturnBarEl.value);
   const list = summary.value?.trend10Days ?? [];
   if (!list.length) {
-    orderCombo.clear();
-    orderCombo.setOption(emptyOption());
+    saleReturnBar.clear();
+    saleReturnBar.setOption(emptyOption());
     return;
   }
-  orderCombo.setOption({
-    color: [STORE_CHART_COLOR.primary],
-    tooltip: { trigger: 'axis' },
-    grid: { left: 12, right: 16, top: 24, bottom: 24, containLabel: true },
+  const saleName = t('storeDashboard.legend.saleQty');
+  const returnName = t('storeDashboard.legend.returnQty');
+  saleReturnBar.setOption({
+    color: [STORE_CHART_COLOR.primary, STORE_CHART_COLOR.accent],
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: [saleName, returnName], bottom: 0, textStyle: { fontSize: 11 } },
+    grid: { left: 12, right: 16, top: 24, bottom: 36, containLabel: true },
     xAxis: { type: 'category', data: list.map((p) => p.date), axisLabel: { fontSize: 11, rotate: list.length > 7 ? 30 : 0 } },
-    yAxis: { type: 'value', name: t('storeDashboard.legend.orderCount') },
+    yAxis: { type: 'value' },
     series: [
-      {
-        name: t('storeDashboard.legend.orderCount'),
-        type: 'bar',
-        barWidth: '50%',
-        label: { show: true, position: 'top', fontSize: 11 },
-        data: list.map((p) => p.orderCount)
-      }
+      { name: saleName, type: 'bar', barGap: 0, barWidth: '32%', data: list.map((p) => p.saleQty) },
+      { name: returnName, type: 'bar', barWidth: '32%', data: list.map((p) => p.returnQty) }
     ]
   });
 }
 
-/** 销售额 + 客单价双轴折线：x=date，左轴 saleAmount，右轴 avgPrice */
-function renderSalePriceLine() {
-  if (!salePriceLineEl.value) return;
-  if (!salePriceLine) salePriceLine = echarts.init(salePriceLineEl.value);
+/** 销售额变化趋势：近 10 日单折线（x=date，line=saleAmount） */
+function renderSaleAmountLine() {
+  if (!saleAmountLineEl.value) return;
+  if (!saleAmountLine) saleAmountLine = echarts.init(saleAmountLineEl.value);
   const list = summary.value?.trend10Days ?? [];
   if (!list.length) {
-    salePriceLine.clear();
-    salePriceLine.setOption(emptyOption());
+    saleAmountLine.clear();
+    saleAmountLine.setOption(emptyOption());
     return;
   }
-  salePriceLine.setOption({
-    color: [STORE_CHART_COLOR.primary, STORE_CHART_COLOR.accent],
+  saleAmountLine.setOption({
+    color: [STORE_CHART_COLOR.primary],
     tooltip: { trigger: 'axis' },
-    legend: { data: [t('storeDashboard.legend.saleAmount'), t('storeDashboard.legend.avgPrice')], bottom: 0, textStyle: { fontSize: 11 } },
-    grid: { left: 12, right: 12, top: 24, bottom: 36, containLabel: true },
+    grid: { left: 12, right: 16, top: 24, bottom: 24, containLabel: true },
     xAxis: { type: 'category', boundaryGap: false, data: list.map((p) => p.date), axisLabel: { fontSize: 11, rotate: list.length > 7 ? 30 : 0 } },
-    yAxis: [
-      { type: 'value', name: t('storeDashboard.axis.saleAmount'), position: 'left' },
-      { type: 'value', name: t('storeDashboard.axis.avgPrice'), position: 'right' }
-    ],
+    yAxis: { type: 'value', name: t('storeDashboard.axis.saleAmount') },
     series: [
       {
         name: t('storeDashboard.legend.saleAmount'),
         type: 'line',
         smooth: true,
-        yAxisIndex: 0,
+        areaStyle: { opacity: 0.08 },
         data: list.map((p) => p.saleAmount)
-      },
-      {
-        name: t('storeDashboard.legend.avgPrice'),
-        type: 'line',
-        smooth: true,
-        yAxisIndex: 1,
-        data: list.map((p) => p.avgPrice)
       }
     ]
   });
@@ -311,21 +310,21 @@ interface TooltipParam {
 }
 
 function disposeCharts() {
-  productPie?.dispose();
-  productPie = null;
+  top10Donut?.dispose();
+  top10Donut = null;
   top10Bar?.dispose();
   top10Bar = null;
-  orderCombo?.dispose();
-  orderCombo = null;
-  salePriceLine?.dispose();
-  salePriceLine = null;
+  saleReturnBar?.dispose();
+  saleReturnBar = null;
+  saleAmountLine?.dispose();
+  saleAmountLine = null;
 }
 
 function handleResize() {
-  productPie?.resize();
+  top10Donut?.resize();
   top10Bar?.resize();
-  orderCombo?.resize();
-  salePriceLine?.resize();
+  saleReturnBar?.resize();
+  saleAmountLine?.resize();
 }
 
 onMounted(async () => {
@@ -364,14 +363,33 @@ onUnmounted(() => {
       font-weight: 600;
       color: #303133;
 
-      &.warn {
-        color: #e6a23c;
+      &.accent {
+        color: #409eff;
       }
+    }
+
+    .kpi-foot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
     .kpi-unit {
       font-size: 12px;
       color: #c0c4cc;
+    }
+
+    .kpi-yoy {
+      font-size: 12px;
+
+      &.up {
+        color: #67c23a;
+      }
+
+      &.down {
+        color: #f56c6c;
+      }
     }
   }
 

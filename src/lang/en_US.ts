@@ -447,9 +447,35 @@ export default {
   // v1.2 key: NO timer / NO auto-transition — config only decides "suggested time", state changes by events
   productionConfig: {
     tab: {
+      sow: 'Sow Production',
+      fatten: 'Fattening Production',
+      slaughter: 'Slaughter Config',
       cycle: 'Production Cycle',
       boar: 'Sperm / Boar',
       med: 'Med Schedule'
+    },
+    unit: {
+      day: 'day(s)'
+    },
+    sow: {
+      sow_wean_to_breed_days: 'Wean → Breed (days)',
+      sow_return_to_breed_days: 'Return-to-estrus → Breed (days)',
+      sow_empty_to_breed_days: 'Empty → Breed (days)',
+      sow_abort_to_breed_days: 'Abort → Breed (days)',
+      sow_breed_to_farrow_days: 'Breed → Farrow (days)',
+      sow_farrow_to_wean_days: 'Farrow → Wean (days)'
+    },
+    fatten: {
+      index: 'No.',
+      startAge: 'Start Age',
+      endAge: 'End Age',
+      recordGrowth: 'Record Growth',
+      addStage: 'Add Age Stage',
+      ruleRequired: 'Row {row}: start / end age is required',
+      ruleRange: 'Row {row}: end age cannot be less than start age'
+    },
+    slaughter: {
+      slaughterAge: 'Slaughter Age'
     },
     title: {
       addCycle: 'Add Cycle Item',
@@ -2157,6 +2183,30 @@ export default {
       gift_box: 'Gift box',
       other: 'Other'
     },
+    tab: {
+      white_bar: 'White bar',
+      pork: 'Pork',
+      vegetable: 'Vegetable',
+      dry_good: 'Dry goods',
+      egg: 'Egg',
+      gift_box: 'Gift box',
+      other: 'Other'
+    },
+    create: {
+      productType: 'Product type',
+      operation: 'Operation',
+      cartTitle: 'Demand products',
+      cartEmpty: 'Select products on the left and enter quantities',
+      emptyProducts: 'No products under this type',
+      productName: 'Product name',
+      availablePigs: 'Available pigs',
+      unit: 'Unit',
+      demandQuantity: 'Quantity',
+      mailing: 'Personal mailing',
+      remark: 'Remark:',
+      remarkPh: 'Enter remark',
+      confirm: 'Confirm demand'
+    },
     filter: {
       store: 'Store',
       storePlaceholder: 'Select store'
@@ -2192,10 +2242,16 @@ export default {
     column: {
       demandNo: 'Demand No.',
       demandDate: 'Demand date',
-      productName: 'Product',
+      productName: 'Product name',
+      productSpec: 'Spec',
       demandQuantity: 'Quantity',
       productUnit: 'Unit',
+      demandType: 'Demand type',
+      demandRemark: 'Remark',
+      expectedWeight: 'Expected weight',
       demandStatus: 'Status',
+      confirmerTime: 'Confirmed at',
+      demandConfirmer: 'Confirmed by',
       expectedArriveDate: 'Expected arrival',
       createTime: 'Created',
       actions: 'Actions'
@@ -2218,10 +2274,12 @@ export default {
       edit: 'Edit',
       cancel: 'Withdraw',
       assignPig: 'Assign pigs',
+      receive: 'Confirm receipt',
       detail: 'Detail'
     },
     confirm: {
-      del: 'Delete {count} selected demand(s)? Only unconfirmed demands can be deleted'
+      del: 'Delete {count} selected demand(s)? Only unconfirmed demands can be deleted',
+      receive: 'Confirm receipt of "{name}"?'
     },
     prompt: {
       cancelRemark: 'Enter withdraw reason (optional)',
@@ -2483,6 +2541,37 @@ export default {
     }
   },
   // Store return management (STR-RETURN-001, store-domain thin impl, admin only)
+  storeTrace: {
+    veg: {
+      arrivalDate: 'Arrival Date',
+      produceNo: 'Produce No.',
+      serialNo: 'Seq',
+      productName: 'Product',
+      productSpec: 'Spec',
+      actualWeight: 'Actual Weight',
+      plotName: 'Source Plot',
+      pickTime: 'Pick Time',
+      platformReceiveTime: 'Platform Receive',
+      shipTime: 'Ship Time',
+      print: 'Print Trace Code',
+      noCode: 'No trace code to print'
+    },
+    pork: {
+      pickPig: 'Traceable Pig',
+      noPig: 'No traceable pig (slaughtered fattening pigs)',
+      pickCut: 'Select Cut',
+      opPanel: 'Operation',
+      pigId: 'Pig ID',
+      pigSex: 'Sex',
+      pigBreed: 'Breed',
+      ageDays: 'Age (days)',
+      daysUnit: 'days',
+      weight: 'Product Weight',
+      weightPlaceholder: 'Enter product weight (kg)',
+      genPrint: 'Print Trace Code',
+      genOk: 'Code generated: {code}'
+    }
+  },
   storeReturn: {
     field: {
       returnNo: 'Return No.',
@@ -2503,12 +2592,17 @@ export default {
       returnNo: 'Return No.',
       returnDirection: 'Direction',
       storeName: 'Return Store',
-      productType: 'Product Type',
+      productType: 'Return Type',
       productCode: 'Product Code',
       productName: 'Product',
       productSpec: 'Spec',
       locationName: 'Inbound Location',
-      returnQuantity: 'Quantity',
+      returnQuantity: 'Return Qty',
+      unit: 'Unit',
+      goodsWeight: 'Goods Weight',
+      receivedQty: 'Received Qty',
+      receivedWeight: 'Received Weight',
+      returnStatus: 'Return Status',
       returnReason: 'Reason',
       traceCode: 'Trace Code',
       memberId: 'Member ID',
@@ -2519,6 +2613,17 @@ export default {
     tab: {
       pork: 'Pork Products',
       vegetable: 'Produce Products'
+    },
+    action: {
+      confirm: 'Confirm Inbound'
+    },
+    operation: {
+      title: 'Return Operation',
+      returnWeight: 'Return Weight (KG)',
+      weightPlaceholder: 'Enter return weight (KG)',
+      emptyCandidates: 'Select a store first; this store has no linked products',
+      submit: 'Submit',
+      submitConfirm: 'Submit {n} returns?'
     },
     placeholder: {
       returnDirection: 'Select direction',
@@ -2535,17 +2640,85 @@ export default {
       product: 'Product is required',
       location: 'Inbound location is required',
       returnQuantity: 'Quantity is required',
-      returnQuantityMin: 'Quantity must be greater than 0'
+      returnQuantityMin: 'Quantity must be greater than 0',
+      receivedQty: 'Received quantity is required'
     },
     tip: {
       editLock: 'Product / Inbound Location / Quantity drive the inbound and cannot be changed after creation'
     },
     dialog: {
       add: 'Add Return',
-      edit: 'Edit Return'
+      edit: 'Edit Return',
+      confirm: 'Confirm Received'
     },
     confirm: {
       delete: 'Confirm delete return {no}?'
+    }
+  },
+  // Store daily operating ledger (STORE-LEDGER-001, rebuild of prototype Store Mgmt > Stock Check)
+  storeLedger: {
+    field: {
+      store: 'Store',
+      dateFrom: 'Date From',
+      dateTo: 'Date To'
+    },
+    column: {
+      index: 'No.',
+      storeName: 'Store',
+      ledgerDate: 'Check Date',
+      lineCount: 'Products',
+      operatorName: 'Operator',
+      checkTime: 'Check Time',
+      productName: 'Product',
+      unit: 'Unit',
+      openingQty: 'Opening',
+      inboundQty: 'Inbound',
+      saleQty: 'Sales',
+      giftQty: 'Gift',
+      returnQty: 'Return',
+      returnedQty: 'Returned',
+      lossQty: 'Loss',
+      closingQty: 'Closing'
+    },
+    action: {
+      newEntry: 'New Daily Check',
+      detail: 'Detail'
+    },
+    detail: {
+      title: '{store} {date} Check Detail'
+    },
+    entry: {
+      title: 'New Daily Check',
+      storePlaceholder: 'Select store',
+      datePlaceholder: 'Select date',
+      emptyCandidates: 'No linked products for this store. Configure sellable products in Product Mgmt first.',
+      submit: 'Finish Check',
+      submitConfirm: 'Submit check data for {n} products?'
+    }
+  },
+  // Store product management (STORE-LEDGER-001, store domain entry)
+  storeProduct: {
+    field: {
+      productName: 'Product Name',
+      productType: 'Product Type',
+      productStatus: 'Status'
+    },
+    column: {
+      image: 'Image',
+      productType: 'Type',
+      productName: 'Product Name',
+      supplier: 'Supplier',
+      productSpec: 'Spec',
+      unit: 'Unit',
+      productStatus: 'Status',
+      updateTime: 'Updated',
+      updateBy: 'Updated By'
+    },
+    detail: {
+      title: 'Product Detail',
+      productCode: 'Product Code',
+      history: 'Check History',
+      noHistory: 'No check history'
     }
   },
   // Plant disaster records (PLT-WORK-003, admin read-only sub-page)
@@ -2708,20 +2881,22 @@ export default {
   },
   storeDashboard: {
     title: {
-      home: 'Store Home',
-      productStructure: 'Today Product Structure (by Category)',
-      top10: 'Monthly TOP10 Products',
-      trend: 'Last 10 Days Trend'
+      home: 'Store Overview',
+      top10Donut: "Today Hot TOP10 Products",
+      top10: "Today Hot TOP10 Ranking",
+      saleReturnTrend: 'Sales & Return Qty Trend',
+      saleAmountTrend: 'Sales Amount Trend'
     },
     kpi: {
       todaySale: 'Today Sales',
       monthSale: 'Monthly Sales',
       todayOrder: 'Today Orders',
       monthOrder: 'Monthly Orders',
-      pendingShip: 'Pending Shipment',
-      pendingPurchase: 'Pending Purchase',
+      totalMembers: 'Members',
+      todayNewMembers: 'New Members Today',
       amountUnit: 'CNY',
-      orderUnit: 'orders'
+      orderUnit: 'orders',
+      memberUnit: 'people'
     },
     column: {
       productType: 'Category',
@@ -2741,6 +2916,8 @@ export default {
       orderCount: 'Orders',
       productSale: 'Sales',
       saleAmount: 'Sales',
+      saleQty: 'Sale Qty',
+      returnQty: 'Return Qty',
       avgPrice: 'Avg Price'
     },
     axis: {
@@ -2754,8 +2931,7 @@ export default {
       refresh: 'Refresh'
     },
     empty: {
-      productStructure: 'No product structure data today',
-      top10: 'No sales records this month',
+      top10: 'No sales records today',
       trend: 'No sales records in last 10 days'
     }
   },

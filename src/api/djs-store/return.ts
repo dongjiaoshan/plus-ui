@@ -7,7 +7,7 @@
  */
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { StoreReturnForm, StoreReturnQuery, StoreReturnVO } from './return/types';
+import type { StoreReturnBatchForm, StoreReturnConfirmForm, StoreReturnForm, StoreReturnQuery, StoreReturnVO } from './return/types';
 
 /** 列表（分页） */
 export const listStoreReturn = (query?: StoreReturnQuery): AxiosPromise<StoreReturnVO[]> => {
@@ -39,6 +39,24 @@ export const addStoreReturn = (data: StoreReturnForm) => {
 export const updateStoreReturn = (data: StoreReturnForm) => {
   return request({
     url: '/djs/store/return',
+    method: 'put',
+    data
+  });
+};
+
+/** 退回操作批量录入（原型「退回操作」，建 pending 待仓库确认，不入库） */
+export const batchCreateStoreReturn = (data: StoreReturnBatchForm) => {
+  return request<number>({
+    url: '/djs/store/return/operation/batch',
+    method: 'post',
+    data
+  });
+};
+
+/** 仓库确认实收（原型「退回记录」仓库确认入库，pending→received 联动外购入库） */
+export const confirmStoreReturn = (data: StoreReturnConfirmForm) => {
+  return request({
+    url: '/djs/store/return/confirm',
     method: 'put',
     data
   });

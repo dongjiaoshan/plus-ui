@@ -1,6 +1,14 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { StoreAssignPigForm, StoreDemandForm, StoreDemandPigVO, StoreDemandQuery, StoreDemandVO, StorePigAvailableVO } from './demand/types';
+import type {
+  StoreAssignPigForm,
+  StoreDemandBatchForm,
+  StoreDemandForm,
+  StoreDemandPigVO,
+  StoreDemandQuery,
+  StoreDemandVO,
+  StorePigAvailableVO
+} from './demand/types';
 
 /**
  * 门店端需求 API（STR-DEMAND-001）。
@@ -18,6 +26,13 @@ export const getStoreDemand = (id: string): AxiosPromise<StoreDemandVO> => reque
 
 /** 门店发起需求（创建即 SUBMITTED）。 */
 export const addStoreDemand = (data: StoreDemandForm) => request({ url: '/djs/store/demand/add', method: 'post', data });
+
+/** 购物车整单发起需求（原型「新增需求」多产品整页，一次提交多条）。 */
+export const batchCreateStoreDemand = (data: StoreDemandBatchForm): AxiosPromise<number> =>
+  request({ url: '/djs/store/demand/operation/batch', method: 'post', data });
+
+/** 门店收货确认（CONFIRMED 态，原型列表「确认收货」）。 */
+export const receiveStoreDemand = (id: string) => request({ url: `/djs/store/demand/${id}/receive`, method: 'put' });
 
 /** 编辑需求。 */
 export const updateStoreDemand = (data: StoreDemandForm) => request({ url: '/djs/store/demand/edit', method: 'put', data });

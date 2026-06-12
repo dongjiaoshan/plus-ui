@@ -46,6 +46,21 @@ export interface TraceCodeVO {
   creatorName?: string;
   /** 生成时间 yyyy-MM-dd HH:mm:ss */
   createTime?: string;
+  // —— 原型「果蔬追溯码管理」产出流字段（STORE-TRACE-ONSITE-001，service 聚合 trace_event/产出记录）——
+  /** 到店日期（trace_event arrival 事件时间） */
+  arrivalDate?: string;
+  /** 生产编号（produce_no） */
+  produceNo?: string;
+  /** 序号（生产编号末段流水号） */
+  serialNo?: number;
+  /** 实际重量 kg（产出记录 produce_quantity） */
+  actualWeight?: number;
+  /** 采摘时间（trace_event pick 事件时间） */
+  pickTime?: string;
+  /** 月台接收时间（trace_event in_stock 事件时间） */
+  platformReceiveTime?: string;
+  /** 发货时间（trace_event ship 事件时间） */
+  shipTime?: string;
 }
 
 /** 单条事件流水 VO（时间轴节点，immutable 只读）。 */

@@ -21,6 +21,16 @@ export interface StoreReturnVO {
   /** 库位名称（后端内存聚合填） */
   locationName?: string;
   returnQuantity: number;
+  /** 报退货物重量(kg)（原型「货物重量」） */
+  goodsWeight?: number;
+  /** 退货状态 djs_store_return_status：pending=待仓库确认 / received=已入库 */
+  returnStatus?: string;
+  /** 仓库实收量（仓库确认时填） */
+  receivedQty?: number;
+  /** 仓库实收重量(kg)（仓库确认时填） */
+  receivedWeight?: number;
+  /** 仓库确认时间 */
+  confirmTime?: string;
   returnReason?: string;
   /** 已贴追溯码字符串，V1 仅存值无 FK */
   traceCode?: string;
@@ -32,6 +42,28 @@ export interface StoreReturnVO {
   operatorName?: string;
   remark?: string;
   createTime?: string;
+}
+
+/** 退回操作批量录入单行 */
+export interface StoreReturnBatchItem {
+  productId: string;
+  /** 退回重量(kg) */
+  returnWeight?: number;
+  traceCode?: string;
+}
+
+/** 退回操作批量录入 form（对齐原型「退回操作」矩阵提交） */
+export interface StoreReturnBatchForm {
+  storeId?: string;
+  items: StoreReturnBatchItem[];
+}
+
+/** 仓库确认实收 form（对齐原型「退回记录」仓库确认入库） */
+export interface StoreReturnConfirmForm {
+  id?: string;
+  locationId?: string;
+  receivedQty?: number;
+  receivedWeight?: number;
 }
 
 export interface StoreReturnForm {
@@ -56,6 +88,8 @@ export interface StoreReturnQuery {
   storeId?: string;
   productId?: string;
   returnDirection?: string;
+  /** 退货状态 pending/received */
+  returnStatus?: string;
   returnDateFrom?: string;
   returnDateTo?: string;
 }

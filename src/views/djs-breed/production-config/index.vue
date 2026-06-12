@@ -3,350 +3,265 @@
     <el-alert class="mb-3" type="info" show-icon :closable="true" :title="t('productionConfig.tip.noAutoTrigger')" />
 
     <el-tabs v-model="activeTab" class="biz-tabs">
-      <!-- Tab1 生产周期 -->
-      <el-tab-pane :label="t('productionConfig.tab.cycle')" name="cycle">
-        <BizTable
-          :data="cycleList"
-          :total="cycleTotal"
-          :loading="cycleLoading"
-          :columns="cycleColumns"
-          :search-schema="cycleSearchSchema"
-          :search-model="cycleSearch"
-          :page-num="cyclePageNum"
-          :page-size="cyclePageSize"
-          row-key="id"
-          selectable
-          perm-prefix="djs:breed:production-cycle"
-          @search="onCycleSearch"
-          @reset="onCycleReset"
-          @add="onCycleAdd"
-          @edit="onCycleEdit"
-          @del="onCycleDel"
-          @page-change="onCyclePageChange"
-        />
+      <!-- Tab1 母猪生产配置（6 字段表单）-->
+      <el-tab-pane :label="t('productionConfig.tab.sow')" name="sow">
+        <el-card shadow="never" class="form-card">
+          <el-form ref="sowFormRef" :model="sowForm" label-width="180px" class="config-form">
+            <el-form-item v-for="item in SOW_FIELDS" :key="item.key" :label="t('productionConfig.sow.' + item.key)">
+              <el-input-number v-model="sowForm[item.key]" :min="0" :max="9999" :step="1" :precision="0" controls-position="right" />
+              <span class="unit-suffix">{{ t('productionConfig.unit.day') }}</span>
+            </el-form-item>
+            <el-form-item>
+              <el-button v-hasPermi="['djs:breed:production-cycle:edit']" type="primary" :loading="sowSaving" @click="onSaveSow">
+                {{ t('common.save') }}
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
       </el-tab-pane>
 
-      <!-- Tab2 精液公猪 -->
-      <el-tab-pane :label="t('productionConfig.tab.boar')" name="boar">
-        <BizTable
-          :data="boarList"
-          :total="boarTotal"
-          :loading="boarLoading"
-          :columns="boarColumns"
-          :search-schema="boarSearchSchema"
-          :search-model="boarSearch"
-          :page-num="boarPageNum"
-          :page-size="boarPageSize"
-          row-key="id"
-          selectable
-          perm-prefix="djs:breed:production-boar"
-          @search="onBoarSearch"
-          @reset="onBoarReset"
-          @add="onBoarAdd"
-          @edit="onBoarEdit"
-          @del="onBoarDel"
-          @page-change="onBoarPageChange"
-        />
+      <!-- Tab2 育肥生产配置（日龄阶段表格 CRUD）-->
+      <el-tab-pane :label="t('productionConfig.tab.fatten')" name="fatten">
+        <el-card shadow="never" class="form-card">
+          <div class="table-toolbar">
+            <el-button v-hasPermi="['djs:breed:production-cycle:edit']" type="primary" plain icon="Plus" @click="onAddStage">
+              {{ t('productionConfig.fatten.addStage') }}
+            </el-button>
+            <el-button v-hasPermi="['djs:breed:production-cycle:edit']" type="success" :loading="fattenSaving" @click="onSaveFatten">
+              {{ t('common.save') }}
+            </el-button>
+          </div>
+          <el-table v-loading="fattenLoading" :data="fattenList" border row-key="rowKey">
+            <el-table-column type="index" :label="t('productionConfig.fatten.index')" width="70" align="center" />
+            <el-table-column :label="t('productionConfig.fatten.startAge')" min-width="160">
+              <template #default="{ row }">
+                <el-input-number v-model="row.startAge" :min="0" :max="9999" :step="1" :precision="0" controls-position="right" />
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('productionConfig.fatten.endAge')" min-width="160">
+              <template #default="{ row }">
+                <el-input-number v-model="row.endAge" :min="0" :max="9999" :step="1" :precision="0" controls-position="right" />
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('productionConfig.fatten.recordGrowth')" width="160" align="center">
+              <template #default="{ row }">
+                <el-switch v-model="row.recordGrowth" :active-value="1" :inactive-value="0" />
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('common.operate')" width="100" align="center">
+              <template #default="{ $index }">
+                <el-button v-hasPermi="['djs:breed:production-cycle:edit']" type="danger" link icon="Delete" @click="onRemoveStage($index)">
+                  {{ t('common.delete') }}
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
       </el-tab-pane>
 
-      <!-- Tab3 药品周期 -->
-      <el-tab-pane :label="t('productionConfig.tab.med')" name="med">
-        <BizTable
-          :data="medList"
-          :total="medTotal"
-          :loading="medLoading"
-          :columns="medColumns"
-          :search-schema="medSearchSchema"
-          :search-model="medSearch"
-          :page-num="medPageNum"
-          :page-size="medPageSize"
-          row-key="id"
-          selectable
-          perm-prefix="djs:breed:production-med"
-          @search="onMedSearch"
-          @reset="onMedReset"
-          @add="onMedAdd"
-          @edit="onMedEdit"
-          @del="onMedDel"
-          @page-change="onMedPageChange"
-        />
+      <!-- Tab3 出栏配置（单字段表单）-->
+      <el-tab-pane :label="t('productionConfig.tab.slaughter')" name="slaughter">
+        <el-card shadow="never" class="form-card">
+          <el-form ref="slaughterFormRef" :model="slaughterForm" label-width="180px" class="config-form">
+            <el-form-item :label="t('productionConfig.slaughter.slaughterAge')">
+              <el-input-number v-model="slaughterForm.slaughter_age_days" :min="0" :max="9999" :step="1" :precision="0" controls-position="right" />
+              <span class="unit-suffix">{{ t('productionConfig.unit.day') }}</span>
+            </el-form-item>
+            <el-form-item>
+              <el-button v-hasPermi="['djs:breed:production-cycle:edit']" type="primary" :loading="slaughterSaving" @click="onSaveSlaughter">
+                {{ t('common.save') }}
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
       </el-tab-pane>
     </el-tabs>
-
-    <CycleForm ref="cycleFormRef" @success="fetchCycle" />
-    <BoarForm ref="boarFormRef" @success="fetchBoar" />
-    <MedScheduleForm ref="medFormRef" @success="fetchMed" />
   </div>
 </template>
 
 <script setup name="ProductionConfig" lang="ts">
-import BizTable from '@/components/BizTable/index.vue';
-import type { BizRow, BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
-import CycleForm from './components/CycleForm.vue';
-import BoarForm from './components/BoarForm.vue';
-import MedScheduleForm from './components/MedScheduleForm.vue';
 import {
-  delBoarConfig,
-  delMedSchedule,
-  delProductionCycle,
-  listBoarConfig,
-  listMedSchedule,
-  listProductionCycle
+  batchSaveFattenStage,
+  getSlaughterConfig,
+  getSowConfig,
+  listFattenStage,
+  saveSlaughterConfig,
+  saveSowConfig
 } from '@/api/djs-breed/production-config';
-import type {
-  BoarConfigQuery,
-  BoarConfigVO,
-  MedScheduleConfigQuery,
-  MedScheduleConfigVO,
-  ProductionCycleConfigQuery,
-  ProductionCycleConfigVO
-} from '@/api/djs-breed/production-config/types';
+import type { FattenAgeStageVO } from '@/api/djs-breed/production-config/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_med_type, djs_med_event_trigger } = toRefs<any>(proxy?.useDict('djs_med_type', 'djs_med_event_trigger'));
 
-const activeTab = ref<'cycle' | 'boar' | 'med'>('cycle');
+const activeTab = ref<'sow' | 'fatten' | 'slaughter'>('sow');
 
-const cycleFormRef = ref<{ openCreate: () => void; openEdit: (id: number | string) => void }>();
-const boarFormRef = ref<{ openCreate: () => void; openEdit: (id: number | string) => void }>();
-const medFormRef = ref<{ openCreate: () => void; openEdit: (id: number | string) => void }>();
+// ============= Tab1 母猪生产配置（6 字段表单）=============
+// key 与后端 ProductionCycleConfigController.SOW_DEFAULTS 严格对齐
+const SOW_FIELDS = [
+  { key: 'sow_wean_to_breed_days' },
+  { key: 'sow_return_to_breed_days' },
+  { key: 'sow_empty_to_breed_days' },
+  { key: 'sow_abort_to_breed_days' },
+  { key: 'sow_breed_to_farrow_days' },
+  { key: 'sow_farrow_to_wean_days' }
+] as const;
 
-// ============= Tab1 cycle state =============
-const cycleList = ref<ProductionCycleConfigVO[]>([]);
-const cycleTotal = ref(0);
-const cycleLoading = ref(false);
-const cyclePageNum = ref(1);
-const cyclePageSize = ref(10);
-const cycleSearch = reactive<Record<string, any>>({ configKey: undefined, description: undefined });
+const sowForm = reactive<Record<string, number>>({
+  sow_wean_to_breed_days: 6,
+  sow_return_to_breed_days: 5,
+  sow_empty_to_breed_days: 5,
+  sow_abort_to_breed_days: 5,
+  sow_breed_to_farrow_days: 141,
+  sow_farrow_to_wean_days: 25
+});
+const sowSaving = ref(false);
 
-const cycleSearchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'configKey', label: t('productionConfig.field.configKey'), type: 'input' },
-  { field: 'description', label: t('productionConfig.field.description'), type: 'input' }
-]);
-
-const cycleColumns = computed<BizTableColumn[]>(() => [
-  { prop: 'configKey', label: t('productionConfig.column.configKey'), width: 200 },
-  { prop: 'defaultValue', label: t('productionConfig.column.defaultValue'), width: 100, align: 'right' },
-  { prop: 'customValue', label: t('productionConfig.column.customValue'), width: 110, align: 'right' },
-  { prop: 'unit', label: t('productionConfig.column.unit'), width: 80, align: 'center' },
-  { prop: 'description', label: t('productionConfig.column.description'), minWidth: 240, showOverflowTooltip: true },
-  { prop: 'remark', label: t('productionConfig.column.remark'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'createTime', label: t('productionConfig.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
-]);
-
-async function fetchCycle() {
-  cycleLoading.value = true;
-  try {
-    const query: ProductionCycleConfigQuery = {
-      pageNum: cyclePageNum.value,
-      pageSize: cyclePageSize.value,
-      configKey: cycleSearch.configKey || undefined,
-      description: cycleSearch.description || undefined
-    };
-    const res = await listProductionCycle(query);
-    cycleList.value = (res.rows ?? res.data ?? []) as ProductionCycleConfigVO[];
-    cycleTotal.value = res.total ?? 0;
-  } finally {
-    cycleLoading.value = false;
-  }
-}
-
-function onCycleSearch() {
-  cyclePageNum.value = 1;
-  fetchCycle();
-}
-function onCycleReset() {
-  onCycleSearch();
-}
-function onCyclePageChange(payload: number | [number, number]) {
-  if (Array.isArray(payload)) {
-    cyclePageNum.value = payload[0];
-    cyclePageSize.value = payload[1];
-  }
-  fetchCycle();
-}
-function onCycleAdd() {
-  cycleFormRef.value?.openCreate();
-}
-function onCycleEdit(row: BizRow) {
-  cycleFormRef.value?.openEdit(row.id);
-}
-async function onCycleDel(rowOrRows: BizRow | BizRow[]) {
-  const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];
-  await proxy?.$modal.confirm(t('productionConfig.confirm.delCycle', { count: ids.length }));
-  await delProductionCycle(ids);
-  proxy?.$modal.msgSuccess(t('common.opSuccess'));
-  fetchCycle();
-}
-
-// ============= Tab2 boar state =============
-const boarList = ref<BoarConfigVO[]>([]);
-const boarTotal = ref(0);
-const boarLoading = ref(false);
-const boarPageNum = ref(1);
-const boarPageSize = ref(10);
-const boarSearch = reactive<Record<string, any>>({ boarId: undefined });
-
-const boarSearchSchema = computed<SearchFieldSchema[]>(() => [{ field: 'boarId', label: t('productionConfig.field.boarId'), type: 'input' }]);
-
-const boarColumns = computed<BizTableColumn[]>(() => [
-  { prop: 'boarId', label: t('productionConfig.column.boarId'), width: 140, align: 'right' },
-  { prop: 'spermQualityThreshold', label: t('productionConfig.column.spermQualityThreshold'), width: 160, align: 'right' },
-  { prop: 'breedingIntervalDays', label: t('productionConfig.column.breedingIntervalDays'), width: 140, align: 'right' },
-  { prop: 'remark', label: t('productionConfig.column.remark'), minWidth: 200, showOverflowTooltip: true },
-  { prop: 'createTime', label: t('productionConfig.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
-]);
-
-async function fetchBoar() {
-  boarLoading.value = true;
-  try {
-    const query: BoarConfigQuery = {
-      pageNum: boarPageNum.value,
-      pageSize: boarPageSize.value,
-      boarId: boarSearch.boarId || undefined
-    };
-    const res = await listBoarConfig(query);
-    boarList.value = (res.rows ?? res.data ?? []) as BoarConfigVO[];
-    boarTotal.value = res.total ?? 0;
-  } finally {
-    boarLoading.value = false;
-  }
-}
-
-function onBoarSearch() {
-  boarPageNum.value = 1;
-  fetchBoar();
-}
-function onBoarReset() {
-  onBoarSearch();
-}
-function onBoarPageChange(payload: number | [number, number]) {
-  if (Array.isArray(payload)) {
-    boarPageNum.value = payload[0];
-    boarPageSize.value = payload[1];
-  }
-  fetchBoar();
-}
-function onBoarAdd() {
-  boarFormRef.value?.openCreate();
-}
-function onBoarEdit(row: BizRow) {
-  boarFormRef.value?.openEdit(row.id);
-}
-async function onBoarDel(rowOrRows: BizRow | BizRow[]) {
-  const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];
-  await proxy?.$modal.confirm(t('productionConfig.confirm.delBoar', { count: ids.length }));
-  await delBoarConfig(ids);
-  proxy?.$modal.msgSuccess(t('common.opSuccess'));
-  fetchBoar();
-}
-
-// ============= Tab3 med state =============
-const medList = ref<MedScheduleConfigVO[]>([]);
-const medTotal = ref(0);
-const medLoading = ref(false);
-const medPageNum = ref(1);
-const medPageSize = ref(10);
-const medSearch = reactive<Record<string, any>>({ medType: undefined, eventTrigger: undefined });
-
-const medSearchSchema = computed<SearchFieldSchema[]>(() => [
-  {
-    field: 'medType',
-    label: t('productionConfig.field.medType'),
-    type: 'select',
-    options: (djs_med_type.value || []).map((d: any) => ({ value: d.value, label: d.label }))
-  },
-  {
-    field: 'eventTrigger',
-    label: t('productionConfig.field.eventTrigger'),
-    type: 'select',
-    options: (djs_med_event_trigger.value || []).map((d: any) => ({ value: d.value, label: d.label }))
-  }
-]);
-
-const medColumns = computed<BizTableColumn[]>(() => [
-  {
-    prop: 'medType',
-    label: t('productionConfig.column.medType'),
-    width: 120,
-    align: 'center',
-    formatter: (row: any) => {
-      const item = (djs_med_type.value || []).find((d: any) => d.value === row.medType);
-      return item ? item.label : row.medType;
+async function fetchSow() {
+  const res = await getSowConfig();
+  const data = (res.data ?? {}) as Record<string, number>;
+  SOW_FIELDS.forEach((f) => {
+    if (data[f.key] != null) {
+      sowForm[f.key] = data[f.key];
     }
-  },
-  {
-    prop: 'eventTrigger',
-    label: t('productionConfig.column.eventTrigger'),
-    width: 140,
-    align: 'center',
-    formatter: (row: any) => {
-      const item = (djs_med_event_trigger.value || []).find((d: any) => d.value === row.eventTrigger);
-      return item ? item.label : row.eventTrigger;
-    }
-  },
-  { prop: 'daysOffset', label: t('productionConfig.column.daysOffset'), width: 110, align: 'right' },
-  { prop: 'description', label: t('productionConfig.column.description'), minWidth: 220, showOverflowTooltip: true },
-  { prop: 'remark', label: t('productionConfig.column.remark'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'createTime', label: t('productionConfig.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
-]);
+  });
+}
 
-async function fetchMed() {
-  medLoading.value = true;
+async function onSaveSow() {
+  sowSaving.value = true;
   try {
-    const query: MedScheduleConfigQuery = {
-      pageNum: medPageNum.value,
-      pageSize: medPageSize.value,
-      medType: medSearch.medType || undefined,
-      eventTrigger: medSearch.eventTrigger || undefined
-    };
-    const res = await listMedSchedule(query);
-    medList.value = (res.rows ?? res.data ?? []) as MedScheduleConfigVO[];
-    medTotal.value = res.total ?? 0;
+    const payload: Record<string, number> = {};
+    SOW_FIELDS.forEach((f) => (payload[f.key] = sowForm[f.key]));
+    await saveSowConfig(payload);
+    proxy?.$modal.msgSuccess(t('common.opSuccess'));
+    fetchSow();
   } finally {
-    medLoading.value = false;
+    sowSaving.value = false;
   }
 }
 
-function onMedSearch() {
-  medPageNum.value = 1;
-  fetchMed();
+// ============= Tab2 育肥生产配置（日龄阶段表格）=============
+interface FattenRow {
+  rowKey: string;
+  id?: number | string;
+  startAge: number | null;
+  endAge: number | null;
+  recordGrowth: number;
 }
-function onMedReset() {
-  onMedSearch();
+
+const fattenList = ref<FattenRow[]>([]);
+const fattenLoading = ref(false);
+const fattenSaving = ref(false);
+let rowSeq = 0;
+
+function nextRowKey(): string {
+  rowSeq += 1;
+  return 'r' + rowSeq;
 }
-function onMedPageChange(payload: number | [number, number]) {
-  if (Array.isArray(payload)) {
-    medPageNum.value = payload[0];
-    medPageSize.value = payload[1];
+
+async function fetchFatten() {
+  fattenLoading.value = true;
+  try {
+    const res = await listFattenStage();
+    const rows = (res.data ?? []) as FattenAgeStageVO[];
+    fattenList.value = rows.map((r) => ({
+      rowKey: nextRowKey(),
+      id: r.id,
+      startAge: r.startAge,
+      endAge: r.endAge,
+      recordGrowth: r.recordGrowth ?? 0
+    }));
+  } finally {
+    fattenLoading.value = false;
   }
-  fetchMed();
 }
-function onMedAdd() {
-  medFormRef.value?.openCreate();
+
+function onAddStage() {
+  // 新增行默认接续上一行的截止日龄 + 1（连续日龄段）
+  const last = fattenList.value[fattenList.value.length - 1];
+  const start = last && last.endAge != null ? last.endAge + 1 : 0;
+  fattenList.value.push({ rowKey: nextRowKey(), startAge: start, endAge: null, recordGrowth: 0 });
 }
-function onMedEdit(row: BizRow) {
-  medFormRef.value?.openEdit(row.id);
+
+function onRemoveStage(index: number) {
+  fattenList.value.splice(index, 1);
 }
-async function onMedDel(rowOrRows: BizRow | BizRow[]) {
-  const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];
-  await proxy?.$modal.confirm(t('productionConfig.confirm.delMed', { count: ids.length }));
-  await delMedSchedule(ids);
-  proxy?.$modal.msgSuccess(t('common.opSuccess'));
-  fetchMed();
+
+async function onSaveFatten() {
+  // 前端校验：每行起止非空 + 截止 ≥ 起始
+  for (let i = 0; i < fattenList.value.length; i++) {
+    const r = fattenList.value[i];
+    if (r.startAge == null || r.endAge == null) {
+      proxy?.$modal.msgError(t('productionConfig.fatten.ruleRequired', { row: i + 1 }));
+      return;
+    }
+    if (r.endAge < r.startAge) {
+      proxy?.$modal.msgError(t('productionConfig.fatten.ruleRange', { row: i + 1 }));
+      return;
+    }
+  }
+  fattenSaving.value = true;
+  try {
+    const payload = fattenList.value.map((r) => ({
+      startAge: r.startAge,
+      endAge: r.endAge,
+      recordGrowth: r.recordGrowth
+    }));
+    await batchSaveFattenStage(payload);
+    proxy?.$modal.msgSuccess(t('common.opSuccess'));
+    fetchFatten();
+  } finally {
+    fattenSaving.value = false;
+  }
+}
+
+// ============= Tab3 出栏配置（单字段表单）=============
+const slaughterForm = reactive<Record<string, number>>({ slaughter_age_days: 175 });
+const slaughterSaving = ref(false);
+
+async function fetchSlaughter() {
+  const res = await getSlaughterConfig();
+  const data = (res.data ?? {}) as Record<string, number>;
+  if (data.slaughter_age_days != null) {
+    slaughterForm.slaughter_age_days = data.slaughter_age_days;
+  }
+}
+
+async function onSaveSlaughter() {
+  slaughterSaving.value = true;
+  try {
+    await saveSlaughterConfig({ slaughter_age_days: slaughterForm.slaughter_age_days });
+    proxy?.$modal.msgSuccess(t('common.opSuccess'));
+    fetchSlaughter();
+  } finally {
+    slaughterSaving.value = false;
+  }
 }
 
 onMounted(() => {
-  fetchCycle();
-  fetchBoar();
-  fetchMed();
+  fetchSow();
+  fetchFatten();
+  fetchSlaughter();
 });
 </script>
 
 <style scoped>
 .biz-tabs :deep(.el-tabs__content) {
   padding-top: 4px;
+}
+.form-card {
+  max-width: 720px;
+}
+.config-form {
+  padding-top: 8px;
+}
+.unit-suffix {
+  margin-left: 8px;
+  color: var(--el-text-color-secondary);
+}
+.table-toolbar {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
 }
 </style>

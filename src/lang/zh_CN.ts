@@ -447,9 +447,35 @@ export default {
   // v1.2 关键：无定时任务 / 无自动流转 —— 配置只决定"建议时间"，状态转换全靠 BRD-EVENT-* 事件触发
   productionConfig: {
     tab: {
+      sow: '母猪生产配置',
+      fatten: '育肥生产配置',
+      slaughter: '出栏配置',
       cycle: '生产周期',
       boar: '精液公猪',
       med: '药品疫苗周期'
+    },
+    unit: {
+      day: '天'
+    },
+    sow: {
+      sow_wean_to_breed_days: '断奶-配种天数',
+      sow_return_to_breed_days: '返情-配种天数',
+      sow_empty_to_breed_days: '空怀-配种天数',
+      sow_abort_to_breed_days: '流产-配种天数',
+      sow_breed_to_farrow_days: '配种-分娩天数',
+      sow_farrow_to_wean_days: '分娩-断奶天数'
+    },
+    fatten: {
+      index: '序号',
+      startAge: '起始日龄',
+      endAge: '截止日龄',
+      recordGrowth: '是否记录生长记录',
+      addStage: '新增日龄阶段',
+      ruleRequired: '第 {row} 行：起始 / 截止日龄不能为空',
+      ruleRange: '第 {row} 行：截止日龄不能小于起始日龄'
+    },
+    slaughter: {
+      slaughterAge: '出栏日龄'
     },
     title: {
       addCycle: '新增生产周期项',
@@ -2159,6 +2185,30 @@ export default {
       gift_box: '礼盒',
       other: '其他'
     },
+    tab: {
+      white_bar: '白条产品',
+      pork: '猪肉产品',
+      vegetable: '果蔬产品',
+      dry_good: '干货产品',
+      egg: '鸡蛋产品',
+      gift_box: '礼盒产品',
+      other: '其他产品'
+    },
+    create: {
+      productType: '产品类型',
+      operation: '操作',
+      cartTitle: '需求产品',
+      cartEmpty: '请在左侧选择产品并填写需求量',
+      emptyProducts: '该类型下暂无产品',
+      productName: '产品名称',
+      availablePigs: '可出栏猪只头数',
+      unit: '单位',
+      demandQuantity: '需求量',
+      mailing: '个人邮寄',
+      remark: '备注：',
+      remarkPh: '请输入备注信息',
+      confirm: '需求确认'
+    },
     filter: {
       store: '门店',
       storePlaceholder: '请选择门店'
@@ -2194,10 +2244,16 @@ export default {
     column: {
       demandNo: '需求单号',
       demandDate: '需求日期',
-      productName: '产品',
+      productName: '产品名称',
+      productSpec: '产品规格',
       demandQuantity: '需求量',
       productUnit: '单位',
-      demandStatus: '状态',
+      demandType: '需求类型',
+      demandRemark: '备注',
+      expectedWeight: '预计到店重量',
+      demandStatus: '需求状态',
+      confirmerTime: '需求确认时间',
+      demandConfirmer: '需求确认人',
       expectedArriveDate: '期望到货',
       createTime: '创建时间',
       actions: '操作'
@@ -2220,10 +2276,12 @@ export default {
       edit: '编辑',
       cancel: '撤回',
       assignPig: '指定猪只',
+      receive: '确认收货',
       detail: '详情'
     },
     confirm: {
-      del: '确认删除选中的 {count} 条需求？仅未确认需求可删'
+      del: '确认删除选中的 {count} 条需求？仅未确认需求可删',
+      receive: '确认已收到「{name}」的货物？'
     },
     prompt: {
       cancelRemark: '请输入撤回原因（可选）',
@@ -2484,6 +2542,37 @@ export default {
     }
   },
   // 门店退回管理（STR-RETURN-001，门店域薄实现，admin only）
+  storeTrace: {
+    veg: {
+      arrivalDate: '到店日期',
+      produceNo: '生产编号',
+      serialNo: '序号',
+      productName: '产品名称',
+      productSpec: '产品规格',
+      actualWeight: '实际重量',
+      plotName: '来源地块',
+      pickTime: '采摘时间',
+      platformReceiveTime: '月台接收时间',
+      shipTime: '发货时间',
+      print: '追溯码打印',
+      noCode: '该行无追溯码可打印'
+    },
+    pork: {
+      pickPig: '追溯猪只',
+      noPig: '暂无可追溯猪只（已出栏育肥猪）',
+      pickCut: '选择追溯部位',
+      opPanel: '操作',
+      pigId: '猪只ID',
+      pigSex: '猪只性别',
+      pigBreed: '猪只品种',
+      ageDays: '猪只日龄',
+      daysUnit: '日龄',
+      weight: '产品重量',
+      weightPlaceholder: '请输入产品重量(kg)',
+      genPrint: '追溯码打印',
+      genOk: '生码成功：{code}'
+    }
+  },
   storeReturn: {
     field: {
       returnNo: '退回单号',
@@ -2504,12 +2593,17 @@ export default {
       returnNo: '退回单号',
       returnDirection: '退回方向',
       storeName: '退回门店',
-      productType: '产品类型',
+      productType: '退货产品类型',
       productCode: '产品代码',
-      productName: '产品',
+      productName: '产品名称',
       productSpec: '规格',
       locationName: '入库库位',
-      returnQuantity: '退回数量',
+      returnQuantity: '退货量',
+      unit: '单位',
+      goodsWeight: '货物重量',
+      receivedQty: '仓库实收量',
+      receivedWeight: '仓库实收重量',
+      returnStatus: '退货状态',
       returnReason: '退回原因',
       traceCode: '追溯码',
       memberId: '会员ID',
@@ -2520,6 +2614,17 @@ export default {
     tab: {
       pork: '猪肉产品',
       vegetable: '果蔬产品'
+    },
+    action: {
+      confirm: '确认入库'
+    },
+    operation: {
+      title: '退回操作',
+      returnWeight: '退回产品重量(KG)',
+      weightPlaceholder: '请输入退回重量(KG)',
+      emptyCandidates: '请先选择门店；该门店暂无关联产品',
+      submit: '确认提交',
+      submitConfirm: '确认提交 {n} 条退回？'
     },
     placeholder: {
       returnDirection: '请选择退回方向',
@@ -2536,17 +2641,85 @@ export default {
       product: '请选择产品',
       location: '请选择退回入库库位',
       returnQuantity: '请输入退回数量',
-      returnQuantityMin: '退回数量必须大于 0'
+      returnQuantityMin: '退回数量必须大于 0',
+      receivedQty: '请输入仓库实收量'
     },
     tip: {
       editLock: '产品 / 入库库位 / 退回数量为入库驱动字段，建后不可修改'
     },
     dialog: {
       add: '新增退回',
-      edit: '编辑退回'
+      edit: '编辑退回',
+      confirm: '仓库确认实收'
     },
     confirm: {
       delete: '确认删除退回单 {no}？'
+    }
+  },
+  // 门店经营流水盘点（STORE-LEDGER-001，原型 门店管理>门店盘点 重建）
+  storeLedger: {
+    field: {
+      store: '门店',
+      dateFrom: '盘点日期起',
+      dateTo: '盘点日期止'
+    },
+    column: {
+      index: '序号',
+      storeName: '门店',
+      ledgerDate: '盘点日期',
+      lineCount: '产品数',
+      operatorName: '盘点人',
+      checkTime: '盘点时间',
+      productName: '产品名称',
+      unit: '单位',
+      openingQty: '期初库存',
+      inboundQty: '当日入库',
+      saleQty: '销售量',
+      giftQty: '赠送量',
+      returnQty: '退货量',
+      returnedQty: '退回量',
+      lossQty: '损耗量',
+      closingQty: '期末库存'
+    },
+    action: {
+      newEntry: '新增当日盘点',
+      detail: '查看详情'
+    },
+    detail: {
+      title: '{store} {date} 盘点明细'
+    },
+    entry: {
+      title: '新增当日盘点',
+      storePlaceholder: '请选择门店',
+      datePlaceholder: '请选择盘点日期',
+      emptyCandidates: '该门店暂无关联产品，请先在「产品管理」配置可售产品',
+      submit: '盘点完成',
+      submitConfirm: '确认提交 {n} 个产品的盘点数据？'
+    }
+  },
+  // 门店产品管理（STORE-LEDGER-001，门店域入口）
+  storeProduct: {
+    field: {
+      productName: '产品名称',
+      productType: '产品类型',
+      productStatus: '产品状态'
+    },
+    column: {
+      image: '产品图片',
+      productType: '产品类型',
+      productName: '产品名称',
+      supplier: '供应商',
+      productSpec: '规格',
+      unit: '单位',
+      productStatus: '产品状态',
+      updateTime: '更新时间',
+      updateBy: '更新人'
+    },
+    detail: {
+      title: '产品详情',
+      productCode: '产品编码',
+      history: '盘点历史',
+      noHistory: '暂无盘点历史'
     }
   },
   // 种植灾害记录（PLT-WORK-003，admin 只读独立子页）
@@ -2709,20 +2882,22 @@ export default {
   },
   storeDashboard: {
     title: {
-      home: '门店首页',
-      productStructure: '当日产品结构（按业态）',
-      top10: '当月 TOP10 产品排行',
-      trend: '近 10 日趋势'
+      home: '门店总览',
+      top10Donut: '当日热销产品 TOP10',
+      top10: '当日热销产品 TOP10 排行',
+      saleReturnTrend: '销售量与退货量趋势',
+      saleAmountTrend: '销售额变化趋势'
     },
     kpi: {
       todaySale: '今日销售额',
       monthSale: '本月累计销售额',
       todayOrder: '今日订单数',
       monthOrder: '本月订单数',
-      pendingShip: '待发货',
-      pendingPurchase: '待采购',
+      totalMembers: '会员数',
+      todayNewMembers: '今日新增会员',
       amountUnit: '元',
-      orderUnit: '单'
+      orderUnit: '单',
+      memberUnit: '人'
     },
     column: {
       productType: '业态',
@@ -2742,6 +2917,8 @@ export default {
       orderCount: '订单数',
       productSale: '销售额',
       saleAmount: '销售额',
+      saleQty: '销售量',
+      returnQty: '退货量',
       avgPrice: '客单价'
     },
     axis: {
@@ -2755,8 +2932,7 @@ export default {
       refresh: '刷新'
     },
     empty: {
-      productStructure: '当日暂无产品结构数据',
-      top10: '当月暂无销售记录',
+      top10: '当日暂无销售记录',
       trend: '近 10 日暂无销售记录'
     }
   },

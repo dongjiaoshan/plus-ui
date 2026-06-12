@@ -1,5 +1,6 @@
 <template>
   <div class="p-2">
+    <!-- 门店经营流水盘点列表（盘点单 = 门店 + 盘点日期）。点查看进只读详情；新增当日盘点进整表录入页 -->
     <BizTable
       ref="tableRef"
       :data="list"
@@ -10,77 +11,55 @@
       :search-model="searchModel"
       :page-num="pageNum"
       :page-size="pageSize"
-      row-key="id"
+      row-key="rowKey"
       :selectable="false"
       :show-batch-del="false"
       :show-row-edit="false"
-      :show-export="true"
+      :show-add="false"
+      :show-export="false"
       perm-prefix="djs:store:check"
       @search="handleSearch"
       @reset="handleReset"
-      @add="handleAdd"
-      @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-checkStatus="{ row }">
-        <dict-tag :options="djs_check_status" :value="row.checkStatus" />
-      </template>
-      <template #cell-diffSum="{ row }">
-        <span :class="diffClass(row.diffSum)">{{ formatDiff(row.diffSum) }}</span>
+      <template #toolbar-extra>
+        <el-button v-hasPermi="['djs:store:check:add']" type="primary" icon="Plus" @click="handleAddEntry">
+          {{ t('storeLedger.action.newEntry') }}
+        </el-button>
       </template>
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:store:check:query']" link type="primary" icon="View" @click="openDetail(row)">
-          {{ t('storeCheck.action.detail') }}
-        </el-button>
-        <el-button
-          v-if="row.checkStatus === 'in_progress'"
-          v-hasPermi="['djs:store:check:complete']"
-          link
-          type="success"
-          icon="CircleCheck"
-          @click="handleComplete(row)"
-        >
-          {{ t('storeCheck.action.complete') }}
-        </el-button>
-        <el-button
-          v-if="row.checkStatus === 'in_progress'"
-          v-hasPermi="['djs:store:check:cancel']"
-          link
-          type="warning"
-          icon="CircleClose"
-          @click="handleCancel(row)"
-        >
-          {{ t('storeCheck.action.cancel') }}
+          {{ t('storeLedger.action.detail') }}
         </el-button>
       </template>
     </BizTable>
 
-    <StoreCheckForm ref="formRef" :store-options="storeOptions" @success="onCreated" />
-
-    <StoreCheckDetail ref="detailRef" @changed="fetchList" />
+    <LedgerDetail ref="detailRef" />
   </div>
 </template>
 
-<script setup name="StoreCheck" lang="ts">
+<script setup name="StoreLedgerList" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import StoreCheckForm from './components/StoreCheckForm.vue';
-import StoreCheckDetail from './components/StoreCheckDetail.vue';
-import { listStoreCheck, completeStoreCheck, cancelStoreCheck } from '@/api/djs-store/check';
-import type { StoreCheckHeaderVO, StoreCheckQuery } from '@/api/djs-store/check/types';
+import LedgerDetail from './detail/index.vue';
+import { listStoreLedger } from '@/api/djs-store/ledger';
+import type { StoreLedgerHeaderVO, StoreLedgerQuery } from '@/api/djs-store/ledger/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
 const { t } = useI18n();
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_check_status } = toRefs<any>(proxy?.useDict('djs_check_status'));
+const router = useRouter();
+
+interface LedgerRow extends StoreLedgerHeaderVO {
+  rowKey: string;
+}
 
 const tableRef = ref<BizTableExpose>();
-const formRef = ref<{ openCreate: () => void }>();
-const detailRef = ref<{ open: (row: StoreCheckHeaderVO) => void }>();
+const detailRef = ref<{ open: (storeId: string, ledgerDate: string) => void }>();
 
-const list = ref<StoreCheckHeaderVO[]>([]);
+const list = ref<LedgerRow[]>([]);
 const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
@@ -88,54 +67,36 @@ const pageSize = ref(10);
 const storeOptions = ref<StoreVO[]>([]);
 
 const searchModel = reactive<Record<string, unknown>>({
-  checkId: undefined,
   storeId: undefined,
-  checkStatus: undefined,
-  checkDateFrom: undefined,
-  checkDateTo: undefined
+  ledgerDateFrom: undefined,
+  ledgerDateTo: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'checkId', label: t('storeCheck.field.checkId'), type: 'input' },
   {
     field: 'storeId',
-    label: t('storeCheck.field.store'),
+    label: t('storeLedger.field.store'),
     type: 'select',
     options: storeOptions.value.map((s) => ({ label: s.storeName, value: String(s.id) }))
   },
-  { field: 'checkStatus', label: t('storeCheck.field.checkStatus'), type: 'select', dictType: 'djs_check_status' },
-  { field: 'checkDateFrom', label: t('storeCheck.field.checkDateFrom'), type: 'date' },
-  { field: 'checkDateTo', label: t('storeCheck.field.checkDateTo'), type: 'date' }
+  { field: 'ledgerDateFrom', label: t('storeLedger.field.dateFrom'), type: 'date' },
+  { field: 'ledgerDateTo', label: t('storeLedger.field.dateTo'), type: 'date' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'checkId', label: t('storeCheck.column.checkId'), width: 160, showOverflowTooltip: true },
-  { prop: 'storeName', label: t('storeCheck.column.storeName'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'checkDate', label: t('storeCheck.column.checkDate'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'checkStatus', label: t('storeCheck.column.checkStatus'), width: 100, align: 'center' },
-  { prop: 'lineCount', label: t('storeCheck.column.lineCount'), width: 90, align: 'right' },
-  { prop: 'diffSum', label: t('storeCheck.column.diffSum'), width: 110, align: 'right' },
-  { prop: 'createTime', label: t('storeCheck.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
+  { prop: 'storeName', label: t('storeLedger.column.storeName'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'ledgerDate', label: t('storeLedger.column.ledgerDate'), width: 140, align: 'center' },
+  { prop: 'lineCount', label: t('storeLedger.column.lineCount'), width: 100, align: 'right' },
+  { prop: 'operatorName', label: t('storeLedger.column.operatorName'), width: 120, align: 'center' },
+  { prop: 'checkTime', label: t('storeLedger.column.checkTime'), width: 170, align: 'center', formatter: 'datetime' }
 ]);
-
-function formatDiff(v: number | string | undefined): string {
-  const n = Number(v ?? 0);
-  if (Number.isNaN(n) || n === 0) return '0';
-  return n > 0 ? `+${n}` : String(n);
-}
-function diffClass(v: number | string | undefined): string {
-  const n = Number(v ?? 0);
-  if (n > 0) return 'text-green-600';
-  if (n < 0) return 'text-red-500';
-  return '';
-}
 
 async function loadStoreOptions() {
   try {
     const res = await listStore({ pageNum: 1, pageSize: 200 });
     storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
   } catch (e) {
-    console.warn('[StoreCheck] loadStoreOptions failed', e);
+    console.warn('[StoreLedgerList] loadStoreOptions failed', e);
     storeOptions.value = [];
   }
 }
@@ -143,17 +104,16 @@ async function loadStoreOptions() {
 async function fetchList() {
   loading.value = true;
   try {
-    const query: StoreCheckQuery = {
+    const query: StoreLedgerQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
-      checkId: (searchModel.checkId as string) || undefined,
       storeId: (searchModel.storeId as string) || undefined,
-      checkStatus: (searchModel.checkStatus as string) || undefined,
-      checkDateFrom: (searchModel.checkDateFrom as string) || undefined,
-      checkDateTo: (searchModel.checkDateTo as string) || undefined
+      ledgerDateFrom: (searchModel.ledgerDateFrom as string) || undefined,
+      ledgerDateTo: (searchModel.ledgerDateTo as string) || undefined
     };
-    const res = await listStoreCheck(query);
-    list.value = (res.rows ?? res.data ?? []) as StoreCheckHeaderVO[];
+    const res = await listStoreLedger(query);
+    const rows = (res.rows ?? res.data ?? []) as StoreLedgerHeaderVO[];
+    list.value = rows.map((r) => ({ ...r, rowKey: `${r.storeId}_${r.ledgerDate}` }));
     total.value = res.total ?? 0;
   } finally {
     loading.value = false;
@@ -175,32 +135,12 @@ function handlePageChange(p: number, s: number) {
   pageSize.value = s;
   fetchList();
 }
-function handleAdd() {
-  formRef.value?.openCreate();
-}
-function handleExport(query?: Record<string, unknown>) {
-  proxy?.download('djs/store/check/export', { ...(query ?? {}) }, `store_check_${new Date().getTime()}.xlsx`);
+function handleAddEntry() {
+  router.push({ path: '/djs-store/store-mgmt/check-entry' });
 }
 function openDetail(row: BizRow) {
-  detailRef.value?.open(row as unknown as StoreCheckHeaderVO);
-}
-function onCreated(headerId: string, row: StoreCheckHeaderVO) {
-  fetchList();
-  // 新建后直接打开详情录实盘
-  if (row) detailRef.value?.open(row);
-}
-
-async function handleComplete(row: BizRow) {
-  await proxy?.$modal.confirm(t('storeCheck.confirm.complete', { id: row.checkId }));
-  await completeStoreCheck(String(row.id));
-  proxy?.$modal.msgSuccess(t('common.opSuccess'));
-  fetchList();
-}
-async function handleCancel(row: BizRow) {
-  await proxy?.$modal.confirm(t('storeCheck.confirm.cancel', { id: row.checkId }));
-  await cancelStoreCheck(String(row.id));
-  proxy?.$modal.msgSuccess(t('common.opSuccess'));
-  fetchList();
+  const r = row as unknown as LedgerRow;
+  detailRef.value?.open(String(r.storeId), String(r.ledgerDate));
 }
 
 onMounted(async () => {
