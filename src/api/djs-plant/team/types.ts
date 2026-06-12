@@ -10,6 +10,8 @@ export interface PlantWorkTeamVO {
   leaderId?: number | string;
   /** 负责人显示名（后端 enrich：LEFT JOIN sys_user.nick_name） */
   leaderName?: string;
+  /** 负责人手机号（后端 enrich：LEFT JOIN sys_user.phonenumber by leader_id，非落库） */
+  leaderPhone?: string;
   /** 字典 djs_common_status：1=启用 / 2=停用 */
   teamStatus: number;
   /** 当前成员数（后端 enrich：子查询 count） */

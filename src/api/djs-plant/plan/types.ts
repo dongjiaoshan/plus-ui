@@ -14,6 +14,12 @@ export interface PlantPlanQuery {
   planSeason?: string;
   cropId?: number | string;
   plantStatus?: string;
+  /** 计划日期模糊（原型「计划日期」筛选，对后端 plant_date）。 */
+  planDate?: string;
+  /** 计划更新时间（按天，原型「计划更新时间」筛选）。 */
+  queryUpdateTime?: string;
+  /** 计划编制人 user_id（原型「计划编制人」筛选，对 create_by）。 */
+  queryCreateBy?: number | string;
   pageNum?: number;
   pageSize?: number;
 }
@@ -24,14 +30,48 @@ export interface PlantPlanVO {
   planYear: number;
   cropId: string;
   cropName?: string;
+  /** 种植图片（crop_info.crop_image_preview，service enrich）。 */
+  cropImage?: string;
   plantDate?: string;
   planSeason: string;
+  /** 计划最早开始日期 = MIN(details 开始日期推算)。 */
+  earliestBegindate?: string;
+  /** 计划最晚开始日期 = MAX(details 开始日期推算)。 */
+  lastBegindate?: string;
   earliestHarvestdate?: string;
   lastHarvestdate?: string;
   totalArea?: number;
   totalPlot?: number;
+  /** 预计产量 kg = SUM(details.expected_yield)。 */
+  expectedYield?: number;
+  /** 实际产量 kg = SUM(details.actual_yield)。 */
+  actualYield?: number;
+  /** 已完成种植地数量 = COUNT(details plant_status=completed)。 */
+  finishedPlot?: number;
+  /** 计划完成率(%) = finishedPlot/totalPlot×100，0~100。 */
+  completionRate?: number;
   plantStatus: string;
   createTime?: string;
+  /** 计划更新时间。 */
+  updateTime?: string;
+  /** 编制人 user_id。 */
+  createBy?: number | string;
+  /** 计划编制人姓名（注解翻译）。 */
+  createByName?: string;
+}
+
+/** 列表顶部 5 KPI 统计卡（FIX-PLT-AD-PLAN-001，对齐原型 7b44cd24）。 */
+export interface PlantPlanStatsVO {
+  /** 空地块数。 */
+  idlePlot?: number;
+  /** 已种植地块数。 */
+  plantedPlot?: number;
+  /** 计划种植地块数。 */
+  plannedPlot?: number;
+  /** 计划地块使用频次（小数）。 */
+  plotUsageFreq?: number;
+  /** 计划种植作物品种数。 */
+  cropVarietyCount?: number;
 }
 
 export interface PlantDetailInput {

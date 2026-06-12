@@ -69,3 +69,13 @@ export const changeZoneStatus = (id: number | string, zoneStatus: number) => {
     data: { id, zoneStatus }
   });
 };
+
+/** 导出片区列表（后端 PlotZoneController#export，权限 djs:plant:plot:export）。 */
+export const exportZone = (query: PlotZoneQuery) => {
+  return request({
+    url: '/djs/plant/zone/export',
+    method: 'post',
+    params: query,
+    responseType: 'blob'
+  });
+};

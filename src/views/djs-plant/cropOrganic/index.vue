@@ -14,10 +14,12 @@
       selectable
       show-export
       perm-prefix="djs:plant:cropOrganic"
+      :show-row-edit="false"
+      :show-row-del="false"
+      :action-width="220"
       @search="handleSearch"
       @reset="handleReset"
       @add="handleAdd"
-      @edit="handleEdit"
       @del="handleDel"
       @export="handleExport"
       @page-change="handlePageChange"
@@ -32,13 +34,32 @@
         />
         <span v-else class="text-gray-400">—</span>
       </template>
+      <template #cell-cropName="{ row }">
+        <template v-if="row.relatedCrops && row.relatedCrops.length > 0">
+          {{ relatedCropNames(row.relatedCrops) }}
+        </template>
+        <span v-else-if="row.cropName">{{ row.cropName }}</span>
+        <span v-else class="text-gray-400">—</span>
+      </template>
       <template #cell-isWarning="{ row }">
         <el-tag v-if="row.isWarning === 1" type="danger">{{ t('plantCropOrganic.warning.yes') }}</el-tag>
         <el-tag v-else type="success">{{ t('plantCropOrganic.warning.no') }}</el-tag>
       </template>
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:plant:cropOrganic:edit']" link type="primary" @click="handleEdit(row)">
+          {{ t('biz.table.action.edit') }}
+        </el-button>
+        <el-button v-hasPermi="['djs:plant:cropOrganic:edit']" link type="primary" @click="handleRelate(row)">
+          {{ t('plantCropOrganic.relate.action') }}
+        </el-button>
+        <el-button v-hasPermi="['djs:plant:cropOrganic:remove']" link type="danger" @click="handleDel(row)">
+          {{ t('biz.table.action.del') }}
+        </el-button>
+      </template>
     </BizTable>
 
     <CropOrganicForm ref="formRef" @success="fetchList" />
+    <CropOrganicRelateDialog ref="relateRef" @success="fetchList" />
   </div>
 </template>
 
@@ -47,8 +68,9 @@ import BizTable from '@/components/BizTable/index.vue';
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import CropOrganicForm from './components/CropOrganicForm.vue';
+import CropOrganicRelateDialog from './components/CropOrganicRelateDialog.vue';
 import { listCropOrganic, delCropOrganic } from '@/api/djs-plant/cropOrganic';
-import type { CropOrganicQuery, CropOrganicVO } from '@/api/djs-plant/cropOrganic/types';
+import type { CropOrganicQuery, CropOrganicVO, RelatedCropRef } from '@/api/djs-plant/cropOrganic/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
@@ -57,6 +79,7 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
 const formRef = ref<{ openCreate: () => void; openEdit: (id: number | string) => void }>();
+const relateRef = ref<{ open: (id: number | string) => void }>();
 
 const list = ref<CropOrganicVO[]>([]);
 const total = ref(0);
@@ -86,13 +109,14 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'cropCertNo', label: t('plantCropOrganic.column.cropCertNo'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'cropCertCompany', label: t('plantCropOrganic.column.cropCertCompany'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'cropCertValid', label: t('plantCropOrganic.column.cropCertValid'), minWidth: 120, align: 'center' },
-  { prop: 'cropName', label: t('plantCropOrganic.column.cropName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'cropImagePreview', label: t('plantCropOrganic.column.image'), width: 80, align: 'center' },
+  { prop: 'cropCertCompany', label: t('plantCropOrganic.column.cropCertCompany'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'cropCertNo', label: t('plantCropOrganic.column.cropCertNo'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'cropCertValid', label: t('plantCropOrganic.column.cropCertValid'), minWidth: 120, align: 'center' },
+  { prop: 'cropName', label: t('plantCropOrganic.column.cropName'), minWidth: 180, showOverflowTooltip: true },
   { prop: 'isWarning', label: t('plantCropOrganic.column.warning'), minWidth: 100, align: 'center' },
-  { prop: 'createTime', label: t('plantCropOrganic.column.createTime'), minWidth: 160, align: 'center', formatter: 'datetime' }
+  { prop: 'updateTime', label: t('plantCropOrganic.column.updateTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'updateByName', label: t('plantCropOrganic.column.updateByName'), minWidth: 120, align: 'center' }
 ]);
 
 async function fetchList() {
@@ -153,6 +177,12 @@ function handleAdd() {
 }
 function handleEdit(row: BizRow) {
   formRef.value?.openEdit(row.id);
+}
+function handleRelate(row: BizRow) {
+  relateRef.value?.open(row.id);
+}
+function relatedCropNames(crops: RelatedCropRef[]): string {
+  return crops.map((c) => c.cropName).join('、');
 }
 async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];

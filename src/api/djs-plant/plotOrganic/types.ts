@@ -18,6 +18,10 @@ export interface PlotOrganicVO extends BaseEntity {
   organicImageUrl?: string;
   isWarning: number;
   relatedPlots?: RelatedPlotRef[];
+  /** 覆盖地块数（后端 = relatedPlots.size()，列表计数列直接取；缺省回退 relatedPlots.length）。 */
+  plotCount?: number;
+  /** 更新人姓名（后端注解翻译 updateBy → updateByName）。 */
+  updateByName?: string;
 }
 
 /**

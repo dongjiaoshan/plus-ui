@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { CropInfoForm, CropInfoQuery, CropInfoVO } from './crop/types';
+import type { CropFarmworkVO, CropInfoForm, CropInfoQuery, CropInfoVO, CropPlantingRecordVO } from './crop/types';
 
 /**
  * 作物 API（PLT-MD-001）。
@@ -44,5 +44,25 @@ export const delCrop = (ids: number | string | (number | string)[]) => {
   return request({
     url: '/djs/plant/crop/remove/' + path,
     method: 'delete'
+  });
+};
+
+/**
+ * 作物详情·种植信息子表（按 cropId 聚合，9 列；FIX-PLT-AD-DETAIL-001）。
+ */
+export const listPlantingByCrop = (cropId: number | string): AxiosPromise<CropPlantingRecordVO[]> => {
+  return request({
+    url: `/djs/plant/crop/${cropId}/planting`,
+    method: 'get'
+  });
+};
+
+/**
+ * 作物详情·农事信息子表（按 cropId 关联农事记录；FIX-PLT-AD-DETAIL-001）。
+ */
+export const listFarmworkByCrop = (cropId: number | string): AxiosPromise<CropFarmworkVO[]> => {
+  return request({
+    url: `/djs/plant/crop/${cropId}/farmwork`,
+    method: 'get'
   });
 };

@@ -1207,17 +1207,67 @@ export default {
     }
   },
   // Planting - Zone (PLT-MD-001)
+  // Plant Overview (FIX-PLT-AD-OVERVIEW-001)
+  plantOverview: {
+    title: 'Plant Overview',
+    empty: 'No crop data',
+    breadcrumbHome: 'Home',
+    breadcrumbPlant: 'Plant Management',
+    kpi: {
+      idlePlotCount: 'Idle Plots',
+      plantedPlotCount: 'Planted Plots',
+      harvestedTotalTon: 'Harvested Total (t)',
+      expectedTotalTon: 'Expected Total (t)',
+      remainingExpectedTon: 'Remaining Expected (t)'
+    },
+    card: {
+      currentPlanted: 'Currently Planted',
+      currentPlantedArea: 'Planted Area (mu)',
+      planGroup: 'Plan',
+      doneGroup: 'Completed',
+      plotCount: 'Plots',
+      area: 'Area (mu)',
+      expectedYield: 'Expected Yield (kg)',
+      doneArea: 'Planted Area (mu)',
+      donePlotCount: 'Planted Plots',
+      harvestYield: 'Harvested Yield (kg)'
+    },
+    detail: {
+      title: 'Crop Detail',
+      back: 'Back',
+      export: 'Export',
+      col: {
+        cropName: 'Crop Name',
+        plotName: 'Plot',
+        harvestStatus: 'Harvest Status',
+        planSeason: 'Season',
+        planPlantDate: 'Planned Date',
+        plantDate: 'Plant Date',
+        plantTeamName: 'Planted By',
+        beginHarvestdate: 'Harvest Start',
+        endHarvestdate: 'Harvest End',
+        earliestHarvestdate: 'Earliest Harvest',
+        lastHarvestdate: 'Latest Harvest',
+        plotArea: 'Plot Area (mu)',
+        expectedYield: 'Standard Yield (kg)',
+        actualYield: 'Actual Yield (kg)'
+      }
+    }
+  },
   plantZone: {
     title: { add: 'Add Zone', edit: 'Edit Zone' },
-    column: { zoneCode: 'Code', zoneName: 'Name', zoneDesc: 'Description', zoneBelong: 'Belong', zoneStatus: 'Status', createTime: 'Created' },
+    column: { zoneCode: 'Code', zoneName: 'Name', zoneDesc: 'Description', zoneBelong: 'Belong', zoneStatus: 'Status', createTime: 'Created', plotCount: 'Managed Plots', updateTime: 'Update Time', updateByName: 'Updated By' },
     field: { zoneCode: 'Zone Code', zoneName: 'Zone Name', zoneDesc: 'Description', zoneBelong: 'Belong Region', zoneStatus: 'Status' },
+    filter: { zoneName: 'Zone Name', updateTime: 'Update Time', updateBy: 'Updated By' },
     placeholder: {
       zoneCode: 'Enter zone code (e.g. Z001 / EAST-01)',
       zoneName: 'Enter zone name',
       zoneDesc: 'Description (optional)',
       zoneBelong: 'Belong region (optional)',
-      search: 'Search zone name'
+      search: 'Search zone name',
+      updateBy: 'Select updater'
     },
+    action: { edit: 'Edit', disable: 'Disable', enable: 'Enable', del: 'Delete' },
     rule: { zoneCode: { required: 'Zone code is required' }, zoneName: { required: 'Zone name is required' } },
     confirm: { del: 'Are you sure to delete {count} zones? Ensure no associated plots exist.' },
     empty: 'No zones yet. Create one to get started.'
@@ -1226,7 +1276,33 @@ export default {
   plantPlot: {
     title: { add: 'Add Plot', edit: 'Edit Plot', view: 'Plot Detail', baseInfo: 'Basic Info', zoneInfo: 'Zone Info' },
     zoneEmpty: 'No zone linked',
-    tab: { basic: 'Basic', location: 'Location & Area', soil: 'Soil & Environment' },
+    tab: { basic: 'Basic', location: 'Location & Area', soil: 'Soil & Environment', planting: 'Planting', farmwork: 'Farm Work', cert: 'Certification' },
+    planting: {
+      plantDate: 'Planting Date',
+      cropImage: 'Crop Image',
+      cropName: 'Crop Name',
+      cropCode: 'Crop Code',
+      plantByName: 'Planted By',
+      expectedYield: 'Est. Yield/mu',
+      earliestHarvestdate: 'Est. Earliest Harvest',
+      actualYield: 'Actual Yield/mu',
+      beginHarvestdate: 'Harvest Start',
+      endHarvestdate: 'Harvest End',
+      harvestByName: 'Harvested By'
+    },
+    farmwork: {
+      farmDate: 'Work Date',
+      farmType: 'Work Type',
+      plotName: 'Plot',
+      farmByName: 'Worker',
+      remark: 'Note'
+    },
+    cert: {
+      organicNo: 'Cert No.',
+      organicCompany: 'Issuer',
+      organicValid: 'Valid Until',
+      isWarning: 'Warning'
+    },
     column: {
       plotCode: 'Code',
       plotName: 'Name',
@@ -1299,7 +1375,10 @@ export default {
       image: 'Image',
       relatedPlots: 'Related Plots',
       warning: 'Warning',
-      createTime: 'Created'
+      createTime: 'Created',
+      plotCount: 'Plot Count',
+      updateTime: 'Update Time',
+      updateByName: 'Updated By'
     },
     field: {
       organicNo: 'Cert No.',
@@ -1346,16 +1425,26 @@ export default {
       cropName: 'Crop',
       image: 'Image',
       warning: 'Warning',
-      createTime: 'Created'
+      createTime: 'Created',
+      updateTime: 'Update Time',
+      updateByName: 'Updated By'
     },
     field: {
       cropCertNo: 'Cert No.',
       cropCertCompany: 'Issuer',
       cropCertValid: 'Valid Until',
       cropId: 'Crop',
+      relatedCrops: 'Related Crops',
       cropImagePreview: 'Thumbnail',
       cropImageUrl: 'Cert Images',
       isWarning: 'Warning Status'
+    },
+    relate: {
+      title: 'Relate Crops',
+      action: 'Relate Crops',
+      unselected: 'Unrelated Crops',
+      selected: 'Related Crops',
+      search: 'Search crop code / name'
     },
     placeholder: {
       cropCertNo: 'Enter cert number',
@@ -1374,9 +1463,44 @@ export default {
   },
   // Planting - Crop (PLT-MD-001)
   plantCrop: {
-    title: { add: 'Add Crop', edit: 'Edit Crop', view: 'Crop Detail', baseInfo: 'Basic Info', related: 'Related Info' },
-    organicEmpty: 'Organic certification details not available yet (backend aggregation pending)',
-    tab: { basic: 'Basic', growth: 'Growth Cycle', yield: 'Yield & Quality' },
+    title: { add: 'Add Crop', edit: 'Edit Crop', view: 'Crop Detail', baseInfo: 'Basic Info' },
+    tab: { basic: 'Basic', growth: 'Growth Cycle', yield: 'Yield & Quality', planting: 'Planting Records', farmwork: 'Farm Work' },
+    label: {
+      varietyOrigin: 'Variety Source',
+      qualityDesc: 'Crop Description',
+      relatedProduct: 'Related Product No.',
+      historyPlantCount: 'Planting Times',
+      avgYield: 'Avg Yield (kg)',
+      maxYield: 'Max Yield (kg)',
+      updateTime: 'Update Time',
+      updateByName: 'Updated By'
+    },
+    search: {
+      varietyOrigin: 'Variety Source',
+      updateTime: 'Update Time',
+      updateBy: 'Updated By'
+    },
+    planting: {
+      plantDate: 'Plant Date',
+      plotName: 'Plot',
+      plantTeamName: 'Planter',
+      predictedPer: 'Expected Yield (kg)',
+      earliestHarvestDate: 'Earliest Harvest Date',
+      actualPer: 'Actual Yield (kg)',
+      pickStartDate: 'Pick Start Date',
+      pickEndDate: 'Pick End Date',
+      pickTeamName: 'Picker',
+      empty: 'No planting records'
+    },
+    farmwork: {
+      farmDate: 'Farm Date',
+      farmType: 'Farm Type',
+      plotName: 'Plot',
+      teamName: 'Operator',
+      remark: 'Note',
+      empty: 'No farm-work records'
+    },
+    sub: { index: 'No.' },
     column: {
       cropCode: 'Code',
       cropName: 'Name',
@@ -1430,6 +1554,7 @@ export default {
     column: {
       teamName: 'Team name',
       leader: 'Leader',
+      leaderPhone: 'Leader Phone',
       teamStatus: 'Status',
       memberCount: 'Members',
       remark: 'Remark',
@@ -1495,25 +1620,61 @@ export default {
       plantPeriod: 'Period',
       plantBy: 'Plant Team',
       harvestBy: 'Harvest Team',
-      expectedYield: 'Expected Yield'
+      expectedYield: 'Expected Yield',
+      planDate: 'Plan Date',
+      updateTime: 'Updated Time',
+      createBy: 'Created By'
     },
     column: {
       planNo: 'Plan No.',
-      planYear: 'Year',
+      planYear: 'Plan Year',
       planSeason: 'Season',
       crop: 'Crop',
+      cropName: 'Crop',
+      cropImage: 'Crop Image',
       plantDate: 'Plant Start Date',
-      totalArea: 'Total Area (mu)',
-      totalPlot: 'Plots',
+      earliestBegindate: 'Earliest Begin Date',
+      lastBegindate: 'Latest Begin Date',
+      totalArea: 'Planted Area',
+      totalPlot: 'Plot Count',
       earliestHarvestdate: 'Earliest Harvest',
       lastHarvestdate: 'Last Harvest',
-      plantStatus: 'Status',
+      expectedYield: 'Expected Yield (kg)',
+      actualYield: 'Actual Yield (kg)',
+      finishedPlot: 'Finished Plots',
+      completionRate: 'Completion Rate (%)',
+      plantStatus: 'Plan Status',
+      updateTime: 'Updated Time',
+      createBy: 'Created By',
+      createByName: 'Created By',
       action: 'Actions'
     },
     placeholder: {
       planSeason: 'Select planting season',
       plantDate: 'e.g. early April (optional)',
-      team: 'Select team'
+      team: 'Select team',
+      planDateFilter: 'Enter plan date',
+      crop: 'Select crop',
+      updateTime: 'Select updated time',
+      createBy: 'Select creator'
+    },
+    unit: { mu: 'mu' },
+    kpi: {
+      idlePlot: 'Idle Plots',
+      plantedPlot: 'Planted Plots',
+      plannedPlot: 'Planned Plots',
+      plotUsageFreq: 'Plot Usage Freq',
+      cropVarietyCount: 'Crop Varieties'
+    },
+    query: {
+      planDate: 'Plan Date',
+      planDatePlaceholder: 'Enter plan date',
+      cropId: 'Crop',
+      cropIdPlaceholder: 'Select crop',
+      updateTime: 'Updated Time',
+      updateTimePlaceholder: 'Select updated time',
+      createBy: 'Created By',
+      createByPlaceholder: 'Select creator'
     },
     action: {
       detail: 'Details'
@@ -1593,26 +1754,34 @@ export default {
     field: {
       planYear: 'Plan Year',
       planSeason: 'Season',
-      harvestStatus: 'Harvest Status'
+      harvestStatus: 'Harvest Status',
+      cropName: 'Crop'
     },
     placeholder: {
       planSeason: 'Pick a season',
       harvestStatus: 'Pick a harvest status',
-      team: 'Harvest team'
+      team: 'Harvest team',
+      cropName: 'Select a crop'
     },
     column: {
       planNo: 'Plan No',
       planYear: 'Year',
       planSeason: 'Season',
       crop: 'Crop',
+      cropImage: 'Image',
+      cropName: 'Crop',
       plotCount: 'Plots',
-      planEarliest: 'Plan Earliest',
-      planLatest: 'Plan Latest',
+      planEarliest: 'Earliest Start',
+      planLatest: 'Latest Deadline',
+      totalAcreage: 'Planted Acreage',
+      demandQty: 'Demand (Est.)',
+      actualYield: 'Picked (This Year)',
+      plotTotalCount: 'Plots (This Year)',
+      disasterLoss: 'Disaster Loss (Est.)',
       actualBegin: 'Actual Begin',
       actualEnd: 'Actual End',
       expectedYield: 'Expected Yield',
-      actualYield: 'Actual Yield',
-      activityPlotCount: 'Visitor Plots',
+      activityPlotCount: 'Activity Plots',
       action: 'Action'
     },
     action: { adjust: 'Adjust' },
@@ -1622,70 +1791,68 @@ export default {
       tip: 'Set the plan earliest harvest date per plot (plan latest is auto-derived from the crop pick cycle), visitor pick flag and harvest team. Actual harvest start/end are written back by the mini-program and read-only here. Saves immediately.',
       activityYes: 'Visitor',
       activityNo: 'Normal',
+      activityOptYes: 'Yes',
+      activityOptNo: 'No',
       paramsMissing: 'planId / cropId missing',
       saveSuccess: '{count} rows updated',
+      toggleSuccess: 'Updated',
       col: {
+        cropName: 'Crop',
         plotCode: 'Plot Code',
-        plotName: 'Plot Name',
+        plotName: 'Plot',
         plotArea: 'Area',
-        planEarliest: 'Plan Earliest',
-        planLatest: 'Plan Latest',
-        beginHarvestdate: 'Actual Begin',
+        isPick: 'Is Activity',
+        harvestStatus: 'Status',
+        plantDate: 'Planting Date',
+        plantTeam: 'Planting Team',
+        planEarliest: 'Earliest Start',
+        planLatest: 'Latest Deadline',
+        beginHarvestdate: 'Actual Start',
         endHarvestdate: 'Actual End',
-        isPick: 'Visitor Pick',
         harvestBy: 'Harvest Team',
+        standardYield: 'Standard Yield',
+        actualYield: 'Actual Yield',
+        lossYield: 'Disaster Loss'
+      },
+      filter: {
+        isPick: 'Is Activity',
         harvestStatus: 'Status'
+      },
+      placeholder: {
+        isPick: 'Select activity flag',
+        harvestStatus: 'Select status'
+      },
+      action: {
+        setSchedule: 'Set Schedule',
+        setActivity: 'Set as Activity',
+        unsetActivity: 'Unset Activity'
+      },
+      dialog: {
+        title: 'Set Schedule',
+        beginDate: 'Start Date',
+        endDate: 'End Date',
+        beginRequired: 'Please select a start date',
+        dateOrder: 'End date must not be before start date'
       }
     }
   },
   pickActivity: {
     pageTitle: 'Pick Activity',
     field: {
-      activityNo: 'Activity No',
-      activityName: 'Activity Name',
-      activityStatus: 'Status',
-      activityDate: 'Date',
-      cropId: 'Crop',
-      totalPlot: 'Plots',
-      totalYield: 'Total Yield (kg)',
-      visitorCount: 'Visitors',
-      remark: 'Remark'
+      activityDate: 'Activity Date',
+      cropName: 'Crop'
     },
     placeholder: {
-      activityNo: 'fuzzy match',
-      activityName: 'fuzzy match',
-      dateFrom: 'From',
-      dateTo: 'To'
+      activityDate: 'Select activity date',
+      crop: 'Select crop'
     },
     column: {
-      activityNo: 'Activity No',
-      activityName: 'Name',
-      activityDate: 'Date',
-      activityStatus: 'Status',
-      crop: 'Crop',
-      totalPlot: 'Plots',
-      totalYield: 'Yield',
-      visitorCount: 'Visitors',
-      action: 'Action'
-    },
-    action: { summary: 'Summarize' },
-    dialog: {
-      addTitle: 'Add Pick Activity',
-      editTitle: 'Edit Pick Activity'
-    },
-    rule: {
-      activityNameRequired: 'Name required',
-      activityDateRequired: 'Date required',
-      cropRequired: 'Crop required'
-    },
-    confirm: {
-      del: 'Delete activity "{name}"?',
-      summary: 'Summarize will set status to "ended" and backfill total yield. Continue?'
-    },
-    tip: {
-      addSuccess: 'Activity created',
-      updateSuccess: 'Activity updated',
-      summarySuccess: 'Summarized: today {yield} kg'
+      activityDate: 'Activity Date',
+      cropName: 'Crop',
+      plotCount: 'Plots',
+      todayPickWeight: 'Today Picked (kg)',
+      expectedYield: 'Expected Yield (kg)',
+      cumulativePickWeight: 'Cumulative Picked (kg)'
     }
   },
   // Dongjiaoshan business modules placeholder
@@ -2841,7 +3008,7 @@ export default {
       recordNo: 'Record No.',
       farmDate: 'Date',
       disasterType: 'Disaster Type',
-      plotName: 'Plot',
+      plotName: 'Plot Name',
       plotCode: 'Plot Code',
       cropName: 'Crop',
       lossRate: 'Loss Rate',
@@ -2855,7 +3022,13 @@ export default {
       dateRange: 'Date Range',
       plot: 'Plot',
       disasterType: 'Disaster Type',
-      isWarning: 'Warning'
+      isWarning: 'Warning',
+      crop: 'Crop',
+      team: 'Work Team'
+    },
+    placeholder: {
+      crop: 'Enter crop',
+      team: 'Select work team'
     },
     tag: {
       warning: 'Warning',
@@ -2885,7 +3058,7 @@ export default {
       recordNo: 'Record No.',
       farmDate: 'Farm Date',
       farmType: 'Farm Work',
-      plotName: 'Plot',
+      plotName: 'Plot Name',
       plotCode: 'Plot Code',
       cropName: 'Crop',
       teamName: 'Work Team',
@@ -2919,7 +3092,7 @@ export default {
   },
   // Plant - Team Performance (PLT-PERF-001)
   plantPerformance: {
-    pageTitle: 'Team Performance',
+    pageTitle: 'Performance Management',
     toolbar: {
       statMonth: 'Settle Month',
       pickMonth: 'Select month',
@@ -2960,37 +3133,6 @@ export default {
       plot: 'Plot',
       farmDate: 'Farm Date',
       farmCount: '{count} farm records'
-    }
-  },
-  // Plant dashboard (PLT-DASH-001)
-  plantDashboard: {
-    title: {
-      overview: 'Land Overview',
-      todayFarm: 'Today Farm Work',
-      monthCompletion: 'Monthly Plan Completion Rate',
-      gantt: 'Plant / Harvest Gantt'
-    },
-    kpi: {
-      idle: 'Idle Plots',
-      planting: 'Planting',
-      harvesting: 'Harvesting',
-      pending: 'Pending Plots',
-      total: 'Total Plots',
-      totalArea: 'Total Area',
-      areaUnit: 'mu',
-      todayFarmTotal: 'Today Farm Total',
-      farmUnit: ''
-    },
-    chart: {
-      completionRate: 'Completion',
-      cropAxis: 'Crop',
-      plantSegment: 'Plant',
-      pickSegment: 'Harvest',
-      noData: 'No Data'
-    },
-    action: {
-      refresh: 'Refresh',
-      lastRefresh: 'Last Refresh'
     }
   },
   storeDashboard: {

@@ -3,6 +3,7 @@ import { AxiosPromise } from 'axios';
 import type {
   PlantPlanQuery,
   PlantPlanVO,
+  PlantPlanStatsVO,
   PlantPlanCreateForm,
   PlantPlanUpdateForm,
   PlantPlanDetailVO,
@@ -21,6 +22,14 @@ export const listPlan = (query: PlantPlanQuery): AxiosPromise<PlantPlanVO[]> => 
     url: '/djs/plant/plan/list',
     method: 'get',
     params: query
+  });
+};
+
+/** 列表顶部 5 KPI 统计卡（FIX-PLT-AD-PLAN-001）。 */
+export const getPlanStats = (): AxiosPromise<PlantPlanStatsVO> => {
+  return request({
+    url: '/djs/plant/plan/stats',
+    method: 'get'
   });
 };
 

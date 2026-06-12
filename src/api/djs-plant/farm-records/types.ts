@@ -46,7 +46,15 @@ export interface DisasterRecordQuery extends PageQuery {
   recordNo?: string;
   plotId?: number | string;
   disasterType?: string;
-  /** 是否预警（1=是 / 2=否，字典 djs_yes_no） */
+  /**
+   * 作物名 like 筛选（原型「请输入作物信息」）。
+   * TODO(后端依赖)：后端 FarmRecordsQuery 目前仅有 cropId(eq)，无 crop_name like 字段；
+   * 后端补 `private String cropName` + buildWrapper `.like(crop_name)` 前此参数不生效（见 D-FIX-22 _open-issues 后端依赖项）。
+   */
+  cropName?: string;
+  /** 记录班组 ID（后端 FarmRecordsQuery.farmBy 已支持 eq 过滤）。 */
+  farmBy?: number | string;
+  /** 是否预警（1=是 / 2=否，字典 djs_yes_no）；列表 tag 仍用，筛选项已按原型移除。 */
   isWarning?: number;
   farmDateBegin?: string;
   farmDateEnd?: string;

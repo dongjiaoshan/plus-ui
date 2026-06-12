@@ -10,7 +10,11 @@ export interface PlotZoneVO extends BaseEntity {
   zoneName: string;
   zoneDesc?: string;
   zoneBelong?: string;
+  /** 管理地块数量（后端聚合：该片区下未删除地块数，FIX-PLT-AD-ZONE-001） */
+  plotCount?: number;
   zoneStatus: number;
+  /** 更新人 ID（后端 sys_user.user_id） */
+  updateBy?: number | string;
   /** 更新人姓名（后端 @Translation 回填） */
   updateByName?: string;
 }
@@ -33,4 +37,10 @@ export interface PlotZoneQuery extends PageQuery {
   zoneCode?: string;
   zoneName?: string;
   zoneStatus?: number;
+  /** 更新人 ID（精确匹配，FIX-PLT-AD-ZONE-001） */
+  updateBy?: number;
+  /** 更新时间起（yyyy-MM-dd[ HH:mm:ss]，含） */
+  updateTimeStart?: string;
+  /** 更新时间止（yyyy-MM-dd[ HH:mm:ss]，含） */
+  updateTimeEnd?: string;
 }

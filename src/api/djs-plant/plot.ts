@@ -1,6 +1,13 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { PlotInfoForm, PlotInfoQuery, PlotInfoVO } from './plot/types';
+import type {
+  PlotFarmworkRecordVO,
+  PlotInfoForm,
+  PlotInfoQuery,
+  PlotInfoVO,
+  PlotOrganicRefVO,
+  PlotPlantingRecordVO
+} from './plot/types';
 
 /**
  * 地块 API（PLT-MD-001）。
@@ -44,5 +51,29 @@ export const delPlot = (ids: number | string | (number | string)[]) => {
   return request({
     url: '/djs/plant/plot/remove/' + path,
     method: 'delete'
+  });
+};
+
+/** 地块详情·种植信息子表（FIX-PLT-AD-DETAIL-001，按 plotId 透视，11 列）。 */
+export const listPlantingByPlot = (plotId: number | string): AxiosPromise<PlotPlantingRecordVO[]> => {
+  return request({
+    url: `/djs/plant/plot/${plotId}/planting`,
+    method: 'get'
+  });
+};
+
+/** 地块详情·农事信息子表（FIX-PLT-AD-DETAIL-001，按 plotId 透视）。 */
+export const listFarmworkByPlot = (plotId: number | string): AxiosPromise<PlotFarmworkRecordVO[]> => {
+  return request({
+    url: `/djs/plant/plot/${plotId}/farmwork`,
+    method: 'get'
+  });
+};
+
+/** 地块详情·认证信息子表（FIX-PLT-AD-DETAIL-001，按 plotId 关联有机证书）。 */
+export const listOrganicByPlot = (plotId: number | string): AxiosPromise<PlotOrganicRefVO[]> => {
+  return request({
+    url: `/djs/plant/plot/${plotId}/organic`,
+    method: 'get'
   });
 };

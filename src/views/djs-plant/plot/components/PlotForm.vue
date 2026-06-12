@@ -30,16 +30,15 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item :label="t('plantPlot.field.plotStatus')" prop="plotStatus">
-                <el-radio-group v-model="form.plotStatus">
-                  <el-radio v-for="d in djs_plot_status" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
-                </el-radio-group>
+              <el-form-item :label="t('plantPlot.field.plotStatus')">
+                <!-- 当前状态只读：由种植记录联动（空闲↔种植），表单不手填、不提交 -->
+                <dict-tag :options="djs_plot_status" :value="form.plotStatus" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item :label="t('plantPlot.field.isLease')" prop="isLease">
                 <el-radio-group v-model="form.isLease">
-                  <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
+                  <el-radio v-for="d in djs_plot_lease" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
                 </el-radio-group>
               </el-form-item>
             </el-col>
@@ -182,7 +181,7 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const {
   djs_plot_type,
   djs_plot_status,
-  djs_yes_no,
+  djs_plot_lease,
   djs_soil_type,
   djs_soil_fertility,
   djs_terrain_condition,
@@ -192,7 +191,7 @@ const {
   proxy?.useDict(
     'djs_plot_type',
     'djs_plot_status',
-    'djs_yes_no',
+    'djs_plot_lease',
     'djs_soil_type',
     'djs_soil_fertility',
     'djs_terrain_condition',
@@ -229,8 +228,10 @@ const defaultForm = (): PlotInfoForm => ({
   zoneId: undefined,
   plotType: undefined,
   plotName: '',
+  // 新增态默认带出「空闲」展示（djs_plot_status 1=空闲）；只读、不参与提交，由种植记录联动流转
   plotStatus: 1,
-  isLease: 0,
+  // djs_plot_lease 1=自用 / 2=租赁，默认自用
+  isLease: 1,
   plotRemark: undefined,
   plotArea: undefined,
   plotLocationDesc: undefined,
@@ -337,10 +338,13 @@ const submit = () => {
     if (!valid) return;
     submitting.value = true;
     try {
+      // plotStatus 只读不参与提交（由后端按种植记录联动算 空闲↔种植）
+      const payload: PlotInfoForm = { ...form.value };
+      delete payload.plotStatus;
       if (form.value.id) {
-        await updatePlot(form.value);
+        await updatePlot(payload);
       } else {
-        await addPlot(form.value);
+        await addPlot(payload);
       }
       proxy?.$modal.msgSuccess(t('common.opSuccess'));
       visible.value = false;

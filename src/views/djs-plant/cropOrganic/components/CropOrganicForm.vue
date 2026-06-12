@@ -24,13 +24,6 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="t('plantCropOrganic.field.cropId')" prop="cropId">
-            <el-select v-model="form.cropId" :placeholder="t('plantCropOrganic.placeholder.cropId')" filterable style="width: 100%">
-              <el-option v-for="c in allCrops" :key="c.id" :label="`${c.cropCode}  ${c.cropName}`" :value="c.id" />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
           <el-form-item :label="t('plantCropOrganic.field.cropImagePreview')" prop="cropImagePreview">
             <OssUpload ref="ossThumbRef" v-model="thumbOssIdsModel" biz-type="plant_organic" :limit="1" :file-size="10" />
           </el-form-item>
@@ -38,6 +31,18 @@
         <el-col :span="24">
           <el-form-item :label="t('plantCropOrganic.field.cropImageUrl')" prop="cropImageUrl">
             <OssUpload ref="ossImgRef" v-model="imgOssIdsModel" biz-type="plant_organic" :limit="9" :file-size="10" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item :label="t('plantCropOrganic.field.relatedCrops')" prop="cropIds">
+            <el-transfer
+              v-model="form.cropIds"
+              :data="cropTransferData"
+              :titles="[t('plantCropOrganic.relate.unselected'), t('plantCropOrganic.relate.selected')]"
+              filterable
+              :filter-placeholder="t('plantCropOrganic.relate.search')"
+              style="width: 100%"
+            />
           </el-form-item>
         </el-col>
       </el-row>
@@ -73,17 +78,25 @@ const ossImgRef = ref<InstanceType<typeof OssUpload>>();
 
 const allCrops = ref<CropInfoVO[]>([]);
 
-const defaultForm = (): CropOrganicForm => ({
+const cropTransferData = computed(() =>
+  allCrops.value.map((c) => ({
+    key: String(c.id),
+    label: `${c.cropCode}  ${c.cropName}`,
+    disabled: false
+  }))
+);
+
+const defaultForm = (): CropOrganicForm & { cropIds: string[] } => ({
   id: undefined,
   cropCertNo: '',
   cropCertCompany: '',
   cropCertValid: '',
-  cropId: undefined,
+  cropIds: [],
   cropImagePreview: undefined,
   cropImageUrl: undefined
 });
 
-const form = ref<CropOrganicForm>(defaultForm());
+const form = ref<CropOrganicForm & { cropIds: string[] }>(defaultForm());
 
 // OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段是单/多 ossId 字符串（useOssBridge 桥接）
 const thumbOssIdsModel = useOssBridge(form, 'cropImagePreview', 'single');
@@ -92,8 +105,7 @@ const imgOssIdsModel = useOssBridge(form, 'cropImageUrl', 'multi');
 const rules = computed(() => ({
   cropCertNo: [{ required: true, message: t('plantCropOrganic.rule.cropCertNo.required'), trigger: 'blur' }],
   cropCertCompany: [{ required: true, message: t('plantCropOrganic.rule.cropCertCompany.required'), trigger: 'blur' }],
-  cropCertValid: [{ required: true, message: t('plantCropOrganic.rule.cropCertValid.required'), trigger: 'change' }],
-  cropId: [{ required: true, message: t('plantCropOrganic.rule.cropId.required'), trigger: 'change' }]
+  cropCertValid: [{ required: true, message: t('plantCropOrganic.rule.cropCertValid.required'), trigger: 'change' }]
 }));
 
 const dialogTitle = computed(() => (form.value.id ? t('plantCropOrganic.title.edit') : t('plantCropOrganic.title.add')));
@@ -119,7 +131,13 @@ const openCreate = async () => {
 const openEdit = async (id: number | string) => {
   await ensureCropList();
   const res = await getCropOrganic(id);
-  form.value = { ...defaultForm(), ...res.data };
+  const data = res.data;
+  form.value = {
+    ...defaultForm(),
+    ...data,
+    // el-transfer key 必须 string；后端 relatedCrops 是 [{cropId, cropName}]
+    cropIds: (data.relatedCrops ?? []).map((c) => String(c.cropId))
+  };
   visible.value = true;
 
   await nextTick();

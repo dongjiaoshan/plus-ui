@@ -33,13 +33,8 @@
         />
         <span v-else class="text-gray-400">—</span>
       </template>
-      <template #cell-relatedPlots="{ row }">
-        <template v-if="row.relatedPlots && row.relatedPlots.length > 0">
-          <el-tag v-for="p in row.relatedPlots" :key="p.plotId" size="small" class="mr-1 mb-1">
-            {{ p.plotName }}
-          </el-tag>
-        </template>
-        <span v-else class="text-gray-400">—</span>
+      <template #cell-plotCount="{ row }">
+        {{ row.plotCount ?? row.relatedPlots?.length ?? 0 }}
       </template>
       <template #cell-isWarning="{ row }">
         <el-tag v-if="row.isWarning === 1" type="danger">{{ t('plantPlotOrganic.warning.yes') }}</el-tag>
@@ -101,13 +96,14 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'organicNo', label: t('plantPlotOrganic.column.organicNo'), width: 160, showOverflowTooltip: true },
-  { prop: 'organicCompany', label: t('plantPlotOrganic.column.organicCompany'), width: 160, showOverflowTooltip: true },
-  { prop: 'organicValid', label: t('plantPlotOrganic.column.organicValid'), width: 120, align: 'center' },
   { prop: 'organicImagePreview', label: t('plantPlotOrganic.column.image'), width: 80, align: 'center' },
-  { prop: 'relatedPlots', label: t('plantPlotOrganic.column.relatedPlots'), minWidth: 200 },
+  { prop: 'organicCompany', label: t('plantPlotOrganic.column.organicCompany'), width: 160, showOverflowTooltip: true },
+  { prop: 'organicNo', label: t('plantPlotOrganic.column.organicNo'), width: 160, showOverflowTooltip: true },
+  { prop: 'organicValid', label: t('plantPlotOrganic.column.organicValid'), width: 120, align: 'center' },
+  { prop: 'plotCount', label: t('plantPlotOrganic.column.plotCount'), width: 110, align: 'center' },
   { prop: 'isWarning', label: t('plantPlotOrganic.column.warning'), width: 100, align: 'center' },
-  { prop: 'createTime', label: t('plantPlotOrganic.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
+  { prop: 'updateTime', label: t('plantPlotOrganic.column.updateTime'), width: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'updateByName', label: t('plantPlotOrganic.column.updateByName'), width: 120, align: 'center' }
 ]);
 
 async function fetchList() {

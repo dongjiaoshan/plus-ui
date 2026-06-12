@@ -1,6 +1,77 @@
 <template>
-  <el-dialog v-model="visible" :title="t('plantPlot.title.view')" destroy-on-close append-to-body width="820px">
+  <el-dialog v-model="visible" :title="t('plantPlot.title.view')" destroy-on-close append-to-body width="900px">
     <el-tabs v-model="activeTab">
+      <!-- Tab 1：种植信息（默认选中，11 列） -->
+      <el-tab-pane :label="t('plantPlot.tab.planting')" name="planting">
+        <el-table :data="plantingList" border size="small" max-height="420">
+          <el-table-column :label="t('plantPlot.planting.plantDate')" prop="plantDate" width="110" align="center" />
+          <el-table-column :label="t('plantPlot.planting.cropImage')" width="70" align="center">
+            <template #default="{ row }">
+              <ImagePreview
+                v-if="row.cropImage && cropImgUrlMap[String(row.cropImage)]"
+                :width="36"
+                :height="36"
+                :src="cropImgUrlMap[String(row.cropImage)]"
+                :preview-src-list="[cropImgUrlMap[String(row.cropImage)]]"
+              />
+              <span v-else class="text-gray-400">—</span>
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('plantPlot.planting.cropName')" prop="cropName" min-width="120" show-overflow-tooltip />
+          <el-table-column :label="t('plantPlot.planting.cropCode')" prop="cropCode" width="120" show-overflow-tooltip />
+          <el-table-column :label="t('plantPlot.planting.plantByName')" prop="plantByName" width="110" align="center" show-overflow-tooltip />
+          <el-table-column :label="t('plantPlot.planting.expectedYield')" prop="expectedYield" width="120" align="right">
+            <template #default="{ row }">{{ row.expectedYield != null ? `${row.expectedYield} kg/亩` : '-' }}</template>
+          </el-table-column>
+          <el-table-column :label="t('plantPlot.planting.earliestHarvestdate')" prop="earliestHarvestdate" width="130" align="center" />
+          <el-table-column :label="t('plantPlot.planting.actualYield')" prop="actualYield" width="120" align="right">
+            <template #default="{ row }">{{ row.actualYield != null ? `${row.actualYield} kg/亩` : '-' }}</template>
+          </el-table-column>
+          <el-table-column :label="t('plantPlot.planting.beginHarvestdate')" prop="beginHarvestdate" width="120" align="center" />
+          <el-table-column :label="t('plantPlot.planting.endHarvestdate')" prop="endHarvestdate" width="120" align="center" />
+          <el-table-column :label="t('plantPlot.planting.harvestByName')" prop="harvestByName" width="110" align="center" show-overflow-tooltip />
+          <template #empty>
+            <el-empty :image-size="60" />
+          </template>
+        </el-table>
+      </el-tab-pane>
+
+      <!-- Tab 2：农事信息 -->
+      <el-tab-pane :label="t('plantPlot.tab.farmwork')" name="farmwork">
+        <el-table :data="farmworkList" border size="small" max-height="420">
+          <el-table-column :label="t('plantPlot.farmwork.farmDate')" prop="farmDate" width="120" align="center" />
+          <el-table-column :label="t('plantPlot.farmwork.farmType')" width="120" align="center">
+            <template #default="{ row }">
+              <dict-tag :options="djs_farm_work_type" :value="row.farmType" />
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('plantPlot.farmwork.plotName')" prop="plotName" min-width="140" show-overflow-tooltip />
+          <el-table-column :label="t('plantPlot.farmwork.farmByName')" prop="farmByName" width="120" align="center" show-overflow-tooltip />
+          <el-table-column :label="t('plantPlot.farmwork.remark')" prop="remark" min-width="180" show-overflow-tooltip />
+          <template #empty>
+            <el-empty :image-size="60" />
+          </template>
+        </el-table>
+      </el-tab-pane>
+
+      <!-- Tab 3：认证信息 -->
+      <el-tab-pane :label="t('plantPlot.tab.cert')" name="cert">
+        <el-table :data="organicList" border size="small" max-height="420">
+          <el-table-column :label="t('plantPlot.cert.organicNo')" prop="organicNo" min-width="160" show-overflow-tooltip />
+          <el-table-column :label="t('plantPlot.cert.organicCompany')" prop="organicCompany" min-width="160" show-overflow-tooltip />
+          <el-table-column :label="t('plantPlot.cert.organicValid')" prop="organicValid" width="130" align="center" />
+          <el-table-column :label="t('plantPlot.cert.isWarning')" width="100" align="center">
+            <template #default="{ row }">
+              <dict-tag :options="djs_yes_no" :value="row.isWarning" />
+            </template>
+          </el-table-column>
+          <template #empty>
+            <el-empty :image-size="60" />
+          </template>
+        </el-table>
+      </el-tab-pane>
+
+      <!-- Tab 4：基础信息 -->
       <el-tab-pane :label="t('plantPlot.title.baseInfo')" name="info">
         <el-descriptions :column="2" border>
           <el-descriptions-item :label="t('plantPlot.field.plotCode')">{{ data.plotCode || '-' }}</el-descriptions-item>
@@ -13,7 +84,7 @@
             <dict-tag :options="djs_plot_status" :value="data.plotStatus" />
           </el-descriptions-item>
           <el-descriptions-item :label="t('plantPlot.field.isLease')">
-            <dict-tag :options="djs_yes_no" :value="data.isLease" />
+            <dict-tag :options="djs_plot_lease" :value="data.isLease" />
           </el-descriptions-item>
           <el-descriptions-item :label="t('plantPlot.field.plotArea')">{{
             data.plotArea != null ? `${data.plotArea} 亩` : '-'
@@ -43,19 +114,6 @@
           <el-descriptions-item :label="t('plantPlot.field.plotRemark')" :span="2">{{ data.plotRemark || '-' }}</el-descriptions-item>
         </el-descriptions>
       </el-tab-pane>
-
-      <el-tab-pane :label="t('plantPlot.title.zoneInfo')" name="zone">
-        <el-descriptions v-if="zone.id" :column="2" border>
-          <el-descriptions-item :label="t('plantZone.field.zoneCode')">{{ zone.zoneCode || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantZone.field.zoneName')">{{ zone.zoneName || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantZone.field.zoneBelong')">{{ zone.zoneBelong || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantZone.field.zoneStatus')">
-            <dict-tag :options="sys_normal_disable" :value="zone.zoneStatus" />
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantZone.field.zoneDesc')" :span="2">{{ zone.zoneDesc || '-' }}</el-descriptions-item>
-        </el-descriptions>
-        <el-empty v-else :description="t('plantPlot.zoneEmpty')" :image-size="60" />
-      </el-tab-pane>
     </el-tabs>
 
     <template #footer>
@@ -65,10 +123,9 @@
 </template>
 
 <script setup lang="ts">
-import { getPlot } from '@/api/djs-plant/plot';
-import { getZone } from '@/api/djs-plant/zone';
-import type { PlotInfoVO } from '@/api/djs-plant/plot/types';
-import type { PlotZoneVO } from '@/api/djs-plant/zone/types';
+import { getPlot, listPlantingByPlot, listFarmworkByPlot, listOrganicByPlot } from '@/api/djs-plant/plot';
+import type { PlotFarmworkRecordVO, PlotInfoVO, PlotOrganicRefVO, PlotPlantingRecordVO } from '@/api/djs-plant/plot/types';
+import ImagePreview from '@/components/ImagePreview/index.vue';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
@@ -77,41 +134,52 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const {
   djs_plot_type,
   djs_plot_status,
+  djs_plot_lease,
   djs_yes_no,
   djs_soil_type,
   djs_soil_fertility,
   djs_terrain_condition,
   djs_light_condition,
   djs_drain_condition,
-  sys_normal_disable
+  djs_farm_work_type
 } = toRefs<any>(
   proxy?.useDict(
     'djs_plot_type',
     'djs_plot_status',
+    'djs_plot_lease',
     'djs_yes_no',
     'djs_soil_type',
     'djs_soil_fertility',
     'djs_terrain_condition',
     'djs_light_condition',
     'djs_drain_condition',
-    'sys_normal_disable'
+    'djs_farm_work_type'
   )
 );
 
 const visible = ref(false);
-const activeTab = ref('info');
+const activeTab = ref('planting');
 const data = ref<Partial<PlotInfoVO>>({});
-const zone = ref<Partial<PlotZoneVO>>({});
 const plotImageUrl = ref<string>('');
+const plantingList = ref<PlotPlantingRecordVO[]>([]);
+const farmworkList = ref<PlotFarmworkRecordVO[]>([]);
+const organicList = ref<PlotOrganicRefVO[]>([]);
+const cropImgUrlMap = ref<Record<string, string>>({});
 
 const open = async (id: number | string) => {
+  data.value = {};
+  plotImageUrl.value = '';
+  plantingList.value = [];
+  farmworkList.value = [];
+  organicList.value = [];
+  cropImgUrlMap.value = {};
+  activeTab.value = 'planting';
+  visible.value = true;
+
   const res = await getPlot(id);
   data.value = res.data || {};
-  zone.value = {};
-  plotImageUrl.value = '';
-  activeTab.value = 'info';
-  visible.value = true;
-  // VO 已 enrich plotImageUrl 则直用；否则用 plotImagePreview(ossId) 回查
+
+  // 主图回填（VO 已 enrich plotImageUrl 则直用；否则用 plotImagePreview(ossId) 回查）
   if (data.value.plotImageUrl) {
     plotImageUrl.value = data.value.plotImageUrl;
   } else if (data.value.plotImagePreview) {
@@ -122,16 +190,48 @@ const open = async (id: number | string) => {
       console.warn('[PlotView] listOssByIds failed for plotImagePreview', data.value.plotImagePreview, e);
     }
   }
-  // 拉所属片区详情
-  if (data.value.zoneId) {
-    try {
-      const zoneRes = await getZone(data.value.zoneId);
-      zone.value = zoneRes.data || {};
-    } catch (e) {
-      console.warn('[PlotView] getZone failed for zoneId', data.value.zoneId, e);
-    }
-  }
+
+  // 并发拉 3 张子表
+  const [planting, farmwork, organic] = await Promise.all([
+    listPlantingByPlot(id).catch((e) => {
+      console.warn('[PlotView] listPlantingByPlot failed', e);
+      return { data: [] } as any;
+    }),
+    listFarmworkByPlot(id).catch((e) => {
+      console.warn('[PlotView] listFarmworkByPlot failed', e);
+      return { data: [] } as any;
+    }),
+    listOrganicByPlot(id).catch((e) => {
+      console.warn('[PlotView] listOrganicByPlot failed', e);
+      return { data: [] } as any;
+    })
+  ]);
+  plantingList.value = (planting.data ?? []) as PlotPlantingRecordVO[];
+  farmworkList.value = (farmwork.data ?? []) as PlotFarmworkRecordVO[];
+  organicList.value = (organic.data ?? []) as PlotOrganicRefVO[];
+
+  await loadCropImgUrls();
 };
+
+/** 种植子表「作物图片」字段是 OSS id（image_oss_id / crop_image_preview），批量换 URL。 */
+async function loadCropImgUrls() {
+  const ids = Array.from(new Set(plantingList.value.map((r) => r.cropImage).filter((v): v is string => !!v)));
+  if (ids.length === 0) {
+    cropImgUrlMap.value = {};
+    return;
+  }
+  try {
+    const res = await listOssByIds(ids.join(','));
+    const map: Record<string, string> = {};
+    (res.data ?? []).forEach((o: any) => {
+      if (o?.ossId != null && o?.url) map[String(o.ossId)] = o.url;
+    });
+    cropImgUrlMap.value = map;
+  } catch (e) {
+    console.warn('[PlotView] crop image listOssByIds failed', e);
+    cropImgUrlMap.value = {};
+  }
+}
 
 defineExpose({ open });
 </script>

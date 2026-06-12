@@ -1209,17 +1209,67 @@ export default {
     }
   },
   // 种植 - 片区（PLT-MD-001）
+  // 种植总览（FIX-PLT-AD-OVERVIEW-001）
+  plantOverview: {
+    title: '种植总览',
+    empty: '暂无作物数据',
+    breadcrumbHome: '首页',
+    breadcrumbPlant: '种植管理',
+    kpi: {
+      idlePlotCount: '空地块数',
+      plantedPlotCount: '已种植地块数',
+      harvestedTotalTon: '已采摘总量(吨)',
+      expectedTotalTon: '预计总产量(吨)',
+      remainingExpectedTon: '剩余预计总产量(吨)'
+    },
+    card: {
+      currentPlanted: '当前地已种',
+      currentPlantedArea: '当前已种面积(亩)',
+      planGroup: '计划',
+      doneGroup: '已完成',
+      plotCount: '地块数',
+      area: '面积(亩)',
+      expectedYield: '预计产量(kg)',
+      doneArea: '已种面积(亩)',
+      donePlotCount: '已种地数',
+      harvestYield: '已摘产量(kg)'
+    },
+    detail: {
+      title: '作物详情',
+      back: '返回',
+      export: '导出',
+      col: {
+        cropName: '作物名称',
+        plotName: '种植地块',
+        harvestStatus: '采摘状态',
+        planSeason: '种植季',
+        planPlantDate: '计划种植日期',
+        plantDate: '种植日期',
+        plantTeamName: '种植人员',
+        beginHarvestdate: '实际开始采摘日期',
+        endHarvestdate: '实际结束采摘日期',
+        earliestHarvestdate: '最早起始采摘时间',
+        lastHarvestdate: '最晚截止采摘时间',
+        plotArea: '地块面积(亩)',
+        expectedYield: '标准产量(kg)',
+        actualYield: '实际采收量(kg)'
+      }
+    }
+  },
   plantZone: {
     title: { add: '新增片区', edit: '编辑片区' },
-    column: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '说明', zoneBelong: '所属大区', zoneStatus: '状态', createTime: '创建时间' },
+    column: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '说明', zoneBelong: '所属大区', zoneStatus: '状态', createTime: '创建时间', plotCount: '管理地块数量', updateTime: '更新时间', updateByName: '更新人员' },
     field: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '片区说明', zoneBelong: '所属大区', zoneStatus: '状态' },
+    filter: { zoneName: '片区名称', updateTime: '更新时间', updateBy: '更新人员' },
     placeholder: {
       zoneCode: '请输入片区编码（如 Z001 / EAST-01）',
       zoneName: '请输入片区名称',
       zoneDesc: '片区说明（可选）',
       zoneBelong: '所属大区（可选，例 东部）',
-      search: '搜索片区名称'
+      search: '搜索片区名称',
+      updateBy: '请选择更新人员'
     },
+    action: { edit: '修改信息', disable: '禁用', enable: '启用', del: '删除' },
     rule: { zoneCode: { required: '片区编码不能为空' }, zoneName: { required: '片区名称不能为空' } },
     confirm: { del: '是否确认删除选中的 {count} 个片区？删除前需确保片区下无关联地块。' },
     empty: '暂无片区数据，请新建片区开始'
@@ -1228,7 +1278,33 @@ export default {
   plantPlot: {
     title: { add: '新增地块', edit: '编辑地块', view: '地块详情', baseInfo: '基础信息', zoneInfo: '片区信息' },
     zoneEmpty: '未关联片区',
-    tab: { basic: '基础信息', location: '位置面积', soil: '土壤环境' },
+    tab: { basic: '基础信息', location: '位置面积', soil: '土壤环境', planting: '种植信息', farmwork: '农事信息', cert: '认证信息' },
+    planting: {
+      plantDate: '种植日期',
+      cropImage: '作物图片',
+      cropName: '作物名称',
+      cropCode: '作物编码',
+      plantByName: '种植人',
+      expectedYield: '预计亩产',
+      earliestHarvestdate: '预计最早采摘日期',
+      actualYield: '实际亩产',
+      beginHarvestdate: '采摘开始日期',
+      endHarvestdate: '采摘结束日期',
+      harvestByName: '采摘人'
+    },
+    farmwork: {
+      farmDate: '农事日期',
+      farmType: '农事类型',
+      plotName: '作业地块',
+      farmByName: '作业人',
+      remark: '说明'
+    },
+    cert: {
+      organicNo: '证书编号',
+      organicCompany: '证书单位',
+      organicValid: '有效期',
+      isWarning: '是否预警'
+    },
     column: {
       plotCode: '地块编码',
       plotName: '地块名称',
@@ -1301,7 +1377,10 @@ export default {
       image: '证书图',
       relatedPlots: '关联地块',
       warning: '预警状态',
-      createTime: '创建时间'
+      createTime: '创建时间',
+      plotCount: '覆盖地块数',
+      updateTime: '更新时间',
+      updateByName: '更新人'
     },
     field: {
       organicNo: '证书编号',
@@ -1348,16 +1427,26 @@ export default {
       cropName: '关联作物',
       image: '证书图',
       warning: '预警状态',
-      createTime: '创建时间'
+      createTime: '创建时间',
+      updateTime: '更新时间',
+      updateByName: '更新人'
     },
     field: {
       cropCertNo: '证书编号',
       cropCertCompany: '颁发单位',
       cropCertValid: '有效期至',
       cropId: '关联作物',
+      relatedCrops: '关联作物',
       cropImagePreview: '缩略图',
       cropImageUrl: '证书图片',
       isWarning: '预警状态'
+    },
+    relate: {
+      title: '关联作物',
+      action: '关联作物',
+      unselected: '未关联作物',
+      selected: '已关联作物',
+      search: '搜索作物编码 / 名称'
     },
     placeholder: {
       cropCertNo: '请输入证书编号',
@@ -1376,9 +1465,44 @@ export default {
   },
   // 种植 - 作物（PLT-MD-001）
   plantCrop: {
-    title: { add: '新增作物', edit: '编辑作物', view: '作物详情', baseInfo: '基础信息', related: '关联信息' },
-    organicEmpty: '有机认证明细暂未提供（后端聚合待补）',
-    tab: { basic: '基础信息', growth: '生长周期', yield: '产量品质' },
+    title: { add: '新增作物', edit: '编辑作物', view: '作物详情', baseInfo: '基础信息' },
+    tab: { basic: '基础信息', growth: '生长周期', yield: '产量品质', planting: '种植信息', farmwork: '农事信息' },
+    label: {
+      varietyOrigin: '品种来源',
+      qualityDesc: '作物说明',
+      relatedProduct: '关联产品编号',
+      historyPlantCount: '历史种植次数',
+      avgYield: '平均亩产(kg)',
+      maxYield: '最大亩产(kg)',
+      updateTime: '更新时间',
+      updateByName: '更新人员'
+    },
+    search: {
+      varietyOrigin: '品种来源',
+      updateTime: '更新时间',
+      updateBy: '更新人员'
+    },
+    planting: {
+      plantDate: '种植日期',
+      plotName: '种植地块',
+      plantTeamName: '种植人',
+      predictedPer: '预计亩产(kg)',
+      earliestHarvestDate: '预计最早采摘日期',
+      actualPer: '实际亩产(kg)',
+      pickStartDate: '采摘开始日期',
+      pickEndDate: '采摘结束日期',
+      pickTeamName: '采摘人',
+      empty: '暂无种植记录'
+    },
+    farmwork: {
+      farmDate: '农事日期',
+      farmType: '农事类型',
+      plotName: '作业地块',
+      teamName: '作业人',
+      remark: '说明',
+      empty: '暂无农事记录'
+    },
+    sub: { index: '序号' },
     column: {
       cropCode: '作物编码',
       cropName: '作物名称',
@@ -1432,6 +1556,7 @@ export default {
     column: {
       teamName: '班组名称',
       leader: '班组负责人',
+      leaderPhone: '负责人联系方式',
       teamStatus: '状态',
       memberCount: '成员数',
       remark: '备注',
@@ -1497,25 +1622,61 @@ export default {
       plantPeriod: '上中下旬',
       plantBy: '种植班组',
       harvestBy: '采摘班组',
-      expectedYield: '预计产量'
+      expectedYield: '预计产量',
+      planDate: '计划日期',
+      updateTime: '计划更新时间',
+      createBy: '计划编制人'
     },
     column: {
       planNo: '计划号',
-      planYear: '年份',
+      planYear: '计划年份',
       planSeason: '季节',
       crop: '作物',
+      cropName: '种植农作物',
+      cropImage: '种植图片',
       plantDate: '种植开始日期',
-      totalArea: '总面积(亩)',
-      totalPlot: '地块数',
+      earliestBegindate: '计划最早开始日期',
+      lastBegindate: '计划最晚开始日期',
+      totalArea: '种植面积',
+      totalPlot: '种植地块数量',
       earliestHarvestdate: '最早采摘',
       lastHarvestdate: '最晚采摘',
-      plantStatus: '状态',
+      expectedYield: '预计产量(kg)',
+      actualYield: '实际产量(kg)',
+      finishedPlot: '已完成种植地数量',
+      completionRate: '计划完成率(%)',
+      plantStatus: '计划状态',
+      updateTime: '计划更新时间',
+      createBy: '计划编制人',
+      createByName: '计划编制人',
       action: '操作'
     },
     placeholder: {
       planSeason: '请选择种植季节',
       plantDate: '例：4 月上旬（可选填）',
-      team: '请选择班组'
+      team: '请选择班组',
+      planDateFilter: '请输入计划日期',
+      crop: '请选择农作物',
+      updateTime: '请选择计划更新时间',
+      createBy: '请选择计划编制人'
+    },
+    unit: { mu: '亩' },
+    kpi: {
+      idlePlot: '空地块数',
+      plantedPlot: '已种植地块数',
+      plannedPlot: '计划种植地块数',
+      plotUsageFreq: '计划地块使用频次',
+      cropVarietyCount: '计划种植作物品种数'
+    },
+    query: {
+      planDate: '计划日期',
+      planDatePlaceholder: '请输入计划日期',
+      cropId: '种植农作物',
+      cropIdPlaceholder: '请选择农作物',
+      updateTime: '计划更新时间',
+      updateTimePlaceholder: '请选择计划更新时间',
+      createBy: '计划编制人',
+      createByPlaceholder: '请选择计划编制人'
     },
     action: {
       detail: '详情'
@@ -1595,26 +1756,34 @@ export default {
     field: {
       planYear: '计划年份',
       planSeason: '计划季节',
-      harvestStatus: '采摘状态'
+      harvestStatus: '采摘状态',
+      cropName: '作物名称'
     },
     placeholder: {
       planSeason: '请选择季节',
       harvestStatus: '请选择采摘状态',
-      team: '采摘班组'
+      team: '采摘班组',
+      cropName: '请选择农作物'
     },
     column: {
       planNo: '计划号',
       planYear: '年份',
       planSeason: '季节',
       crop: '作物',
+      cropImage: '作物图片',
+      cropName: '作物名称',
       plotCount: '地块数',
-      planEarliest: '计划最早',
-      planLatest: '计划最晚',
+      planEarliest: '最早开始时间',
+      planLatest: '最晚截止时间',
+      totalAcreage: '当前种植亩数',
+      demandQty: '预计需求量',
+      actualYield: '当年已采摘量',
+      plotTotalCount: '当年种植地块总数',
+      disasterLoss: '预计灾害损失量',
       actualBegin: '实际开始',
       actualEnd: '实际结束',
       expectedYield: '预计产量',
-      actualYield: '实际产量',
-      activityPlotCount: '游客活动地块',
+      activityPlotCount: '采摘活动地块数',
       action: '操作'
     },
     action: { adjust: '调整' },
@@ -1624,70 +1793,68 @@ export default {
       tip: '按地块设置计划最早采摘日期（计划最晚按作物采摘周期自动算）、是否游客采摘活动、采摘班组；实际采摘起止由小程序采收录入回写、此处只读；保存后立即生效。',
       activityYes: '游客采摘',
       activityNo: '常规',
+      activityOptYes: '是',
+      activityOptNo: '否',
       paramsMissing: '缺少 planId / cropId 参数',
       saveSuccess: '已更新 {count} 行明细',
+      toggleSuccess: '已更新',
       col: {
+        cropName: '作物名称',
         plotCode: '地块编码',
-        plotName: '地块名称',
-        plotArea: '面积',
-        planEarliest: '计划最早',
-        planLatest: '计划最晚',
-        beginHarvestdate: '实际开始采摘',
-        endHarvestdate: '实际结束采摘',
-        isPick: '游客采摘',
+        plotName: '种植地块',
+        plotArea: '地块面积',
+        isPick: '是否采摘活动',
+        harvestStatus: '采摘状态',
+        plantDate: '种植日期',
+        plantTeam: '种植班组',
+        planEarliest: '最早起始采摘时间',
+        planLatest: '最晚截止采摘时间',
+        beginHarvestdate: '实际开始采摘日期',
+        endHarvestdate: '实际结束采摘日期',
         harvestBy: '采摘班组',
+        standardYield: '标准产量',
+        actualYield: '实际采收量',
+        lossYield: '灾害损失'
+      },
+      filter: {
+        isPick: '是否采摘活动',
         harvestStatus: '采摘状态'
+      },
+      placeholder: {
+        isPick: '请选择是否采摘活动',
+        harvestStatus: '请选择采摘状态'
+      },
+      action: {
+        setSchedule: '设置采摘计划',
+        setActivity: '设为采摘活动',
+        unsetActivity: '取消采摘活动'
+      },
+      dialog: {
+        title: '设置计划',
+        beginDate: '开始采摘日期',
+        endDate: '结束采摘日期',
+        beginRequired: '请选择开始采摘日期',
+        dateOrder: '结束采摘日期不得早于开始采摘日期'
       }
     }
   },
   pickActivity: {
     pageTitle: '采摘活动',
     field: {
-      activityNo: '活动编码',
-      activityName: '活动名称',
-      activityStatus: '活动状态',
       activityDate: '活动日期',
-      cropId: '作物',
-      totalPlot: '涉及地块数',
-      totalYield: '当日采摘汇总(kg)',
-      visitorCount: '参与游客人数',
-      remark: '备注'
+      cropName: '作物名称'
     },
     placeholder: {
-      activityNo: '编码模糊匹配',
-      activityName: '名称模糊匹配',
-      dateFrom: '开始日期',
-      dateTo: '结束日期'
+      activityDate: '请选择活动日期',
+      crop: '请选择作物'
     },
     column: {
-      activityNo: '活动编码',
-      activityName: '活动名称',
       activityDate: '活动日期',
-      activityStatus: '状态',
-      crop: '作物',
-      totalPlot: '地块数',
-      totalYield: '采摘量',
-      visitorCount: '游客人数',
-      action: '操作'
-    },
-    action: { summary: '汇总结束' },
-    dialog: {
-      addTitle: '新增采摘活动',
-      editTitle: '编辑采摘活动'
-    },
-    rule: {
-      activityNameRequired: '请填写活动名称',
-      activityDateRequired: '请选择活动日期',
-      cropRequired: '请选择作物'
-    },
-    confirm: {
-      del: '确认删除采摘活动「{name}」？',
-      summary: '汇总后将状态置为「已结束」，并从采摘明细聚合当日产量回填，是否继续？'
-    },
-    tip: {
-      addSuccess: '采摘活动已创建',
-      updateSuccess: '采摘活动已更新',
-      summarySuccess: '汇总完成，当日采摘 {yield} kg'
+      cropName: '作物名称',
+      plotCount: '活动地块数',
+      todayPickWeight: '今日采摘重量',
+      expectedYield: '预计总产量',
+      cumulativePickWeight: '累计已采重量'
     }
   },
   // 东角山业务模块占位
@@ -2842,8 +3009,8 @@ export default {
       recordNo: '灾害记录号',
       farmDate: '发生日期',
       disasterType: '灾害类型',
-      plotName: '地块',
-      plotCode: '地块编码',
+      plotName: '地块名称',
+      plotCode: '地块编号',
       cropName: '作物',
       lossRate: '损失率',
       lossYield: '损失产量',
@@ -2856,7 +3023,13 @@ export default {
       dateRange: '发生日期',
       plot: '地块',
       disasterType: '灾害类型',
-      isWarning: '是否预警'
+      isWarning: '是否预警',
+      crop: '作物',
+      team: '记录班组'
+    },
+    placeholder: {
+      crop: '请输入作物信息',
+      team: '请选择记录班组'
     },
     tag: {
       warning: '预警',
@@ -2886,8 +3059,8 @@ export default {
       recordNo: '记录号',
       farmDate: '农事日期',
       farmType: '农事类型',
-      plotName: '地块',
-      plotCode: '地块编码',
+      plotName: '地块名称',
+      plotCode: '地块编号',
       cropName: '作物',
       teamName: '处理班组',
       remark: '备注',
@@ -2920,7 +3093,7 @@ export default {
   },
   // 种植 - 班组绩效（PLT-PERF-001）
   plantPerformance: {
-    pageTitle: '班组绩效',
+    pageTitle: '绩效管理',
     toolbar: {
       statMonth: '结算月份',
       pickMonth: '请选择月份',
@@ -2961,37 +3134,6 @@ export default {
       plot: '地块',
       farmDate: '农事日期',
       farmCount: '共 {count} 条农事记录'
-    }
-  },
-  // 种植首页 dashboard（PLT-DASH-001）
-  plantDashboard: {
-    title: {
-      overview: '土地总览',
-      todayFarm: '今日农事',
-      monthCompletion: '当月种植任务完成率',
-      gantt: '种植 / 采摘进度甘特图'
-    },
-    kpi: {
-      idle: '空闲地块',
-      planting: '种植中',
-      harvesting: '采摘中',
-      pending: '待种地块',
-      total: '地块总数',
-      totalArea: '土地总面积',
-      areaUnit: '亩',
-      todayFarmTotal: '今日农事总数',
-      farmUnit: '条'
-    },
-    chart: {
-      completionRate: '完成率',
-      cropAxis: '作物',
-      plantSegment: '种植',
-      pickSegment: '采摘',
-      noData: '暂无数据'
-    },
-    action: {
-      refresh: '刷新',
-      lastRefresh: '最近刷新'
     }
   },
   storeDashboard: {

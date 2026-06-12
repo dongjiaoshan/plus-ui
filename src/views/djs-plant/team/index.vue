@@ -15,10 +15,11 @@
       perm-prefix="djs:plant:team"
       :show-add="true"
       :show-batch-del="false"
-      :show-export="false"
+      show-export
       @search="handleSearch"
       @reset="handleReset"
       @add="onAdd"
+      @export="handleExport"
       @page-change="handlePageChange"
     >
       <template #cell-teamStatus="{ row }">
@@ -55,8 +56,8 @@
 /**
  * 班组管理列表（PLT-MD-002）。
  *
- * 列：班组名称 / 负责人 / 状态 / 成员数（点击 → 成员管理弹窗）/ 备注 / 创建时间
- * 操作：成员管理 / 编辑 / 删除
+ * 列（对齐原型）：班组名称 / 班组人数（点击 → 成员管理弹窗）/ 负责人 / 负责人联系方式 / 状态 / 备注 / 创建时间
+ * 操作：成员管理 / 编辑 / 删除 / 导出
  */
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
@@ -88,11 +89,14 @@ const searchSchema: SearchFieldSchema[] = [
   { field: 'teamStatus', label: t('plantTeam.column.teamStatus'), type: 'select', dictType: 'djs_common_status', clearable: true }
 ];
 
+// 列顺序对齐原型：班组名称 → 班组人数 → 班组负责人 → 负责人联系方式；
+// 状态/备注/创建时间为超原型增强列，保留并置于其后（#4 待客户确认是否保留，未拍板不删）。
 const columns: BizTableColumn[] = [
   { prop: 'teamName', label: t('plantTeam.column.teamName'), minWidth: 160, fixed: 'left', showOverflowTooltip: true },
-  { prop: 'leaderName', label: t('plantTeam.column.leader'), minWidth: 160, align: 'center', showOverflowTooltip: true },
-  { prop: 'teamStatus', label: t('plantTeam.column.teamStatus'), minWidth: 120, align: 'center' },
   { prop: 'memberCount', label: t('plantTeam.column.memberCount'), minWidth: 120, align: 'center' },
+  { prop: 'leaderName', label: t('plantTeam.column.leader'), minWidth: 160, align: 'center', showOverflowTooltip: true },
+  { prop: 'leaderPhone', label: t('plantTeam.column.leaderPhone'), minWidth: 150, align: 'center' },
+  { prop: 'teamStatus', label: t('plantTeam.column.teamStatus'), minWidth: 120, align: 'center' },
   { prop: 'remark', label: t('plantTeam.column.remark'), minWidth: 200, showOverflowTooltip: true },
   { prop: 'createTime', label: t('plantTeam.column.createTime'), minWidth: 170, align: 'center', formatter: 'datetime' }
 ];
@@ -139,6 +143,18 @@ function handlePageChange(p: number, s: number) {
   pageNum.value = p;
   pageSize.value = s;
   loadList();
+}
+
+// 导出班组列表（后端 POST /djs/plant/team/export，FastExcel；含负责人/联系方式/状态等列）。
+function handleExport() {
+  proxy?.download(
+    'djs/plant/team/export',
+    {
+      teamName: searchModel.teamName || undefined,
+      teamStatus: searchModel.teamStatus === undefined || (searchModel.teamStatus as unknown) === '' ? undefined : Number(searchModel.teamStatus)
+    },
+    `班组数据_${new Date().getTime()}.xlsx`
+  );
 }
 
 function onAdd() {

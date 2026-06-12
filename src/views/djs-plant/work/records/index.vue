@@ -106,6 +106,8 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'recordNo', label: t('plantWork.column.recordNo'), width: 150, showOverflowTooltip: true },
   { prop: 'farmDate', label: t('plantWork.column.farmDate'), width: 120, align: 'center' },
   { prop: 'farmType', label: t('plantWork.column.farmType'), width: 110, align: 'center', dictType: 'djs_farm_work_type' },
+  // 地块编号列对齐原型「地块编号」（如 A-D-001）；plotCode 由后端 FarmRecordsVo service enrich 返回
+  { prop: 'plotCode', label: t('plantWork.column.plotCode'), width: 120, showOverflowTooltip: true },
   { prop: 'plotName', label: t('plantWork.column.plotName'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'cropName', label: t('plantWork.column.cropName'), width: 120, showOverflowTooltip: true },
   { prop: 'teamName', label: t('plantWork.column.teamName'), width: 120, showOverflowTooltip: true },

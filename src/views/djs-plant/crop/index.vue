@@ -78,72 +78,92 @@ const pageSize = ref(10);
 const thumbUrlMap = ref<Record<string, string>>({});
 
 const searchModel = reactive<Record<string, any>>({
-  cropCode: undefined,
   cropName: undefined,
-  varietyName: undefined,
   cropFamily: undefined,
-  plantingSeason: undefined
+  varietyName: undefined,
+  varietyOrigin: undefined,
+  updateTime: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'cropCode', label: t('plantCrop.field.cropCode'), type: 'input' },
   { field: 'cropName', label: t('plantCrop.field.cropName'), type: 'input' },
-  { field: 'varietyName', label: t('plantCrop.field.varietyName'), type: 'input' },
   { field: 'cropFamily', label: t('plantCrop.field.cropFamily'), type: 'select', dictType: 'djs_crop_family' },
-  { field: 'plantingSeason', label: t('plantCrop.field.plantingSeason'), type: 'select', dictType: 'djs_planting_season' }
+  { field: 'varietyName', label: t('plantCrop.field.varietyName'), type: 'input' },
+  { field: 'varietyOrigin', label: t('plantCrop.search.varietyOrigin'), type: 'input' },
+  { field: 'updateTime', label: t('plantCrop.search.updateTime'), type: 'daterange' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'cropCode', label: t('plantCrop.column.cropCode'), width: 100, showOverflowTooltip: true },
   { prop: 'cropImagePreview', label: t('plantPlot.column.plotImage'), width: 80, align: 'center' },
-  { prop: 'cropName', label: t('plantCrop.column.cropName'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'varietyName', label: t('plantCrop.column.varietyName'), width: 140, showOverflowTooltip: true },
+  { prop: 'cropName', label: t('plantCrop.column.cropName'), minWidth: 130, showOverflowTooltip: true },
+  { prop: 'cropCode', label: t('plantCrop.column.cropCode'), width: 100, showOverflowTooltip: true },
   { prop: 'cropFamily', label: t('plantCrop.column.cropFamily'), width: 100, align: 'center', dictType: 'djs_crop_family' },
+  { prop: 'varietyName', label: t('plantCrop.column.varietyName'), width: 130, showOverflowTooltip: true },
+  { prop: 'varietyOrigin', label: t('plantCrop.label.varietyOrigin'), width: 140, showOverflowTooltip: true },
   {
     prop: 'plantingSeason',
     label: t('plantCrop.column.plantingSeason'),
-    width: 140,
+    width: 130,
     align: 'center',
     dictType: 'djs_planting_season',
     showOverflowTooltip: true
   },
   {
-    prop: 'maxCycle',
-    label: t('plantCrop.column.cycle'),
-    width: 110,
-    align: 'right',
-    formatter: (r: BizRow) => (r.minCycle && r.maxCycle ? `${r.minCycle}-${r.maxCycle} 天` : '-')
-  },
-  {
     prop: 'predictedPer',
     label: t('plantCrop.column.predictedPer'),
-    width: 130,
+    width: 120,
     align: 'right',
     formatter: (r: BizRow) => (r.predictedPer != null ? `${r.predictedPer} kg/亩` : '-')
   },
   {
-    prop: 'pickUnitPrice',
-    label: t('plantCrop.column.pickUnitPrice'),
+    prop: 'maxYield',
+    label: t('plantCrop.label.maxYield'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.pickUnitPrice != null ? `¥${r.pickUnitPrice}/斤` : '-')
+    formatter: (r: BizRow) => (r.maxYield != null ? `${r.maxYield} kg/亩` : '-')
   },
-  { prop: 'createTime', label: t('plantCrop.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
+  {
+    prop: 'avgYield',
+    label: t('plantCrop.label.avgYield'),
+    width: 120,
+    align: 'right',
+    formatter: (r: BizRow) => (r.avgYield != null ? `${r.avgYield} kg/亩` : '-')
+  },
+  {
+    prop: 'historyPlantCount',
+    label: t('plantCrop.label.historyPlantCount'),
+    width: 110,
+    align: 'right',
+    formatter: (r: BizRow) => (r.historyPlantCount != null ? `${r.historyPlantCount} 次` : '0 次')
+  },
+  { prop: 'qualityDesc', label: t('plantCrop.label.qualityDesc'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'relatedProduct', label: t('plantCrop.label.relatedProduct'), width: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'updateByName', label: t('plantCrop.label.updateByName'), width: 110, align: 'center', showOverflowTooltip: true },
+  { prop: 'updateTime', label: t('plantCrop.label.updateTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
+
+function buildQuery(): CropInfoQuery {
+  const range = searchModel.updateTime;
+  const params: Record<string, any> = {};
+  if (Array.isArray(range) && range[0] && range[1]) {
+    params.beginTime = range[0];
+    params.endTime = range[1];
+  }
+  return {
+    pageNum: pageNum.value,
+    pageSize: pageSize.value,
+    cropName: searchModel.cropName || undefined,
+    cropFamily: searchModel.cropFamily || undefined,
+    varietyName: searchModel.varietyName || undefined,
+    varietyOrigin: searchModel.varietyOrigin || undefined,
+    params: Object.keys(params).length ? params : undefined
+  };
+}
 
 async function fetchList() {
   loading.value = true;
   try {
-    const query: CropInfoQuery = {
-      pageNum: pageNum.value,
-      pageSize: pageSize.value,
-      cropCode: searchModel.cropCode || undefined,
-      cropName: searchModel.cropName || undefined,
-      varietyName: searchModel.varietyName || undefined,
-      cropFamily: searchModel.cropFamily || undefined,
-      plantingSeason: searchModel.plantingSeason || undefined
-    };
-    const res = await listCrop(query);
+    const res = await listCrop(buildQuery());
     list.value = (res.rows ?? res.data ?? []) as CropInfoVO[];
     total.value = res.total ?? 0;
     await loadThumbUrls();
@@ -203,14 +223,16 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
   fetchList();
 }
 function handleExport() {
+  const range = searchModel.updateTime;
   proxy?.download(
     'djs/plant/crop/export',
     {
-      cropCode: searchModel.cropCode || undefined,
       cropName: searchModel.cropName || undefined,
-      varietyName: searchModel.varietyName || undefined,
       cropFamily: searchModel.cropFamily || undefined,
-      plantingSeason: searchModel.plantingSeason || undefined
+      varietyName: searchModel.varietyName || undefined,
+      varietyOrigin: searchModel.varietyOrigin || undefined,
+      'params[beginTime]': Array.isArray(range) && range[0] ? range[0] : undefined,
+      'params[endTime]': Array.isArray(range) && range[1] ? range[1] : undefined
     },
     `crop_${new Date().getTime()}.xlsx`
   );
