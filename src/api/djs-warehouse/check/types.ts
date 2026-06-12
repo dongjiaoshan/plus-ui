@@ -10,15 +10,21 @@ export interface StockCheckHeaderVO extends BaseEntity {
   id: number | string;
   checkId: string;
   locationId: number | string;
-  /** service 层 JOIN 回填 */
+  /** 盘点仓库（库位名称，service 层 JOIN 回填） */
   locationName?: string;
   checkDate?: string;
   /** 字典 djs_check_status：draft / in_progress / done */
   checkStatus: string;
-  /** 明细行数 */
+  /** 盘点商品数 = 明细行数 */
   lineCount?: number;
+  /** 盘点异常数 = 结果为异常（djs_check_result=2）的明细数 */
+  abnormalCount?: number;
   /** 盈亏计 = SUM(diff_stock) */
   diffSum?: number | string;
+  /** 盘点人 ID（盘点单头发起人 create_by） */
+  checkBy?: number | string;
+  /** 盘点人姓名（后端 @Translation 回填） */
+  checkByName?: string;
 }
 
 /** 盘点明细 line VO */
@@ -28,10 +34,17 @@ export interface StockCheckRecordVO extends BaseEntity {
   locationId: number | string;
   locationName?: string;
   productId: number | string;
+  /** 产品代码（业务码，后端按 productId 回填 ProductInfo.productId） */
+  productCode?: string;
   productName: string;
   productUnit: string;
+  /** 库存量（盘点时系统量） */
   sysStock: number | string;
+  /** 盘点库存量（实盘量） */
   checkStock: number | string;
+  /** 盘点计损量（正常结果计入的损耗量，后端派生） */
+  lossWeight?: number | string;
+  /** 差异 = checkStock - sysStock（带符号） */
   diffStock: number | string;
   /** 字典 djs_check_result：1=正常 / 2=异常 / 3=计损 */
   checkResultType: number;
@@ -49,6 +62,8 @@ export interface StockCheckQuery extends PageQuery {
   checkId?: string;
   locationId?: number | string;
   checkStatus?: string;
+  /** 盘点人姓名（按发起人 nick_name 模糊筛选） */
+  checkByName?: string;
   checkDateFrom?: string;
   checkDateTo?: string;
 }

@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" :title="dialogTitle" destroy-on-close append-to-body width="780px" @closed="handleClosed">
+  <el-dialog v-model="visible" :title="dialogTitle" destroy-on-close append-to-body :close-on-click-modal="true" width="780px" @closed="handleClosed">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-row :gutter="16">
         <el-col :span="12">
@@ -27,6 +27,18 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
+          <el-form-item :label="t('location.field.locationSort')" prop="locationSort">
+            <el-input-number
+              v-model="form.locationSort"
+              :min="0"
+              :precision="0"
+              :step="1"
+              :placeholder="t('location.placeholder.locationSort')"
+              style="width: 100%"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
           <el-form-item :label="t('location.field.capacity')" prop="capacity">
             <el-input-number
               v-model="form.capacity"
@@ -35,6 +47,18 @@
               :step="100"
               :placeholder="t('location.placeholder.capacity')"
               style="width: 100%"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item :label="t('location.field.locationDesc')" prop="locationDesc">
+            <el-input
+              v-model="form.locationDesc"
+              type="textarea"
+              :rows="2"
+              :placeholder="t('location.placeholder.locationDesc')"
+              maxlength="500"
+              show-word-limit
             />
           </el-form-item>
         </el-col>
@@ -89,6 +113,8 @@ const defaultForm = (): LocationInfoForm => ({
   locationThumb: undefined,
   locationImg: undefined,
   locationStatus: 1,
+  locationSort: 0,
+  locationDesc: undefined,
   capacity: undefined,
   remark: undefined
 });

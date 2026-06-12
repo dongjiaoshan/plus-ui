@@ -97,9 +97,11 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'locationCode', label: t('location.column.locationCode'), width: 140, showOverflowTooltip: true },
-  { prop: 'locationName', label: t('location.column.locationName'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'locationType', label: t('location.column.locationType'), width: 110, align: 'center', dictType: 'djs_location_type' },
   { prop: 'locationThumb', label: t('location.column.locationThumb'), width: 90, align: 'center' },
+  { prop: 'locationName', label: t('location.column.locationName'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'locationSort', label: t('location.column.locationSort'), width: 90, align: 'center' },
+  { prop: 'locationDesc', label: t('location.column.locationDesc'), minWidth: 180, showOverflowTooltip: true },
+  { prop: 'locationType', label: t('location.column.locationType'), width: 110, align: 'center', dictType: 'djs_location_type' },
   { prop: 'locationStatus', label: t('location.column.locationStatus'), width: 90, align: 'center', dictType: 'djs_location_status' },
   { prop: 'capacity', label: t('location.column.capacity'), width: 110, align: 'right' },
   { prop: 'createTime', label: t('location.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },

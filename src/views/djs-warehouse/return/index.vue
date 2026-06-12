@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_return_direction', 'djs_return_status', 'djs_yes_no']"
+      :dict-types="['djs_return_direction', 'djs_return_status', 'djs_yes_no', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -42,6 +42,7 @@
       :title="formMode === 'add' ? t('djs.warehouse.return.dialogAddTitle') : t('djs.warehouse.return.dialogEditTitle')"
       destroy-on-close
       append-to-body
+      :close-on-click-modal="true"
       width="560px"
       @closed="handleDialogClosed"
     >
@@ -83,7 +84,7 @@
     </el-dialog>
 
     <!-- 确认退货 -->
-    <el-dialog v-model="confirmDialogVisible" :title="t('djs.warehouse.return.confirmDialogTitle')" destroy-on-close append-to-body width="480px">
+    <el-dialog v-model="confirmDialogVisible" :title="t('djs.warehouse.return.confirmDialogTitle')" destroy-on-close append-to-body :close-on-click-modal="true" width="480px">
       <el-form ref="confirmFormRef" :model="confirmForm" :rules="confirmRules" label-width="120px">
         <el-form-item label="退货单号">
           <span>{{ currentRow?.returnNo }}</span>
@@ -143,38 +144,48 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
-  returnNo: undefined,
-  storeId: undefined,
+  returnDate: undefined,
+  returnCategory: undefined,
   productId: undefined,
-  isConfirm: undefined,
-  returnDirection: undefined,
-  returnStatus: undefined
+  storeId: undefined
 });
 
-const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'returnNo', label: t('djs.warehouse.return.returnNo'), type: 'input' },
-  { field: 'returnDirection', label: t('djs.warehouse.return.returnDirection'), type: 'select', dictType: 'djs_return_direction' },
-  { field: 'returnStatus', label: t('djs.warehouse.return.returnStatus'), type: 'select', dictType: 'djs_return_status' },
-  { field: 'isConfirm', label: t('djs.warehouse.return.isConfirm'), type: 'select', dictType: 'djs_yes_no' }
-]);
-
-const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'returnNo', label: t('djs.warehouse.return.returnNo'), minWidth: 160 },
-  { prop: 'applyTime', label: t('djs.warehouse.return.applyTime'), minWidth: 160 },
-  { prop: 'storeId', label: t('djs.warehouse.return.storeId'), minWidth: 100 },
-  { prop: 'productName', label: t('djs.warehouse.return.productName'), minWidth: 120 },
-  { prop: 'returnWeight', label: t('djs.warehouse.return.returnWeight'), minWidth: 100 },
-  { prop: 'confirmWeight', label: t('djs.warehouse.return.confirmWeight'), minWidth: 100 },
-  { prop: 'returnDirection', label: t('djs.warehouse.return.returnDirection'), dictType: 'djs_return_direction', minWidth: 130 },
-  { prop: 'returnStatus', label: t('djs.warehouse.return.returnStatus'), dictType: 'djs_return_status', minWidth: 100 },
-  { prop: 'confirmUserName', label: t('djs.warehouse.return.confirmUser'), minWidth: 100 },
-  { prop: 'confirmTime', label: t('djs.warehouse.return.confirmTime'), minWidth: 160 },
-  { prop: 'remark', label: t('djs.warehouse.return.remark'), minWidth: 160 }
-]);
-
-// 门店 / 产品 下拉数据源（替代手输 snowflake）
+// 门店 / 产品 下拉数据源（搜索筛选 + 表单共用，onMounted 加载）
 const storeOptions = ref<StoreVO[]>([]);
 const productOptions = ref<ProductInfoVO[]>([]);
+
+// 退货产品 / 退货门店 搜索下拉选项
+const productSearchOptions = computed(() => productOptions.value.map((p) => ({ label: p.productName, value: String(p.id) })));
+const storeSearchOptions = computed(() => storeOptions.value.map((s) => ({ label: s.storeName, value: String(s.id) })));
+
+// 对齐原型筛选：退货日期 / 退货品类 / 退货产品 / 退货门店
+const searchSchema = computed<SearchFieldSchema[]>(() => [
+  { field: 'returnDate', label: t('djs.warehouse.return.returnDate'), type: 'daterange' },
+  { field: 'returnCategory', label: t('djs.warehouse.return.returnCategory'), type: 'select', dictType: 'djs_belong_type' },
+  { field: 'productId', label: t('djs.warehouse.return.returnProduct'), type: 'select', options: productSearchOptions.value },
+  { field: 'storeId', label: t('djs.warehouse.return.storeId'), type: 'select', options: storeSearchOptions.value }
+]);
+
+// 对齐原型列：退货日期/退货品类/退货产品编号/退货产品/退货单位/产品原材料/退货重量/退货门店/实收重量/重量差异/退货确认时间/退货确认人
+const columns = computed<BizTableColumn[]>(() => [
+  { prop: 'applyTime', label: t('djs.warehouse.return.returnDate'), minWidth: 160 },
+  { prop: 'returnCategory', label: t('djs.warehouse.return.returnCategory'), dictType: 'djs_belong_type', minWidth: 110 },
+  { prop: 'returnProductCode', label: t('djs.warehouse.return.returnProductCode'), minWidth: 120 },
+  { prop: 'productName', label: t('djs.warehouse.return.returnProduct'), minWidth: 120 },
+  { prop: 'productUnit', label: t('djs.warehouse.return.productUnit'), minWidth: 90 },
+  { prop: 'productMaterialName', label: t('djs.warehouse.return.productMaterialName'), minWidth: 110 },
+  { prop: 'returnWeight', label: t('djs.warehouse.return.returnWeight'), minWidth: 100, formatter: (row: any) => formatWeight(row.returnWeight) },
+  { prop: 'storeName', label: t('djs.warehouse.return.storeId'), minWidth: 110 },
+  { prop: 'confirmWeight', label: t('djs.warehouse.return.confirmWeight'), minWidth: 100, formatter: (row: any) => formatWeight(row.confirmWeight) },
+  { prop: 'weightDiff', label: t('djs.warehouse.return.weightDiff'), minWidth: 100, formatter: (row: any) => formatWeight(row.weightDiff) },
+  { prop: 'confirmTime', label: t('djs.warehouse.return.confirmTime'), minWidth: 160 },
+  { prop: 'confirmUserName', label: t('djs.warehouse.return.confirmUser'), minWidth: 100 }
+]);
+
+// 重量列统一带 kg 单位展示（空值 —）
+function formatWeight(v: number | undefined | null): string {
+  return v === undefined || v === null ? '—' : `${v}kg`;
+}
 
 async function loadStoreOptions() {
   const res: any = await listStore({ pageNum: 1, pageSize: 500 });
@@ -315,11 +326,23 @@ async function handleConfirmSubmit() {
   }
 }
 
+// searchModel → 后端 query（退货日期 daterange 拆成 applyDateFrom/applyDateTo）
+function buildQueryParams(): ReturnProductQuery {
+  const range = (searchModel.returnDate as string[] | undefined) ?? [];
+  return {
+    returnCategory: searchModel.returnCategory || undefined,
+    productId: searchModel.productId || undefined,
+    storeId: searchModel.storeId || undefined,
+    applyDateFrom: range[0] || undefined,
+    applyDateTo: range[1] || undefined
+  };
+}
+
 async function loadList() {
   loading.value = true;
   try {
     const params: ReturnProductQuery = {
-      ...searchModel,
+      ...buildQueryParams(),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -351,7 +374,7 @@ function handlePageChange(pn: number, ps: number) {
 }
 
 function handleExport() {
-  proxy?.download('/djs/warehouse/return/export', { ...searchModel }, `退货管理_${new Date().getTime()}.xlsx`);
+  proxy?.download('/djs/warehouse/return/export', { ...buildQueryParams() }, `退货记录_${new Date().getTime()}.xlsx`);
 }
 
 onMounted(() => {

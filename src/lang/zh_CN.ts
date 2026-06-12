@@ -1893,9 +1893,16 @@ export default {
         title: '退货管理',
         returnNo: '退货单号',
         applyTime: '申请时间',
+        returnDate: '退货日期',
+        returnCategory: '退货归属',
         storeId: '退货门店',
         productId: '产品 ID',
         productName: '产品名称',
+        returnProduct: '退货产品',
+        returnProductCode: '产品码',
+        productUnit: '单位',
+        productMaterialName: '物料名称',
+        weightDiff: '重量差异',
         returnWeight: '退货重量',
         confirmWeight: '确认重量',
         confirmUser: '确认人',
@@ -1924,9 +1931,12 @@ export default {
       check: {
         checkId: '盘点单号',
         locationName: '盘点库位',
+        checkWarehouse: '盘点库位',
         checkDate: '盘点日期',
         checkStatus: '状态',
         lineCount: '明细数',
+        goodsCount: '商品数',
+        abnormalCount: '异常数',
         diffSum: '盈亏计',
         createTime: '创建时间',
         detail: '详情',
@@ -1941,7 +1951,9 @@ export default {
         remark: '备注',
         detailTitle: '盘点明细',
         productName: '产品',
+        productCode: '产品码',
         productUnit: '单位',
+        lossWeight: '损耗重量 (kg)',
         sysStock: '系统量',
         checkStock: '实盘量',
         diffStock: '差异',
@@ -1958,32 +1970,106 @@ export default {
         flowNo: '流水号',
         flowDate: '业务时间',
         flowType: '类型',
+        inMode: '入库方式',
         matType: '物资类型',
         productCode: '产品码',
         productName: '产品',
+        blockNo: '白条编号',
         belongType: '归属',
         changeQuantity: '数量',
         productUnit: '单位',
         location: '库位',
         earNo: '耳号',
         operator: '操作人',
+        createTime: '创建时间',
         remark: '备注'
       },
       flowOut: {
         flowNo: '流水号',
         flowDate: '业务时间',
         flowType: '类型',
+        outMode: '出库方式',
         matType: '物资类型',
         stockOutDest: '出库去向',
         productCode: '产品码',
         productName: '产品',
+        blockNo: '白条编号',
         belongType: '归属',
         changeQuantity: '数量',
         productUnit: '单位',
         location: '库位',
         earNo: '耳号',
         operator: '操作人',
+        createTime: '创建时间',
         remark: '备注'
+      },
+      outsourcePig: {
+        title: {
+          add: '新增外购生猪'
+        },
+        column: {
+          purchaseDate: '采购日期',
+          arriveTime: '到场时间',
+          pigMarkNo: '生猪标号',
+          pigWeight: '生猪重量 (kg)',
+          supplier: '供应商',
+          buyer: '采购人'
+        },
+        field: {
+          pigMarkNo: '生猪标号',
+          purchaseDate: '采购日期',
+          slaughterDate: '屠宰日期',
+          arriveTime: '到场时间',
+          pigWeight: '生猪重量 (kg)',
+          supplier: '供应商',
+          buyer: '采购人'
+        },
+        placeholder: {
+          pigMarkNo: '请输入生猪标号',
+          purchaseDate: '请选择采购日期',
+          slaughterDate: '请选择屠宰日期',
+          arriveTime: '请选择到场时间',
+          pigWeight: '请输入生猪重量',
+          supplier: '请选择供应商',
+          buyer: '请选择采购人'
+        },
+        rule: {
+          purchaseDate: {
+            required: '请选择采购日期'
+          },
+          slaughterDate: {
+            required: '请选择屠宰日期'
+          },
+          pigWeight: {
+            required: '请输入生猪重量'
+          },
+          supplier: {
+            required: '请选择供应商'
+          }
+        },
+        confirm: {
+          del: '确认删除该外购生猪记录？'
+        }
+      },
+      production: {
+        title: {
+          itemList: '产品明细'
+        },
+        column: {
+          produceDate: '生产日期',
+          produceNo: '生产单号',
+          productName: '产品名称',
+          productSpec: '规格',
+          productSort: '产品序号',
+          productWeight: '产品重量',
+          storeName: '需求门店'
+        },
+        button: {
+          traceCode: '追溯码'
+        },
+        text: {
+          noTrace: '暂无追溯码'
+        }
       }
     }
   },
@@ -2207,14 +2293,26 @@ export default {
       mailing: '个人邮寄',
       remark: '备注：',
       remarkPh: '请输入备注信息',
-      confirm: '需求确认'
+      confirm: '需求确认',
+      spec: '规格',
+      materialStock: '原材料库存',
+      remainPlot: '剩余地块',
+      expectYield: '预计产量',
+      earliestPick: '最早可采摘日期',
+      latestPick: '最晚可采摘日期',
+      demandStore: '需求门店',
+      demandStorePh: '请选择门店'
+    },
+    cart: {
+      title: '新增需求'
     },
     filter: {
       store: '门店',
       storePlaceholder: '请选择门店'
     },
     tip: {
-      selectStoreFirst: '请先在顶部选择门店再新增需求'
+      selectStoreFirst: '请先在顶部选择门店再新增需求',
+      mailingListPending: '个人邮寄子地址清单接口暂未提供'
     },
     field: {
       demandNo: '需求单号',
@@ -2277,7 +2375,9 @@ export default {
       cancel: '撤回',
       assignPig: '指定猪只',
       receive: '确认收货',
-      detail: '详情'
+      detail: '详情',
+      del: '删除',
+      viewList: '查看列表'
     },
     confirm: {
       del: '确认删除选中的 {count} 条需求？仅未确认需求可删',
@@ -2543,6 +2643,10 @@ export default {
   },
   // 门店退回管理（STR-RETURN-001，门店域薄实现，admin only）
   storeTrace: {
+    tab: {
+      veg: '果蔬追溯',
+      pork: '猪肉追溯'
+    },
     veg: {
       arrivalDate: '到店日期',
       produceNo: '生产编号',
@@ -2570,7 +2674,10 @@ export default {
       weight: '产品重量',
       weightPlaceholder: '请输入产品重量(kg)',
       genPrint: '追溯码打印',
-      genOk: '生码成功：{code}'
+      genOk: '生码成功：{code}',
+      tracePig: '追溯猪只',
+      traceProduct: '追溯产品',
+      productName: '产品名称'
     }
   },
   storeReturn: {
@@ -2615,6 +2722,10 @@ export default {
       pork: '猪肉产品',
       vegetable: '果蔬产品'
     },
+    mainTab: {
+      operation: '退回操作',
+      record: '退回记录'
+    },
     action: {
       confirm: '确认入库'
     },
@@ -2624,7 +2735,8 @@ export default {
       weightPlaceholder: '请输入退回重量(KG)',
       emptyCandidates: '请先选择门店；该门店暂无关联产品',
       submit: '确认提交',
-      submitConfirm: '确认提交 {n} 条退回？'
+      submitConfirm: '确认提交 {n} 条退回？',
+      quantityPlaceholder: '请输入退回量'
     },
     placeholder: {
       returnDirection: '请选择退回方向',
@@ -2678,6 +2790,7 @@ export default {
       giftQty: '赠送量',
       returnQty: '退货量',
       returnedQty: '退回量',
+      whReturnQty: '退回量',
       lossQty: '损耗量',
       closingQty: '期末库存'
     },
@@ -2686,7 +2799,8 @@ export default {
       detail: '查看详情'
     },
     detail: {
-      title: '{store} {date} 盘点明细'
+      title: '{store} {date} 盘点明细',
+      titleByDate: '当日盘点明细 - {date}'
     },
     entry: {
       title: '新增当日盘点',

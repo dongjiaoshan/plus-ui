@@ -11,7 +11,7 @@
   <el-alert v-if="!error" :type="alertType" :closable="false" show-icon style="margin-bottom: 12px">
     <template #title>
       <span v-if="loading">{{ t('demand.summary.loading') }}</span>
-      <span v-else-if="productType === 'white_bar' && summary">
+      <span v-else-if="(productType === 'white_bar' || productType === 'pig') && summary">
         {{ t('demand.summary.whiteBar', { count: summary.availablePigs ?? 0 }) }}
       </span>
       <span v-else-if="productType === 'vegetable' && summary">
@@ -27,7 +27,7 @@
       <span v-else-if="productType === 'gift_box' && summary">
         {{ t('demand.summary.giftBox', { count: formatNum(summary.giftBoxStock) }) }}
       </span>
-      <span v-else-if="productType === 'other' && summary">
+      <span v-else-if="(productType === 'other' || productType === 'dry' || productType === 'egg') && summary">
         {{ t('demand.summary.other', { stock: formatKg(summary.rawMaterialStockKg) }) }}
       </span>
     </template>
@@ -48,8 +48,8 @@ const loading = ref<boolean>(true);
 const error = ref<boolean>(false);
 
 const alertType = computed<'success' | 'warning' | 'info' | 'error'>(() => {
-  // white_bar 0 头时 warning 提示，其他业态用 info 中性
-  if (props.productType === 'white_bar' && summary.value && (summary.value.availablePigs ?? 0) === 0) {
+  // 白条 / 猪 0 头时 warning 提示，其他业态用 info 中性
+  if ((props.productType === 'white_bar' || props.productType === 'pig') && summary.value && (summary.value.availablePigs ?? 0) === 0) {
     return 'warning';
   }
   return 'info';

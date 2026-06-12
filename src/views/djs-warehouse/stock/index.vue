@@ -11,6 +11,7 @@
       :dict-types="['djs_check_result']"
       :page-num="pageNum"
       :page-size="pageSize"
+      :action-width="280"
       row-key="id"
       perm-prefix="djs:warehouse:stock"
       show-export
@@ -21,8 +22,11 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <!-- 库存查询只读，无 edit / del；操作列改为 3 钻取链接（入库 / 出库 / 盘点记录） -->
+      <!-- 操作列（对齐原型）：产品出库 + 3 钻取链接（入库 / 出库 / 盘点记录） -->
       <template #action="{ row }">
+        <el-button v-hasPermi="['djs:warehouse:stock:out']" link type="primary" size="small" @click="handleProductOut(row as LocationStockVO)">
+          {{ t('stock.action.productOut') }}
+        </el-button>
         <el-button link type="primary" size="small" @click="drillTo('in', row as LocationStockVO)">
           {{ t('stock.action.flowIn') }}
         </el-button>
@@ -34,12 +38,15 @@
         </el-button>
       </template>
     </BizTable>
+
+    <StockOutDialog ref="outDialogRef" @success="fetchList" />
   </div>
 </template>
 
 <script setup name="Stock" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import StockOutDialog from './components/StockOutDialog.vue';
 import { listStock } from '@/api/djs-warehouse/stock';
 import type { LocationStockQuery, LocationStockVO } from '@/api/djs-warehouse/stock/types';
 import { useI18n } from 'vue-i18n';
@@ -50,6 +57,7 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const router = useRouter();
 
 const tableRef = ref<BizTableExpose>();
+const outDialogRef = ref<{ open: (row: LocationStockVO) => void }>();
 
 const list = ref<LocationStockVO[]>([]);
 const total = ref(0);
@@ -70,6 +78,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
+  { prop: 'productCode', label: t('stock.column.productCode'), width: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'locationName', label: t('stock.column.locationName'), width: 140, showOverflowTooltip: true },
   { prop: 'productName', label: t('stock.column.productName'), minWidth: 180, showOverflowTooltip: true },
   { prop: 'productStock', label: t('stock.column.productStock'), width: 110, align: 'right' },
@@ -96,6 +105,11 @@ async function fetchList() {
   } finally {
     loading.value = false;
   }
+}
+
+/** 行操作「产品出库」：打开出库弹窗（出库日期默认当天 / 出库量 / 出库方式）。 */
+function handleProductOut(row: LocationStockVO) {
+  outDialogRef.value?.open(row);
 }
 
 /**

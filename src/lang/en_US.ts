@@ -1891,9 +1891,16 @@ export default {
         title: 'Return Management',
         returnNo: 'Return No',
         applyTime: 'Apply Time',
+        returnDate: 'Return Date',
+        returnCategory: 'Category',
         storeId: 'Store',
         productId: 'Product ID',
         productName: 'Product Name',
+        returnProduct: 'Return Product',
+        returnProductCode: 'Product Code',
+        productUnit: 'Unit',
+        productMaterialName: 'Material Name',
+        weightDiff: 'Weight Diff',
         returnWeight: 'Return Weight',
         confirmWeight: 'Confirm Weight',
         confirmUser: 'Confirm User',
@@ -1922,9 +1929,12 @@ export default {
       check: {
         checkId: 'Check No.',
         locationName: 'Location',
+        checkWarehouse: 'Location',
         checkDate: 'Check Date',
         checkStatus: 'Status',
         lineCount: 'Lines',
+        goodsCount: 'Goods',
+        abnormalCount: 'Abnormal',
         diffSum: 'Net Diff',
         createTime: 'Created',
         detail: 'Detail',
@@ -1939,7 +1949,9 @@ export default {
         remark: 'Remark',
         detailTitle: 'Check Detail',
         productName: 'Product',
+        productCode: 'Product Code',
         productUnit: 'Unit',
+        lossWeight: 'Loss Weight (kg)',
         sysStock: 'System Qty',
         checkStock: 'Actual Qty',
         diffStock: 'Diff',
@@ -1956,32 +1968,106 @@ export default {
         flowNo: 'Flow No.',
         flowDate: 'Time',
         flowType: 'Type',
+        inMode: 'Inbound Mode',
         matType: 'Material Type',
         productCode: 'Product Code',
         productName: 'Product',
+        blockNo: 'Block No.',
         belongType: 'Category',
         changeQuantity: 'Quantity',
         productUnit: 'Unit',
         location: 'Location',
         earNo: 'Ear No.',
         operator: 'Operator',
+        createTime: 'Created',
         remark: 'Remark'
       },
       flowOut: {
         flowNo: 'Flow No.',
         flowDate: 'Time',
         flowType: 'Type',
+        outMode: 'Outbound Mode',
         matType: 'Material Type',
         stockOutDest: 'Out Dest',
         productCode: 'Product Code',
         productName: 'Product',
+        blockNo: 'Block No.',
         belongType: 'Category',
         changeQuantity: 'Quantity',
         productUnit: 'Unit',
         location: 'Location',
         earNo: 'Ear No.',
         operator: 'Operator',
+        createTime: 'Created',
         remark: 'Remark'
+      },
+      outsourcePig: {
+        title: {
+          add: 'New Outsourced Pig'
+        },
+        column: {
+          purchaseDate: 'Purchase Date',
+          arriveTime: 'Arrival Time',
+          pigMarkNo: 'Pig Mark No.',
+          pigWeight: 'Pig Weight (kg)',
+          supplier: 'Supplier',
+          buyer: 'Buyer'
+        },
+        field: {
+          pigMarkNo: 'Pig Mark No.',
+          purchaseDate: 'Purchase Date',
+          slaughterDate: 'Slaughter Date',
+          arriveTime: 'Arrival Time',
+          pigWeight: 'Pig Weight (kg)',
+          supplier: 'Supplier',
+          buyer: 'Buyer'
+        },
+        placeholder: {
+          pigMarkNo: 'Enter pig mark no.',
+          purchaseDate: 'Select purchase date',
+          slaughterDate: 'Select slaughter date',
+          arriveTime: 'Select arrival time',
+          pigWeight: 'Enter pig weight',
+          supplier: 'Select supplier',
+          buyer: 'Select buyer'
+        },
+        rule: {
+          purchaseDate: {
+            required: 'Purchase date is required'
+          },
+          slaughterDate: {
+            required: 'Slaughter date is required'
+          },
+          pigWeight: {
+            required: 'Pig weight is required'
+          },
+          supplier: {
+            required: 'Supplier is required'
+          }
+        },
+        confirm: {
+          del: 'Delete this outsourced pig record?'
+        }
+      },
+      production: {
+        title: {
+          itemList: 'Product Items'
+        },
+        column: {
+          produceDate: 'Produce Date',
+          produceNo: 'Produce No.',
+          productName: 'Product Name',
+          productSpec: 'Spec',
+          productSort: 'Product Seq',
+          productWeight: 'Product Weight',
+          storeName: 'Store'
+        },
+        button: {
+          traceCode: 'Trace Code'
+        },
+        text: {
+          noTrace: 'No trace code'
+        }
       }
     }
   },
@@ -2205,14 +2291,26 @@ export default {
       mailing: 'Personal mailing',
       remark: 'Remark:',
       remarkPh: 'Enter remark',
-      confirm: 'Confirm demand'
+      confirm: 'Confirm demand',
+      spec: 'Spec',
+      materialStock: 'Raw Material Stock',
+      remainPlot: 'Remaining Plots',
+      expectYield: 'Expected Yield',
+      earliestPick: 'Earliest Pick Date',
+      latestPick: 'Latest Pick Date',
+      demandStore: 'Demand Store',
+      demandStorePh: 'Select store'
+    },
+    cart: {
+      title: 'New Demand'
     },
     filter: {
       store: 'Store',
       storePlaceholder: 'Select store'
     },
     tip: {
-      selectStoreFirst: 'Select a store at the top before adding a demand'
+      selectStoreFirst: 'Select a store at the top before adding a demand',
+      mailingListPending: 'Mailing sub-address list API is not available yet'
     },
     field: {
       demandNo: 'Demand No.',
@@ -2275,7 +2373,9 @@ export default {
       cancel: 'Withdraw',
       assignPig: 'Assign pigs',
       receive: 'Confirm receipt',
-      detail: 'Detail'
+      detail: 'Detail',
+      del: 'Delete',
+      viewList: 'View List'
     },
     confirm: {
       del: 'Delete {count} selected demand(s)? Only unconfirmed demands can be deleted',
@@ -2542,6 +2642,10 @@ export default {
   },
   // Store return management (STR-RETURN-001, store-domain thin impl, admin only)
   storeTrace: {
+    tab: {
+      veg: 'Vegetable Trace',
+      pork: 'Pork Trace'
+    },
     veg: {
       arrivalDate: 'Arrival Date',
       produceNo: 'Produce No.',
@@ -2569,7 +2673,10 @@ export default {
       weight: 'Product Weight',
       weightPlaceholder: 'Enter product weight (kg)',
       genPrint: 'Print Trace Code',
-      genOk: 'Code generated: {code}'
+      genOk: 'Code generated: {code}',
+      tracePig: 'Traced Pig',
+      traceProduct: 'Traced Product',
+      productName: 'Product Name'
     }
   },
   storeReturn: {
@@ -2614,6 +2721,10 @@ export default {
       pork: 'Pork Products',
       vegetable: 'Produce Products'
     },
+    mainTab: {
+      operation: 'Return Entry',
+      record: 'Return Records'
+    },
     action: {
       confirm: 'Confirm Inbound'
     },
@@ -2623,7 +2734,8 @@ export default {
       weightPlaceholder: 'Enter return weight (KG)',
       emptyCandidates: 'Select a store first; this store has no linked products',
       submit: 'Submit',
-      submitConfirm: 'Submit {n} returns?'
+      submitConfirm: 'Submit {n} returns?',
+      quantityPlaceholder: 'Enter return quantity'
     },
     placeholder: {
       returnDirection: 'Select direction',
@@ -2677,6 +2789,7 @@ export default {
       giftQty: 'Gift',
       returnQty: 'Return',
       returnedQty: 'Returned',
+      whReturnQty: 'Return to WH',
       lossQty: 'Loss',
       closingQty: 'Closing'
     },
@@ -2685,7 +2798,8 @@ export default {
       detail: 'Detail'
     },
     detail: {
-      title: '{store} {date} Check Detail'
+      title: '{store} {date} Check Detail',
+      titleByDate: 'Daily Check Detail - {date}'
     },
     entry: {
       title: 'New Daily Check',

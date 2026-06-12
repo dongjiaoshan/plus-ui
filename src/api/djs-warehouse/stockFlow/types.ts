@@ -25,6 +25,8 @@ export interface StockFlowVO {
   supplierId?: number;
   earNo?: string;
   plotId?: number;
+  /** 地块编号（= t_plant_plot_info.plot_code，后端 JOIN 回填） */
+  blockNo?: string;
   operatorId?: number;
   operatorName?: string;
   remark?: string;
@@ -40,11 +42,17 @@ export interface StockFlowQuery {
   /** 雪花 ID 全链路 string —— Number() 会丢精度（coder-djs-cross-layer-contract） */
   productId?: string;
   productCode?: string;
+  /** 产品名称模糊匹配 */
+  productName?: string;
   earNo?: string;
   plotId?: number;
+  /** 地块编号模糊匹配 */
+  blockNo?: string;
   warehouseId?: number;
   stockOutDest?: string;
   operatorId?: number;
+  /** 入/出库人姓名模糊匹配 */
+  operatorName?: string;
   dateFrom?: string;
   dateTo?: string;
   pageNum?: number;

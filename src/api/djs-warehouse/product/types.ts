@@ -26,6 +26,8 @@ export interface ProductInfoVO extends BaseEntity {
   productAttr?: number;
   productWorkshop?: number;
   storeLocationId?: string;
+  /** 存储仓库名称（后端按 store_location_id 关联 location_info 回填；多库位逗号拼接） */
+  storeLocationName?: string;
   productStatus: number;
   productMaterial?: number | string;
   productDesc?: string;
@@ -37,6 +39,37 @@ export interface ProductInfoVO extends BaseEntity {
   giftComponents?: GiftBoxVO[];
   /** 更新人姓名（后端 @Translation 回填） */
   updateByName?: string;
+}
+
+/** 产品详情「生产记录」子表行（生产 / 退货） */
+export interface ProductionRecordVO {
+  id: number | string;
+  produceDate?: string;
+  /** produce=生产 / return=退货 */
+  produceType?: string;
+  produceNum?: number | string;
+  produceUnit?: string;
+  standardWeight?: number | string;
+  produceWeight?: number | string;
+  diffWeight?: number | string;
+}
+
+/** 商品详情「业务流水」子表行（入库 / 领用出库 / 后台出库） */
+export interface ProductFlowRecordVO {
+  id: number | string;
+  bizDate?: string;
+  /** in_stock=入库 / pick_out=领用出库 / backend_out=后台出库 */
+  bizType?: string;
+  bizNum?: number | string;
+  bizUnit?: string;
+}
+
+/** 产品入库入参（产品 / 库位 / 数量） */
+export interface ProductInboundForm {
+  productId: number | string;
+  locationId: number | string;
+  quantity: number;
+  remark?: string;
 }
 
 export interface GiftBoxVO {
@@ -90,7 +123,19 @@ export interface ProductInfoQuery extends PageQuery {
   productId?: string;
   productName?: string;
   productType?: number;
+  /** 产品类型集合（产品配置入口 {1,3}，商品配置入口 {2}）；非空时优先于 productType */
+  productTypes?: number[];
   belongType?: string;
   buyClass?: string;
+  /** 生产车间（djs_product_workshop） */
+  productWorkshop?: number;
+  /** 存储仓库（location_info.id 精确匹配） */
+  storeLocationId?: string;
   productStatus?: number;
+  /** 更新人员（sys_user.user_id） */
+  updateBy?: number | string;
+  /** 更新时间区间起 yyyy-MM-dd */
+  updateBeginTime?: string;
+  /** 更新时间区间止 yyyy-MM-dd */
+  updateEndTime?: string;
 }

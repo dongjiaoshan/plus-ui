@@ -8,7 +8,6 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_check_status']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -57,6 +56,8 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { cancelCheck, completeCheck, listCheck } from '@/api/djs-warehouse/check';
 import type { StockCheckHeaderVO, StockCheckQuery } from '@/api/djs-warehouse/check/types';
+import { listLocation } from '@/api/djs-warehouse/location';
+import type { LocationInfoVO } from '@/api/djs-warehouse/location/types';
 import CheckCreateDialog from './components/CheckCreateDialog.vue';
 import CheckDetailDialog from './components/CheckDetailDialog.vue';
 import { useI18n } from 'vue-i18n';
@@ -75,24 +76,36 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
-  checkId: undefined,
-  checkStatus: undefined,
-  // 从库存查询页钻取而来时由 route.query 注入（盘点单为库位级，按 locationId 隐式过滤）
-  locationId: undefined
+  // 盘点日期（单日，loadList 拆成当天 From/To）
+  checkDate: undefined,
+  // 盘点仓库（库位 ID）
+  locationId: undefined,
+  // 盘点人（按发起人姓名模糊）
+  checkByName: undefined
 });
 
+// 盘点仓库下拉选项（库位）
+const locationOptions = ref<Array<{ label: string; value: string }>>([]);
+async function loadLocationOptions() {
+  const res: any = await listLocation({ pageNum: 1, pageSize: 500 });
+  locationOptions.value = ((res.rows ?? []) as LocationInfoVO[]).map((l) => ({
+    label: `${l.locationName}（${l.locationCode}）`,
+    value: String(l.id)
+  }));
+}
+
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'checkId', label: t('djs.warehouse.check.checkId'), type: 'input' },
-  { field: 'checkStatus', label: t('djs.warehouse.check.checkStatus'), type: 'select', dictType: 'djs_check_status' }
+  { field: 'checkDate', label: t('djs.warehouse.check.checkDate'), type: 'date' },
+  { field: 'locationId', label: t('djs.warehouse.check.checkWarehouse'), type: 'select', options: locationOptions.value },
+  { field: 'checkByName', label: t('djs.warehouse.check.checkBy'), type: 'input' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'checkId', label: t('djs.warehouse.check.checkId'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'locationName', label: t('djs.warehouse.check.locationName'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'checkDate', label: t('djs.warehouse.check.checkDate'), minWidth: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'checkStatus', label: t('djs.warehouse.check.checkStatus'), width: 100, align: 'center', dictType: 'djs_check_status' },
-  { prop: 'lineCount', label: t('djs.warehouse.check.lineCount'), width: 90, align: 'center' },
-  { prop: 'diffSum', label: t('djs.warehouse.check.diffSum'), width: 110, align: 'right' },
+  { prop: 'locationName', label: t('djs.warehouse.check.checkWarehouse'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'lineCount', label: t('djs.warehouse.check.goodsCount'), width: 120, align: 'center' },
+  { prop: 'abnormalCount', label: t('djs.warehouse.check.abnormalCount'), width: 120, align: 'center' },
+  { prop: 'checkByName', label: t('djs.warehouse.check.checkBy'), minWidth: 100, align: 'center' },
   { prop: 'createTime', label: t('djs.warehouse.check.createTime'), minWidth: 160, align: 'center', formatter: 'datetime' }
 ]);
 
@@ -133,8 +146,13 @@ async function handleCancel(row: StockCheckHeaderVO) {
 async function loadList() {
   loading.value = true;
   try {
+    // 盘点日期单日 → 当天 00:00:00 ~ 23:59:59 范围
+    const day = searchModel.checkDate ? String(searchModel.checkDate) : undefined;
     const params: StockCheckQuery = {
-      ...searchModel,
+      locationId: searchModel.locationId || undefined,
+      checkByName: searchModel.checkByName || undefined,
+      checkDateFrom: day ? `${day} 00:00:00` : undefined,
+      checkDateTo: day ? `${day} 23:59:59` : undefined,
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -166,7 +184,17 @@ function handlePageChange(pn: number, ps: number) {
 }
 
 function handleExport() {
-  proxy?.download('/djs/warehouse/check/export', { ...searchModel }, `库存盘点_${new Date().getTime()}.xlsx`);
+  const day = searchModel.checkDate ? String(searchModel.checkDate) : undefined;
+  proxy?.download(
+    '/djs/warehouse/check/export',
+    {
+      locationId: searchModel.locationId || undefined,
+      checkByName: searchModel.checkByName || undefined,
+      checkDateFrom: day ? `${day} 00:00:00` : undefined,
+      checkDateTo: day ? `${day} 23:59:59` : undefined
+    },
+    `库存盘点_${new Date().getTime()}.xlsx`
+  );
 }
 
 /**
@@ -186,6 +214,7 @@ function syncDrillFromQuery(): boolean {
 }
 
 onMounted(() => {
+  loadLocationOptions();
   syncDrillFromQuery();
   loadList();
 });

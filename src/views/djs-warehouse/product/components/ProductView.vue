@@ -57,6 +57,90 @@
           </template>
         </el-table>
       </el-tab-pane>
+
+      <!-- 生产记录子表（自产 / 礼盒，即非外购）。原型：产品详情含生产记录 -->
+      <el-tab-pane v-if="data.productType !== 2" :label="t('product.title.production')" name="production">
+        <el-form :inline="true" class="mb-2">
+          <el-form-item :label="t('product.production.produceDate')">
+            <el-date-picker
+              v-model="productionFilter.produceDate"
+              type="date"
+              value-format="YYYY-MM-DD"
+              :placeholder="t('product.production.produceDatePlaceholder')"
+              clearable
+              style="width: 180px"
+            />
+          </el-form-item>
+          <el-form-item :label="t('product.production.produceType')">
+            <el-select
+              v-model="productionFilter.produceType"
+              :placeholder="t('product.production.produceTypePlaceholder')"
+              clearable
+              style="width: 140px"
+            >
+              <el-option :label="t('product.production.typeProduce')" value="produce" />
+              <el-option :label="t('product.production.typeReturn')" value="return" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="loadProduction">{{ t('common.search') }}</el-button>
+            <el-button @click="resetProductionFilter">{{ t('common.reset') }}</el-button>
+          </el-form-item>
+        </el-form>
+        <el-table v-loading="productionLoading" :data="productionList" border>
+          <el-table-column prop="produceDate" :label="t('product.production.produceDate')" width="120" align="center" />
+          <el-table-column :label="t('product.production.produceType')" width="100" align="center">
+            <template #default="{ row }">
+              {{ row.produceType === 'return' ? t('product.production.typeReturn') : t('product.production.typeProduce') }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="produceNum" :label="t('product.production.produceNum')" width="110" align="right" />
+          <el-table-column prop="produceUnit" :label="t('product.production.produceUnit')" width="100" align="center" />
+          <el-table-column :label="t('product.production.standardWeight')" width="110" align="right">
+            <template #default="{ row }">{{ formatKg(row.standardWeight) }}</template>
+          </el-table-column>
+          <el-table-column :label="t('product.production.produceWeight')" width="110" align="right">
+            <template #default="{ row }">{{ formatKg(row.produceWeight) }}</template>
+          </el-table-column>
+          <el-table-column :label="t('product.production.diffWeight')" width="110" align="right">
+            <template #default="{ row }">{{ formatKg(row.diffWeight) }}</template>
+          </el-table-column>
+          <template #empty>
+            <el-empty :description="t('common.noData')" :image-size="60" />
+          </template>
+        </el-table>
+      </el-tab-pane>
+
+      <!-- 业务流水子表（外购商品）。原型：商品详情含业务流水 -->
+      <el-tab-pane v-if="data.productType === 2" :label="t('product.title.flow')" name="flow">
+        <el-form :inline="true" class="mb-2">
+          <el-form-item :label="t('product.flow.bizDate')">
+            <el-date-picker
+              v-model="flowFilter.bizDate"
+              type="date"
+              value-format="YYYY-MM-DD"
+              :placeholder="t('product.flow.bizDatePlaceholder')"
+              clearable
+              style="width: 180px"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="loadFlow">{{ t('common.search') }}</el-button>
+            <el-button @click="resetFlowFilter">{{ t('common.reset') }}</el-button>
+          </el-form-item>
+        </el-form>
+        <el-table v-loading="flowLoading" :data="flowList" border>
+          <el-table-column prop="bizDate" :label="t('product.flow.bizDate')" width="130" align="center" />
+          <el-table-column :label="t('product.flow.bizType')" width="130" align="center">
+            <template #default="{ row }">{{ bizTypeLabel(row.bizType) }}</template>
+          </el-table-column>
+          <el-table-column prop="bizNum" :label="t('product.flow.bizNum')" min-width="120" align="right" />
+          <el-table-column prop="bizUnit" :label="t('product.flow.bizUnit')" width="100" align="center" />
+          <template #empty>
+            <el-empty :description="t('common.noData')" :image-size="60" />
+          </template>
+        </el-table>
+      </el-tab-pane>
     </el-tabs>
 
     <template #footer>
@@ -66,8 +150,8 @@
 </template>
 
 <script setup lang="ts">
-import { getProduct } from '@/api/djs-warehouse/product';
-import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import { getProduct, listProductFlowRecords, listProductionRecords } from '@/api/djs-warehouse/product';
+import type { ProductFlowRecordVO, ProductInfoVO, ProductionRecordVO } from '@/api/djs-warehouse/product/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
@@ -91,13 +175,85 @@ const data = ref<Partial<ProductInfoVO>>({});
 const thumbUrl = ref<string>('');
 const imgUrls = ref<string[]>([]);
 
-const open = async (id: number | string) => {
+// 生产记录子表（自产 / 礼盒）
+const productionList = ref<ProductionRecordVO[]>([]);
+const productionLoading = ref(false);
+const productionFilter = reactive<{ produceDate?: string; produceType?: string }>({ produceDate: undefined, produceType: undefined });
+
+// 业务流水子表（外购商品）
+const flowList = ref<ProductFlowRecordVO[]>([]);
+const flowLoading = ref(false);
+const flowFilter = reactive<{ bizDate?: string }>({ bizDate: undefined });
+
+const currentId = ref<number | string>('');
+
+function formatKg(v?: number | string | null): string {
+  if (v === undefined || v === null || v === '') return '-';
+  const n = Number(v);
+  if (Number.isNaN(n)) return '-';
+  return `${n}kg`;
+}
+
+function bizTypeLabel(type?: string): string {
+  if (type === 'in_stock') return t('product.flow.typeInStock');
+  if (type === 'pick_out') return t('product.flow.typePickOut');
+  if (type === 'backend_out') return t('product.flow.typeBackendOut');
+  return type ?? '-';
+}
+
+async function loadProduction() {
+  if (!currentId.value) return;
+  productionLoading.value = true;
+  try {
+    const res = await listProductionRecords(currentId.value, {
+      produceDate: productionFilter.produceDate || undefined,
+      produceType: productionFilter.produceType || undefined
+    });
+    productionList.value = (res.data ?? []) as ProductionRecordVO[];
+  } finally {
+    productionLoading.value = false;
+  }
+}
+function resetProductionFilter() {
+  productionFilter.produceDate = undefined;
+  productionFilter.produceType = undefined;
+  loadProduction();
+}
+
+async function loadFlow() {
+  if (!currentId.value) return;
+  flowLoading.value = true;
+  try {
+    const res = await listProductFlowRecords(currentId.value, { bizDate: flowFilter.bizDate || undefined });
+    flowList.value = (res.data ?? []) as ProductFlowRecordVO[];
+  } finally {
+    flowLoading.value = false;
+  }
+}
+function resetFlowFilter() {
+  flowFilter.bizDate = undefined;
+  loadFlow();
+}
+
+const open = async (id: number | string, _productType?: number) => {
+  currentId.value = id;
+  productionList.value = [];
+  flowList.value = [];
+  productionFilter.produceDate = undefined;
+  productionFilter.produceType = undefined;
+  flowFilter.bizDate = undefined;
   const res = await getProduct(id);
   data.value = res.data || {};
   thumbUrl.value = '';
   imgUrls.value = [];
   activeTab.value = 'info';
   visible.value = true;
+  // 子表按形态懒加载：外购→业务流水；自产/礼盒→生产记录
+  if (data.value.productType === 2) {
+    loadFlow();
+  } else {
+    loadProduction();
+  }
   // product VO 只有 ossId（productThumb 单图 / productImg 逗号分隔多图），必须 listByIds 回查 url
   const thumbId = data.value.productThumb;
   if (thumbId) {

@@ -97,6 +97,7 @@ import { addDemand } from '@/api/djs-warehouse/demand';
 import type { DemandManageForm, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { useDemandProducts } from '../composables/useDemandProducts';
+import { demandTypeLabel as resolveTypeLabel, demandTypeColor as resolveTypeColor, demandTypeHasRaw } from '../composables/demandTypeMeta';
 
 /** 购物车单行：一个产品 + 需求量（提交时映射成一条 DemandManageForm）。 */
 interface CartItem {
@@ -114,6 +115,7 @@ const emit = defineEmits<{ (e: 'success'): void }>();
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const { djs_demand_product_type } = toRefs<any>(proxy?.useDict('djs_demand_product_type'));
 
 const visible = ref(false);
 const submitting = ref(false);
@@ -146,20 +148,9 @@ const filteredProducts = computed<ProductInfoVO[]>(() => {
   );
 });
 
-const productTypeLabel = computed(() => t(`demand.productType.${props.productType}`));
+const productTypeLabel = computed(() => resolveTypeLabel(props.productType, djs_demand_product_type.value));
 const drawerTitle = computed(() => t('demand.cart.title', { type: productTypeLabel.value }));
-const productTypeColor = computed(() => {
-  switch (props.productType) {
-    case 'white_bar':
-      return 'danger';
-    case 'vegetable':
-      return 'success';
-    case 'gift_box':
-      return 'warning';
-    default:
-      return 'info';
-  }
-});
+const productTypeColor = computed(() => resolveTypeColor(props.productType));
 
 function addToCart(row: ProductInfoVO): void {
   const pid = String(row.id);
@@ -203,7 +194,7 @@ function toDemandForm(item: CartItem): DemandManageForm {
     expectedArriveDate: footer.expectedArriveDate
   };
   // 白条 / 蔬菜业态保留原材料描述（与 DemandForm 单产品弹窗一致）
-  if ((props.productType === 'white_bar' || props.productType === 'vegetable') && item.rawMaterial) {
+  if (demandTypeHasRaw(props.productType) && item.rawMaterial) {
     f.rawMaterial = item.rawMaterial;
   }
   return f;

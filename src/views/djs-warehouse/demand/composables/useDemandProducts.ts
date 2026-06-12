@@ -13,6 +13,23 @@ import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import type { DemandProductType } from '@/api/djs-warehouse/demand/types';
 
+/**
+ * 需求业态 → 候选产品 belongType 映射（拉候选产品按 belong_type 过滤）。
+ * other 不限定 belongType（前端兜底排除已知 6 类）。
+ */
+const DEMAND_TYPE_TO_BELONG: Record<DemandProductType, string | undefined> = {
+  white_bar: 'white_bar',
+  pig: 'pork',
+  vegetable: 'vegetable',
+  dry: 'dry_good',
+  egg: 'egg',
+  gift_box: 'gift_box',
+  other: undefined
+};
+
+/** 已知 6 类 belongType（other tab 前端兜底排除）。 */
+const KNOWN_BELONG_TYPES = ['white_bar', 'pork', 'vegetable', 'dry_good', 'egg', 'gift_box'];
+
 /** 从产品 VO 派生的录入快照（DemandForm / DemandCart 回填用）。 */
 export interface DemandProductSnapshot {
   productName: string;
@@ -38,11 +55,19 @@ export function useDemandProducts(productType: DemandProductType) {
 
   async function loadProductOptions(): Promise<void> {
     try {
-      // 按业态映射 belongType：white_bar / vegetable / gift_box 各取对应字典 key；other 不限定
-      const belongType = productType === 'other' ? undefined : productType;
+      // 按业态映射 belongType 拉候选产品：
+      //   white_bar→white_bar / pig→pork / vegetable→vegetable / dry→dry_good / egg→egg / gift_box→gift_box
+      //   other 不限定 belongType（前端兜底「不在已知 6 类」的产品）
+      const belongType = DEMAND_TYPE_TO_BELONG[productType];
       const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0 });
       const rsp = res as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] };
-      productOptions.value = rsp.rows ?? rsp.data ?? [];
+      const rows = rsp.rows ?? rsp.data ?? [];
+      // other tab：服务端不过滤 belongType，前端兜底排除已知 6 类（剩"其他"）
+      if (productType === 'other') {
+        productOptions.value = rows.filter((p) => !KNOWN_BELONG_TYPES.includes(String(p.belongType ?? '')));
+      } else {
+        productOptions.value = rows;
+      }
     } catch (e) {
       console.warn('[useDemandProducts] loadProductOptions failed', e);
       productOptions.value = [];

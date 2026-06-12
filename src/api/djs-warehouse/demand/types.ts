@@ -5,8 +5,8 @@
  * 参 .claude/skills/coder-djs-cross-layer-contract.md §契约 1）。
  */
 
-/** 需求业态枚举（与字典 djs_demand_product_type 对齐）。 */
-export type DemandProductType = 'white_bar' | 'vegetable' | 'gift_box' | 'other';
+/** 需求业态枚举（与字典 djs_demand_product_type 对齐，7 业态）。 */
+export type DemandProductType = 'white_bar' | 'pig' | 'vegetable' | 'dry' | 'egg' | 'gift_box' | 'other';
 
 /** 需求状态 7 态（与字典 djs_demand_status 对齐）。 */
 export type DemandStatusCode = 'DRAFT' | 'SUBMITTED' | 'CONFIRMED' | 'IN_PRODUCTION' | 'PARTIAL_SHIPPED' | 'COMPLETED' | 'CANCELLED';

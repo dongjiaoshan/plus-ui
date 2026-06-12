@@ -7,6 +7,8 @@
 
 export interface LocationStockVO extends BaseEntity {
   id: number | string;
+  /** service 层按 product_id FK 回填的产品业务码（如 P10002） */
+  productCode?: string;
   locationId: number | string;
   /** service 层 JOIN 回填 */
   locationName?: string;
@@ -35,4 +37,20 @@ export interface LocationStockQuery extends PageQuery {
   plotId?: number | string;
   blockNo?: string;
   isEnd?: number;
+}
+
+/**
+ * 库存查询行「产品出库」入参（DJS-FIX-WMS-RALN-B）。
+ *
+ * id = 库存行主键（snowflake，全链路 string 防截断）；后端按此取 locationId + productId。
+ */
+export interface StockOutForm {
+  id: number | string;
+  /** 出库日期（默认当天，yyyy-MM-dd） */
+  outDate: string;
+  /** 出库量（> 0） */
+  quantity?: number;
+  /** 出库方式 / 去向（djs_stock_out_dest 字典 value） */
+  stockOutDest: string;
+  remark?: string;
 }

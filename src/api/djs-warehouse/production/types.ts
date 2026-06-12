@@ -42,12 +42,14 @@ export interface ProductProductionVO {
 
 export interface ProductProductionQuery {
   produceNo?: string;
-  productId?: number;
+  productId?: number | string;
   productType?: number;
+  productSort?: number;
   packStatus?: string;
   earNo?: string;
-  plotId?: number;
-  storeId?: number;
+  plotId?: number | string;
+  storeId?: number | string;
+  produceDate?: string;
   produceTimeFrom?: string;
   produceTimeTo?: string;
   pageNum?: number;

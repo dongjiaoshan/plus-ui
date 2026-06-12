@@ -1,34 +1,35 @@
 <template>
   <el-dialog v-model="visible" :title="t('djs.warehouse.check.detailTitle')" destroy-on-close append-to-body width="820px">
     <el-descriptions :column="3" border class="mb-3">
-      <el-descriptions-item :label="t('djs.warehouse.check.checkId')">{{ header?.checkId }}</el-descriptions-item>
-      <el-descriptions-item :label="t('djs.warehouse.check.locationName')">{{ header?.locationName }}</el-descriptions-item>
+      <el-descriptions-item :label="t('djs.warehouse.check.checkWarehouse')">{{ header?.locationName }}</el-descriptions-item>
+      <el-descriptions-item :label="t('djs.warehouse.check.checkDate')">{{ header?.checkDate }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.checkStatus')">
         <dict-tag :options="djs_check_status" :value="header?.checkStatus" />
       </el-descriptions-item>
-      <el-descriptions-item :label="t('djs.warehouse.check.lineCount')">{{ header?.lineCount ?? 0 }}</el-descriptions-item>
-      <el-descriptions-item :label="t('djs.warehouse.check.diffSum')">{{ header?.diffSum ?? 0 }}</el-descriptions-item>
-      <el-descriptions-item :label="t('djs.warehouse.check.checkDate')">{{ header?.checkDate }}</el-descriptions-item>
+      <el-descriptions-item :label="t('djs.warehouse.check.goodsCount')">{{ header?.lineCount ?? 0 }}</el-descriptions-item>
+      <el-descriptions-item :label="t('djs.warehouse.check.abnormalCount')">{{ header?.abnormalCount ?? 0 }}</el-descriptions-item>
+      <el-descriptions-item :label="t('djs.warehouse.check.checkBy')">{{ header?.checkByName }}</el-descriptions-item>
     </el-descriptions>
 
     <el-table v-loading="loading" :data="lines" border max-height="420">
-      <el-table-column type="index" label="#" width="50" align="center" />
-      <el-table-column :label="t('djs.warehouse.check.productName')" prop="productName" min-width="160" show-overflow-tooltip />
-      <el-table-column :label="t('djs.warehouse.check.productUnit')" prop="productUnit" width="80" align="center" />
-      <el-table-column :label="t('djs.warehouse.check.sysStock')" prop="sysStock" width="100" align="right" />
-      <el-table-column :label="t('djs.warehouse.check.checkStock')" prop="checkStock" width="100" align="right" />
-      <el-table-column :label="t('djs.warehouse.check.diffStock')" width="100" align="right">
-        <template #default="{ row }">
-          <span :class="diffClass(row.diffStock)">{{ row.diffStock }}</span>
-        </template>
-      </el-table-column>
+      <el-table-column :label="t('djs.warehouse.check.checkDate')" prop="checkDate" width="160" align="center" />
+      <el-table-column :label="t('djs.warehouse.check.productCode')" prop="productCode" width="110" align="center" show-overflow-tooltip />
+      <el-table-column :label="t('djs.warehouse.check.productName')" prop="productName" min-width="150" show-overflow-tooltip />
       <el-table-column :label="t('djs.warehouse.check.checkResultType')" width="90" align="center">
         <template #default="{ row }">
           <dict-tag :options="djs_check_result" :value="String(row.checkResultType)" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('djs.warehouse.check.diffReason')" prop="diffReason" min-width="140" show-overflow-tooltip />
-      <el-table-column :label="t('djs.warehouse.check.checkBy')" prop="checkByName" width="100" align="center" />
+      <el-table-column :label="t('djs.warehouse.check.sysStock')" prop="sysStock" width="100" align="right" />
+      <el-table-column :label="t('djs.warehouse.check.checkStock')" prop="checkStock" width="120" align="right" />
+      <el-table-column :label="t('djs.warehouse.check.lossWeight')" prop="lossWeight" width="110" align="right" />
+      <el-table-column :label="t('djs.warehouse.check.diffStock')" width="90" align="right">
+        <template #default="{ row }">
+          <span :class="diffClass(abnormalDiff(row))">{{ abnormalDiff(row) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('djs.warehouse.check.productUnit')" prop="productUnit" width="80" align="center" />
+      <el-table-column :label="t('djs.warehouse.check.createTime')" prop="createTime" width="160" align="center" />
     </el-table>
 
     <template #footer>
@@ -58,6 +59,16 @@ function diffClass(diff: number | string): string {
   if (n > 0) return 'diff-surplus';
   if (n < 0) return 'diff-deficit';
   return '';
+}
+
+/**
+ * 差异列 = 异常差额：结果为异常（djs_check_result=2）时取 |系统量 - 实盘量|，否则 0
+ * （正常差额计入「盘点计损量」列，对齐原型「计损 / 差异」二分）。
+ */
+function abnormalDiff(row: StockCheckRecordVO): number {
+  const RESULT_ABNORMAL = 2;
+  if (Number(row.checkResultType) !== RESULT_ABNORMAL) return 0;
+  return Math.abs(Number(row.sysStock ?? 0) - Number(row.checkStock ?? 0));
 }
 
 async function loadLines() {

@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { ProductInfoForm, ProductInfoQuery, ProductInfoVO } from './product/types';
+import type { ProductFlowRecordVO, ProductInboundForm, ProductInfoForm, ProductInfoQuery, ProductInfoVO, ProductionRecordVO } from './product/types';
 
 /**
  * 产品 / 商品 / 礼盒 API（WMS-MD-002）。
@@ -8,12 +8,21 @@ import type { ProductInfoForm, ProductInfoQuery, ProductInfoVO } from './product
  * 后端：org.dromara.djs.warehouse.product.controller.ProductInfoController  /djs/warehouse/product
  */
 
-/** 分页查询产品列表（不带礼盒组件清单） */
+/**
+ * 分页查询产品列表（不带礼盒组件清单）。
+ *
+ * productTypes 数组（产品配置入口 {1,3}）以 CSV 传给后端（Spring 自动绑定 List<Integer>）。
+ */
 export const listProduct = (query: ProductInfoQuery): AxiosPromise<ProductInfoVO[]> => {
+  const { productTypes, ...rest } = query;
+  const params: Record<string, any> = { ...rest };
+  if (productTypes && productTypes.length > 0) {
+    params.productTypes = productTypes.join(',');
+  }
   return request({
     url: '/djs/warehouse/product/list',
     method: 'get',
-    params: query
+    params
   });
 };
 
@@ -58,5 +67,35 @@ export const changeProductStatus = (id: number | string, productStatus: number) 
     url: '/djs/warehouse/product/changeStatus',
     method: 'put',
     data: { id, productStatus }
+  });
+};
+
+/** 产品详情「生产记录」子表：按 productId 查生产 + 退货记录（可选 produceDate / produceType 筛选） */
+export const listProductionRecords = (
+  productId: number | string,
+  params?: { produceDate?: string; produceType?: string }
+): AxiosPromise<ProductionRecordVO[]> => {
+  return request({
+    url: '/djs/warehouse/product/production/' + productId,
+    method: 'get',
+    params
+  });
+};
+
+/** 商品详情「业务流水」子表：按 productId 查 stock_flow（入库 / 领用出库 / 后台出库；可选 bizDate 筛选） */
+export const listProductFlowRecords = (productId: number | string, params?: { bizDate?: string }): AxiosPromise<ProductFlowRecordVO[]> => {
+  return request({
+    url: '/djs/warehouse/product/flow/' + productId,
+    method: 'get',
+    params
+  });
+};
+
+/** 产品入库：录入 产品 / 库位 / 数量 → 写入库流水 + 增库存（复用 product:edit 权限） */
+export const inboundProduct = (data: ProductInboundForm): AxiosPromise<number> => {
+  return request({
+    url: '/djs/warehouse/product/inbound',
+    method: 'post',
+    data
   });
 };

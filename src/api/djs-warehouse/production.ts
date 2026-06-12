@@ -27,6 +27,15 @@ export const getProduction = (id: number | string): AxiosPromise<ProductProducti
   });
 };
 
+/** 产品列表下钻：按"生产日期 + 产品"锁定一个生产批次，分页列出逐件产品 */
+export const listProductionItems = (query: ProductProductionQuery): AxiosPromise<ProductProductionVO[]> => {
+  return request({
+    url: '/djs/warehouse/production/items',
+    method: 'get',
+    params: query
+  });
+};
+
 /** 导出 */
 export const exportProduction = (query: ProductProductionQuery) => {
   return request({

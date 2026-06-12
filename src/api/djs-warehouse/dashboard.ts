@@ -61,43 +61,85 @@ export interface ChartTrendPoint {
 
 /** 仓库看板可视化（与后端 WarehouseDashboardChartsVo 对齐） */
 export interface WarehouseDashboardChartsVo {
-  /** 图① 需求饼（4 业态需求量占比） */
+  /** 图① 果蔬产品当日需求分布饼（近 30 日 vegetable 业态按产品名） */
   demandByType: ChartSeriesItem[];
-  /** 图② 退货环（退货方向构成） */
+  /** 图② 退货环（退货方向构成，兼容旧口径） */
   returnByDirection: ChartSeriesItem[];
-  /** 图③ 生产趋势折线（近 7 日生产重量） */
+  /** 图② 退货分布·猪肉（pork 按产品名） */
+  returnPork: ChartSeriesItem[];
+  /** 图② 退货分布·果蔬（vegetable 按产品名，前端「猪肉/果蔬」切换） */
+  returnVegetable: ChartSeriesItem[];
+  /** 图③ 生产趋势折线（近 7 日生产重量，兼容旧口径） */
   productionTrend: ChartTrendPoint[];
+  /** 图③ 组合图·白条头数（近 7 日，柱） */
+  productionWhiteBarHeadTrend: ChartTrendPoint[];
+  /** 图③ 组合图·猪肉产品重量（近 7 日，线） */
+  productionPorkWeightTrend: ChartTrendPoint[];
+  /** 图③ 组合图·果蔬产品重量（近 7 日，线） */
+  productionVegWeightTrend: ChartTrendPoint[];
   /** 图④ 盘点结果饼（正常 / 异常 / 计损） */
   checkResult: ChartSeriesItem[];
-  /** 图⑤ 异常库位环（异常 vs 正常库位数） */
+  /** 图⑤ 异常库位环（异常 vs 正常库位数，兼容旧口径） */
   locationHealth: ChartSeriesItem[];
-  /** 图⑥ 损耗折线（近 7 日损耗量） */
+  /** 图⑤ 当月盘点异常库位分布环（按库位名） */
+  abnormalLocationByName: ChartSeriesItem[];
+  /** 图⑥ 损耗折线（近 7 日损耗量，兼容旧口径） */
   lossTrend: ChartTrendPoint[];
+  /** 图⑥ 损耗多系列·猪肉（近 7 日，线） */
+  lossPorkTrend: ChartTrendPoint[];
+  /** 图⑥ 损耗多系列·果蔬（近 7 日，线） */
+  lossVegTrend: ChartTrendPoint[];
 
-  // 横条 1「今日需求」6 项
-  /** 白条业态需求量 */
+  // 横条 1「今日需求」8 项（对齐原型）+ 兼容旧 3 项
+  /** 白条需求（头） */
   todayDemandWhiteBar: number;
-  /** 蔬菜业态需求量 */
-  todayDemandVegetable: number;
-  /** 礼盒业态需求量 */
+  /** 猪肉产品需求量（kg） */
+  todayDemandPork: number;
+  /** 红白脏产品需求量（kg，V1 无数据源默认 0） */
+  todayDemandOffal: number;
+  /** 礼盒需求量（份） */
   todayDemandGiftBox: number;
-  /** 其他业态需求量 */
+  /** 果蔬需求品类数（种） */
+  todayDemandVegetableKinds: number;
+  /** 果蔬需求量（kg） */
+  todayDemandVegetable: number;
+  /** 鸡蛋需求量（个） */
+  todayDemandEgg: number;
+  /** 干货需求量（kg） */
+  todayDemandDryGood: number;
+  /** 其他业态需求量（兼容旧口径） */
   todayDemandOther: number;
-  /** 今日需求单数 */
+  /** 今日需求单数（兼容旧口径） */
   todayDemandOrderCount: number;
-  /** 今日需求总量 */
+  /** 今日需求总量（兼容旧口径） */
   todayDemandTotal: number;
 
-  // 横条 2「今日生产」5 项
-  /** 今日生产笔数 */
+  // 横条 2「今日生产」8 项（对齐原型）+ 兼容旧 5 项
+  /** 送宰猪只（头） */
+  todaySlaughterPigCount: number;
+  /** 白条总重（kg） */
+  todayWhiteBarWeight: number;
+  /** 分割白条（头） */
+  todayCutBarCount: number;
+  /** 分割猪只产品总重（kg） */
+  todayCutProductWeight: number;
+  /** 果蔬接收品种（种） */
+  todayVegReceiveKinds: number;
+  /** 果蔬接收总重（kg） */
+  todayVegReceiveWeight: number;
+  /** 果蔬产品种类（种） */
+  todayVegProductKinds: number;
+  /** 果蔬产品总重（kg） */
+  todayVegProductWeight: number;
+  /** 今日生产笔数（兼容旧口径） */
   todayProductionCount: number;
-  /** 今日生产重量 */
+  /** 今日生产重量（兼容旧口径） */
   todayProductionWeight: number;
-  /** 今日入库笔数 */
+  /** 今日入库笔数（兼容旧口径） */
   todayInboundCount: number;
-  /** 今日出库笔数 */
+  /** 今日出库笔数（兼容旧口径） */
   todayOutboundCount: number;
-  /** 今日损耗量 */
+  /** 今日损耗量（兼容旧口径） */
   todayLossQuantity: number;
 }
 

@@ -21,21 +21,31 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <!-- 只读：admin 不暴露写入入口（写入走 mp 4 业态打包子页） -->
-      <template #action><span /></template>
+      <!-- 行操作：查看 → 下钻产品列表（逐件）。admin 不暴露写入入口（写入走 mp 4 业态打包子页） -->
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:warehouse:production:list']" link type="primary" icon="View" @click="handleView(row)">
+          {{ t('common.view') }}
+        </el-button>
+      </template>
     </BizTable>
+
+    <ProductionItemDialog ref="itemDialogRef" />
   </div>
 </template>
 
 <script setup name="ProductProduction" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
-import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import ProductionItemDialog from './components/ProductionItemDialog.vue';
 import { listProduction } from '@/api/djs-warehouse/production';
 import type { ProductProductionQuery, ProductProductionVO } from '@/api/djs-warehouse/production/types';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
+const itemDialogRef = ref<{ open: (row: ProductProductionVO) => void }>();
 
 const list = ref<ProductProductionVO[]>([]);
 const total = ref(0);
@@ -70,8 +80,18 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productWeight', label: '重量/数量', minWidth: 100 },
   { prop: 'packStatus', label: '打包状态', minWidth: 120, dictType: 'djs_pack_status' },
   { prop: 'earNo', label: '来源耳号', minWidth: 120 },
-  { prop: 'plotId', label: '来源地块', minWidth: 100 },
-  { prop: 'storeId', label: '需求门店', minWidth: 100 },
+  {
+    prop: 'plotName',
+    label: '来源地块',
+    minWidth: 120,
+    formatter: (row: ProductProductionVO) => row.plotName || (row.plotId ? String(row.plotId) : '-')
+  },
+  {
+    prop: 'storeName',
+    label: '所属门店',
+    minWidth: 120,
+    formatter: (row: ProductProductionVO) => row.storeName || (row.storeId ? String(row.storeId) : '-')
+  },
   { prop: 'produceTime', label: '生产时间', minWidth: 160 },
   {
     prop: 'isDeliveryCheck',
@@ -123,14 +143,19 @@ function handleReset() {
   handleSearch();
 }
 
-function handlePageChange(p: { pageNum: number; pageSize: number }) {
-  pageNum.value = p.pageNum;
-  pageSize.value = p.pageSize;
+function handlePageChange(pn: number, ps: number) {
+  pageNum.value = pn;
+  pageSize.value = ps;
   loadList();
 }
 
 function handleExport() {
   proxy?.download('/djs/warehouse/production/export', { ...searchModel }, `生产记录_${new Date().getTime()}.xlsx`);
+}
+
+/** 查看 → 下钻该生产批次（生产日期 + 产品）的逐件产品列表 */
+function handleView(row: BizRow) {
+  itemDialogRef.value?.open(row as ProductProductionVO);
 }
 
 onMounted(() => {

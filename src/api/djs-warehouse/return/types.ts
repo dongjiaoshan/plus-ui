@@ -8,11 +8,23 @@ export interface ReturnProductVO {
   id?: string;
   returnNo: string;
   storeId?: string;
+  /** 退货门店名称（后端 service 回填） */
+  storeName?: string;
   applyTime: string;
   productId: string;
+  /** 退货品类 belongType（djs_belong_type，后端回填） */
+  returnCategory?: string;
+  /** 退货产品编号 = 产品业务码（后端回填） */
+  returnProductCode?: string;
   productName: string;
+  /** 退货单位（产品 productUnit，后端回填） */
+  productUnit?: string;
+  /** 产品原材料名（后端回填） */
+  productMaterialName?: string;
   returnWeight: number;
   confirmWeight?: number;
+  /** 重量差异 = returnWeight - confirmWeight（后端衍生，未确认为空） */
+  weightDiff?: number;
   confirmUser?: string;
   confirmUserName?: string;
   confirmTime?: string;
@@ -46,6 +58,8 @@ export interface ReturnProductQuery {
   returnNo?: string;
   storeId?: string;
   productId?: string;
+  /** 退货品类 belongType（djs_belong_type） */
+  returnCategory?: string;
   isConfirm?: number;
   returnDirection?: string;
   returnStatus?: string;

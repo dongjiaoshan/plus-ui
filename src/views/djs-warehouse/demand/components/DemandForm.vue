@@ -76,8 +76,8 @@
           </el-form-item>
         </el-col>
 
-        <!-- 白条 / 蔬菜：原材料 + 计算量 -->
-        <template v-if="props.productType === 'white_bar' || props.productType === 'vegetable'">
+        <!-- 白条 / 蔬菜：原材料 + 计算量（其余业态无 raw） -->
+        <template v-if="hasRawMaterial">
           <el-col :span="12">
             <el-form-item :label="t('demand.field.rawMaterial')" prop="rawMaterial">
               <el-input v-model="form.rawMaterial" :placeholder="t('demand.placeholder.rawMaterial')" maxlength="255" />
@@ -123,11 +123,16 @@ import { addDemand, getDemand, updateDemand } from '@/api/djs-warehouse/demand';
 import type { DemandManageForm, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import { useDemandProducts } from '../composables/useDemandProducts';
 
+import { demandTypeLabel as resolveTypeLabel, demandTypeColor as resolveTypeColor, demandTypeDestination, demandTypeHasRaw } from '../composables/demandTypeMeta';
+
 const props = defineProps<{ productType: DemandProductType }>();
 const emit = defineEmits<{ (e: 'success'): void }>();
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const { djs_demand_product_type } = toRefs<any>(proxy?.useDict('djs_demand_product_type'));
+
+const hasRawMaterial = computed(() => demandTypeHasRaw(props.productType));
 
 const visible = ref(false);
 const submitting = ref(false);
@@ -162,48 +167,10 @@ function onProductSelect(productSnowflakeId: string) {
   }
 }
 
-const productTypeLabel = computed(() => {
-  switch (props.productType) {
-    case 'white_bar':
-      return t('demand.productType.white_bar');
-    case 'vegetable':
-      return t('demand.productType.vegetable');
-    case 'gift_box':
-      return t('demand.productType.gift_box');
-    case 'other':
-      return t('demand.productType.other');
-    default:
-      return props.productType;
-  }
-});
-// 排产去向：按业态派生（doc/02 §需求拆解 line 680-686 定义），DB 无字段，service 层 confirm 时按 product_type 走业务前置校验
-const productionDestination = computed(() => {
-  switch (props.productType) {
-    case 'white_bar':
-      return t('demand.productionDestination.white_bar'); // 分割间 + 肉品打包间
-    case 'vegetable':
-      return t('demand.productionDestination.vegetable'); // 菜品打包间
-    case 'gift_box':
-      return t('demand.productionDestination.gift_box'); // 礼盒打包
-    case 'other':
-      return t('demand.productionDestination.other'); // 其他产品打包
-    default:
-      return '—';
-  }
-});
-
-const productTypeColor = computed(() => {
-  switch (props.productType) {
-    case 'white_bar':
-      return 'danger';
-    case 'vegetable':
-      return 'success';
-    case 'gift_box':
-      return 'warning';
-    default:
-      return 'info';
-  }
-});
+const productTypeLabel = computed(() => resolveTypeLabel(props.productType, djs_demand_product_type.value));
+// 排产去向：按业态派生（doc/02 §需求拆解），DB 无字段，service 层 confirm 时按 product_type 走业务前置校验
+const productionDestination = computed(() => demandTypeDestination(props.productType));
+const productTypeColor = computed(() => resolveTypeColor(props.productType));
 const dialogTitle = computed(() => (editing.value ? t('demand.form.editTitle') : t('demand.form.addTitle')));
 
 const rules = computed(() => ({
