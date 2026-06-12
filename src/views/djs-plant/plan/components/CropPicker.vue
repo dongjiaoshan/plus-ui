@@ -43,7 +43,10 @@ import { listCrop } from '@/api/djs-plant/crop';
 import type { CropInfoVO } from '@/api/djs-plant/crop/types';
 
 const props = defineProps<{ modelValue?: string | number }>();
-const emit = defineEmits<{ (e: 'update:modelValue', val: string | number): void }>();
+const emit = defineEmits<{
+  (e: 'update:modelValue', val: string | number): void;
+  (e: 'select-crop', crop: CropInfoVO): void;
+}>();
 
 const { t } = useI18n();
 const loading = ref(false);
@@ -75,5 +78,6 @@ onMounted(async () => {
 
 function select(c: CropInfoVO) {
   emit('update:modelValue', String(c.id));
+  emit('select-crop', c);
 }
 </script>

@@ -5,6 +5,8 @@ import { listLocation } from '@/api/djs-warehouse/location';
 import type { LocationInfoVO } from '@/api/djs-warehouse/location/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
+import { listPlot } from '@/api/djs-plant/plot';
+import type { PlotInfoVO } from '@/api/djs-plant/plot/types';
 import { listAvailableBars, listSourceDry, listSourceVeg, listSourceWhiteBar } from '@/api/djs-warehouse/packEntry';
 import type { BarInfoVO, PackSourceVO } from '@/api/djs-warehouse/packEntry';
 
@@ -25,6 +27,9 @@ export function usePackEntryOptions() {
   const sourceLoading = ref(false);
   const bars = ref<BarInfoVO[]>([]);
   const barLoading = ref(false);
+  // plotId → 「地块编码」映射（果蔬打包顶部地块卡片标签用，纯前端）
+  const plotMap = ref<Record<string, string>>({});
+  const plotLoading = ref(false);
 
   /** 目标打包产品 SKU。productType: 1=产品 2=商品 3=礼盒（不传=全部） */
   async function loadProducts(productType?: number) {
@@ -81,6 +86,23 @@ export function usePackEntryOptions() {
     }
   }
 
+  /** 地块全量（果蔬打包顶部地块卡片用 plotId → plotCode）。 */
+  async function loadPlots() {
+    if (Object.keys(plotMap.value).length > 0) return;
+    plotLoading.value = true;
+    try {
+      const res = await listPlot({ pageNum: 1, pageSize: 999 } as any);
+      const rows = ((res as any).rows ?? []) as PlotInfoVO[];
+      const map: Record<string, string> = {};
+      rows.forEach((p) => {
+        map[String(p.id)] = p.plotCode || p.plotName || String(p.id);
+      });
+      plotMap.value = map;
+    } finally {
+      plotLoading.value = false;
+    }
+  }
+
   return {
     products,
     productLoading,
@@ -92,10 +114,13 @@ export function usePackEntryOptions() {
     sourceLoading,
     bars,
     barLoading,
+    plotMap,
+    plotLoading,
     loadProducts,
     loadLocations,
     loadStores,
     loadSources,
-    loadBars
+    loadBars,
+    loadPlots
   };
 }

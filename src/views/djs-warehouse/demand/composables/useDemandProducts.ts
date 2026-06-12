@@ -38,7 +38,7 @@ export interface DemandProductSnapshot {
   rawMaterial?: string;
 }
 
-export function useDemandProducts(productType: DemandProductType) {
+export function useDemandProducts(productType: DemandProductType = 'white_bar') {
   const storeOptions = ref<StoreVO[]>([]);
   const productOptions = ref<ProductInfoVO[]>([]);
 
@@ -53,17 +53,22 @@ export function useDemandProducts(productType: DemandProductType) {
     }
   }
 
-  async function loadProductOptions(): Promise<void> {
+  /**
+   * 拉候选产品。typeOverride 用于 DemandCart 切 7 tab 时按当前 tab 业态加载；
+   * 不传则用创建时闭包的 productType（DemandForm 单产品弹窗用，向后兼容）。
+   */
+  async function loadProductOptions(typeOverride?: DemandProductType): Promise<void> {
+    const tp = typeOverride ?? productType;
     try {
       // 按业态映射 belongType 拉候选产品：
       //   white_bar→white_bar / pig→pork / vegetable→vegetable / dry→dry_good / egg→egg / gift_box→gift_box
       //   other 不限定 belongType（前端兜底「不在已知 6 类」的产品）
-      const belongType = DEMAND_TYPE_TO_BELONG[productType];
+      const belongType = DEMAND_TYPE_TO_BELONG[tp];
       const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0 });
       const rsp = res as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] };
       const rows = rsp.rows ?? rsp.data ?? [];
       // other tab：服务端不过滤 belongType，前端兜底排除已知 6 类（剩"其他"）
-      if (productType === 'other') {
+      if (tp === 'other') {
         productOptions.value = rows.filter((p) => !KNOWN_BELONG_TYPES.includes(String(p.belongType ?? '')));
       } else {
         productOptions.value = rows;

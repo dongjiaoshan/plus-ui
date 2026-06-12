@@ -36,14 +36,20 @@
           </el-select>
         </el-form-item>
 
-        <!-- 部位明细（多行） -->
+        <!-- 分割产品明细（多行）：按具体产品（冻五花肉/排骨/肘子/大排 等 belong_type=pork） -->
         <el-form-item :label="t('djs.warehouse.packEntry.parts')">
           <div class="w-full">
             <el-table :data="form.partItems" border size="small">
-              <el-table-column :label="t('djs.warehouse.packEntry.cutPart')" min-width="160">
+              <el-table-column :label="t('djs.warehouse.packEntry.cutProduct')" min-width="200">
                 <template #default="{ row }">
-                  <el-select v-model="row.cutPart" :placeholder="t('djs.warehouse.packEntry.cutPartPlaceholder')" style="width: 100%">
-                    <el-option v-for="p in CUT_PARTS" :key="p.value" :label="p.label" :value="p.value" />
+                  <el-select
+                    v-model="row.productId"
+                    filterable
+                    :loading="porkProductLoading"
+                    :placeholder="t('djs.warehouse.packEntry.cutProductPlaceholder')"
+                    style="width: 100%"
+                  >
+                    <el-option v-for="p in porkProducts" :key="String(p.id)" :label="`${p.productId} - ${p.productName}`" :value="p.id" />
                   </el-select>
                 </template>
               </el-table-column>
@@ -111,19 +117,27 @@ import OssUpload from '@/components/OssUpload/index.vue';
 import { usePackEntryOptions } from '../useOptions';
 import { listCuttable, submitCutDone, submitCutOut } from '@/api/djs-warehouse/packEntry';
 import type { CutPartItem, PigCutRecordVO } from '@/api/djs-warehouse/packEntry';
+import { listProduct } from '@/api/djs-warehouse/product';
+import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
 const { t } = useI18n();
 
 const { locations, locationLoading, loadLocations } = usePackEntryOptions();
 
-// 分割部位字典 djs_pig_cut_part：lean/part/bone/skin/scrap
-const CUT_PARTS = [
-  { value: 'lean', label: '瘦肉' },
-  { value: 'part', label: '部位肉' },
-  { value: 'bone', label: '骨' },
-  { value: 'skin', label: '皮' },
-  { value: 'scrap', label: '碎料' }
-] as const;
+// 可选分割产品（按具体产品对齐原型，Kevin 定）：产品主数据 belong_type=pork 的猪肉分割成品
+// （冻五花肉/排骨/肘子/大排 等）。未 seed 时下拉为空——见 _open-issues ❓「分割成品主数据来源」。
+const porkProducts = ref<ProductInfoVO[]>([]);
+const porkProductLoading = ref(false);
+
+async function loadPorkProducts() {
+  porkProductLoading.value = true;
+  try {
+    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork' } as any);
+    porkProducts.value = ((res as any).rows ?? []) as ProductInfoVO[];
+  } finally {
+    porkProductLoading.value = false;
+  }
+}
 
 const cuttable = ref<PigCutRecordVO[]>([]);
 const cuttableLoading = ref(false);
@@ -145,7 +159,7 @@ interface CutFormShape {
   proofOssIds: string | undefined;
 }
 
-const newPart = (): CutPartItem => ({ cutPart: 'lean', productWeight: undefined as unknown as number, productSpec: undefined });
+const newPart = (): CutPartItem => ({ productId: undefined, productWeight: undefined as unknown as number, productSpec: undefined });
 
 const defaultForm = (): CutFormShape => ({
   cutRecordId: '',
@@ -182,7 +196,7 @@ async function handleCutOut() {
   if (!formRef.value) return;
   await formRef.value.validate(async (valid: boolean) => {
     if (!valid) return;
-    const parts = form.value.partItems.filter((p) => p.cutPart && p.productWeight && p.productWeight > 0);
+    const parts = form.value.partItems.filter((p) => p.productId && p.productWeight && p.productWeight > 0);
     if (parts.length === 0) {
       ElMessage.warning(t('djs.warehouse.packEntry.partsRequired'));
       return;
@@ -246,7 +260,7 @@ async function handleCutDone() {
 }
 
 onMounted(async () => {
-  await Promise.all([loadLocations(), loadCuttable()]);
+  await Promise.all([loadLocations(), loadCuttable(), loadPorkProducts()]);
 });
 </script>
 

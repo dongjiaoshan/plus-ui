@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-    <!-- 顶部：门店筛选 + 业态切换 tab -->
+    <!-- 顶部：门店筛选（原型门店在全局右上角；列表门店视角必须带 storeId 过滤） -->
     <el-card shadow="never" class="mb-2">
       <div class="flex items-center gap-3 flex-wrap">
         <span class="text-sm">{{ t('storeDemand.filter.store') }}</span>
@@ -14,9 +14,6 @@
         >
           <el-option v-for="s in storeOptions" :key="String(s.id)" :label="s.storeName" :value="String(s.id)" />
         </el-select>
-        <el-radio-group v-model="currentType" @change="onTypeChange">
-          <el-radio-button v-for="pt in productTypes" :key="pt" :value="pt">{{ t(`storeDemand.productType.${pt}`) }}</el-radio-button>
-        </el-radio-group>
       </div>
     </el-card>
 
@@ -43,11 +40,24 @@
       @page-change="handlePageChange"
     >
       <template #cell-actions="{ row }">
-        <el-button v-if="canEdit(row)" link type="primary" size="small" @click="handleEdit(row)">
-          {{ t('storeDemand.action.edit') }}
-        </el-button>
+        <!-- 待确认（SUBMITTED）：修改 / 删除 -->
+        <template v-if="isPending(row)">
+          <!-- 个人邮寄（礼盒）待确认：仅「查看列表」（原型个人邮寄行） -->
+          <el-button v-if="isMailing(row)" link type="primary" size="small" @click="onViewMailingList(row)">
+            {{ t('storeDemand.action.viewList') }}
+          </el-button>
+          <template v-else>
+            <el-button link type="primary" size="small" @click="handleEdit(row)">
+              {{ t('storeDemand.action.edit') }}
+            </el-button>
+            <el-button v-hasPermi="['djs:store:demand:remove']" link type="danger" size="small" @click="handleDel(row)">
+              {{ t('storeDemand.action.del') }}
+            </el-button>
+          </template>
+        </template>
+        <!-- 已确认（CONFIRMED）：确认收货 -->
         <el-button
-          v-if="canReceive(row)"
+          v-else-if="canReceive(row)"
           v-hasPermi="['djs:store:demand:receive']"
           link
           type="success"
@@ -56,62 +66,50 @@
         >
           {{ t('storeDemand.action.receive') }}
         </el-button>
-        <el-button v-if="canAssignPig(row)" link type="primary" size="small" @click="onAssignPig(row)">
-          {{ t('storeDemand.action.assignPig') }}
-        </el-button>
-        <el-button v-if="canCancel(row)" link type="danger" size="small" @click="onCancel(row)">
-          {{ t('storeDemand.action.cancel') }}
-        </el-button>
-        <el-button link type="info" size="small" @click="onDetail(row)">
-          {{ t('storeDemand.action.detail') }}
-        </el-button>
+        <!-- 已发货 / 确认到店 等终态：无操作 -->
+        <span v-else class="text-placeholder">/</span>
       </template>
     </BizTable>
 
-    <StoreDemandForm ref="formRef" :product-type="currentType" :default-store-id="currentStoreId" @success="fetchList" />
-    <PigAssignDialog ref="pigDialogRef" @success="fetchList" />
+    <!-- 编辑 / 详情用窄表单弹窗（仅 SUBMITTED 行编辑） -->
+    <StoreDemandForm ref="formRef" :default-store-id="currentStoreId" @success="fetchList" />
+    <!-- 新增需求：多产品购物车右抽屉 -->
+    <DemandCartDrawer ref="cartDrawerRef" @success="fetchList" />
   </div>
 </template>
 
 <script setup name="StoreDemand" lang="ts">
-import { useRouter } from 'vue-router';
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import StoreDemandForm from './components/StoreDemandForm.vue';
-import PigAssignDialog from './components/PigAssignDialog.vue';
-import { listStoreDemand, removeStoreDemand, cancelStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
-import type { StoreDemandProductType, StoreDemandStatusCode, StoreDemandVO } from '@/api/djs-store/demand/types';
+import DemandCartDrawer from './components/DemandCartDrawer.vue';
+import { listStoreDemand, removeStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
+import type { StoreDemandVO } from '@/api/djs-store/demand/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
-const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-const productTypes: StoreDemandProductType[] = ['white_bar', 'vegetable', 'gift_box', 'other'];
-
 const tableRef = ref<BizTableExpose>();
-const formRef = ref<{ openCreate: () => void; openEdit: (id: string) => void; openDetail: (id: string) => void }>();
-const pigDialogRef = ref<{ open: (demandId: string, demandNo: string, requiredCount: number) => void }>();
+const formRef = ref<{ openEdit: (id: string) => void; openDetail: (id: string) => void }>();
+const cartDrawerRef = ref<{ open: (storeId: string) => void }>();
 
 const list = ref<StoreDemandVO[]>([]);
 const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const currentType = ref<StoreDemandProductType>('white_bar');
 const currentStoreId = ref<string>('');
 const storeOptions = ref<StoreVO[]>([]);
 
 const searchModel = reactive<Record<string, unknown>>({});
 
+// 原型筛选：需求日期 + 产品名称
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'demandNo', label: t('storeDemand.field.demandNo'), type: 'input' },
-  { field: 'productName', label: t('storeDemand.field.productName'), type: 'input' },
-  { field: 'demandStatus', label: t('storeDemand.field.demandStatus'), type: 'select', dictType: 'djs_demand_status' },
-  { field: 'beginDate', label: t('storeDemand.field.beginDate'), type: 'date' },
-  { field: 'endDate', label: t('storeDemand.field.endDate'), type: 'date' }
+  { field: 'beginDate', label: t('storeDemand.field.demandDate'), type: 'date' },
+  { field: 'productName', label: t('storeDemand.field.productName'), type: 'input' }
 ]);
 
 // 列对齐原型：需求日期/产品名称/产品规格/需求量/单位/需求类型/备注/预计到店重量/需求状态/需求确认时间/需求确认人/操作
@@ -127,17 +125,15 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'demandStatus', label: t('storeDemand.column.demandStatus'), width: 100, align: 'center', dictType: 'djs_demand_status' },
   { prop: 'confirmerTime', label: t('storeDemand.column.confirmerTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'demandConfirmerName', label: t('storeDemand.column.demandConfirmer'), width: 100, align: 'center' },
-  { prop: 'actions', label: t('storeDemand.column.actions'), width: 280, fixed: 'right', align: 'center' }
+  { prop: 'actions', label: t('storeDemand.column.actions'), width: 200, fixed: 'right', align: 'center' }
 ]);
 
-// 仅 SUBMITTED 态可编辑/取消（门店发起后即 SUBMITTED；CONFIRMED 后由仓库主导）
-const canEdit = (r: BizRow) => (r as StoreDemandVO).demandStatus === 'SUBMITTED';
-const canCancel = (r: BizRow) => ['DRAFT', 'SUBMITTED', 'CONFIRMED'].includes((r as StoreDemandVO).demandStatus);
-// 白条业态 + 未排产前可指定猪只
-const canAssignPig = (r: BizRow) =>
-  (r as StoreDemandVO).productType === 'white_bar' && ['SUBMITTED', 'CONFIRMED'].includes((r as StoreDemandVO).demandStatus);
-// 已确认（CONFIRMED）且未收货 → 门店可确认收货（原型「已确认」行才显「确认收货」）
+// 待确认 = SUBMITTED（门店发起后即 SUBMITTED）
+const isPending = (r: BizRow) => (r as StoreDemandVO).demandStatus === 'SUBMITTED';
+// 已确认（CONFIRMED）且未收货 → 门店可确认收货
 const canReceive = (r: BizRow) => (r as StoreDemandVO).demandStatus === 'CONFIRMED' && !(r as StoreDemandVO).receivedTime;
+// 个人邮寄
+const isMailing = (r: BizRow) => (r as StoreDemandVO).demandType === 'mailing';
 
 async function loadStoreOptions() {
   try {
@@ -158,7 +154,6 @@ async function fetchList() {
   try {
     const params = {
       ...searchModel,
-      productType: currentType.value,
       storeId: currentStoreId.value || undefined,
       pageNum: pageNum.value,
       pageSize: pageSize.value
@@ -191,23 +186,21 @@ function onStoreChange() {
   pageNum.value = 1;
   fetchList();
 }
-function onTypeChange() {
-  pageNum.value = 1;
-  fetchList();
-}
 function handleAdd() {
   if (!currentStoreId.value) {
     proxy?.$modal.msgWarning(t('storeDemand.tip.selectStoreFirst'));
     return;
   }
-  // 新增需求 = 跳转购物车整页（原型「新增需求」多产品整页），带门店上下文
-  router.push({ path: '/djs-store/demand/create', query: { storeId: currentStoreId.value } });
+  // 新增需求 = 打开多产品购物车右抽屉（不再整页路由跳转）
+  cartDrawerRef.value?.open(currentStoreId.value);
 }
 function handleEdit(row: BizRow) {
   formRef.value?.openEdit(String(row.id));
 }
-function onDetail(row: BizRow) {
-  formRef.value?.openDetail(String(row.id));
+function onViewMailingList(row: BizRow) {
+  // 个人邮寄（礼盒）子地址清单：后端暂无该接口，先提示
+  proxy?.$modal.msgWarning(t('storeDemand.tip.mailingListPending'));
+  void row;
 }
 async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
@@ -223,25 +216,15 @@ async function onReceive(row: BizRow) {
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
 }
-async function onCancel(row: BizRow) {
-  const r = row as unknown as StoreDemandVO;
-  const { value: remark } = (await (proxy?.$modal as unknown as { prompt: (...a: unknown[]) => Promise<{ value: string }> }).prompt(
-    t('storeDemand.prompt.cancelRemark'),
-    t('storeDemand.action.cancel'),
-    { inputPlaceholder: t('storeDemand.prompt.cancelRemarkPh') }
-  )) as { value: string };
-  await cancelStoreDemand(r.id, remark);
-  proxy?.$modal.msgSuccess(t('common.opSuccess'));
-  fetchList();
-}
-function onAssignPig(row: BizRow) {
-  const r = row as unknown as StoreDemandVO;
-  const required = Number(r.demandQuantity ?? 0);
-  pigDialogRef.value?.open(r.id, r.demandNo, required);
-}
 
 onMounted(async () => {
   await loadStoreOptions();
   fetchList();
 });
 </script>
+
+<style lang="scss" scoped>
+.text-placeholder {
+  color: #c0c4cc;
+}
+</style>

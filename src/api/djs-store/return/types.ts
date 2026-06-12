@@ -47,6 +47,8 @@ export interface StoreReturnVO {
 /** 退回操作批量录入单行 */
 export interface StoreReturnBatchItem {
   productId: string;
+  /** 退回量（果蔬按份/把/盒录入；猪肉可空，仅按重量） */
+  returnQuantity?: number;
   /** 退回重量(kg) */
   returnWeight?: number;
   traceCode?: string;

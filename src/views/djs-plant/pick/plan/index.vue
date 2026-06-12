@@ -45,24 +45,27 @@
         </el-button>
       </template>
     </BizTable>
+
+    <!-- 采摘计划调整抽屉（§6.13：详情/录入走 drawer，不做整页路由页） -->
+    <PickAdjustDrawer ref="adjustDrawerRef" />
   </div>
 </template>
 
 <script setup name="PickPlanIndex" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import ImagePreview from '@/components/ImagePreview/index.vue';
+import PickAdjustDrawer from './components/PickAdjustDrawer.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listPickPlan } from '@/api/djs-plant/pick';
 import type { PickPlanGroupVO, PickPlanQuery } from '@/api/djs-plant/pick/types';
 import { listCrop } from '@/api/djs-plant/crop';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const router = useRouter();
 
 const tableRef = ref<BizTableExpose>();
+const adjustDrawerRef = ref<InstanceType<typeof PickAdjustDrawer>>();
 
 interface PlanRow extends PickPlanGroupVO {
   rowKey: string;
@@ -147,7 +150,7 @@ function handleExport() {
 }
 
 function handleAdjust(row: PlanRow) {
-  router.push(`/djs-plant/pick/adjust?cropId=${row.cropId}&cropName=${encodeURIComponent(row.cropName || '')}`);
+  adjustDrawerRef.value?.open({ cropId: row.cropId, cropName: row.cropName });
 }
 
 onMounted(() => {

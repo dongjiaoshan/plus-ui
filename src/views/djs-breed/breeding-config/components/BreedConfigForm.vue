@@ -10,10 +10,20 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
+          <el-form-item :label="t('breeding.column.motherName')">
+            <el-input :model-value="motherName" readonly :placeholder="t('breeding.placeholder.autoFillName')" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
           <el-form-item :label="t('breeding.field.fatherCode')" prop="fatherCode">
             <el-select v-model="form.fatherCode" :placeholder="t('breeding.placeholder.fatherCode')" filterable clearable>
               <el-option v-for="item in candidateOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item :label="t('breeding.column.fatherName')">
+            <el-input :model-value="fatherName" readonly :placeholder="t('breeding.placeholder.autoFillName')" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -22,6 +32,11 @@
               <el-option v-for="item in candidateOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
             <div class="text-xs text-gray-400 mt-1">{{ t('breeding.tip.cubMustExistFirst') }}</div>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item :label="t('breeding.column.offspringName')">
+            <el-input :model-value="cubName" readonly :placeholder="t('breeding.placeholder.autoFillName')" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -69,8 +84,16 @@ const defaultForm = (breedStrain = 1): BreedConfigFormType => ({
 
 const form = ref<BreedConfigFormType>(defaultForm());
 
-/** 同 breedStrain 范畴下的候选品种/品系下拉 */
-const candidateOptions = ref<Array<{ label: string; value: string }>>([]);
+/** 同 breedStrain 范畴下的候选品种/品系下拉（name 用于选码后的名称只读框回显） */
+const candidateOptions = ref<Array<{ label: string; value: string; name: string }>>([]);
+
+/** code → name 反查（候选源里取，找不到返回空串） */
+const nameOf = (code: string): string => candidateOptions.value.find((o) => o.value === code)?.name ?? '';
+
+/** 名称只读框联动：选中 code 后自动带出名称，仅展示不提交 */
+const motherName = computed(() => nameOf(form.value.motherCode));
+const fatherName = computed(() => nameOf(form.value.fatherCode));
+const cubName = computed(() => nameOf(form.value.cubCode));
 
 const rules = computed(() => ({
   motherCode: [{ required: true, message: t('breeding.rule.motherCode.required'), trigger: 'change' }],
@@ -92,7 +115,8 @@ async function loadCandidates(breedStrain: number) {
   const rows = (res.rows ?? res.data ?? []) as BreedInfoVO[];
   candidateOptions.value = rows.map((r) => ({
     label: `${r.breedStrainName} (${r.breedStrainCode})`,
-    value: r.breedStrainCode
+    value: r.breedStrainCode,
+    name: r.breedStrainName
   }));
 }
 

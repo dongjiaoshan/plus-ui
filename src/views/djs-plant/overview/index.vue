@@ -77,6 +77,9 @@
         </div>
       </el-col>
     </el-row>
+
+    <!-- 作物详情抽屉（整卡点击下钻打开） -->
+    <CropDetailDrawer v-model="detailVisible" :crop-id="detailCropId" :crop-name="detailCropName" />
   </div>
 </template>
 
@@ -84,16 +87,20 @@
 import { getPlantOverviewSummary } from '@/api/djs-plant/overview';
 import type { CropOverviewCardVO, PlantOverviewSummaryVO } from '@/api/djs-plant/overview/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
+import CropDetailDrawer from './components/CropDetailDrawer.vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 
 const { t } = useI18n();
-const router = useRouter();
 
 const summary = ref<PlantOverviewSummaryVO | null>(null);
 const crops = ref<CropOverviewCardVO[]>([]);
 const thumbUrlMap = ref<Record<string, string>>({});
 const loading = ref(false);
+
+// 作物详情抽屉（替代旧 /djs-plant/overview/crop-detail 整页路由，§6.13 抽屉化）
+const detailVisible = ref(false);
+const detailCropId = ref<string>('');
+const detailCropName = ref<string>('');
 
 async function loadSummary() {
   loading.value = true;
@@ -126,9 +133,11 @@ async function loadThumbUrls() {
   }
 }
 
-/** 整卡点击下钻：携 cropId（+ cropName 便于详情页标题回填）。 */
+/** 整卡点击下钻：打开作物详情抽屉（携 cropId + cropName 回填标题）。 */
 function goCropDetail(c: CropOverviewCardVO) {
-  router.push({ path: '/djs-plant/overview/crop-detail', query: { cropId: c.cropId, cropName: c.cropName ?? '' } });
+  detailCropId.value = c.cropId;
+  detailCropName.value = c.cropName ?? '';
+  detailVisible.value = true;
 }
 
 onMounted(loadSummary);
@@ -146,10 +155,12 @@ onMounted(loadSummary);
     .kpi-card {
       background: var(--el-bg-color-overlay, #fff);
       border: 1px solid var(--el-border-color-lighter);
-      border-radius: 6px;
-      padding: 14px 16px;
+      border-radius: 8px;
+      padding: 16px;
       margin-bottom: 12px;
       text-align: center;
+      height: 100%;
+      box-sizing: border-box;
 
       .kpi-label {
         font-size: 13px;
@@ -175,17 +186,22 @@ onMounted(loadSummary);
   }
 
   .crop-card {
+    background: var(--el-bg-color-overlay, #fff);
     border: 1px solid var(--el-border-color-lighter);
     border-radius: 8px;
-    padding: 14px;
+    padding: 16px;
+    height: 100%;
+    box-sizing: border-box;
     cursor: pointer;
     transition:
-      box-shadow 0.2s,
-      border-color 0.2s;
+      box-shadow 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
 
     &:hover {
       border-color: var(--el-color-primary);
-      box-shadow: 0 2px 12px rgb(0 0 0 / 8%);
+      box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+      transform: translateY(-2px);
     }
 
     .crop-head {

@@ -34,6 +34,8 @@ export interface StoreLedgerLineVO {
   saleQty: number | string;
   giftQty: number | string;
   returnQty: number | string;
+  /** 退回量（门店退回仓库，原型只读） */
+  whReturnQty: number | string;
   lossQty: number | string;
   closingQty: number | string;
   operatorId?: string;
@@ -52,8 +54,10 @@ export interface StoreLedgerCandidateVO {
   saleQty: number | string;
   /** 预填入库量（V1 默认 0 手填） */
   inboundQty: number | string;
-  /** 预填退货量（顾客退货当日聚合） */
+  /** 预填退货量（顾客退货 customer_to_store 当日聚合） */
   returnQty: number | string;
+  /** 预填退回量（门店退回仓库 store_to_warehouse 当日聚合，原型只读） */
+  whReturnQty: number | string;
 }
 
 /** 当日盘点整表批量提交单行。 */
@@ -64,6 +68,8 @@ export interface StoreLedgerBatchItem {
   saleQty?: number | string;
   giftQty?: number | string;
   returnQty?: number | string;
+  /** 退回量（门店退回仓库，原型只读） */
+  whReturnQty?: number | string;
   lossQty?: number | string;
 }
 

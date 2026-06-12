@@ -46,8 +46,20 @@ export interface BarnVO {
   barnStatus: number;
   remark?: string;
   createTime?: string;
+  updateTime?: string;
+  /** 更新人昵称 */
+  updateByName?: string;
+  /** 大栏数量（后端按 pen_type=big 实时统计） */
+  bigPenCount?: number;
+  /** 限位栏数量（后端按 pen_type=stall 实时统计） */
+  limitPenCount?: number;
+  /** 产床数量（后端按 pen_type=farrow 实时统计） */
+  bedCount?: number;
+  /** 当前猪只存栏数量（后端实时统计存活猪只） */
+  liveCount?: number;
 }
 
+/** 编辑栋舍（名称 / 类型 / 状态 / 备注；栏位数量在新建时定，编辑不改） */
 export interface BarnForm {
   id?: number | string;
   barnCode: string;
@@ -55,6 +67,16 @@ export interface BarnForm {
   barnType: string;
   capacity?: number;
   barnStatus: number;
+  remark?: string;
+}
+
+/** 新建栋舍（对齐原型「新建栋舍」弹窗：名称 / 类型 / 三类栏位数量自动生成栏位） */
+export interface BarnCreateForm {
+  barnName: string;
+  barnType: string;
+  bigPenCount: number;
+  limitPenCount: number;
+  bedCount: number;
   remark?: string;
 }
 
@@ -72,13 +94,32 @@ export interface PenVO {
   barnId: number | string;
   penCode: string;
   penName: string;
-  /** 字典 djs_pen_type：male / female / stall / group */
+  /** 字典 djs_pen_type：big 大栏 / stall 限位栏 / farrow 产床 */
   penType: string;
   capacity?: number;
   currentCount?: number;
   penStatus: number;
   remark?: string;
   createTime?: string;
+}
+
+/** 栏位详情（栏位详情子页 3-tab：大栏 / 限位栏 / 产床） */
+export interface PenDetailVO {
+  id: number | string;
+  penCode: string;
+  /** 栏位序号名（如「1栏」） */
+  penName: string;
+  /** big / stall / farrow */
+  penType: string;
+  capacity?: number;
+  /** 大栏：猪只头数 */
+  headCount?: number;
+  /** 限位栏 / 产床：占栏猪只耳号（空栏为 null） */
+  earNo?: string;
+  /** 占栏猪只 ID（耳号链接跳详情用） */
+  pigId?: number | string;
+  /** 产床：占栏母猪最近一次分娩的活产仔猪数 */
+  pigletCount?: number;
 }
 
 export interface PenForm {

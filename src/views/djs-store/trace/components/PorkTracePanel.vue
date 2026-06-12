@@ -1,12 +1,9 @@
 <template>
-  <div class="p-2 trace-pork">
+  <div class="trace-pork">
     <el-row :gutter="16">
-      <!-- 左：追溯猪只选择 + 部位卡 -->
-      <el-col :xs="24" :md="16">
+      <!-- 左：追溯猪只 picker（chip）+ 5 张零售部位卡（带产品图） -->
+      <el-col :xs="24" :md="17">
         <el-card shadow="never">
-          <template #header>
-            <span class="title">{{ t('storeTrace.pork.pickPig') }}</span>
-          </template>
           <div v-loading="pigLoading" class="pig-chips">
             <el-tag
               v-for="p in pigs"
@@ -21,8 +18,6 @@
             <el-empty v-if="!pigLoading && !pigs.length" :description="t('storeTrace.pork.noPig')" :image-size="60" />
           </div>
 
-          <el-divider />
-          <div class="section-label">{{ t('storeTrace.pork.pickCut') }}</div>
           <div class="cut-grid">
             <div
               v-for="c in cutOptions"
@@ -31,19 +26,28 @@
               :class="{ active: form.cutLabel === c.value }"
               @click="form.cutLabel = c.value"
             >
-              <el-icon class="cut-ico"><Food /></el-icon>
+              <div class="cut-img-wrap">
+                <el-image v-if="cutImgMap[c.label]" :src="cutImgMap[c.label]" fit="cover" class="cut-img" :preview-disabled="true">
+                  <template #error>
+                    <div class="cut-img-ph"><el-icon><Food /></el-icon></div>
+                  </template>
+                </el-image>
+                <div v-else class="cut-img-ph"><el-icon><Food /></el-icon></div>
+              </div>
               <div class="cut-name">{{ c.label }}</div>
             </div>
           </div>
         </el-card>
       </el-col>
 
-      <!-- 右：猪只信息 + 重量 + 生码打印 -->
-      <el-col :xs="24" :md="8">
+      <!-- 右：操作面板（追溯猪只信息 + 追溯产品 + 重量 + 追溯码打印） -->
+      <el-col :xs="24" :md="7">
         <el-card shadow="never" class="op-card">
           <template #header>
             <span class="title">{{ t('storeTrace.pork.opPanel') }}</span>
           </template>
+
+          <div class="section-label">{{ t('storeTrace.pork.tracePig') }}</div>
           <el-descriptions :column="1" border size="small" class="pig-info">
             <el-descriptions-item :label="t('storeTrace.pork.pigId')">{{ selectedPig?.earNo ?? '-' }}</el-descriptions-item>
             <el-descriptions-item :label="t('storeTrace.pork.pigSex')">
@@ -51,12 +55,26 @@
               <span v-else>-</span>
             </el-descriptions-item>
             <el-descriptions-item :label="t('storeTrace.pork.pigBreed')">{{ selectedPig?.pigBreedLabel ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item :label="t('storeTrace.pork.ageDays')">{{ selectedPig?.ageDays != null ? selectedPig.ageDays + ' ' + t('storeTrace.pork.daysUnit') : '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="t('storeTrace.pork.ageDays')">
+              {{ selectedPig?.ageDays != null ? selectedPig.ageDays + ' ' + t('storeTrace.pork.daysUnit') : '-' }}
+            </el-descriptions-item>
+          </el-descriptions>
+
+          <div class="section-label">{{ t('storeTrace.pork.traceProduct') }}</div>
+          <el-descriptions :column="1" border size="small" class="product-info">
+            <el-descriptions-item :label="t('storeTrace.pork.productName')">{{ form.cutLabel ?? '-' }}</el-descriptions-item>
           </el-descriptions>
 
           <div class="weight-box">
             <div class="section-label">{{ t('storeTrace.pork.weight') }}</div>
-            <el-input-number v-model="form.weight" :min="0.01" :precision="2" :step="1" :placeholder="t('storeTrace.pork.weightPlaceholder')" style="width: 100%" />
+            <el-input-number
+              v-model="form.weight"
+              :min="0.01"
+              :precision="2"
+              :step="1"
+              :placeholder="t('storeTrace.pork.weightPlaceholder')"
+              style="width: 100%"
+            />
           </div>
 
           <el-button
@@ -75,20 +93,40 @@
   </div>
 </template>
 
-<script setup name="StoreTracePork" lang="ts">
+<script setup name="PorkTracePanel" lang="ts">
 import { Food } from '@element-plus/icons-vue';
 import { listTraceablePig, genStoreTraceCode } from '@/api/djs-store/trace';
 import type { TraceablePigVO } from '@/api/djs-store/trace/types';
+import { listImage } from '@/api/djs-common/image';
+import type { ImageLibraryVO } from '@/api/djs-common/image/types';
+import frontLeg from '@/assets/images/pork-cut/front-leg.png';
+import porkBelly from '@/assets/images/pork-cut/pork-belly.png';
+import ribsImg from '@/assets/images/pork-cut/ribs.png';
+import elbowImg from '@/assets/images/pork-cut/elbow.png';
+import porkChop from '@/assets/images/pork-cut/pork-chop.png';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_pig_sex, djs_pork_cut_product } = toRefs<any>(proxy?.useDict('djs_pig_sex', 'djs_pork_cut_product'));
+const { djs_pig_sex, djs_pork_cut_product } = toRefs<Record<string, { label: string; value: string }[]>>(
+  proxy?.useDict('djs_pig_sex', 'djs_pork_cut_product')
+);
 
 const pigs = ref<TraceablePigVO[]>([]);
 const pigLoading = ref(false);
 const genLoading = ref(false);
 const selectedEarNo = ref<string>();
+
+// 部位中文名 → 本地原型抠图兜底（前腿肉/五花肉/排骨/肘子/大排，从原型截图裁出）；图库命中则覆盖
+const LOCAL_CUT_IMG: Record<string, string> = {
+  前腿肉: frontLeg,
+  五花肉: porkBelly,
+  排骨: ribsImg,
+  肘子: elbowImg,
+  大排: porkChop
+};
+// 部位中文名 → imageUrl：ADR-0014 公共图库按 imageName 精确/别名命中则用图库图，否则用本地兜底图
+const cutImgMap = ref<Record<string, string>>({ ...LOCAL_CUT_IMG });
 
 const form = reactive<{ cutLabel?: string; weight?: number }>({ cutLabel: undefined, weight: undefined });
 
@@ -103,6 +141,29 @@ async function loadPigs() {
     pigs.value = (res.rows ?? res.data ?? []) as TraceablePigVO[];
   } finally {
     pigLoading.value = false;
+  }
+}
+
+// 从公共图库按部位名拉图（前腿肉/五花肉/排骨/肘子/大排），命中 imageUrl 用真实图，未命中保持占位
+async function loadCutImages() {
+  const labels = cutOptions.value.map((c) => c.label).filter(Boolean);
+  if (!labels.length) return;
+  try {
+    const res = await listImage({ pageNum: 1, pageSize: 500, status: '0' });
+    const rows = ((res as unknown as { rows?: ImageLibraryVO[]; data?: ImageLibraryVO[] }).rows ?? []) as ImageLibraryVO[];
+    const map: Record<string, string> = { ...LOCAL_CUT_IMG };
+    labels.forEach((label) => {
+      const hit = rows.find(
+        (r) =>
+          r.imageUrl &&
+          (r.imageName === label || (r.aliases ?? '').split(',').map((a) => a.trim()).includes(label))
+      );
+      if (hit?.imageUrl) map[label] = hit.imageUrl;
+    });
+    cutImgMap.value = map;
+  } catch (e) {
+    console.warn('[PorkTracePanel] loadCutImages failed', e);
+    cutImgMap.value = { ...LOCAL_CUT_IMG };
   }
 }
 
@@ -139,7 +200,10 @@ function printLabel(code: string, cut: string) {
   w.print();
 }
 
-onMounted(() => loadPigs());
+onMounted(async () => {
+  await loadPigs();
+  loadCutImages();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -150,10 +214,12 @@ onMounted(() => loadPigs());
 
   .pig-chips {
     min-height: 48px;
+    margin-bottom: 20px;
 
     .pig-chip {
       margin: 0 8px 8px 0;
       cursor: pointer;
+      font-size: 14px;
     }
   }
 
@@ -165,8 +231,8 @@ onMounted(() => loadPigs());
 
   .cut-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
 
     .cut-card {
       display: flex;
@@ -188,20 +254,43 @@ onMounted(() => loadPigs());
         background: #fdf6ec;
       }
 
-      .cut-ico {
-        font-size: 28px;
-        color: #e6a23c;
+      .cut-img-wrap {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #f5f7fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .cut-img {
+          width: 100%;
+          height: 100%;
+        }
+
+        .cut-img-ph {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #c0c4cc;
+          font-size: 32px;
+        }
       }
 
       .cut-name {
-        margin-top: 8px;
+        margin-top: 10px;
         font-size: 14px;
+        font-weight: 500;
       }
     }
   }
 
   .op-card {
-    .pig-info {
+    .pig-info,
+    .product-info {
       margin-bottom: 16px;
     }
 

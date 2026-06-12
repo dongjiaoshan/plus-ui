@@ -50,6 +50,9 @@ export interface PigCutRecordVO {
   locationName?: string;
 }
 
+/** 发送位置字典 djs_pack_send_dest：platform 发货月台 / mail 邮寄 / gift 礼盒 */
+export type DeliverDest = 'platform' | 'mail' | 'gift';
+
 /** 肉品/其他产品打包 BO（dry 口：选目标 SKU） */
 export interface DryPackBo {
   sourceInhouseId: number | string;
@@ -58,6 +61,7 @@ export interface DryPackBo {
   productUnit: string;
   locationId: number | string;
   storeId?: number | string;
+  deliverDest?: DeliverDest;
   productSpec?: string;
   proofOssIds?: string;
   remark?: string;
@@ -69,6 +73,7 @@ export interface GiftPackBo {
   packBoxCount: number;
   locationId: number | string;
   storeId?: number | string;
+  deliverDest?: DeliverDest;
   proofOssIds?: string;
   remark?: string;
 }
@@ -82,14 +87,34 @@ export interface VegPackBo {
   materialConsume?: number;
   materialId?: number | string;
   storeId?: number | string;
+  deliverDest?: DeliverDest;
   productSpec?: string;
   proofOssIds?: string;
   remark?: string;
 }
 
-/** 分割部位明细 */
+/** 打包提交结果（确认并打印追溯码用） */
+export interface PackSubmitResultVO {
+  id: number | string;
+  traceCode?: string;
+}
+
+/** 某产品各门店未发货需求份数（底部「门店(N份)」标签条） */
+export interface StoreDemandCopiesVO {
+  storeId: number | string;
+  storeName: string;
+  copies: number;
+}
+
+/**
+ * 分割部位明细。
+ *
+ * 按具体产品对齐原型（Kevin 定）：分割成品按 productId 录入（冻五花肉/排骨/肘子/大排 等，belong_type=pork）；
+ * cutPart 5 部位枚举为向后兼容回落项，productId 非空时优先。两者至少传一个。
+ */
 export interface CutPartItem {
-  cutPart: 'lean' | 'part' | 'bone' | 'skin' | 'scrap';
+  productId?: number | string;
+  cutPart?: 'lean' | 'part' | 'bone' | 'skin' | 'scrap';
   productWeight: number;
   productSpec?: string;
 }
@@ -131,19 +156,24 @@ export interface WhiteBarOutBo {
 
 // ==================== 打包提交 ====================
 
-/** 肉品/其他产品打包（dry 口） → 返新 production.id */
-export const submitDryPack = (data: DryPackBo): AxiosPromise<number> => {
+/** 肉品/其他产品打包（dry 口） → 返 {id, traceCode} */
+export const submitDryPack = (data: DryPackBo): AxiosPromise<PackSubmitResultVO> => {
   return request({ url: '/djs/warehouse/packEntry/dry', method: 'post', data });
 };
 
-/** 礼盒打包 → 返新 production.id */
-export const submitGiftPack = (data: GiftPackBo): AxiosPromise<number> => {
+/** 礼盒打包 → 返 {id, traceCode} */
+export const submitGiftPack = (data: GiftPackBo): AxiosPromise<PackSubmitResultVO> => {
   return request({ url: '/djs/warehouse/packEntry/gift', method: 'post', data });
 };
 
-/** 果蔬打包 → 返新 production.id */
-export const submitVegPack = (data: VegPackBo): AxiosPromise<number> => {
+/** 果蔬打包 → 返 {id, traceCode} */
+export const submitVegPack = (data: VegPackBo): AxiosPromise<PackSubmitResultVO> => {
   return request({ url: '/djs/warehouse/packEntry/veg', method: 'post', data });
+};
+
+/** 某产品各门店未发货需求份数（底部「门店(N份)」标签条） */
+export const listStoreDemand = (productId: number | string): AxiosPromise<StoreDemandCopiesVO[]> => {
+  return request({ url: '/djs/warehouse/packEntry/storeDemand', method: 'get', params: { productId } });
 };
 
 // ==================== 白条分割 ====================

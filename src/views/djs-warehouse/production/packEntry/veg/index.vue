@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-    <SkuPackForm kind="veg" :product-type="1" :title="t('djs.warehouse.packEntry.vegTitle')" />
+    <SkuPackForm kind="veg" :product-type="1" :title="t('djs.warehouse.packEntry.vegTitle')" plot-group />
   </div>
 </template>
 

@@ -1,35 +1,30 @@
 <template>
-  <div class="p-2 ledger-entry">
-    <el-card shadow="never">
-      <template #header>
-        <div class="entry-header">
-          <span class="title">{{ t('storeLedger.entry.title') }}</span>
-          <div class="entry-tools">
-            <el-select
-              v-model="storeId"
-              filterable
-              :placeholder="t('storeLedger.entry.storePlaceholder')"
-              class="store-select"
-              @change="loadCandidates"
-            >
-              <el-option v-for="s in storeOptions" :key="s.id" :label="s.storeName" :value="String(s.id)" />
-            </el-select>
-            <el-date-picker
-              v-model="ledgerDate"
-              type="date"
-              value-format="YYYY-MM-DD"
-              :placeholder="t('storeLedger.entry.datePlaceholder')"
-              :clearable="false"
-              @change="loadCandidates"
-            />
-          </div>
-        </div>
-      </template>
+  <!-- 新增当日盘点：宽抽屉整表录入，点蒙层可关（保持 Element Plus 默认）。对齐原型「门店盘点>新增当日盘点」矩阵。 -->
+  <el-drawer v-model="visible" :title="t('storeLedger.entry.title')" direction="rtl" size="80%" append-to-body destroy-on-close>
+    <div class="ledger-entry">
+      <div class="entry-tools">
+        <el-select
+          v-model="storeId"
+          filterable
+          :placeholder="t('storeLedger.entry.storePlaceholder')"
+          class="store-select"
+          @change="loadCandidates"
+        >
+          <el-option v-for="s in storeOptions" :key="s.id" :label="s.storeName" :value="String(s.id)" />
+        </el-select>
+        <el-date-picker
+          v-model="ledgerDate"
+          type="date"
+          value-format="YYYY-MM-DD"
+          :placeholder="t('storeLedger.entry.datePlaceholder')"
+          :clearable="false"
+          @change="loadCandidates"
+        />
+      </div>
 
       <el-table v-loading="loading" :data="rows" border stripe class="entry-table">
-        <el-table-column type="index" :label="t('storeLedger.column.index')" width="55" align="center" fixed="left" />
-        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="160" show-overflow-tooltip fixed="left" />
-        <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="70" align="center" />
+        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" />
+        <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" />
         <el-table-column :label="t('storeLedger.column.openingQty')" width="130" align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.openingQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
@@ -57,12 +52,12 @@
         </el-table-column>
         <el-table-column :label="t('storeLedger.column.returnedQty')" width="100" align="right">
           <template #default="{ row }">
-            <span class="text-muted">{{ row.returnQty }}</span>
+            <span class="text-muted">{{ row.whReturnQty }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.lossQty')" width="130" align="center">
+        <el-table-column :label="t('storeLedger.column.lossQty')" width="100" align="right">
           <template #default="{ row }">
-            <el-input-number v-model="row.lossQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
+            <span class="text-muted">{{ row.lossQty }}</span>
           </template>
         </el-table-column>
         <el-table-column :label="t('storeLedger.column.closingQty')" width="110" align="right" fixed="right">
@@ -73,28 +68,28 @@
       </el-table>
 
       <el-empty v-if="!loading && !rows.length" :description="t('storeLedger.entry.emptyCandidates')" />
+    </div>
 
-      <div class="entry-footer">
-        <el-button @click="goBack">{{ t('common.back') }}</el-button>
-        <el-button type="primary" :loading="submitLoading" :disabled="!rows.length || !storeId" @click="handleSubmit">
-          {{ t('storeLedger.entry.submit') }}
-        </el-button>
-      </div>
-    </el-card>
-  </div>
+    <template #footer>
+      <el-button @click="visible = false">{{ t('common.cancel') }}</el-button>
+      <el-button type="primary" :loading="submitLoading" :disabled="!rows.length || !storeId" @click="handleSubmit">
+        {{ t('storeLedger.entry.submit') }}
+      </el-button>
+    </template>
+  </el-drawer>
 </template>
 
-<script setup name="StoreLedgerEntry" lang="ts">
+<script setup name="StoreCheckEntryDrawer" lang="ts">
 import { listStoreLedgerCandidates, batchSaveStoreLedger } from '@/api/djs-store/ledger';
 import type { StoreLedgerBatchItem, StoreLedgerCandidateVO } from '@/api/djs-store/ledger/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const router = useRouter();
+
+const emit = defineEmits<{ saved: [] }>();
 
 interface EntryRow {
   productId: string;
@@ -105,6 +100,9 @@ interface EntryRow {
   saleQty: number;
   giftQty: number;
   returnQty: number;
+  /** 退回量（门店退回仓库，原型只读，后端预填） */
+  whReturnQty: number;
+  /** 损耗量（原型只读，V1 默认 0） */
   lossQty: number;
   closingQty: number;
 }
@@ -116,6 +114,7 @@ function todayStr(): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
+const visible = ref(false);
 const storeId = ref<string>();
 const ledgerDate = ref<string>(todayStr());
 const loading = ref(false);
@@ -129,10 +128,17 @@ function nz(v: number | string | undefined): number {
 }
 
 function recalc(row: EntryRow) {
-  row.closingQty =
-    Number(
-      (nz(row.openingQty) + nz(row.inboundQty) - nz(row.saleQty) - nz(row.giftQty) - nz(row.returnQty) - nz(row.lossQty)).toFixed(2)
-    );
+  row.closingQty = Number(
+    (
+      nz(row.openingQty) +
+      nz(row.inboundQty) -
+      nz(row.saleQty) -
+      nz(row.giftQty) -
+      nz(row.returnQty) -
+      nz(row.whReturnQty) -
+      nz(row.lossQty)
+    ).toFixed(2)
+  );
 }
 
 async function loadStoreOptions() {
@@ -140,7 +146,7 @@ async function loadStoreOptions() {
     const res = await listStore({ pageNum: 1, pageSize: 200 });
     storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
   } catch (e) {
-    console.warn('[StoreLedgerEntry] loadStoreOptions failed', e);
+    console.warn('[StoreCheckEntryDrawer] loadStoreOptions failed', e);
     storeOptions.value = [];
   }
 }
@@ -164,6 +170,7 @@ async function loadCandidates() {
         saleQty: nz(c.saleQty),
         giftQty: 0,
         returnQty: nz(c.returnQty),
+        whReturnQty: nz(c.whReturnQty),
         lossQty: 0,
         closingQty: 0
       };
@@ -187,54 +194,45 @@ async function handleSubmit() {
     saleQty: r.saleQty,
     giftQty: r.giftQty,
     returnQty: r.returnQty,
+    whReturnQty: r.whReturnQty,
     lossQty: r.lossQty
   }));
   submitLoading.value = true;
   try {
     await batchSaveStoreLedger({ storeId: storeId.value, ledgerDate: ledgerDate.value, items });
     proxy?.$modal.msgSuccess(t('common.opSuccess'));
-    router.push({ path: '/djs-store/store-mgmt/check' });
+    visible.value = false;
+    emit('saved');
   } finally {
     submitLoading.value = false;
   }
 }
 
-function goBack() {
-  router.push({ path: '/djs-store/check/index' });
+async function open() {
+  storeId.value = undefined;
+  ledgerDate.value = todayStr();
+  rows.value = [];
+  visible.value = true;
+  await loadStoreOptions();
 }
 
-onMounted(async () => {
-  await loadStoreOptions();
-});
+defineExpose({ open });
 </script>
 
 <style lang="scss" scoped>
 .ledger-entry {
-  .entry-header {
+  .entry-tools {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
     gap: 12px;
+    margin-bottom: 12px;
 
-    .title {
-      font-weight: 600;
-    }
-
-    .entry-tools {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .store-select {
-        width: 220px;
-      }
+    .store-select {
+      width: 220px;
     }
   }
 
   .entry-table {
-    margin-top: 8px;
-
     .cell-num {
       width: 100%;
     }
@@ -247,11 +245,6 @@ onMounted(async () => {
 
   .text-muted {
     color: #909399;
-  }
-
-  .entry-footer {
-    margin-top: 24px;
-    text-align: center;
   }
 }
 </style>

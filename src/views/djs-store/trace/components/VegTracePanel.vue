@@ -1,34 +1,32 @@
 <template>
-  <div class="p-2">
-    <BizTable
-      :data="list"
-      :total="total"
-      :loading="loading"
-      :columns="columns"
-      :search-schema="searchSchema"
-      :search-model="searchModel"
-      :page-num="pageNum"
-      :page-size="pageSize"
-      row-key="id"
-      :selectable="false"
-      :show-add="false"
-      :show-row-edit="false"
-      :show-export="false"
-      perm-prefix="djs:warehouse:trace"
-      @search="handleSearch"
-      @reset="handleReset"
-      @page-change="handlePageChange"
-    >
-      <template #action="{ row }">
-        <el-button v-hasPermi="['djs:warehouse:trace:print']" link type="primary" icon="Printer" @click="handlePrint(row)">
-          {{ t('storeTrace.veg.print') }}
-        </el-button>
-      </template>
-    </BizTable>
-  </div>
+  <BizTable
+    :data="list"
+    :total="total"
+    :loading="loading"
+    :columns="columns"
+    :search-schema="searchSchema"
+    :search-model="searchModel"
+    :page-num="pageNum"
+    :page-size="pageSize"
+    row-key="id"
+    :selectable="false"
+    :show-add="false"
+    :show-row-edit="false"
+    :show-export="false"
+    perm-prefix="djs:warehouse:trace"
+    @search="handleSearch"
+    @reset="handleReset"
+    @page-change="handlePageChange"
+  >
+    <template #action="{ row }">
+      <el-button v-hasPermi="['djs:warehouse:trace:print']" link type="primary" icon="Printer" @click="handlePrint(row)">
+        {{ t('storeTrace.veg.print') }}
+      </el-button>
+    </template>
+  </BizTable>
 </template>
 
-<script setup name="StoreTraceVeg" lang="ts">
+<script setup name="VegTracePanel" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
 import { listTrace } from '@/api/warehouse/trace';
@@ -44,10 +42,12 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const searchModel = reactive<Record<string, unknown>>({ produceNo: undefined, productName: undefined });
+// 原型搜索：到店日期 / 序号 / 产品名称
+const searchModel = reactive<Record<string, unknown>>({ arrivalDate: undefined, serialNo: undefined, productName: undefined });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'produceNo', label: t('storeTrace.veg.produceNo'), type: 'input' },
+  { field: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), type: 'date' },
+  { field: 'serialNo', label: t('storeTrace.veg.serialNo'), type: 'input' },
   { field: 'productName', label: t('storeTrace.veg.productName'), type: 'input' }
 ]);
 
@@ -68,14 +68,19 @@ const columns = computed<BizTableColumn[]>(() => [
 async function fetchList() {
   loading.value = true;
   try {
+    const arrival = (searchModel.arrivalDate as string) || undefined;
     const query: TraceCodeQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       codeType: 'veg',
-      produceCode: (searchModel.produceNo as string) || undefined,
-      productName: (searchModel.productName as string) || undefined
+      productName: (searchModel.productName as string) || undefined,
+      // 到店日期：单日 → beginDate/endDate 同日（后端按生成时间区间过滤）
+      beginDate: arrival ? `${arrival} 00:00:00` : undefined,
+      endDate: arrival ? `${arrival} 23:59:59` : undefined
     };
-    const res = await listTrace(query);
+    // 序号精确查：后端 TraceCodeQuery 暂无 serialNo 过滤（backendGap），先随参带上，后端补后即生效
+    const serialNo = (searchModel.serialNo as string) || undefined;
+    const res = await listTrace({ ...query, serialNo } as TraceCodeQuery & { serialNo?: string });
     list.value = (res.rows ?? res.data ?? []) as TraceCodeVO[];
     total.value = res.total ?? 0;
   } finally {
@@ -99,7 +104,7 @@ function handlePageChange(p: number, s: number) {
   fetchList();
 }
 
-// 追溯码打印：浏览器打印一张含追溯码的标签（V1 简版，jsPDF 批量打印复用见 warehouse/trace）
+// 追溯码打印：浏览器打印一张含追溯码的标签（V1 简版）
 function handlePrint(row: BizRow) {
   const code = String((row as unknown as TraceCodeVO).produceCode ?? '');
   const name = String((row as unknown as TraceCodeVO).productName ?? '');

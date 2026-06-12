@@ -9,7 +9,7 @@
         </el-col>
         <el-col :span="12">
           <el-form-item :label="t('storeDemand.field.productType')">
-            <el-tag size="default" :type="productTypeColor">{{ t(`storeDemand.productType.${props.productType}`) }}</el-tag>
+            <el-tag size="default" :type="productTypeColor">{{ t(`storeDemand.productType.${effectiveType}`) }}</el-tag>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -95,7 +95,7 @@ import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 
-const props = defineProps<{ productType: StoreDemandProductType; defaultStoreId?: string }>();
+const props = defineProps<{ productType?: StoreDemandProductType; defaultStoreId?: string }>();
 const emit = defineEmits<{ (e: 'success'): void }>();
 
 const { t } = useI18n();
@@ -114,11 +114,14 @@ const baseForm = (): StoreDemandForm => ({
   storeId: props.defaultStoreId ?? '',
   productId: '',
   productName: '',
-  productType: props.productType,
+  productType: props.productType ?? 'other',
   demandQuantity: undefined as unknown as number,
   productUnit: ''
 });
 const form = reactive<StoreDemandForm>(baseForm());
+
+/** 业态优先取已载入单据的落库业态，其次取传入默认值，最后兜底 other。 */
+const effectiveType = computed<StoreDemandProductType>(() => form.productType ?? props.productType ?? 'other');
 
 const storeOptions = ref<StoreVO[]>([]);
 const productOptions = ref<ProductInfoVO[]>([]);
@@ -135,7 +138,7 @@ async function loadStoreOptions() {
 
 async function loadProductOptions() {
   try {
-    const belongType = props.productType === 'other' ? undefined : props.productType;
+    const belongType = effectiveType.value === 'other' ? undefined : effectiveType.value;
     const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0 });
     productOptions.value = ((res as unknown as { rows?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
   } catch (e) {
@@ -153,7 +156,7 @@ function onProductSelect(productSnowflakeId: string) {
 }
 
 const productTypeColor = computed(() => {
-  switch (props.productType) {
+  switch (effectiveType.value) {
     case 'white_bar':
       return 'danger';
     case 'vegetable':

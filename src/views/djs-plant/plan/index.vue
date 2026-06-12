@@ -1,14 +1,12 @@
 <template>
   <div class="p-2">
-    <!-- 顶部 5 KPI 统计卡（FIX-PLT-AD-PLAN-001，对齐原型 7b44cd24） -->
-    <el-row :gutter="12" class="plan-kpi-row">
-      <el-col v-for="kpi in kpiCards" :key="kpi.key" :xs="12" :sm="8" :md="6" :lg="24 / 5">
-        <el-card shadow="hover" class="plan-kpi-card">
-          <div class="plan-kpi-label">{{ kpi.label }}</div>
-          <div class="plan-kpi-value">{{ kpi.value }}</div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <!-- 顶部 5 KPI 统计卡（FIX-PLT-AD-PLAN-001，对齐原型 7b44cd24）；flex 等宽一行 5 个，窄到放不下才换行 -->
+    <div class="plan-kpi-row">
+      <el-card v-for="kpi in kpiCards" :key="kpi.key" shadow="hover" class="plan-kpi-card">
+        <div class="plan-kpi-label">{{ kpi.label }}</div>
+        <div class="plan-kpi-value">{{ kpi.value }}</div>
+      </el-card>
+    </div>
 
     <BizTable
       ref="tableRef"
@@ -271,10 +269,16 @@ onMounted(() => {
 
 <style scoped>
 .plan-kpi-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 8px;
 }
 
 .plan-kpi-card {
+  /* 一行 5 个等宽：弹性增长 + min-width 触发换行（窄到 5 个放不下才换） */
+  flex: 1 1 0;
+  min-width: 150px;
   text-align: center;
 }
 

@@ -1,40 +1,38 @@
 <template>
-  <el-dialog v-model="visible" :title="dialogTitle" destroy-on-close append-to-body width="640px" @closed="handleClosed">
+  <el-dialog v-model="visible" :title="dialogTitle" destroy-on-close append-to-body width="560px" @closed="handleClosed">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-      <el-row :gutter="16">
-        <el-col :span="12">
-          <el-form-item :label="t('farm.field.barnCode')" prop="barnCode">
-            <el-input v-model="form.barnCode" :placeholder="t('farm.placeholder.barnCode')" :disabled="!!form.id" maxlength="32" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('farm.field.barnName')" prop="barnName">
-            <el-input v-model="form.barnName" :placeholder="t('farm.placeholder.barnName')" maxlength="64" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('farm.field.barnType')" prop="barnType">
-            <el-select v-model="form.barnType" :placeholder="t('farm.placeholder.barnType')" style="width: 100%">
-              <el-option v-for="dict in barnTypeDict" :key="dict.value" :label="dict.label" :value="dict.value" />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('farm.field.capacity')" prop="capacity">
-            <el-input-number v-model="form.capacity" :min="0" :step="10" controls-position="right" style="width: 100%" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('farm.field.barnStatus')" prop="barnStatus">
-            <el-switch v-model="form.barnStatus" :active-value="1" :inactive-value="0" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item :label="t('farm.field.remark')" prop="remark">
-            <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
-          </el-form-item>
-        </el-col>
-      </el-row>
+      <el-form-item :label="t('farm.field.barnName')" prop="barnName">
+        <el-input v-model="form.barnName" :placeholder="t('farm.placeholder.barnName')" maxlength="64" />
+      </el-form-item>
+      <el-form-item :label="t('farm.field.barnType')" prop="barnType">
+        <el-select v-model="form.barnType" :placeholder="t('farm.placeholder.barnType')" style="width: 100%">
+          <el-option v-for="dict in barnTypeDict" :key="dict.value" :label="dict.label" :value="dict.value" />
+        </el-select>
+      </el-form-item>
+
+      <!-- 新建：填三类栏位数量，提交后系统自动批量生成对应栏位 -->
+      <template v-if="isCreate">
+        <el-form-item :label="t('farm.proto.field.bigPenCount')" prop="bigPenCount">
+          <el-input-number v-model="form.bigPenCount" :min="0" :max="999" :step="1" controls-position="right" style="width: 100%" />
+        </el-form-item>
+        <el-form-item :label="t('farm.proto.field.limitPenCount')" prop="limitPenCount">
+          <el-input-number v-model="form.limitPenCount" :min="0" :max="999" :step="1" controls-position="right" style="width: 100%" />
+        </el-form-item>
+        <el-form-item :label="t('farm.proto.field.bedCount')" prop="bedCount">
+          <el-input-number v-model="form.bedCount" :min="0" :max="999" :step="1" controls-position="right" style="width: 100%" />
+        </el-form-item>
+      </template>
+
+      <!-- 编辑：状态（栏位数量不在编辑改，增删栏位走「栏位详情」子页） -->
+      <template v-else>
+        <el-form-item :label="t('farm.field.barnStatus')" prop="barnStatus">
+          <el-switch v-model="form.barnStatus" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+      </template>
+
+      <el-form-item :label="t('farm.field.remark')" prop="remark">
+        <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
+      </el-form-item>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
@@ -46,10 +44,21 @@
 </template>
 
 <script setup lang="ts">
-import { addBarn, getBarn, updateBarn } from '@/api/djs-breed/farm';
-import type { BarnForm as BarnFormType } from '@/api/djs-breed/farm/types';
+import { createBarnWithPens, getBarn, updateBarn } from '@/api/djs-breed/farm';
 import { useDict } from '@/utils/dict';
 import { useI18n } from 'vue-i18n';
+
+interface BarnFormModel {
+  id?: number | string;
+  barnCode: string;
+  barnName: string;
+  barnType: string;
+  barnStatus: number;
+  remark?: string;
+  bigPenCount: number;
+  limitPenCount: number;
+  bedCount: number;
+}
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -61,29 +70,29 @@ const formRef = ref<ElFormInstance>();
 const dicts = useDict('djs_barn_type');
 const barnTypeDict = computed(() => dicts['djs_barn_type'] ?? []);
 
-const defaultForm = (): BarnFormType => ({
+const defaultForm = (): BarnFormModel => ({
   id: undefined,
   barnCode: '',
   barnName: '',
   barnType: '',
-  capacity: undefined,
   barnStatus: 1,
-  remark: undefined
+  remark: undefined,
+  bigPenCount: 0,
+  limitPenCount: 0,
+  bedCount: 0
 });
 
-const form = ref<BarnFormType>(defaultForm());
+const form = ref<BarnFormModel>(defaultForm());
+
+const isCreate = computed(() => !form.value.id);
 
 const rules = computed(() => ({
-  barnCode: [
-    { required: true, message: t('farm.rule.barnCode.required'), trigger: 'blur' },
-    { pattern: /^[A-Za-z0-9_.-]+$/, message: t('farm.rule.barnCode.pattern'), trigger: 'blur' }
-  ],
   barnName: [{ required: true, message: t('farm.rule.barnName.required'), trigger: 'blur' }],
   barnType: [{ required: true, message: t('farm.rule.barnType.required'), trigger: 'change' }],
   barnStatus: [{ required: true, message: t('farm.rule.barnStatus.required'), trigger: 'change' }]
 }));
 
-const dialogTitle = computed(() => (form.value.id ? t('farm.title.editBarn') : t('farm.title.addBarn')));
+const dialogTitle = computed(() => (isCreate.value ? t('farm.proto.createBarn') : t('farm.title.editBarn')));
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
@@ -110,10 +119,24 @@ const submit = () => {
     if (!valid) return;
     submitting.value = true;
     try {
-      if (form.value.id) {
-        await updateBarn(form.value);
+      if (isCreate.value) {
+        await createBarnWithPens({
+          barnName: form.value.barnName,
+          barnType: form.value.barnType,
+          bigPenCount: form.value.bigPenCount,
+          limitPenCount: form.value.limitPenCount,
+          bedCount: form.value.bedCount,
+          remark: form.value.remark
+        });
       } else {
-        await addBarn(form.value);
+        await updateBarn({
+          id: form.value.id,
+          barnCode: form.value.barnCode,
+          barnName: form.value.barnName,
+          barnType: form.value.barnType,
+          barnStatus: form.value.barnStatus,
+          remark: form.value.remark
+        });
       }
       proxy?.$modal.msgSuccess(t('common.opSuccess'));
       visible.value = false;

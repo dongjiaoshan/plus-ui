@@ -28,8 +28,8 @@
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
 import BreedConfigForm from './components/BreedConfigForm.vue';
-import { delBreedConfig, listBreedConfig } from '@/api/djs-breed/breeding';
-import type { BreedConfigQuery, BreedConfigVO } from '@/api/djs-breed/breeding/types';
+import { delBreedConfig, listBreedConfig, listBreedInfo } from '@/api/djs-breed/breeding';
+import type { BreedConfigQuery, BreedConfigVO, BreedInfoVO } from '@/api/djs-breed/breeding/types';
 import { useI18n } from 'vue-i18n';
 
 /**
@@ -48,6 +48,9 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
+/** 搜索下拉候选（母系/父系/仔代共用，源同弹窗的 listBreedInfo；value=code 保证 param key 不变） */
+const codeOptions = ref<Array<{ label: string; value: string }>>([]);
+
 const searchModel = reactive<Record<string, any>>({
   motherCode: undefined,
   fatherCode: undefined,
@@ -56,19 +59,32 @@ const searchModel = reactive<Record<string, any>>({
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'motherCode', label: t('breeding.field.motherCode'), type: 'input' },
-  { field: 'fatherCode', label: t('breeding.field.fatherCode'), type: 'input' },
-  { field: 'cubCode', label: t('breeding.field.cubCode'), type: 'input' },
+  { field: 'motherCode', label: t('breeding.field.motherCode'), type: 'select', options: codeOptions.value },
+  { field: 'fatherCode', label: t('breeding.field.fatherCode'), type: 'select', options: codeOptions.value },
+  { field: 'cubCode', label: t('breeding.field.cubCode'), type: 'select', options: codeOptions.value },
   { field: 'createTimeRange', label: t('breeding.field.createTimeRange'), type: 'daterange' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'motherCode', label: t('breeding.column.motherCode'), width: 160 },
-  { prop: 'fatherCode', label: t('breeding.column.fatherCode'), width: 160 },
-  { prop: 'cubCode', label: t('breeding.column.cubCode'), width: 160 },
+  { prop: 'motherCode', label: t('breeding.column.motherCode'), width: 140 },
+  { prop: 'motherName', label: t('breeding.column.motherName'), width: 140 },
+  { prop: 'fatherCode', label: t('breeding.column.fatherCode'), width: 140 },
+  { prop: 'fatherName', label: t('breeding.column.fatherName'), width: 140 },
+  { prop: 'cubCode', label: t('breeding.column.cubCode'), width: 140 },
+  { prop: 'offspringName', label: t('breeding.column.offspringName'), width: 140 },
   { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'createByName', label: t('breeding.column.createBy'), width: 120, align: 'center' }
 ]);
+
+/** 加载搜索下拉候选（同弹窗的品种/品系范畴） */
+async function loadCodeOptions() {
+  const res = await listBreedInfo({ pageNum: 1, pageSize: 999, breedStrain: BREED_STRAIN });
+  const rows = (res.rows ?? res.data ?? []) as BreedInfoVO[];
+  codeOptions.value = rows.map((r) => ({
+    label: `${r.breedStrainName} (${r.breedStrainCode})`,
+    value: r.breedStrainCode
+  }));
+}
 
 async function fetchList() {
   loading.value = true;
@@ -122,6 +138,7 @@ async function onDel(rowOrRows: BizRow | BizRow[]) {
 }
 
 onMounted(() => {
+  loadCodeOptions();
   fetchList();
 });
 </script>

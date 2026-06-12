@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-    <!-- 门店经营流水盘点列表（盘点单 = 门店 + 盘点日期）。点查看进只读详情；新增当日盘点进整表录入页 -->
+    <!-- 门店盘点列表（盘点单 = 门店 + 盘点日期）。点查看详情开只读抽屉；新增当日盘点开宽抽屉录入 -->
     <BizTable
       ref="tableRef"
       :data="list"
@@ -34,29 +34,28 @@
       </template>
     </BizTable>
 
-    <LedgerDetail ref="detailRef" />
+    <CheckEntryDrawer ref="entryRef" @saved="fetchList" />
+    <CheckDetailDrawer ref="detailRef" />
   </div>
 </template>
 
-<script setup name="StoreLedgerList" lang="ts">
+<script setup name="StoreCheckList" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import LedgerDetail from './detail/index.vue';
+import CheckEntryDrawer from './CheckEntryDrawer.vue';
+import CheckDetailDrawer from './CheckDetailDrawer.vue';
 import { listStoreLedger } from '@/api/djs-store/ledger';
 import type { StoreLedgerHeaderVO, StoreLedgerQuery } from '@/api/djs-store/ledger/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 
 const { t } = useI18n();
-const router = useRouter();
 
 interface LedgerRow extends StoreLedgerHeaderVO {
   rowKey: string;
 }
 
 const tableRef = ref<BizTableExpose>();
+const entryRef = ref<{ open: () => void }>();
 const detailRef = ref<{ open: (storeId: string, ledgerDate: string) => void }>();
 
 const list = ref<LedgerRow[]>([]);
@@ -64,42 +63,20 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const storeOptions = ref<StoreVO[]>([]);
 
 const searchModel = reactive<Record<string, unknown>>({
-  storeId: undefined,
-  ledgerDateFrom: undefined,
-  ledgerDateTo: undefined
+  ledgerDate: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  {
-    field: 'storeId',
-    label: t('storeLedger.field.store'),
-    type: 'select',
-    options: storeOptions.value.map((s) => ({ label: s.storeName, value: String(s.id) }))
-  },
-  { field: 'ledgerDateFrom', label: t('storeLedger.field.dateFrom'), type: 'date' },
-  { field: 'ledgerDateTo', label: t('storeLedger.field.dateTo'), type: 'date' }
+  { field: 'ledgerDate', label: t('storeLedger.column.ledgerDate'), type: 'date' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'storeName', label: t('storeLedger.column.storeName'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'ledgerDate', label: t('storeLedger.column.ledgerDate'), width: 140, align: 'center' },
-  { prop: 'lineCount', label: t('storeLedger.column.lineCount'), width: 100, align: 'right' },
-  { prop: 'operatorName', label: t('storeLedger.column.operatorName'), width: 120, align: 'center' },
-  { prop: 'checkTime', label: t('storeLedger.column.checkTime'), width: 170, align: 'center', formatter: 'datetime' }
+  { prop: 'ledgerDate', label: t('storeLedger.column.ledgerDate'), width: 160, align: 'center' },
+  { prop: 'operatorName', label: t('storeLedger.column.operatorName'), minWidth: 140, align: 'center' },
+  { prop: 'checkTime', label: t('storeLedger.column.checkTime'), width: 180, align: 'center', formatter: 'datetime' }
 ]);
-
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
-  } catch (e) {
-    console.warn('[StoreLedgerList] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
 
 async function fetchList() {
   loading.value = true;
@@ -107,9 +84,7 @@ async function fetchList() {
     const query: StoreLedgerQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
-      storeId: (searchModel.storeId as string) || undefined,
-      ledgerDateFrom: (searchModel.ledgerDateFrom as string) || undefined,
-      ledgerDateTo: (searchModel.ledgerDateTo as string) || undefined
+      ledgerDate: (searchModel.ledgerDate as string) || undefined
     };
     const res = await listStoreLedger(query);
     const rows = (res.rows ?? res.data ?? []) as StoreLedgerHeaderVO[];
@@ -136,15 +111,14 @@ function handlePageChange(p: number, s: number) {
   fetchList();
 }
 function handleAddEntry() {
-  router.push({ path: '/djs-store/store-mgmt/check-entry' });
+  entryRef.value?.open();
 }
 function openDetail(row: BizRow) {
   const r = row as unknown as LedgerRow;
   detailRef.value?.open(String(r.storeId), String(r.ledgerDate));
 }
 
-onMounted(async () => {
-  await loadStoreOptions();
+onMounted(() => {
   fetchList();
 });
 </script>

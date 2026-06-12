@@ -1,14 +1,14 @@
 /**
  * 需求列表共享逻辑（WMS-DEMAND-001）。
  *
- * 4 业态列表页共享：数据加载 / 删除 / 状态机操作 / 弹窗调度。
- * 业态差异（列定义 / 表单字段）由各业态 .vue 自行决定。
+ * 统一列表页用：数据加载 / 删除 / 状态机操作 / 弹窗调度。
+ * 不传 productType → 列表返回全部业态需求；传则按业态过滤（保留向后兼容）。
  */
 import { ref, reactive, computed } from 'vue';
 import { cancelDemand, confirmDemand, listDemand, removeDemand, startProduction, submitDemand } from '@/api/djs-warehouse/demand';
 import type { DemandManageQuery, DemandManageVO, DemandProductType, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
 
-export function useDemandList(productType: DemandProductType) {
+export function useDemandList(productType?: DemandProductType) {
   const list = ref<DemandManageVO[]>([]);
   const total = ref(0);
   const loading = ref(false);
@@ -17,6 +17,7 @@ export function useDemandList(productType: DemandProductType) {
 
   const searchModel = reactive<Record<string, any>>({
     demandNo: undefined,
+    productType: undefined,
     demandStatus: undefined,
     storeId: undefined,
     beginDate: undefined,
@@ -29,7 +30,8 @@ export function useDemandList(productType: DemandProductType) {
       const query: DemandManageQuery = {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        productType,
+        // 不传则取全部业态；显式 productType 闭包优先，否则用搜索表单选的业态
+        productType: productType ?? (searchModel.productType as DemandProductType | undefined),
         demandNo: searchModel.demandNo,
         demandStatus: searchModel.demandStatus,
         storeId: searchModel.storeId,

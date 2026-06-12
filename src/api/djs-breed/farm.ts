@@ -1,6 +1,17 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { BarnForm, BarnQuery, BarnVO, FarmContactForm, FarmInfoVO, PenForm, PenQuery, PenVO } from './farm/types';
+import type {
+  BarnCreateForm,
+  BarnForm,
+  BarnQuery,
+  BarnVO,
+  FarmContactForm,
+  FarmInfoVO,
+  PenDetailVO,
+  PenForm,
+  PenQuery,
+  PenVO
+} from './farm/types';
 
 /**
  * 农场 / 栋舍 / 栏位 API（BRD-MD-002）。
@@ -55,6 +66,15 @@ export const addBarn = (data: BarnForm) => {
   });
 };
 
+/** 新建栋舍并按三类数量自动生成栏位（对齐原型「新建栋舍」） */
+export const createBarnWithPens = (data: BarnCreateForm): AxiosPromise<number> => {
+  return request({
+    url: '/djs/breed/barn/createWithPens',
+    method: 'post',
+    data
+  });
+};
+
 export const updateBarn = (data: BarnForm) => {
   return request({
     url: '/djs/breed/barn/edit',
@@ -85,6 +105,15 @@ export const getPen = (id: number | string): AxiosPromise<PenVO> => {
   return request({
     url: '/djs/breed/pen/getInfo/' + id,
     method: 'get'
+  });
+};
+
+/** 栏位详情（栏位详情子页：按栋舍 + 栏位类型查，含占栏猪只关联） */
+export const penDetail = (barnId: number | string, penType: string): AxiosPromise<PenDetailVO[]> => {
+  return request({
+    url: '/djs/breed/pen/detail',
+    method: 'get',
+    params: { barnId, penType }
   });
 };
 

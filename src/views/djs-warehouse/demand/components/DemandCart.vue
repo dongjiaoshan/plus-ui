@@ -1,11 +1,14 @@
 <template>
   <el-drawer v-model="visible" :title="drawerTitle" direction="rtl" size="100%" destroy-on-close :close-on-click-modal="false" @closed="handleClosed">
     <div class="cart-layout">
-      <!-- 左：产品候选表 -->
+      <!-- 左：产品候选表（顶部 7 产品 tab 跨业态切换） -->
       <div class="cart-main">
+        <el-tabs v-model="activeType" class="cart-type-tabs" type="card" @tab-change="onTypeChange">
+          <el-tab-pane v-for="tp in DEMAND_PRODUCT_TYPES" :key="tp" :name="tp" :label="tabLabel(tp)" />
+        </el-tabs>
         <div class="cart-section-head">
           <span class="cart-section-title">{{ t('demand.cart.candidateTitle') }}</span>
-          <el-tag size="small" :type="productTypeColor">{{ productTypeLabel }}</el-tag>
+          <el-tag size="small" :type="activeTypeColor">{{ activeTypeLabel }}</el-tag>
         </div>
         <el-input v-model="keyword" :placeholder="t('demand.cart.searchPlaceholder')" clearable class="cart-search">
           <template #prefix><el-icon><Search /></el-icon></template>
@@ -47,7 +50,10 @@
           <el-empty v-if="!cartItems.length" :description="t('demand.cart.emptyCart')" :image-size="80" />
           <div v-for="(item, idx) in cartItems" :key="item.productId" class="cart-row">
             <div class="cart-row-info">
-              <div class="cart-row-name">{{ item.productName }}</div>
+              <div class="cart-row-name">
+                <el-tag size="small" :type="resolveTypeColor(item.productType)" class="cart-row-type">{{ rowTypeLabel(item.productType) }}</el-tag>
+                {{ item.productName }}
+              </div>
               <div class="cart-row-spec">{{ item.productSpec || '—' }}</div>
             </div>
             <el-input-number
@@ -97,9 +103,14 @@ import { addDemand } from '@/api/djs-warehouse/demand';
 import type { DemandManageForm, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { useDemandProducts } from '../composables/useDemandProducts';
-import { demandTypeLabel as resolveTypeLabel, demandTypeColor as resolveTypeColor, demandTypeHasRaw } from '../composables/demandTypeMeta';
+import {
+  DEMAND_PRODUCT_TYPES,
+  demandTypeLabel as resolveTypeLabel,
+  demandTypeColor as resolveTypeColor,
+  demandTypeHasRaw
+} from '../composables/demandTypeMeta';
 
-/** 购物车单行：一个产品 + 需求量（提交时映射成一条 DemandManageForm）。 */
+/** 购物车单行：一个产品 + 需求量 + 所属业态（提交时映射成一条 DemandManageForm）。 */
 interface CartItem {
   /** t_warehouse_product_info.id（snowflake string），作为去重 key。 */
   productId: string;
@@ -107,10 +118,11 @@ interface CartItem {
   productSpec: string;
   productUnit: string;
   rawMaterial?: string;
+  /** 加入时的业态 tab（跨业态购物车，提交时按本字段映射 productType）。 */
+  productType: DemandProductType;
   demandQuantity: number;
 }
 
-const props = defineProps<{ productType: DemandProductType }>();
 const emit = defineEmits<{ (e: 'success'): void }>();
 
 const { t } = useI18n();
@@ -122,7 +134,10 @@ const submitting = ref(false);
 const keyword = ref('');
 const footerFormRef = ref();
 
-const { storeOptions, productOptions, loadStoreOptions, loadProductOptions } = useDemandProducts(props.productType);
+/** 当前候选区业态 tab（默认白条）。 */
+const activeType = ref<DemandProductType>('white_bar');
+
+const { storeOptions, productOptions, loadStoreOptions, loadProductOptions } = useDemandProducts();
 
 /** 候选表每行待加入数量（key = 产品 snowflake id）。 */
 const rowQty = reactive<Record<string, number>>({});
@@ -148,9 +163,22 @@ const filteredProducts = computed<ProductInfoVO[]>(() => {
   );
 });
 
-const productTypeLabel = computed(() => resolveTypeLabel(props.productType, djs_demand_product_type.value));
-const drawerTitle = computed(() => t('demand.cart.title', { type: productTypeLabel.value }));
-const productTypeColor = computed(() => resolveTypeColor(props.productType));
+const drawerTitle = computed(() => t('demand.cart.titleGeneric'));
+const activeTypeLabel = computed(() => resolveTypeLabel(activeType.value, djs_demand_product_type.value));
+const activeTypeColor = computed(() => resolveTypeColor(activeType.value));
+
+function tabLabel(tp: DemandProductType): string {
+  return resolveTypeLabel(tp, djs_demand_product_type.value);
+}
+function rowTypeLabel(tp: DemandProductType): string {
+  return resolveTypeLabel(tp, djs_demand_product_type.value);
+}
+
+/** 切 tab → 重新加载该业态候选产品（购物车不变，跨业态保留）。 */
+async function onTypeChange(): Promise<void> {
+  keyword.value = '';
+  await loadProductOptions(activeType.value);
+}
 
 function addToCart(row: ProductInfoVO): void {
   const pid = String(row.id);
@@ -171,6 +199,7 @@ function addToCart(row: ProductInfoVO): void {
       productSpec: row.productSpec ?? '',
       productUnit: row.productUnit ?? '',
       rawMaterial: material != null ? String(material) : undefined,
+      productType: activeType.value,
       demandQuantity: qty
     });
   }
@@ -187,14 +216,14 @@ function toDemandForm(item: CartItem): DemandManageForm {
     storeId: footer.storeId,
     productId: item.productId,
     productName: item.productName,
-    productType: props.productType,
+    productType: item.productType,
     productSpec: item.productSpec || undefined,
     demandQuantity: item.demandQuantity,
     productUnit: item.productUnit,
     expectedArriveDate: footer.expectedArriveDate
   };
   // 白条 / 蔬菜业态保留原材料描述（与 DemandForm 单产品弹窗一致）
-  if (demandTypeHasRaw(props.productType) && item.rawMaterial) {
+  if (demandTypeHasRaw(item.productType) && item.rawMaterial) {
     f.rawMaterial = item.rawMaterial;
   }
   return f;
@@ -240,6 +269,7 @@ async function handleSubmit(): Promise<void> {
 
 function reset(): void {
   keyword.value = '';
+  activeType.value = 'white_bar';
   cartItems.value = [];
   Object.keys(rowQty).forEach((k) => delete rowQty[k]);
   footer.storeId = '';
@@ -250,7 +280,7 @@ function reset(): void {
 
 async function open(): Promise<void> {
   reset();
-  await Promise.all([loadStoreOptions(), loadProductOptions()]);
+  await Promise.all([loadStoreOptions(), loadProductOptions(activeType.value)]);
   visible.value = true;
 }
 
@@ -280,6 +310,12 @@ defineExpose({ open });
   flex-direction: column;
   border-left: 1px solid var(--el-border-color-light);
   padding-left: 16px;
+}
+.cart-type-tabs {
+  margin-bottom: 8px;
+}
+.cart-type-tabs :deep(.el-tabs__header) {
+  margin-bottom: 0;
 }
 .cart-section-head {
   display: flex;
@@ -322,6 +358,9 @@ defineExpose({ open });
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.cart-row-type {
+  margin-right: 4px;
 }
 .cart-row-spec {
   font-size: 12px;

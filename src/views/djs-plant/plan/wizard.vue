@@ -32,10 +32,31 @@
       </div>
 
       <!-- step2：作物（卡片单选） -->
-      <CropPicker v-if="currentStep === 1" v-model="form.cropId" />
+      <CropPicker v-if="currentStep === 1" v-model="form.cropId" @select-crop="onSelectCrop" />
 
       <!-- step3：地块（按片区分组 + 每地块设月份+上中下旬+班组） -->
-      <PlotPeriodPicker v-if="currentStep === 2" v-model="form.details" />
+      <template v-if="currentStep === 2">
+        <!-- 已选摘要：回显第 1 步年份/季节 + 第 2 步作物（取向导 state，不新查） -->
+        <el-alert :closable="false" type="info" class="mb-4">
+          <template #title>
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
+              <span>
+                <span class="text-gray-500">{{ t('plantPlan.field.planYear') }}：</span>
+                <span class="font-medium">{{ form.planYear || '-' }}</span>
+              </span>
+              <span>
+                <span class="text-gray-500">{{ t('plantPlan.field.planSeason') }}：</span>
+                <span class="font-medium">{{ selectedSeasonLabel }}</span>
+              </span>
+              <span>
+                <span class="text-gray-500">{{ t('plantPlan.field.crop') }}：</span>
+                <span class="font-medium">{{ selectedCropLabel }}</span>
+              </span>
+            </div>
+          </template>
+        </el-alert>
+        <PlotPeriodPicker v-model="form.details" />
+      </template>
 
       <div class="mt-6 flex justify-center gap-3">
         <el-button v-if="currentStep > 0" @click="prevStep">{{ t('common.prev') }}</el-button>
@@ -49,12 +70,13 @@
 </template>
 
 <script setup name="PlantPlanWizard" lang="ts">
-import { ref, reactive, watch, onMounted, getCurrentInstance } from 'vue';
+import { ref, reactive, computed, watch, onMounted, getCurrentInstance } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { addPlan } from '@/api/djs-plant/plan';
 import type { PlantPlanCreateForm } from '@/api/djs-plant/plan/types';
+import type { CropInfoVO } from '@/api/djs-plant/crop/types';
 import CropPicker from './components/CropPicker.vue';
 import PlotPeriodPicker from './components/PlotPeriodPicker.vue';
 import { PLAN_BASE } from './route';
@@ -66,6 +88,7 @@ const { djs_planting_season } = toRefs<any>(proxy?.useDict('djs_planting_season'
 
 const STORAGE_KEY = 'plt-plan-wizard';
 const STORAGE_STEP = 'plt-plan-wizard-step';
+const STORAGE_CROP_NAME = 'plt-plan-wizard-cropname';
 
 const currentStep = ref(0);
 const submitting = ref(false);
@@ -78,6 +101,21 @@ const form = reactive<PlantPlanCreateForm>({
   details: []
 });
 
+// 已选作物名（仅用于 step3 回显，不进提交 payload）
+const selectedCropName = ref('');
+
+// step3 摘要：季节 → dict label；作物 → 已捕获名（兜底显示 id）
+const selectedSeasonLabel = computed(() => {
+  const opt = djs_planting_season.value?.find((d: any) => String(d.value) === String(form.planSeason));
+  return opt?.label || form.planSeason || '-';
+});
+const selectedCropLabel = computed(() => selectedCropName.value || (form.cropId ? String(form.cropId) : '-'));
+
+function onSelectCrop(crop: CropInfoVO) {
+  selectedCropName.value = crop.cropName || '';
+  sessionStorage.setItem(STORAGE_CROP_NAME, selectedCropName.value);
+}
+
 onMounted(async () => {
   const cache = sessionStorage.getItem(STORAGE_KEY);
   if (!cache) return;
@@ -89,11 +127,13 @@ onMounted(async () => {
     });
     const parsed = JSON.parse(cache) as PlantPlanCreateForm;
     Object.assign(form, parsed);
+    selectedCropName.value = sessionStorage.getItem(STORAGE_CROP_NAME) || '';
     const cachedStep = Number(sessionStorage.getItem(STORAGE_STEP) || '0');
     currentStep.value = Math.min(Math.max(cachedStep, 0), 2);
   } catch (e) {
     sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(STORAGE_STEP);
+    sessionStorage.removeItem(STORAGE_CROP_NAME);
   }
 });
 
@@ -143,6 +183,7 @@ async function submit() {
     ElMessage.success(t('plantPlan.wizard.tip.submitSuccess'));
     sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(STORAGE_STEP);
+    sessionStorage.removeItem(STORAGE_CROP_NAME);
     router.push(`${PLAN_BASE}/detail?id=${newId}`);
   } finally {
     submitting.value = false;
