@@ -68,11 +68,6 @@
           </el-form-item>
         </el-col>
         <el-col :span="24">
-          <el-form-item :label="t('location.field.locationImg')" prop="locationImg">
-            <OssUpload ref="imgUploadRef" v-model="imgOssIdsModel" biz-type="warehouse_location" :limit="5" :file-size="10" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
           <el-form-item :label="t('location.field.remark')" prop="remark">
             <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
           </el-form-item>
@@ -103,7 +98,6 @@ const visible = ref(false);
 const submitting = ref(false);
 const formRef = ref<ElFormInstance>();
 const thumbUploadRef = ref<InstanceType<typeof OssUpload>>();
-const imgUploadRef = ref<InstanceType<typeof OssUpload>>();
 
 const defaultForm = (): LocationInfoForm => ({
   id: undefined,
@@ -111,7 +105,6 @@ const defaultForm = (): LocationInfoForm => ({
   locationName: '',
   locationType: '',
   locationThumb: undefined,
-  locationImg: undefined,
   locationStatus: 1,
   locationSort: 0,
   locationDesc: undefined,
@@ -130,24 +123,9 @@ const thumbOssIdsModel = computed<string[]>({
   }
 });
 
-// locationImg 多图：业务字段是逗号分隔 ossId 字符串 ↔ string[]
-const imgOssIdsModel = computed<string[]>({
-  get: () =>
-    form.value.locationImg
-      ? form.value.locationImg
-          .split(',')
-          .map((s) => s.trim())
-          .filter((s) => s.length > 0)
-      : [],
-  set: (val: string[]) => {
-    form.value.locationImg = val && val.length > 0 ? val.join(',') : undefined;
-  }
-});
-
 const rules = computed(() => ({
   locationCode: [{ required: true, message: t('location.rule.locationCode.required'), trigger: 'blur' }],
   locationName: [{ required: true, message: t('location.rule.locationName.required'), trigger: 'blur' }],
-  locationType: [{ required: true, message: t('location.rule.locationType.required'), trigger: 'change' }],
   locationStatus: [{ required: true, message: t('location.rule.locationStatus.required'), trigger: 'change' }]
 }));
 
@@ -171,7 +149,6 @@ const openEdit = async (id: number | string) => {
   visible.value = true;
   // 回填 OssUpload 已有图片（OssUpload 内部不主动反查 URL，必须父组件调 setExistingFiles）
   await restoreOssThumbs();
-  await restoreOssImgs();
 };
 
 /** 回填缩略图（单 ossId） */
@@ -189,24 +166,6 @@ const restoreOssThumbs = async () => {
     thumbUploadRef.value?.setExistingFiles(items);
   } catch (e) {
     console.warn('[LocationForm] listOssByIds failed for locationThumb', ossId, e);
-  }
-};
-
-/** 回填原图（逗号分隔 ossId） */
-const restoreOssImgs = async () => {
-  const ids = form.value.locationImg;
-  if (!ids) return;
-  try {
-    const ossRes = await listOssByIds(ids);
-    const items = (ossRes.data || []).map((o) => ({
-      ossId: String(o.ossId),
-      url: o.url,
-      originalName: o.originalName
-    }));
-    await nextTick();
-    imgUploadRef.value?.setExistingFiles(items);
-  } catch (e) {
-    console.warn('[LocationForm] listOssByIds failed for locationImg', ids, e);
   }
 };
 

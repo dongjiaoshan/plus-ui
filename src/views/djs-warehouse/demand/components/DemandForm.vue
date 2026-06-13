@@ -38,7 +38,7 @@
               style="width: 100%"
               @change="onProductSelect"
             >
-              <el-option v-for="p in productOptions" :key="String(p.id)" :label="`${p.productName} (${p.productId})`" :value="String(p.id)" />
+              <el-option v-for="p in productOptions" :key="String(p.id)" :label="p.productName" :value="String(p.id)" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -56,7 +56,7 @@
           <el-form-item :label="t('demand.field.demandQuantity')" prop="demandQuantity">
             <el-input-number
               v-model="form.demandQuantity"
-              :precision="3"
+              :precision="2"
               :min="0"
               :step="1"
               :placeholder="t('demand.placeholder.demandQuantity')"
@@ -85,7 +85,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item :label="t('demand.field.materialQty')" prop="materialQty">
-              <el-input-number v-model="form.materialQty" :precision="3" :min="0" :step="1" style="width: 100%" />
+              <el-input-number v-model="form.materialQty" :precision="2" :min="0" :step="1" style="width: 100%" />
             </el-form-item>
           </el-col>
         </template>
@@ -123,7 +123,12 @@ import { addDemand, getDemand, updateDemand } from '@/api/djs-warehouse/demand';
 import type { DemandManageForm, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import { useDemandProducts } from '../composables/useDemandProducts';
 
-import { demandTypeLabel as resolveTypeLabel, demandTypeColor as resolveTypeColor, demandTypeDestination, demandTypeHasRaw } from '../composables/demandTypeMeta';
+import {
+  demandTypeLabel as resolveTypeLabel,
+  demandTypeColor as resolveTypeColor,
+  demandTypeDestination,
+  demandTypeHasRaw
+} from '../composables/demandTypeMeta';
 
 const props = defineProps<{ productType: DemandProductType }>();
 const emit = defineEmits<{ (e: 'success'): void }>();

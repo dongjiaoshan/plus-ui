@@ -360,9 +360,6 @@ export default {
     confirm: {
       del: '是否确认删除选中的 {count} 条门店记录？',
       clearManager: '是否确认清空当前店长？'
-    },
-    tip: {
-      managerHint: '请通过"设置店长"按钮关联系统用户'
     }
   },
   // 育种配置（BRD-MD-001）— 品种/品系/配种关系，4 tab 单页
@@ -396,7 +393,9 @@ export default {
       cubCode: '仔代编码',
       offspringName: '仔代名称',
       createTime: '创建时间',
-      createBy: '创建人'
+      createBy: '创建人',
+      changeTime: '变更时间',
+      changeBy: '变更人'
     },
     field: {
       breedStrain: '类型',
@@ -408,7 +407,8 @@ export default {
       motherCode: '母系编码',
       fatherCode: '父系编码',
       cubCode: '仔代编码',
-      createTimeRange: '创建时间'
+      createTimeRange: '创建时间',
+      changeTimeRange: '变更日期'
     },
     placeholder: {
       breedStrainCode: '请输入编码（字母/数字/下划线/连字符）',
@@ -1103,6 +1103,8 @@ export default {
       locationName: '库位名称',
       locationType: '类型',
       locationThumb: '图片',
+      locationSort: '排序',
+      locationDesc: '描述',
       capacity: '容量',
       locationStatus: '状态',
       createTime: '创建时间',
@@ -1112,8 +1114,10 @@ export default {
       locationCode: '库位编码',
       locationName: '库位名称',
       locationType: '库位类型',
-      locationThumb: '缩略图',
+      locationThumb: '库位图片',
       locationImg: '原图',
+      locationSort: '排序',
+      locationDesc: '库位描述',
       locationStatus: '状态',
       capacity: '容量',
       remark: '备注'
@@ -1137,7 +1141,7 @@ export default {
     },
     summary: {
       locationCount: '库位数',
-      productCount: '产品数',
+      productCount: '库存产品品类',
       currentStock: '当前库存',
       todayIn: '今日入库',
       todayOut: '今日出库',
@@ -1153,7 +1157,9 @@ export default {
       edit: '编辑商品',
       view: '产品详情',
       baseInfo: '产品属性',
-      giftComponents: '礼盒清单'
+      giftComponents: '礼盒清单',
+      production: '生产记录',
+      flow: '业务流水'
     },
     giftEmpty: '该礼盒暂无组件',
     column: {
@@ -1162,6 +1168,7 @@ export default {
       productType: '类型',
       productAttr: '产品属性',
       productWorkshop: '生产车间',
+      storeLocation: '存储仓库',
       belongType: '归属',
       productThumb: '图片',
       productUnit: '单位',
@@ -1190,6 +1197,9 @@ export default {
       productStatus: '状态',
       isDelivery: '是否发货产品',
       isBuyOut: '是否买断',
+      isBuyOutSupport: '是否支持外购',
+      storeLocation: '存储仓库',
+      updateBy: '更新人员',
       supplierId: '供应商',
       productDesc: '产品描述',
       remark: '备注',
@@ -1223,6 +1233,32 @@ export default {
     action: {
       addComponent: '添加组件'
     },
+    button: {
+      inbound: '入库'
+    },
+    production: {
+      produceDate: '生产日期',
+      produceDatePlaceholder: '请选择生产日期',
+      produceType: '生产类型',
+      produceTypePlaceholder: '请选择类型',
+      typeProduce: '生产',
+      typeReturn: '退料',
+      produceNum: '生产数量',
+      produceUnit: '单位',
+      standardWeight: '标准重量',
+      produceWeight: '实际重量',
+      diffWeight: '差异重量'
+    },
+    flow: {
+      bizDate: '业务日期',
+      bizDatePlaceholder: '请选择业务日期',
+      bizType: '业务类型',
+      bizNum: '数量',
+      bizUnit: '单位',
+      typeInStock: '入库',
+      typePickOut: '领用出库',
+      typeBackendOut: '后台出库'
+    },
     confirm: {
       del: '是否确认删除选中的 {count} 条商品？删除前需先确保无库存且未被作为原材料引用。'
     }
@@ -1237,6 +1273,7 @@ export default {
     column: {
       locationName: '库位',
       productName: '产品名称',
+      productCode: '产品编码',
       productStock: '当前库存',
       productUnit: '单位',
       earNo: '耳号',
@@ -1247,7 +1284,23 @@ export default {
     action: {
       flowIn: '入库记录',
       flowOut: '出库记录',
-      checkRecord: '盘点记录'
+      checkRecord: '盘点记录',
+      productOut: '产品出库'
+    },
+    outDialog: {
+      title: '产品出库',
+      outDate: '出库日期',
+      outDatePlaceholder: '请选择出库日期',
+      quantity: '出库数量',
+      quantityPlaceholder: '请输入出库数量',
+      stockOutDest: '出库去向',
+      stockOutDestPlaceholder: '请选择出库去向',
+      confirm: '确定',
+      rule: {
+        outDate: '请选择出库日期',
+        quantity: '请输入出库数量',
+        stockOutDest: '请选择出库去向'
+      }
     }
   },
   // 种植 - 片区（PLT-MD-001）
@@ -2096,7 +2149,24 @@ export default {
         confirmPickup: '确认领用',
         pickupSuccess: '白条已领用进分割车间',
         confirmShipOut: '确认发货出库',
-        shipOutSuccess: '白条/猪肉已发货出库'
+        shipOutSuccess: '白条/猪肉已发货出库',
+        specLabel: '规格',
+        demandLabel: '需求量',
+        materialStockLabel: '原材料库存',
+        noProduct: '暂无产品',
+        operation: '操作',
+        weightPlaceholder: '产品重量KG',
+        sendType: '发送方式',
+        earNo: '猪只耳号',
+        earNoShort: '耳号',
+        remainShort: '剩余',
+        inLocation: '入库位置',
+        noCuttable: '暂无待分割白条',
+        cutProductRequired: '请选择分割产品',
+        cutStatusPendingPickup: '待领用',
+        cutStatusPicked: '已领用',
+        cutStatusCutting: '称重中',
+        cutStatusDone: '已完成'
       },
       shipment: {
         title: '发货流水',
@@ -2198,11 +2268,11 @@ export default {
         matType: '物资类型',
         productCode: '产品码',
         productName: '产品',
-        blockNo: '白条编号',
+        blockNo: '地块编号',
         belongType: '归属',
-        changeQuantity: '数量',
+        changeQuantity: '入库量',
         productUnit: '单位',
-        location: '库位',
+        location: '入库库位',
         earNo: '耳号',
         operator: '操作人',
         createTime: '创建时间',
@@ -2217,11 +2287,11 @@ export default {
         stockOutDest: '出库去向',
         productCode: '产品码',
         productName: '产品',
-        blockNo: '白条编号',
+        blockNo: '地块编号',
         belongType: '归属',
-        changeQuantity: '数量',
+        changeQuantity: '出库量',
         productUnit: '单位',
-        location: '库位',
+        location: '出库库位',
         earNo: '耳号',
         operator: '操作人',
         createTime: '创建时间',
@@ -2235,7 +2305,7 @@ export default {
           purchaseDate: '采购日期',
           arriveTime: '到场时间',
           pigMarkNo: '生猪标号',
-          pigWeight: '生猪重量 (kg)',
+          pigWeight: '生猪重量',
           supplier: '供应商',
           buyer: '采购人'
         },
@@ -2244,7 +2314,7 @@ export default {
           purchaseDate: '采购日期',
           slaughterDate: '屠宰日期',
           arriveTime: '到场时间',
-          pigWeight: '生猪重量 (kg)',
+          pigWeight: '生猪重量',
           supplier: '供应商',
           buyer: '采购人'
         },
@@ -2418,6 +2488,7 @@ export default {
       rawMaterial: '原材料',
       demandStatus: '状态',
       shippedCount: '已发货',
+      storeCount: '需求门店数',
       expectedArriveDate: '期望到货',
       createByName: '创建人',
       createTime: '创建时间',
@@ -2442,7 +2513,16 @@ export default {
       startProduction: '开始排产',
       cancel: '取消',
       assignPig: '指定猪只',
-      history: '状态历史'
+      history: '状态历史',
+      detail: '详情'
+    },
+    detail: {
+      title: '产品需求详情',
+      storeCount: '共 {count} 家门店',
+      storeName: '门店',
+      demandQuantity: '需求量',
+      demandCount: '需求单数',
+      empty: '暂无门店需求'
     },
     confirm: {
       del: '确认删除选中的 {count} 条需求？仅 DRAFT/CANCELLED 态可删',
@@ -2497,7 +2577,7 @@ export default {
     cart: {
       title: '新增{type}需求',
       titleGeneric: '新增需求',
-      candidateTitle: '产品候选',
+      candidateTitle: '产品选择',
       cartTitle: '需求产品',
       searchPlaceholder: '搜索产品名称 / 编码',
       emptyProducts: '该业态暂无可选产品',
@@ -2929,7 +3009,17 @@ export default {
       genOk: '生码成功：{code}',
       tracePig: '追溯猪只',
       traceProduct: '追溯产品',
-      productName: '产品名称'
+      productName: '产品名称',
+      codeListTitle: '已生成追溯码',
+      codeNo: '追溯码',
+      pigEarNo: '猪只耳号',
+      codeProductName: '产品',
+      remark: '备注',
+      creatorName: '生成人',
+      createTime: '生成时间',
+      codeDate: '生成日期',
+      reprint: '补打',
+      noCode: '该行无追溯码可补打'
     }
   },
   storeReturn: {

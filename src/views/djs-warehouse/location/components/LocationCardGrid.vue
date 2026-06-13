@@ -5,11 +5,7 @@
         <el-card shadow="hover" class="location-card" :body-style="{ padding: '12px 14px' }">
           <div class="location-card__header">
             <dict-tag :options="djs_location_type" :value="card.locationType" />
-            <span class="location-card__count">
-              {{ t('location.summary.locationCount') }}: {{ card.locationCount }}
-              <el-divider direction="vertical" />
-              {{ t('location.summary.productCount') }}: {{ card.productCount }}
-            </span>
+            <span class="location-card__count"> {{ t('location.summary.productCount') }}：{{ card.productCount }} </span>
           </div>
           <div class="location-card__metric">
             <span class="location-card__metric-label">{{ t('location.summary.currentStock') }}</span>

@@ -151,8 +151,9 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productType', label: t('product.column.productType'), width: 90, align: 'center', dictType: 'djs_product_type' },
   { prop: 'productAttr', label: t('product.column.productAttr'), width: 100, align: 'center', dictType: 'djs_product_attr' },
   { prop: 'productWorkshop', label: t('product.column.productWorkshop'), width: 110, align: 'center', dictType: 'djs_product_workshop' },
-  // 原型新增列：产品单位 / 存储仓库
+  // 原型新增列：产品单位 / 规格 / 存储仓库
   { prop: 'productUnit', label: t('product.column.productUnit'), width: 90, align: 'center' },
+  { prop: 'productSpec', label: t('product.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true },
   { prop: 'storeLocationName', label: t('product.column.storeLocation'), width: 130, align: 'center', showOverflowTooltip: true },
   { prop: 'productStatus', label: t('product.column.productStatus'), width: 90, align: 'center', dictType: 'sys_normal_disable' },
   { prop: 'updateTime', label: t('product.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' },

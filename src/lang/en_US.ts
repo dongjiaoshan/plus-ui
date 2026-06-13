@@ -360,9 +360,6 @@ export default {
     confirm: {
       del: 'Delete the selected {count} store record(s)?',
       clearManager: 'Clear the current manager?'
-    },
-    tip: {
-      managerHint: 'Use the "Set manager" button to bind a system user'
     }
   },
   // Breeding configuration (BRD-MD-001) — type / strain / mating relations, 4-tab single page
@@ -396,7 +393,9 @@ export default {
       cubCode: 'Cub Code',
       offspringName: 'Offspring Name',
       createTime: 'Created At',
-      createBy: 'Created By'
+      createBy: 'Created By',
+      changeTime: 'Change Time',
+      changeBy: 'Changed By'
     },
     field: {
       breedStrain: 'Type',
@@ -408,7 +407,8 @@ export default {
       motherCode: 'Maternal Line Code',
       fatherCode: 'Paternal Line Code',
       cubCode: 'Cub Code',
-      createTimeRange: 'Created At'
+      createTimeRange: 'Created At',
+      changeTimeRange: 'Change Date'
     },
     placeholder: {
       breedStrainCode: 'Enter code (letters / digits / underscore / hyphen)',
@@ -1101,6 +1101,8 @@ export default {
       locationName: 'Name',
       locationType: 'Type',
       locationThumb: 'Image',
+      locationSort: 'Sort',
+      locationDesc: 'Description',
       capacity: 'Capacity',
       locationStatus: 'Status',
       createTime: 'Created',
@@ -1110,8 +1112,10 @@ export default {
       locationCode: 'Code',
       locationName: 'Name',
       locationType: 'Type',
-      locationThumb: 'Thumbnail',
+      locationThumb: 'Location Image',
       locationImg: 'Images',
+      locationSort: 'Sort',
+      locationDesc: 'Description',
       locationStatus: 'Status',
       capacity: 'Capacity',
       remark: 'Remark'
@@ -1135,7 +1139,7 @@ export default {
     },
     summary: {
       locationCount: 'Locations',
-      productCount: 'Products',
+      productCount: 'Product Categories',
       currentStock: 'Current stock',
       todayIn: 'In today',
       todayOut: 'Out today',
@@ -1151,7 +1155,9 @@ export default {
       edit: 'Edit commodity',
       view: 'Product detail',
       baseInfo: 'Product info',
-      giftComponents: 'Gift box list'
+      giftComponents: 'Gift box list',
+      production: 'Production Records',
+      flow: 'Transaction Flow'
     },
     giftEmpty: 'No components in this gift box',
     column: {
@@ -1160,6 +1166,7 @@ export default {
       productType: 'Type',
       productAttr: 'Attribute',
       productWorkshop: 'Workshop',
+      storeLocation: 'Store Location',
       belongType: 'Belong',
       productThumb: 'Image',
       productUnit: 'Unit',
@@ -1188,6 +1195,9 @@ export default {
       productStatus: 'Status',
       isDelivery: 'Is delivery',
       isBuyOut: 'Buy-out',
+      isBuyOutSupport: 'Support Purchase',
+      storeLocation: 'Store Location',
+      updateBy: 'Updated By',
       supplierId: 'Supplier',
       productDesc: 'Description',
       remark: 'Remark',
@@ -1221,6 +1231,32 @@ export default {
     action: {
       addComponent: 'Add component'
     },
+    button: {
+      inbound: 'Inbound'
+    },
+    production: {
+      produceDate: 'Produce Date',
+      produceDatePlaceholder: 'Select produce date',
+      produceType: 'Produce Type',
+      produceTypePlaceholder: 'Select type',
+      typeProduce: 'Produce',
+      typeReturn: 'Return',
+      produceNum: 'Produce Qty',
+      produceUnit: 'Unit',
+      standardWeight: 'Standard Weight',
+      produceWeight: 'Actual Weight',
+      diffWeight: 'Diff Weight'
+    },
+    flow: {
+      bizDate: 'Biz Date',
+      bizDatePlaceholder: 'Select biz date',
+      bizType: 'Biz Type',
+      bizNum: 'Quantity',
+      bizUnit: 'Unit',
+      typeInStock: 'Inbound',
+      typePickOut: 'Pick Out',
+      typeBackendOut: 'Backend Out'
+    },
     confirm: {
       del: 'Delete {count} product(s)? Make sure none has active stock or is referenced as raw material.'
     }
@@ -1235,6 +1271,7 @@ export default {
     column: {
       locationName: 'Location',
       productName: 'Product',
+      productCode: 'Product Code',
       productStock: 'Stock',
       productUnit: 'Unit',
       earNo: 'Ear No.',
@@ -1245,7 +1282,23 @@ export default {
     action: {
       flowIn: 'Inbound',
       flowOut: 'Outbound',
-      checkRecord: 'Check log'
+      checkRecord: 'Check log',
+      productOut: 'Stock Out'
+    },
+    outDialog: {
+      title: 'Product Stock Out',
+      outDate: 'Out Date',
+      outDatePlaceholder: 'Select out date',
+      quantity: 'Quantity',
+      quantityPlaceholder: 'Enter quantity',
+      stockOutDest: 'Destination',
+      stockOutDestPlaceholder: 'Select destination',
+      confirm: 'Confirm',
+      rule: {
+        outDate: 'Please select out date',
+        quantity: 'Please enter quantity',
+        stockOutDest: 'Please select destination'
+      }
     }
   },
   // Planting - Zone (PLT-MD-001)
@@ -2094,7 +2147,24 @@ export default {
         confirmPickup: 'Confirm Pickup',
         pickupSuccess: 'Bar picked to cutting',
         confirmShipOut: 'Confirm Ship Out',
-        shipOutSuccess: 'White bar / pork shipped out'
+        shipOutSuccess: 'White bar / pork shipped out',
+        specLabel: 'Spec',
+        demandLabel: 'Demand',
+        materialStockLabel: 'Material stock',
+        noProduct: 'No products',
+        operation: 'Operation',
+        weightPlaceholder: 'Product weight KG',
+        sendType: 'Send method',
+        earNo: 'Pig ear tag',
+        earNoShort: 'Ear tag',
+        remainShort: 'Remaining',
+        inLocation: 'Inbound location',
+        noCuttable: 'No carcasses to split',
+        cutProductRequired: 'Please select a cut product',
+        cutStatusPendingPickup: 'Pending pickup',
+        cutStatusPicked: 'Picked',
+        cutStatusCutting: 'Weighing',
+        cutStatusDone: 'Done'
       },
       shipment: {
         title: 'Shipment',
@@ -2198,9 +2268,9 @@ export default {
         productName: 'Product',
         blockNo: 'Block No.',
         belongType: 'Category',
-        changeQuantity: 'Quantity',
+        changeQuantity: 'In Quantity',
         productUnit: 'Unit',
-        location: 'Location',
+        location: 'In Location',
         earNo: 'Ear No.',
         operator: 'Operator',
         createTime: 'Created',
@@ -2217,9 +2287,9 @@ export default {
         productName: 'Product',
         blockNo: 'Block No.',
         belongType: 'Category',
-        changeQuantity: 'Quantity',
+        changeQuantity: 'Out Quantity',
         productUnit: 'Unit',
-        location: 'Location',
+        location: 'Out Location',
         earNo: 'Ear No.',
         operator: 'Operator',
         createTime: 'Created',
@@ -2233,7 +2303,7 @@ export default {
           purchaseDate: 'Purchase Date',
           arriveTime: 'Arrival Time',
           pigMarkNo: 'Pig Mark No.',
-          pigWeight: 'Pig Weight (kg)',
+          pigWeight: 'Pig Weight',
           supplier: 'Supplier',
           buyer: 'Buyer'
         },
@@ -2242,7 +2312,7 @@ export default {
           purchaseDate: 'Purchase Date',
           slaughterDate: 'Slaughter Date',
           arriveTime: 'Arrival Time',
-          pigWeight: 'Pig Weight (kg)',
+          pigWeight: 'Pig Weight',
           supplier: 'Supplier',
           buyer: 'Buyer'
         },
@@ -2416,6 +2486,7 @@ export default {
       rawMaterial: 'Raw Material',
       demandStatus: 'Status',
       shippedCount: 'Shipped',
+      storeCount: 'Stores',
       expectedArriveDate: 'Expected',
       createByName: 'Creator',
       createTime: 'Created',
@@ -2440,7 +2511,16 @@ export default {
       startProduction: 'Start Prod',
       cancel: 'Cancel',
       assignPig: 'Assign Pig',
-      history: 'History'
+      history: 'History',
+      detail: 'Detail'
+    },
+    detail: {
+      title: 'Product Demand Detail',
+      storeCount: '{count} stores',
+      storeName: 'Store',
+      demandQuantity: 'Demand Qty',
+      demandCount: 'Demand Count',
+      empty: 'No store demand'
     },
     confirm: {
       del: 'Delete {count} demand(s)? Only DRAFT/CANCELLED allowed',
@@ -2495,7 +2575,7 @@ export default {
     cart: {
       title: 'Add {type} Demand',
       titleGeneric: 'Add Demand',
-      candidateTitle: 'Product Candidates',
+      candidateTitle: 'Product Selection',
       cartTitle: 'Demand Products',
       searchPlaceholder: 'Search product name / code',
       emptyProducts: 'No selectable products for this category',
@@ -2928,7 +3008,17 @@ export default {
       genOk: 'Code generated: {code}',
       tracePig: 'Traced Pig',
       traceProduct: 'Traced Product',
-      productName: 'Product Name'
+      productName: 'Product Name',
+      codeListTitle: 'Generated Trace Codes',
+      codeNo: 'Trace Code',
+      pigEarNo: 'Pig Ear No.',
+      codeProductName: 'Product',
+      remark: 'Remark',
+      creatorName: 'Created By',
+      createTime: 'Created Time',
+      codeDate: 'Generated Date',
+      reprint: 'Reprint',
+      noCode: 'No trace code to reprint for this row'
     }
   },
   storeReturn: {

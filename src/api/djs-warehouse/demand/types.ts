@@ -34,6 +34,8 @@ export interface DemandManageVO extends BaseEntity {
   expectedArriveDate?: string;
   shippedCount: number | string;
   confirmedCount: number | string;
+  /** 该产品被去重门店需求数（后端按 productId 分组统计）。 */
+  storeCount?: number;
   /** JSON 字符串；前端解析后渲染 timeline。 */
   auditHistory?: string;
   /** @Translation 后端 enrich */
@@ -112,6 +114,20 @@ export interface DemandSummaryVO {
 
   // other
   rawMaterialStockKg?: number | string;
+}
+
+/**
+ * 产品需求详情：某产品下单个门店的需求聚合（72-1 详情弹窗用）。
+ *
+ * 后端 GET /djs/warehouse/demand/product-store-detail?productId= 返回数组。
+ */
+export interface DemandProductStoreDetailVO {
+  /** 门店名称。 */
+  storeName: string;
+  /** 该门店对本产品的需求总量。 */
+  demandQuantity: number | string;
+  /** 该门店对本产品的需求单数。 */
+  demandCount: number;
 }
 
 export interface AuditHistoryEntryVO {

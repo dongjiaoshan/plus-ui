@@ -90,7 +90,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item :label="t('product.field.isBuyOut')">
+            <el-form-item :label="t('product.field.isBuyOutSupport')">
               <el-radio-group v-model="form.isBuyOut">
                 <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
               </el-radio-group>
@@ -148,11 +148,6 @@
         <el-col :span="12">
           <el-form-item :label="t('product.field.productThumb')" prop="productThumb">
             <OssUpload ref="ossThumbRef" v-model="thumbOssIdsModel" biz-type="product_image" :limit="1" :file-size="10" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('product.field.productImg')" prop="productImg">
-            <OssUpload ref="ossImgRef" v-model="imgOssIdsModel" biz-type="product_image" :limit="5" :file-size="10" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -225,7 +220,6 @@ const submitting = ref(false);
 const lockType = ref(false);
 const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
-const ossImgRef = ref<InstanceType<typeof OssUpload>>();
 const ossMainRef = ref<InstanceType<typeof OssUpload>>();
 
 const supplierOptions = ref<Array<{ id: number | string; supplierName: string }>>([]);
@@ -260,17 +254,11 @@ const defaultForm = (): ProductInfoForm => ({
 
 const form = ref<ProductInfoForm>(defaultForm());
 
-// OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段 productThumb 是单 ossId 字符串 / productImg 是逗号分隔字符串
+// OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段 productThumb 是单 ossId 字符串
 const thumbOssIdsModel = computed<string[]>({
   get: () => (form.value.productThumb ? [form.value.productThumb] : []),
   set: (val: string[]) => {
     form.value.productThumb = val && val.length > 0 ? val[0] : undefined;
-  }
-});
-const imgOssIdsModel = computed<string[]>({
-  get: () => (form.value.productImg ? form.value.productImg.split(',').filter(Boolean) : []),
-  set: (val: string[]) => {
-    form.value.productImg = val && val.length > 0 ? val.join(',') : undefined;
   }
 });
 // 主图（IMG-LIB-001）单 ossId
@@ -363,19 +351,6 @@ const openEdit = async (id: number | string) => {
       ossThumbRef.value?.setExistingFiles(items);
     } catch (e) {
       console.warn('[ProductInfoForm] listOssByIds thumb failed', e);
-    }
-  }
-  if (form.value.productImg) {
-    try {
-      const ossRes = await listOssByIds(form.value.productImg);
-      const items = (ossRes.data || []).map((o) => ({
-        ossId: String(o.ossId),
-        url: o.url,
-        originalName: o.originalName
-      }));
-      ossImgRef.value?.setExistingFiles(items);
-    } catch (e) {
-      console.warn('[ProductInfoForm] listOssByIds img failed', e);
     }
   }
   if (form.value.imageOssId) {

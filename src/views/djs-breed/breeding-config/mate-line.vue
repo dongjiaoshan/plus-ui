@@ -62,7 +62,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'motherCode', label: t('breeding.field.motherCode'), type: 'select', options: codeOptions.value },
   { field: 'fatherCode', label: t('breeding.field.fatherCode'), type: 'select', options: codeOptions.value },
   { field: 'cubCode', label: t('breeding.field.cubCode'), type: 'select', options: codeOptions.value },
-  { field: 'createTimeRange', label: t('breeding.field.createTimeRange'), type: 'daterange' }
+  { field: 'createTimeRange', label: t('breeding.field.changeTimeRange'), type: 'daterange' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -72,8 +72,8 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'fatherName', label: t('breeding.column.fatherName'), width: 140 },
   { prop: 'cubCode', label: t('breeding.column.cubCode'), width: 140 },
   { prop: 'offspringName', label: t('breeding.column.offspringName'), width: 140 },
-  { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'createByName', label: t('breeding.column.createBy'), width: 120, align: 'center' }
+  { prop: 'createTime', label: t('breeding.column.changeTime'), width: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'createByName', label: t('breeding.column.changeBy'), width: 120, align: 'center' }
 ]);
 
 /** 加载搜索下拉候选（同弹窗的品种/品系范畴） */

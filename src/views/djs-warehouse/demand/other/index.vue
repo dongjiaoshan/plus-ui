@@ -28,7 +28,6 @@
       <template #cell-actions="{ row }">
         <el-button v-if="canSubmit(row)" link type="primary" size="small" @click="onSubmit(row)">{{ t('demand.action.submit') }}</el-button>
         <el-button v-if="canConfirm(row)" link type="success" size="small" @click="onConfirm(row)">{{ t('demand.action.confirm') }}</el-button>
-        <el-button v-if="canStart(row)" link type="warning" size="small" @click="onStart(row)">{{ t('demand.action.startProduction') }}</el-button>
         <el-button v-if="canCancel(row)" link type="danger" size="small" @click="onCancel(row)">{{ t('demand.action.cancel') }}</el-button>
         <el-button link type="info" size="small" @click="onHistory(row)">{{ t('demand.action.history') }}</el-button>
       </template>
@@ -60,21 +59,8 @@ const formRef = ref<{ openCreate: () => void; openEdit: (id: string) => void }>(
 const cartRef = ref<{ open: () => void }>();
 const historyDialogRef = ref<{ open: (demandId: string) => void }>();
 
-const {
-  list,
-  total,
-  loading,
-  pageNum,
-  pageSize,
-  searchModel,
-  fetchList,
-  handleSubmit,
-  handleConfirm,
-  handleStartProduction,
-  handleCancel,
-  handleDelete,
-  allowedActions
-} = useDemandList('other');
+const { list, total, loading, pageNum, pageSize, searchModel, fetchList, handleSubmit, handleConfirm, handleCancel, handleDelete, allowedActions } =
+  useDemandList('other');
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'demandNo', label: t('demand.field.demandNo'), type: 'input' },
@@ -97,7 +83,6 @@ const columns = computed<BizTableColumn[]>(() => [
 const statusActions = (r: DemandManageVO) => allowedActions(r.demandStatus as DemandStatusCode);
 const canSubmit = (r: DemandManageVO) => statusActions(r).includes('submit');
 const canConfirm = (r: DemandManageVO) => statusActions(r).includes('confirm');
-const canStart = (r: DemandManageVO) => statusActions(r).includes('start_production');
 const canCancel = (r: DemandManageVO) => statusActions(r).includes('cancel');
 
 function handleSearch(payload: Record<string, any>) {
@@ -135,11 +120,6 @@ async function onSubmit(row: DemandManageVO) {
 async function onConfirm(row: DemandManageVO) {
   await proxy?.$modal.confirm(t('demand.confirm.confirm', { no: row.demandNo }));
   await handleConfirm(row.id);
-  proxy?.$modal.msgSuccess(t('common.opSuccess'));
-}
-async function onStart(row: DemandManageVO) {
-  await proxy?.$modal.confirm(t('demand.confirm.startProduction', { no: row.demandNo }));
-  await handleStartProduction(row.id);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
 }
 async function onCancel(row: DemandManageVO) {

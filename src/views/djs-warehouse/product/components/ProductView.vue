@@ -28,17 +28,11 @@
           <el-descriptions-item :label="t('product.field.isDelivery')">
             <dict-tag :options="djs_yes_no" :value="data.isDelivery" />
           </el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.isBuyOut')">
+          <el-descriptions-item :label="t('product.field.isBuyOutSupport')">
             <dict-tag :options="djs_yes_no" :value="data.isBuyOut" />
           </el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productThumb')" :span="2">
             <image-preview v-if="thumbUrl" :src="thumbUrl" :width="120" :height="120" />
-            <el-text v-else type="info">-</el-text>
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.productImg')" :span="2">
-            <div v-if="imgUrls.length" class="flex flex-wrap gap-2">
-              <image-preview v-for="(url, i) in imgUrls" :key="i" :src="url" :width="100" :height="100" />
-            </div>
             <el-text v-else type="info">-</el-text>
           </el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productDesc')" :span="2">{{ data.productDesc || '-' }}</el-descriptions-item>
@@ -173,7 +167,6 @@ const visible = ref(false);
 const activeTab = ref('info');
 const data = ref<Partial<ProductInfoVO>>({});
 const thumbUrl = ref<string>('');
-const imgUrls = ref<string[]>([]);
 
 // 生产记录子表（自产 / 礼盒）
 const productionList = ref<ProductionRecordVO[]>([]);
@@ -245,7 +238,6 @@ const open = async (id: number | string, _productType?: number) => {
   const res = await getProduct(id);
   data.value = res.data || {};
   thumbUrl.value = '';
-  imgUrls.value = [];
   activeTab.value = 'info';
   visible.value = true;
   // 子表按形态懒加载：外购→业务流水；自产/礼盒→生产记录
@@ -254,7 +246,7 @@ const open = async (id: number | string, _productType?: number) => {
   } else {
     loadProduction();
   }
-  // product VO 只有 ossId（productThumb 单图 / productImg 逗号分隔多图），必须 listByIds 回查 url
+  // product VO 只有 ossId（productThumb 单图），必须 listByIds 回查 url
   const thumbId = data.value.productThumb;
   if (thumbId) {
     try {
@@ -262,15 +254,6 @@ const open = async (id: number | string, _productType?: number) => {
       thumbUrl.value = ossRes.data?.[0]?.url ?? '';
     } catch (e) {
       console.warn('[ProductView] listOssByIds failed for productThumb', thumbId, e);
-    }
-  }
-  const imgIds = data.value.productImg;
-  if (imgIds) {
-    try {
-      const ossRes = await listOssByIds(imgIds);
-      imgUrls.value = (ossRes.data ?? []).map((o) => o.url).filter((u): u is string => !!u);
-    } catch (e) {
-      console.warn('[ProductView] listOssByIds failed for productImg', imgIds, e);
     }
   }
 };

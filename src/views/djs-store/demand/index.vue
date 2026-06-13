@@ -117,7 +117,17 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'demandDate', label: t('storeDemand.column.demandDate'), width: 110, align: 'center' },
   { prop: 'productName', label: t('storeDemand.column.productName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeDemand.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true },
-  { prop: 'demandQuantity', label: t('storeDemand.column.demandQuantity'), width: 90, align: 'right' },
+  {
+    prop: 'demandQuantity',
+    label: t('storeDemand.column.demandQuantity'),
+    width: 90,
+    align: 'right',
+    // 89-1：后端返 BigDecimal（3 位小数），需求量取整展示，无值显 '—'
+    formatter: (row: BizRow) => {
+      const v = (row as StoreDemandVO).demandQuantity;
+      return v == null || v === '' ? '—' : String(Math.round(Number(v)));
+    }
+  },
   { prop: 'productUnit', label: t('storeDemand.column.productUnit'), width: 70, align: 'center' },
   { prop: 'demandType', label: t('storeDemand.column.demandType'), width: 100, align: 'center', dictType: 'djs_demand_mailing_type' },
   { prop: 'demandRemark', label: t('storeDemand.column.demandRemark'), minWidth: 120, showOverflowTooltip: true },

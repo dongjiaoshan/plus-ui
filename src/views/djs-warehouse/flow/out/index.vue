@@ -31,9 +31,14 @@ import { listFlowOut } from '@/api/djs-warehouse/stockFlow';
 import type { StockFlowQuery, StockFlowVO } from '@/api/djs-warehouse/stockFlow/types';
 import { listLocation } from '@/api/djs-warehouse/location';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const route = useRoute();
+
+/** 库存查询行钻取带入的 productId 预过滤（route query，仅本次进入生效） */
+const drillProductId = ref<string | undefined>(undefined);
 
 const tableRef = ref<BizTableExpose>();
 
@@ -69,7 +74,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'flowDate', label: t('djs.warehouse.flowOut.flowDate'), minWidth: 160, formatter: 'date' },
+  { prop: 'flowDate', label: t('djs.warehouse.flowOut.flowDate'), minWidth: 160, formatter: 'datetime' },
   { prop: 'flowNo', label: t('djs.warehouse.flowOut.flowNo'), minWidth: 160 },
   { prop: 'productCode', label: t('djs.warehouse.flowOut.productCode'), minWidth: 110 },
   { prop: 'productName', label: t('djs.warehouse.flowOut.productName'), minWidth: 160 },
@@ -87,6 +92,7 @@ const columns = computed<BizTableColumn[]>(() => [
 function buildQuery(): StockFlowQuery {
   const [from, to] = Array.isArray(searchModel.dateRange) ? searchModel.dateRange : [undefined, undefined];
   return {
+    productId: drillProductId.value || undefined,
     productName: searchModel.productName || undefined,
     flowType: searchModel.flowType || undefined,
     warehouseId: searchModel.warehouseId ?? undefined,
@@ -142,6 +148,8 @@ function handleExport() {
 }
 
 onMounted(() => {
+  const pid = route.query.productId;
+  drillProductId.value = typeof pid === 'string' && pid ? pid : undefined;
   loadLocations();
   loadList();
 });

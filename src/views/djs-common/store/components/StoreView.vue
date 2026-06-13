@@ -13,10 +13,6 @@
       <el-descriptions-item :label="t('store.field.openDate')">{{ data.openDate || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.managerName')">{{ data.managerName || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.managerPhone')">{{ data.managerPhone || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('store.field.manager')">
-        <span v-if="data.managerUserId">user_id: {{ data.managerUserId }}</span>
-        <el-text v-else type="info">{{ t('store.tip.managerHint') }}</el-text>
-      </el-descriptions-item>
       <el-descriptions-item :label="t('store.field.posSystemId')">{{ data.posSystemId || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.address')" :span="2">{{ data.address || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.image')" :span="2">

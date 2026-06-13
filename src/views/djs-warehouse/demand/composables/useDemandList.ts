@@ -5,7 +5,7 @@
  * 不传 productType → 列表返回全部业态需求；传则按业态过滤（保留向后兼容）。
  */
 import { ref, reactive, computed } from 'vue';
-import { cancelDemand, confirmDemand, listDemand, removeDemand, startProduction, submitDemand } from '@/api/djs-warehouse/demand';
+import { cancelDemand, confirmDemand, listDemand, removeDemand, submitDemand } from '@/api/djs-warehouse/demand';
 import type { DemandManageQuery, DemandManageVO, DemandProductType, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
 
 export function useDemandList(productType?: DemandProductType) {
@@ -66,11 +66,6 @@ export function useDemandList(productType?: DemandProductType) {
     await fetchList();
   }
 
-  async function handleStartProduction(id: string, remark?: string) {
-    await startProduction(id, remark);
-    await fetchList();
-  }
-
   async function handleCancel(id: string, remark?: string) {
     await cancelDemand(id, remark);
     await fetchList();
@@ -84,7 +79,8 @@ export function useDemandList(productType?: DemandProductType) {
       case 'SUBMITTED':
         return ['confirm', 'cancel', 'assign_pig'];
       case 'CONFIRMED':
-        return ['start_production', 'cancel', 'assign_pig'];
+        // 决策 #7：确认即终态，去「开始排产」；保留指派猪只为可选后置动作 + 取消。
+        return ['cancel', 'assign_pig'];
       case 'IN_PRODUCTION':
       case 'PARTIAL_SHIPPED':
         return ['history'];
@@ -110,7 +106,6 @@ export function useDemandList(productType?: DemandProductType) {
     handleDelete,
     handleSubmit,
     handleConfirm,
-    handleStartProduction,
     handleCancel,
     allowedActions
   };

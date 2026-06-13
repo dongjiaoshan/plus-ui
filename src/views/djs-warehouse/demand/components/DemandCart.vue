@@ -11,11 +11,15 @@
           <el-tag size="small" :type="activeTypeColor">{{ activeTypeLabel }}</el-tag>
         </div>
         <el-input v-model="keyword" :placeholder="t('demand.cart.searchPlaceholder')" clearable class="cart-search">
-          <template #prefix><el-icon><Search /></el-icon></template>
+          <template #prefix
+            ><el-icon><Search /></el-icon
+          ></template>
         </el-input>
         <el-table :data="filteredProducts" height="100%" border class="cart-product-table" :empty-text="t('demand.cart.emptyProducts')">
           <el-table-column :label="t('demand.column.productName')" min-width="160" show-overflow-tooltip>
-            <template #default="{ row }">{{ row.productName }} <span class="cart-product-code">({{ row.productId }})</span></template>
+            <template #default="{ row }"
+              >{{ row.productName }} <span class="cart-product-code">({{ row.productId }})</span></template
+            >
           </el-table-column>
           <el-table-column :label="t('demand.field.productSpec')" prop="productSpec" width="120" show-overflow-tooltip />
           <el-table-column :label="t('demand.field.productUnit')" prop="productUnit" width="80" align="center" />
@@ -23,7 +27,7 @@
             <template #default="{ row }">
               <el-input-number
                 v-model="rowQty[String(row.id)]"
-                :precision="3"
+                :precision="2"
                 :min="0"
                 :step="1"
                 size="small"
@@ -54,12 +58,11 @@
                 <el-tag size="small" :type="resolveTypeColor(item.productType)" class="cart-row-type">{{ rowTypeLabel(item.productType) }}</el-tag>
                 {{ item.productName }}
               </div>
-              <div class="cart-row-spec">{{ item.productSpec || '—' }}</div>
             </div>
             <el-input-number
               v-model="item.demandQuantity"
-              :precision="3"
-              :min="0.001"
+              :precision="2"
+              :min="0.01"
               :step="1"
               size="small"
               controls-position="right"
@@ -158,9 +161,7 @@ const footerRules = computed(() => ({
 const filteredProducts = computed<ProductInfoVO[]>(() => {
   const kw = keyword.value.trim().toLowerCase();
   if (!kw) return productOptions.value;
-  return productOptions.value.filter(
-    (p) => p.productName.toLowerCase().includes(kw) || String(p.productId).toLowerCase().includes(kw)
-  );
+  return productOptions.value.filter((p) => p.productName.toLowerCase().includes(kw) || String(p.productId).toLowerCase().includes(kw));
 });
 
 const drawerTitle = computed(() => t('demand.cart.titleGeneric'));
@@ -190,7 +191,7 @@ function addToCart(row: ProductInfoVO): void {
   const exist = cartItems.value.find((c) => c.productId === pid);
   if (exist) {
     // 同产品再次加入：累加数量
-    exist.demandQuantity = Number((exist.demandQuantity + qty).toFixed(3));
+    exist.demandQuantity = Number((exist.demandQuantity + qty).toFixed(2));
   } else {
     const material = (row as ProductInfoVO).productMaterial;
     cartItems.value.push({
@@ -317,6 +318,18 @@ defineExpose({ open });
 .cart-type-tabs :deep(.el-tabs__header) {
   margin-bottom: 0;
 }
+/* card tabs 选中态默认 nav 与 content 间留白；本页无 tab-pane 内容，收掉空白（决策 #11=b）。 */
+.cart-type-tabs :deep(.el-tabs__content) {
+  padding: 0;
+}
+.cart-type-tabs :deep(.el-tabs__new-tab),
+.cart-type-tabs :deep(.el-tabs__nav-wrap)::after {
+  display: none;
+}
+.cart-type-tabs :deep(.el-tabs__item) {
+  height: 36px;
+  line-height: 36px;
+}
 .cart-section-head {
   display: flex;
   align-items: center;
@@ -361,10 +374,6 @@ defineExpose({ open });
 }
 .cart-row-type {
   margin-right: 4px;
-}
-.cart-row-spec {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
 }
 .cart-row-unit {
   font-size: 13px;

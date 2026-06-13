@@ -93,11 +93,11 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'recordNo', label: t('plantDisaster.column.recordNo'), width: 150, showOverflowTooltip: true },
   { prop: 'farmDate', label: t('plantDisaster.column.farmDate'), width: 120, align: 'center' },
-  { prop: 'disasterType', label: t('plantDisaster.column.disasterType'), width: 100, align: 'center', dictType: 'djs_disaster_type' },
   // 地块编号列对齐原型「地块编号」（如 A-D-001）；plotCode 由后端 FarmRecordsVo service enrich 返回
   { prop: 'plotCode', label: t('plantDisaster.column.plotCode'), width: 120, showOverflowTooltip: true },
   { prop: 'plotName', label: t('plantDisaster.column.plotName'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'cropName', label: t('plantDisaster.column.cropName'), width: 120, showOverflowTooltip: true },
+  { prop: 'disasterType', label: t('plantDisaster.column.disasterType'), width: 100, align: 'center', dictType: 'djs_disaster_type' },
   { prop: 'lossRate', label: t('plantDisaster.column.lossRate'), width: 100, align: 'right' },
   { prop: 'lossYield', label: t('plantDisaster.column.lossYield'), width: 120, align: 'right' },
   { prop: 'isWarning', label: t('plantDisaster.column.isWarning'), width: 90, align: 'center' },

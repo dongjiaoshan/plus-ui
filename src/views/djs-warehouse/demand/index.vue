@@ -37,9 +37,9 @@
       @page-change="handlePageChange"
     >
       <template #cell-actions="{ row }">
+        <el-button link type="primary" size="small" @click="onDetail(row)">{{ t('demand.action.detail') }}</el-button>
         <el-button v-if="canSubmit(row)" link type="primary" size="small" @click="onSubmit(row)">{{ t('demand.action.submit') }}</el-button>
         <el-button v-if="canConfirm(row)" link type="success" size="small" @click="onConfirm(row)">{{ t('demand.action.confirm') }}</el-button>
-        <el-button v-if="canStart(row)" link type="warning" size="small" @click="onStart(row)">{{ t('demand.action.startProduction') }}</el-button>
         <el-button v-if="canAssignPig(row)" link type="primary" size="small" @click="onAssignPig(row)">{{ t('demand.action.assignPig') }}</el-button>
         <el-button v-if="canCancel(row)" link type="danger" size="small" @click="onCancel(row)">{{ t('demand.action.cancel') }}</el-button>
         <el-button link type="info" size="small" @click="onHistory(row)">{{ t('demand.action.history') }}</el-button>
@@ -50,6 +50,7 @@
     <DemandCart ref="cartRef" @success="reloadAll" />
     <PigAssignDialog ref="pigDialogRef" @success="reloadAll" />
     <HistoryDialog ref="historyDialogRef" />
+    <DetailDialog ref="detailDialogRef" />
   </div>
 </template>
 
@@ -60,6 +61,7 @@ import DemandForm from './components/DemandForm.vue';
 import DemandCart from './components/DemandCart.vue';
 import PigAssignDialog from './components/PigAssignDialog.vue';
 import HistoryDialog from './components/HistoryDialog.vue';
+import DetailDialog from './components/DetailDialog.vue';
 import DemandKpiBar from './components/DemandKpiBar.vue';
 import { useDemandList } from './composables/useDemandList';
 import { demandTypeHasPigAssign } from './composables/demandTypeMeta';
@@ -74,6 +76,7 @@ const formRef = ref<{ openCreate: () => void; openEdit: (id: string) => void }>(
 const cartRef = ref<{ open: () => void }>();
 const pigDialogRef = ref<{ open: (demandId: string, demandNo: string, requiredCount: number) => void }>();
 const historyDialogRef = ref<{ open: (demandId: string) => void }>();
+const detailDialogRef = ref<{ open: (productId: string, productName: string) => void }>();
 const kpiBarRef = ref<{ refresh: () => void }>();
 
 /**
@@ -106,22 +109,41 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productType', label: t('demand.column.productType'), width: 110, align: 'center', dictType: 'djs_demand_product_type' },
   { prop: 'productName', label: t('demand.column.productName'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('demand.column.productSpec'), width: 110, showOverflowTooltip: true },
-  { prop: 'rawMaterial', label: t('demand.column.rawMaterial'), minWidth: 130, showOverflowTooltip: true },
-  { prop: 'demandQuantity', label: t('demand.column.demandQuantity'), width: 100, align: 'right' },
+  {
+    prop: 'demandQuantity',
+    label: t('demand.column.demandQuantity'),
+    width: 100,
+    align: 'right',
+    formatter: (row: BizRow) => formatQuantity((row as unknown as DemandManageVO).demandQuantity)
+  },
   { prop: 'productUnit', label: t('demand.column.productUnit'), width: 70, align: 'center' },
   { prop: 'demandStatus', label: t('demand.column.demandStatus'), width: 100, align: 'center', dictType: 'djs_demand_status' },
-  { prop: 'storeId', label: t('demand.column.storeId'), width: 110, align: 'center' },
+  {
+    prop: 'storeCount',
+    label: t('demand.column.storeCount'),
+    width: 110,
+    align: 'center',
+    formatter: (row: BizRow) => formatStoreCount((row as unknown as DemandManageVO).storeCount)
+  },
   { prop: 'shippedCount', label: t('demand.column.shippedCount'), width: 90, align: 'right' },
   { prop: 'createTime', label: t('demand.column.createTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'actions', label: t('demand.column.actions'), width: 320, fixed: 'right', align: 'center' }
 ]);
+
+/** 需求量统一两位小数显示（71-5）。 */
+function formatQuantity(v: number | string | undefined): string {
+  return Number(v ?? 0).toFixed(2);
+}
+/** 门店列显示去重门店需求数（71-1）；后端未返回则回退 0。 */
+function formatStoreCount(v: number | undefined): string {
+  return String(v ?? 0);
+}
 
 function statusActions(row: DemandManageVO): string[] {
   return api.allowedActions(row.demandStatus as DemandStatusCode);
 }
 const canSubmit = (r: DemandManageVO) => statusActions(r).includes('submit');
 const canConfirm = (r: DemandManageVO) => statusActions(r).includes('confirm');
-const canStart = (r: DemandManageVO) => statusActions(r).includes('start_production');
 // 指定猪只仅 white_bar / pig 业态（按行 productType 判断，不再依赖全局 tab）
 const canAssignPig = (r: DemandManageVO) => demandTypeHasPigAssign(r.productType) && statusActions(r).includes('assign_pig');
 const canCancel = (r: DemandManageVO) => statusActions(r).includes('cancel');
@@ -169,11 +191,6 @@ async function onConfirm(row: DemandManageVO) {
   await api.handleConfirm(row.id);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
 }
-async function onStart(row: DemandManageVO) {
-  await proxy?.$modal.confirm(t('demand.confirm.startProduction', { no: row.demandNo }));
-  await api.handleStartProduction(row.id);
-  proxy?.$modal.msgSuccess(t('common.opSuccess'));
-}
 async function onCancel(row: DemandManageVO) {
   const { value: remark } = (await proxy?.$modal.prompt(t('demand.prompt.cancelRemark'), t('demand.action.cancel'), {
     inputPlaceholder: t('demand.prompt.cancelRemarkPh')
@@ -187,6 +204,9 @@ function onAssignPig(row: DemandManageVO) {
 }
 function onHistory(row: DemandManageVO) {
   historyDialogRef.value?.open(row.id);
+}
+function onDetail(row: DemandManageVO) {
+  detailDialogRef.value?.open(row.productId, row.productName);
 }
 
 onMounted(() => {

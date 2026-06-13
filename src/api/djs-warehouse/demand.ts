@@ -8,6 +8,7 @@ import type {
   DemandManageVO,
   DemandPigVO,
   DemandProductType,
+  DemandProductStoreDetailVO,
   DemandSummaryVO,
   DemandTodayKpiVO,
   PigAvailableVO
@@ -53,9 +54,6 @@ export const submitDemand = (id: string | number, remark?: string) =>
 export const confirmDemand = (id: string | number, remark?: string) =>
   request({ url: `/djs/warehouse/demand/${id}/confirm`, method: 'post', params: { remark } });
 
-export const startProduction = (id: string | number, remark?: string) =>
-  request({ url: `/djs/warehouse/demand/${id}/start-production`, method: 'post', params: { remark } });
-
 export const cancelDemand = (id: string | number, remark?: string) =>
   request({ url: `/djs/warehouse/demand/${id}/cancel`, method: 'post', params: { remark } });
 
@@ -77,6 +75,12 @@ export const listAvailablePigs = (params: { pageNum?: number; pageSize?: number 
 
 export const getDemandHistory = (id: string | number): AxiosPromise<AuditHistoryEntryVO[]> =>
   request({ url: `/djs/warehouse/demand/${id}/history`, method: 'get' });
+
+// =========== 产品需求详情（按产品聚合各门店需求）===========
+
+/** 某产品下各门店需求明细（门店名 / 需求量 / 需求单数）。 */
+export const getProductStoreDetail = (productId: string | number): AxiosPromise<DemandProductStoreDetailVO[]> =>
+  request({ url: '/djs/warehouse/demand/product-store-detail', method: 'get', params: { productId } });
 
 // =========== 业态摘要（DJS-FIX-ADMIN-W22-003）===========
 

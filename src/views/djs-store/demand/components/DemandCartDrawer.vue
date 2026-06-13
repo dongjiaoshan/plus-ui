@@ -89,9 +89,7 @@
               <span class="cart-item-name">{{ item.productName }}</span>
               <span class="cart-item-qty">{{ item.demandQuantity }}{{ item.productUnit }}</span>
             </div>
-            <el-checkbox v-model="item.mailing" class="cart-item-mailbox" size="small">
-              {{ t('storeDemand.create.mailing') }}
-            </el-checkbox>
+            <!-- 个人邮寄 UI 隐藏（87-1 决策 #10-B：保后端 StoreDemandBatchBo.mailing 字段，提交载荷仍带 mailing=false） -->
           </div>
         </div>
       </div>
@@ -375,8 +373,8 @@ defineExpose({ open });
 
       .cart-del {
         position: absolute;
-        top: -6px;
-        right: -6px;
+        top: 4px;
+        right: 4px;
         font-size: 18px;
         color: #f56c6c;
         cursor: pointer;
@@ -397,10 +395,6 @@ defineExpose({ open });
           font-size: 13px;
           color: #606266;
         }
-      }
-
-      .cart-item-mailbox {
-        margin-top: 4px;
       }
     }
   }

@@ -1,94 +1,82 @@
 <template>
-  <div class="p-2">
-    <el-card shadow="never" class="pack-card">
-      <template #header>
-        <span class="font-bold">{{ t('djs.warehouse.packEntry.cutTitle') }}</span>
+  <div class="pack-station">
+    <div class="station-title">{{ t('djs.warehouse.packEntry.cutTitle') }}</div>
+
+    <!-- 分割单 chip 行（猪只耳号；来源 cut_record picked/cutting） -->
+    <div v-loading="cuttableLoading" class="chip-row">
+      <template v-if="cuttable.length > 0">
+        <button
+          v-for="r in cuttable"
+          :key="String(r.id)"
+          type="button"
+          class="cut-chip"
+          :class="{ active: String(form.cutRecordId) === String(r.id) }"
+          @click="form.cutRecordId = r.id"
+        >
+          <el-icon><PriceTag /></el-icon>
+          <span class="chip-main">{{ r.earNo ?? r.cutId }}</span>
+          <span class="chip-sub">{{ cutStatusLabel(r.cutStatus) }}</span>
+        </button>
       </template>
+      <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.noCuttable') }}</span>
+    </div>
 
-      <el-alert :title="t('djs.warehouse.packEntry.cutHint')" type="info" :closable="false" class="mb-3" show-icon />
+    <div class="station-body">
+      <!-- 左：分割产品卡片网格（按具体产品 belong_type=pork） -->
+      <div class="station-left">
+        <ProductCardGrid v-model="selectedProductId" :items="porkProducts" :loading="porkProductLoading" :show-stock="false" />
+      </div>
 
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" class="max-w-3xl">
-        <!-- 选分割单（猪只耳号；来源 cut_record picked/cutting） -->
-        <el-form-item :label="t('djs.warehouse.packEntry.cutRecord')" prop="cutRecordId">
-          <el-select
-            v-model="form.cutRecordId"
-            filterable
-            clearable
-            :loading="cuttableLoading"
-            :placeholder="t('djs.warehouse.packEntry.cutRecordPlaceholder')"
-            style="width: 100%"
-          >
-            <el-option v-for="r in cuttable" :key="String(r.id)" :label="`${r.cutId} / 耳号 ${r.earNo ?? '-'} / ${r.cutStatus}`" :value="r.id" />
-          </el-select>
-        </el-form-item>
+      <!-- 右：操作 panel -->
+      <div class="station-right">
+        <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
 
-        <!-- 入冻品库位 -->
-        <el-form-item :label="t('djs.warehouse.packEntry.location')" prop="locationId">
-          <el-select
-            v-model="form.locationId"
-            filterable
-            clearable
-            :loading="locationLoading"
-            :placeholder="t('djs.warehouse.packEntry.locationPlaceholder')"
-            style="width: 100%"
-          >
-            <el-option v-for="l in locations" :key="String(l.id)" :label="`${l.locationCode} - ${l.locationName}`" :value="l.id" />
-          </el-select>
-        </el-form-item>
-
-        <!-- 分割产品明细（多行）：按具体产品（冻五花肉/排骨/肘子/大排 等 belong_type=pork） -->
-        <el-form-item :label="t('djs.warehouse.packEntry.parts')">
-          <div class="w-full">
-            <el-table :data="form.partItems" border size="small">
-              <el-table-column :label="t('djs.warehouse.packEntry.cutProduct')" min-width="200">
-                <template #default="{ row }">
-                  <el-select
-                    v-model="row.productId"
-                    filterable
-                    :loading="porkProductLoading"
-                    :placeholder="t('djs.warehouse.packEntry.cutProductPlaceholder')"
-                    style="width: 100%"
-                  >
-                    <el-option v-for="p in porkProducts" :key="String(p.id)" :label="`${p.productId} - ${p.productName}`" :value="p.id" />
-                  </el-select>
-                </template>
-              </el-table-column>
-              <el-table-column :label="t('djs.warehouse.packEntry.productWeight')" min-width="160">
-                <template #default="{ row }">
-                  <el-input-number v-model="row.productWeight" :min="0.001" :precision="3" :step="1" controls-position="right" style="width: 100%" />
-                </template>
-              </el-table-column>
-              <el-table-column :label="t('djs.warehouse.packEntry.productSpec')" min-width="140">
-                <template #default="{ row }">
-                  <el-input v-model="row.productSpec" maxlength="64" />
-                </template>
-              </el-table-column>
-              <el-table-column :label="t('common.operate')" width="80">
-                <template #default="{ $index }">
-                  <el-button link type="danger" :disabled="form.partItems.length <= 1" @click="removePart($index)">
-                    {{ t('common.delete') }}
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-            <el-button class="mt-2" @click="addPart">{{ t('djs.warehouse.packEntry.addPart') }}</el-button>
+        <!-- 猪只耳号 chip（当前选中分割单回显） -->
+        <div class="panel-section">
+          <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
+          <div v-if="selectedCut" class="ear-chip">
+            <el-icon><PriceTag /></el-icon>
+            <span>{{ selectedCut.earNo ?? selectedCut.cutId }}</span>
           </div>
-        </el-form-item>
+          <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.cutRecordRequired') }}</span>
+        </div>
 
-        <el-form-item :label="t('djs.warehouse.packEntry.proof')">
+        <!-- 产品重量 numpad -->
+        <div class="panel-section">
+          <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
+          <WeightNumpad v-model="curWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
+        </div>
+
+        <!-- 规格（可选） -->
+        <div class="panel-section">
+          <div class="panel-label">{{ t('djs.warehouse.packEntry.productSpec') }}</div>
+          <el-input v-model="curSpec" maxlength="64" :placeholder="t('djs.warehouse.packEntry.productSpecPlaceholder')" />
+        </div>
+
+        <!-- 入库位置 button-toggle（冻品库/鲜品库 等冷库库位） -->
+        <div class="panel-section">
+          <div class="panel-label">{{ t('djs.warehouse.packEntry.inLocation') }}</div>
+          <div v-loading="locationLoading">
+            <DestToggle v-model="form.locationId" :options="locationOptions" :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')" />
+          </div>
+        </div>
+
+        <!-- 凭证图 -->
+        <div class="panel-section">
+          <div class="panel-label">{{ t('djs.warehouse.packEntry.proof') }}</div>
           <OssUpload ref="ossRef" v-model="proofModel" biz-type="warehouse_pig_cut" :limit="5" :file-size="10" />
-        </el-form-item>
+        </div>
 
-        <el-form-item>
-          <el-button type="primary" :loading="cutOutSubmitting" @click="handleCutOut">
+        <div class="panel-actions">
+          <el-button type="primary" size="large" class="action-btn" :loading="cutOutSubmitting" @click="handleCutOut">
             {{ t('djs.warehouse.packEntry.confirmCutOut') }}
           </el-button>
-          <el-button type="success" :loading="cutDoneSubmitting" @click="openCutDone">
+          <el-button type="primary" size="large" class="action-btn" :loading="cutDoneSubmitting" @click="openCutDone">
             {{ t('djs.warehouse.packEntry.finishCut') }}
           </el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+        </div>
+      </div>
+    </div>
 
     <!-- 白条完成分割（滴水损失） -->
     <el-dialog v-model="cutDoneVisible" :title="t('djs.warehouse.packEntry.finishCut')" width="420px" append-to-body destroy-on-close>
@@ -113,10 +101,14 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
+import { PriceTag } from '@element-plus/icons-vue';
 import OssUpload from '@/components/OssUpload/index.vue';
+import ProductCardGrid from '../components/ProductCardGrid.vue';
+import WeightNumpad from '../components/WeightNumpad.vue';
+import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
 import { listCuttable, submitCutDone, submitCutOut } from '@/api/djs-warehouse/packEntry';
-import type { CutPartItem, PigCutRecordVO } from '@/api/djs-warehouse/packEntry';
+import type { PigCutRecordVO } from '@/api/djs-warehouse/packEntry';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
@@ -124,8 +116,22 @@ const { t } = useI18n();
 
 const { locations, locationLoading, loadLocations } = usePackEntryOptions();
 
-// 可选分割产品（按具体产品对齐原型，Kevin 定）：产品主数据 belong_type=pork 的猪肉分割成品
-// （冻五花肉/排骨/肘子/大排 等）。未 seed 时下拉为空——见 _open-issues ❓「分割成品主数据来源」。
+const locationOptions = computed<{ value: number | string; label: string }[]>(() =>
+  locations.value.map((l) => ({ value: l.id, label: l.locationName }))
+);
+
+const CUT_STATUS_LABEL: Record<string, string> = {
+  pending_pickup: 'djs.warehouse.packEntry.cutStatusPendingPickup',
+  picked: 'djs.warehouse.packEntry.cutStatusPicked',
+  cutting: 'djs.warehouse.packEntry.cutStatusCutting',
+  done: 'djs.warehouse.packEntry.cutStatusDone'
+};
+function cutStatusLabel(s: string): string {
+  const key = CUT_STATUS_LABEL[s];
+  return key ? t(key) : s;
+}
+
+// 可选分割产品（按具体产品对齐原型）：产品主数据 belong_type=pork 的猪肉分割成品
 const porkProducts = ref<ProductInfoVO[]>([]);
 const porkProductLoading = ref(false);
 
@@ -152,24 +158,19 @@ async function loadCuttable() {
   }
 }
 
-interface CutFormShape {
-  cutRecordId: number | string | '';
-  locationId: number | string | '';
-  partItems: CutPartItem[];
-  proofOssIds: string | undefined;
-}
-
-const newPart = (): CutPartItem => ({ productId: undefined, productWeight: undefined as unknown as number, productSpec: undefined });
-
-const defaultForm = (): CutFormShape => ({
+const form = ref<{ cutRecordId: number | string | ''; locationId: number | string | ''; proofOssIds: string | undefined }>({
   cutRecordId: '',
   locationId: '',
-  partItems: [newPart()],
   proofOssIds: undefined
 });
 
-const form = ref<CutFormShape>(defaultForm());
-const formRef = ref<any>();
+// 当前录入的单件分割产品（卡片选品 + numpad 录重 → 确认入库逐件提交）
+const selectedProductId = ref<number | string | ''>('');
+const curWeight = ref<number | undefined>(undefined);
+const curSpec = ref<string | undefined>(undefined);
+
+const selectedCut = computed(() => cuttable.value.find((r) => String(r.id) === String(form.value.cutRecordId)));
+
 const ossRef = ref<InstanceType<typeof OssUpload>>();
 const cutOutSubmitting = ref(false);
 
@@ -180,41 +181,40 @@ const proofModel = computed<string[]>({
   }
 });
 
-const rules = computed(() => ({
-  cutRecordId: [{ required: true, message: t('djs.warehouse.packEntry.cutRecordRequired'), trigger: 'change' }],
-  locationId: [{ required: true, message: t('djs.warehouse.packEntry.locationRequired'), trigger: 'change' }]
-}));
-
-function addPart() {
-  form.value.partItems.push(newPart());
-}
-function removePart(idx: number) {
-  form.value.partItems.splice(idx, 1);
-}
-
 async function handleCutOut() {
-  if (!formRef.value) return;
-  await formRef.value.validate(async (valid: boolean) => {
-    if (!valid) return;
-    const parts = form.value.partItems.filter((p) => p.productId && p.productWeight && p.productWeight > 0);
-    if (parts.length === 0) {
-      ElMessage.warning(t('djs.warehouse.packEntry.partsRequired'));
-      return;
-    }
-    cutOutSubmitting.value = true;
-    try {
-      await submitCutOut({
-        cutRecordId: form.value.cutRecordId as number | string,
-        locationId: form.value.locationId as number | string,
-        partItems: parts,
-        proofOssIds: form.value.proofOssIds
-      });
-      ElMessage.success(t('djs.warehouse.packEntry.cutOutSuccess'));
-      await loadCuttable();
-    } finally {
-      cutOutSubmitting.value = false;
-    }
-  });
+  if (!form.value.cutRecordId) {
+    ElMessage.warning(t('djs.warehouse.packEntry.cutRecordRequired'));
+    return;
+  }
+  if (!selectedProductId.value) {
+    ElMessage.warning(t('djs.warehouse.packEntry.cutProductRequired'));
+    return;
+  }
+  if (!curWeight.value || curWeight.value <= 0) {
+    ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
+    return;
+  }
+  if (!form.value.locationId) {
+    ElMessage.warning(t('djs.warehouse.packEntry.locationRequired'));
+    return;
+  }
+  cutOutSubmitting.value = true;
+  try {
+    await submitCutOut({
+      cutRecordId: form.value.cutRecordId as number | string,
+      locationId: form.value.locationId as number | string,
+      partItems: [{ productId: selectedProductId.value as number | string, productWeight: curWeight.value, productSpec: curSpec.value }],
+      proofOssIds: form.value.proofOssIds
+    });
+    ElMessage.success(t('djs.warehouse.packEntry.cutOutSuccess'));
+    // 逐件录入：清当前产品/重量/规格，保留分割单 + 库位方便连续称重
+    selectedProductId.value = '';
+    curWeight.value = undefined;
+    curSpec.value = undefined;
+    await loadCuttable();
+  } finally {
+    cutOutSubmitting.value = false;
+  }
 }
 
 // ---- 白条完成分割 ----
@@ -250,7 +250,10 @@ async function handleCutDone() {
       });
       ElMessage.success(t('djs.warehouse.packEntry.finishCutSuccess'));
       cutDoneVisible.value = false;
-      form.value = defaultForm();
+      form.value = { cutRecordId: '', locationId: '', proofOssIds: undefined };
+      selectedProductId.value = '';
+      curWeight.value = undefined;
+      curSpec.value = undefined;
       ossRef.value?.setExistingFiles?.([]);
       await loadCuttable();
     } finally {
@@ -265,10 +268,94 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.pack-card {
-  margin: 8px;
+.pack-station {
+  padding: 12px;
 }
-.max-w-3xl {
-  max-width: 760px;
+.station-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  min-height: 40px;
+}
+.cut-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 16px;
+  border: 1px solid var(--el-color-warning);
+  border-radius: 8px;
+  background: var(--el-color-warning-light-9);
+  color: var(--el-color-warning-dark-2);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.cut-chip.active {
+  box-shadow: 0 0 0 1px var(--el-color-warning);
+}
+.chip-main {
+  font-weight: 600;
+  font-size: 14px;
+}
+.chip-sub {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+.station-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.station-left {
+  flex: 1;
+  min-width: 0;
+}
+.station-right {
+  flex: 0 0 320px;
+  width: 320px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--el-bg-color);
+}
+.panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: var(--el-text-color-secondary);
+}
+.panel-section {
+  margin-bottom: 16px;
+}
+.panel-label {
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+  margin-bottom: 8px;
+}
+.ear-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--el-color-warning-light-9);
+  color: var(--el-color-warning-dark-2);
+  border: 1px solid var(--el-color-warning-light-5);
+  font-weight: 600;
+}
+.panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+.action-btn {
+  width: 100%;
 }
 </style>

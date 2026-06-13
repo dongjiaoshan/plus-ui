@@ -33,7 +33,7 @@
         <el-button link type="primary" size="small" @click="drillTo('out', row as LocationStockVO)">
           {{ t('stock.action.flowOut') }}
         </el-button>
-        <el-button link type="warning" size="small" @click="drillTo('check', row as LocationStockVO)">
+        <el-button link type="primary" size="small" @click="drillTo('check', row as LocationStockVO)">
           {{ t('stock.action.checkRecord') }}
         </el-button>
       </template>
@@ -45,7 +45,7 @@
 
 <script setup name="Stock" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
-import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import StockOutDialog from './components/StockOutDialog.vue';
 import { listStock } from '@/api/djs-warehouse/stock';
 import type { LocationStockQuery, LocationStockVO } from '@/api/djs-warehouse/stock/types';
@@ -81,13 +81,20 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productCode', label: t('stock.column.productCode'), width: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'locationName', label: t('stock.column.locationName'), width: 140, showOverflowTooltip: true },
   { prop: 'productName', label: t('stock.column.productName'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'productStock', label: t('stock.column.productStock'), width: 110, align: 'right' },
+  { prop: 'productStock', label: t('stock.column.productStock'), width: 110, align: 'right', formatter: (row: BizRow) => formatStock(row.productStock) },
   { prop: 'productUnit', label: t('stock.column.productUnit'), width: 80, align: 'center' },
   { prop: 'earNo', label: t('stock.column.earNo'), width: 140, align: 'center' },
   { prop: 'blockNo', label: t('stock.column.blockNo'), width: 130, align: 'center' },
   { prop: 'latestCheckTime', label: t('stock.column.latestCheckTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'checkResult', label: t('stock.column.checkResult'), width: 90, align: 'center', dictType: 'djs_check_result' }
 ]);
+
+/** 当前库存格式化：保留两位小数（后端 BigDecimal 序列化可能是 string / 整数 / 多位小数）。 */
+function formatStock(v: number | string | undefined | null): string {
+  if (v === undefined || v === null || v === '') return '';
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isNaN(n) ? String(v) : n.toFixed(2);
+}
 
 async function fetchList() {
   loading.value = true;
@@ -113,19 +120,20 @@ function handleProductOut(row: LocationStockVO) {
 }
 
 /**
- * 行级钻取：入库 / 出库 → 出入库流水页（带 productId + inoutType 预过滤）；
- * 盘点 → 库存盘点页（带 locationId 预过滤，盘点单为库位级）。
+ * 行级钻取：入库 → 入库记录页（9240 `flow/in`）/ 出库 → 出库记录页（9241 `flow/out`），
+ * 带 productId 预过滤；盘点 → 盘点记录页（9250 `check`），带 locationId 预过滤（盘点单为库位级）。
  *
- * 路由 path 按 plus-ui 动态路由：父菜单 path `djs-warehouse`(9000) + 子 path `stockFlow`(9110) / `check`(9250)。
- * inoutType 字典值：IN 入 / OT 出（后端 djs_inout_type）。
+ * 路由 path 按 plus-ui 动态路由：父菜单 path `djs-warehouse`(9000) + 子 path。
+ * 旧入口 `stockFlow`(9110) 已隐藏（visible='1'），隐藏菜单不生成动态路由会 404，故对齐可见的
+ * 入库/出库记录权威菜单 9240/9241。
  */
 function drillTo(kind: 'in' | 'out' | 'check', row: LocationStockVO) {
   if (kind === 'check') {
     router.push({ path: '/djs-warehouse/check', query: { locationId: row.locationId } });
   } else {
     router.push({
-      path: '/djs-warehouse/stockFlow',
-      query: { productId: row.productId, inoutType: kind === 'in' ? 'IN' : 'OT' }
+      path: kind === 'in' ? '/djs-warehouse/flow/in' : '/djs-warehouse/flow/out',
+      query: { productId: row.productId }
     });
   }
 }
