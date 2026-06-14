@@ -56,7 +56,11 @@ export interface PigVO {
   pigSex: PigSex;
   pigType: PigType;
   pigBreedCode?: string;
+  /** 品种中文名（service enrich，djs_pig_breed 字典翻译，翻不到回落 code） */
+  pigBreedName?: string;
   pigStrainCode?: string;
+  /** 品系中文名（service enrich，djs_pig_strain 字典翻译，翻不到回落 code） */
+  pigStrainName?: string;
   currentStatus: PigLifecycle;
   statusStartedAt?: string;
   endReason?: PigEndReason;
@@ -66,9 +70,13 @@ export interface PigVO {
   barnId?: number | string;
   /** 栋舍编码（service enrich，列表/详情展示用） */
   barnCode?: string;
+  /** 栋舍名称（service enrich） */
+  barnName?: string;
   penId?: number | string;
   /** 栏位编码（service enrich） */
   penCode?: string;
+  /** 栏位名称（service enrich） */
+  penName?: string;
   matingId?: number | string;
   motherEar?: string;
   fatherEar?: string;

@@ -42,14 +42,9 @@
                 </el-radio-group>
               </el-form-item>
             </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantPlot.field.plotImagePreview')" prop="plotImagePreview">
+            <el-col :span="24">
+              <el-form-item :label="t('plantPlot.field.plotImage')" prop="plotImagePreview">
                 <OssUpload ref="ossThumbRef" v-model="thumbOssIdsModel" biz-type="plant_plot" :limit="1" :file-size="10" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantPlot.field.plotImageUrl')" prop="plotImageUrl">
-                <OssUpload ref="ossImgRef" v-model="imgOssIdsModel" biz-type="plant_plot" :limit="9" :file-size="10" />
               </el-form-item>
             </el-col>
             <el-col :span="24">
@@ -214,7 +209,6 @@ const submitting = ref(false);
 const activeTab = ref('basic');
 const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
-const ossImgRef = ref<InstanceType<typeof OssUpload>>();
 
 // 兜底 zoneList（若父组件未传，本组件自己拉）
 const internalZones = ref<PlotZoneVO[]>([]);
@@ -249,7 +243,6 @@ const form = ref<PlotInfoForm>(defaultForm());
 
 // OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段是单/多 ossId 字符串（useOssBridge 桥接）
 const thumbOssIdsModel = useOssBridge(form, 'plotImagePreview', 'single');
-const imgOssIdsModel = useOssBridge(form, 'plotImageUrl', 'multi');
 
 const rules = computed(() => ({
   zoneId: [{ required: true, message: t('plantPlot.rule.zoneId.required'), trigger: 'change' }],
@@ -309,19 +302,6 @@ const openEdit = async (id: number | string) => {
       ossThumbRef.value?.setExistingFiles(items);
     } catch (e) {
       console.warn('[PlotForm] thumb listOssByIds failed', e);
-    }
-  }
-  if (form.value.plotImageUrl) {
-    try {
-      const ossRes = await listOssByIds(form.value.plotImageUrl);
-      const items = (ossRes.data || []).map((o) => ({
-        ossId: String(o.ossId),
-        url: o.url,
-        originalName: o.originalName
-      }));
-      ossImgRef.value?.setExistingFiles(items);
-    } catch (e) {
-      console.warn('[PlotForm] img listOssByIds failed', e);
     }
   }
 };

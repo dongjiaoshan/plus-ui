@@ -21,6 +21,12 @@
         <el-form-item :label="t('farm.proto.field.bedCount')" prop="bedCount">
           <el-input-number v-model="form.bedCount" :min="0" :max="999" :step="1" controls-position="right" style="width: 100%" />
         </el-form-item>
+        <el-form-item :label="t('farm.proto.field.scatterPenCount')" prop="scatterPenCount">
+          <el-input-number v-model="form.scatterPenCount" :min="0" :max="999" :step="1" controls-position="right" style="width: 100%" />
+        </el-form-item>
+        <el-form-item :label="t('farm.proto.field.nurseryPenCount')" prop="nurseryPenCount">
+          <el-input-number v-model="form.nurseryPenCount" :min="0" :max="999" :step="1" controls-position="right" style="width: 100%" />
+        </el-form-item>
       </template>
 
       <!-- 编辑：状态（栏位数量不在编辑改，增删栏位走「栏位详情」子页） -->
@@ -58,6 +64,8 @@ interface BarnFormModel {
   bigPenCount: number;
   limitPenCount: number;
   bedCount: number;
+  scatterPenCount: number;
+  nurseryPenCount: number;
 }
 
 const { t } = useI18n();
@@ -79,7 +87,9 @@ const defaultForm = (): BarnFormModel => ({
   remark: undefined,
   bigPenCount: 0,
   limitPenCount: 0,
-  bedCount: 0
+  bedCount: 0,
+  scatterPenCount: 0,
+  nurseryPenCount: 0
 });
 
 const form = ref<BarnFormModel>(defaultForm());
@@ -126,6 +136,8 @@ const submit = () => {
           bigPenCount: form.value.bigPenCount,
           limitPenCount: form.value.limitPenCount,
           bedCount: form.value.bedCount,
+          scatterPenCount: form.value.scatterPenCount,
+          nurseryPenCount: form.value.nurseryPenCount,
           remark: form.value.remark
         });
       } else {

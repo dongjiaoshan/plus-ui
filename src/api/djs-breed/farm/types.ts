@@ -55,6 +55,10 @@ export interface BarnVO {
   limitPenCount?: number;
   /** 产床数量（后端按 pen_type=farrow 实时统计） */
   bedCount?: number;
+  /** 散栏数量（后端按 pen_type=scatter 实时统计） */
+  scatterPenCount?: number;
+  /** 保育栏数量（后端按 pen_type=nursery_pen 实时统计） */
+  nurseryPenCount?: number;
   /** 当前猪只存栏数量（后端实时统计存活猪只） */
   liveCount?: number;
 }
@@ -70,13 +74,15 @@ export interface BarnForm {
   remark?: string;
 }
 
-/** 新建栋舍（对齐原型「新建栋舍」弹窗：名称 / 类型 / 三类栏位数量自动生成栏位） */
+/** 新建栋舍（对齐原型「新建栋舍」弹窗：名称 / 类型 / 五类栏位数量自动生成栏位） */
 export interface BarnCreateForm {
   barnName: string;
   barnType: string;
   bigPenCount: number;
   limitPenCount: number;
   bedCount: number;
+  scatterPenCount: number;
+  nurseryPenCount: number;
   remark?: string;
 }
 

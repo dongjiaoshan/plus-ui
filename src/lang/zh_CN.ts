@@ -430,7 +430,8 @@ export default {
         required: '编码不能为空',
         pattern: '编码仅允许字母、数字、下划线、连字符',
         len2: '品种编码必须为 2 位数字',
-        len1: '品系编码必须为 1 位数字'
+        len1: '品系编码必须为 1 位数字',
+        len1to2: '品系编码须为1-2位数字'
       },
       breedStrainName: { required: '名称不能为空' },
       motherCode: { required: '请选择母系' },
@@ -568,7 +569,7 @@ export default {
       earNo: '耳号',
       earTag: '耳号全版',
       pigSex: '性别',
-      pigType: '类型',
+      pigType: '猪只类型',
       currentStatus: '当前状态',
       pigBreedCode: '品种',
       pigStrainCode: '品系',
@@ -578,7 +579,7 @@ export default {
       penId: '栏位',
       barn: '栋舍',
       pen: '栏位',
-      motherEar: '母猪耳号',
+      motherEar: '母系耳号',
       fatherEar: '父猪耳号',
       parity: '胎次',
       matingCount: '配种次数',
@@ -607,7 +608,7 @@ export default {
       earNo: '请输入耳号',
       barnId: '请输入栋舍 ID',
       penId: '请输入栏位 ID',
-      motherEar: '请输入母猪耳号'
+      motherEar: '请输入母系耳号'
     },
     event: {
       empty: '当前状态下无可触发事件',
@@ -749,15 +750,18 @@ export default {
         durationDays: '停留天数',
         relatedEventId: '关联业务 ID',
         pigId: '猪只 ID',
-        id: '流水 ID'
+        id: '流水 ID',
+        changeBy: '变更人'
       },
       field: {
         earNo: '耳号',
         eventType: '事件类型',
-        newStatus: '变更后状态'
+        newStatus: '变更后状态',
+        changeBy: '变更人'
       },
       placeholder: {
-        earNo: '精确匹配'
+        earNo: '精确匹配',
+        changeBy: '请输入变更人姓名'
       }
     },
     growth: {
@@ -904,12 +908,16 @@ export default {
       field: {
         bigPenCount: '大栏数量',
         limitPenCount: '限位栏数量',
-        bedCount: '产床数量'
+        bedCount: '产床数量',
+        scatterPenCount: '散栏数量',
+        nurseryPenCount: '保育栏数量'
       },
       placeholder: {
         bigPenCount: '请输入大栏数量',
         limitPenCount: '请输入限位栏数量',
-        bedCount: '请输入产床数量'
+        bedCount: '请输入产床数量',
+        scatterPenCount: '请输入散栏数量',
+        nurseryPenCount: '请输入保育栏数量'
       },
       rule: {
         countRequired: '请输入数量（不小于 0）'
@@ -1319,7 +1327,7 @@ export default {
       remainingExpectedTon: '剩余预计总产量(吨)'
     },
     card: {
-      currentPlanted: '当前地已种',
+      currentPlanted: '当前已种地块',
       currentPlantedArea: '当前已种面积(亩)',
       planGroup: '计划',
       doneGroup: '已完成',
@@ -1380,13 +1388,13 @@ export default {
       cropImage: '作物图片',
       cropName: '作物名称',
       cropCode: '作物编码',
-      plantByName: '种植人',
+      plantByName: '种植班组',
       expectedYield: '预计亩产',
       earliestHarvestdate: '预计最早采摘日期',
       actualYield: '实际亩产',
       beginHarvestdate: '采摘开始日期',
       endHarvestdate: '采摘结束日期',
-      harvestByName: '采摘人'
+      harvestByName: '采摘班组'
     },
     farmwork: {
       farmDate: '农事日期',
@@ -1424,6 +1432,7 @@ export default {
       plotArea: '面积（亩）',
       isLease: '是否租赁',
       plotRemark: '地块备注',
+      plotImage: '图片',
       plotImagePreview: '缩略图',
       plotImageUrl: '地块图片',
       plotLocationDesc: '位置描述',
@@ -1581,13 +1590,14 @@ export default {
     planting: {
       plantDate: '种植日期',
       plotName: '种植地块',
-      plantTeamName: '种植人',
+      plotCode: '地块编码',
+      plantTeamName: '种植班组',
       predictedPer: '预计亩产(kg)',
       earliestHarvestDate: '预计最早采摘日期',
       actualPer: '实际亩产(kg)',
       pickStartDate: '采摘开始日期',
       pickEndDate: '采摘结束日期',
-      pickTeamName: '采摘人',
+      pickTeamName: '采摘班组',
       empty: '暂无种植记录'
     },
     farmwork: {

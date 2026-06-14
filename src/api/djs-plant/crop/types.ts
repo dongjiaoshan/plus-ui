@@ -85,6 +85,8 @@ export interface CropPlantingRecordVO {
   id: number | string;
   /** 种植日期 */
   plantDate?: string;
+  /** 地块编码 */
+  plotCode?: string;
   /** 种植地块名 */
   plotName?: string;
   /** 种植人（种植班组名） */

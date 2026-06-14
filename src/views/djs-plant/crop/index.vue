@@ -113,21 +113,21 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('plantCrop.column.predictedPer'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.predictedPer != null ? `${r.predictedPer} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.predictedPer != null ? `${Number(r.predictedPer).toFixed(2)} kg/亩` : '-')
   },
   {
     prop: 'maxYield',
     label: t('plantCrop.label.maxYield'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.maxYield != null ? `${r.maxYield} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.maxYield != null ? `${Number(r.maxYield).toFixed(2)} kg/亩` : '-')
   },
   {
     prop: 'avgYield',
     label: t('plantCrop.label.avgYield'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.avgYield != null ? `${r.avgYield} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.avgYield != null ? `${Number(r.avgYield).toFixed(2)} kg/亩` : '-')
   },
   {
     prop: 'historyPlantCount',
@@ -136,7 +136,6 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'right',
     formatter: (r: BizRow) => (r.historyPlantCount != null ? `${r.historyPlantCount} 次` : '0 次')
   },
-  { prop: 'qualityDesc', label: t('plantCrop.label.qualityDesc'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'relatedProduct', label: t('plantCrop.label.relatedProduct'), width: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'updateByName', label: t('plantCrop.label.updateByName'), width: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'updateTime', label: t('plantCrop.label.updateTime'), width: 160, align: 'center', formatter: 'datetime' }

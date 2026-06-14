@@ -13,6 +13,9 @@ export interface PigStatusRecordVO {
   durationDays?: number;
   changeTime: string;
   createTime?: string;
+  createBy?: number | string;
+  /** 变更人姓名（后端 @Translation USER_ID_TO_NICKNAME 取 sys_user.nick_name） */
+  createByName?: string;
 }
 
 export interface PigStatusRecordQuery {
@@ -24,6 +27,8 @@ export interface PigStatusRecordQuery {
   newStatus?: string;
   changeTimeStart?: string;
   changeTimeEnd?: string;
+  /** 变更人用户名模糊（按 sys_user.nick_name） */
+  createByName?: string;
 }
 
 /** admin "事件台账" 全局状态流水分页（替代 D6 早期 7 个独立事件菜单） */

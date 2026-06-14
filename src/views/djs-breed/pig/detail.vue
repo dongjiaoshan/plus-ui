@@ -35,12 +35,12 @@
           <el-descriptions-item v-if="detail.currentStatus === 'END'" :label="t('pig.column.endReason')">
             <dict-tag :options="endReasonDict" :value="detail.endReason" />
           </el-descriptions-item>
-          <el-descriptions-item :label="t('pig.column.pigBreedCode')">{{ detail.pigBreedCode || '—' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('pig.column.pigStrainCode')">{{ detail.pigStrainCode || '—' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('pig.column.pigBreedCode')">{{ detail.pigBreedName || detail.pigBreedCode || '—' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('pig.column.pigStrainCode')">{{ detail.pigStrainName || detail.pigStrainCode || '—' }}</el-descriptions-item>
           <el-descriptions-item :label="t('pig.column.birthDate')">{{ detail.birthDate || '—' }}</el-descriptions-item>
           <el-descriptions-item :label="t('pig.column.introduceDate')">{{ detail.introduceDate || '—' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('pig.column.barn')">{{ detail.barnCode || '—' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('pig.column.pen')">{{ detail.penCode || '—' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('pig.column.barn')">{{ detail.barnName || detail.barnCode || '—' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('pig.column.pen')">{{ detail.penName || detail.penCode || '—' }}</el-descriptions-item>
           <el-descriptions-item v-if="detail.pigSex === 'F'" :label="t('pig.column.parity')">
             {{ detail.parity ?? 0 }}
           </el-descriptions-item>

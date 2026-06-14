@@ -430,7 +430,8 @@ export default {
         required: 'Code is required',
         pattern: 'Code allows letters, digits, underscore, hyphen only',
         len2: 'Breed code must be exactly 2 digits',
-        len1: 'Strain code must be exactly 1 digit'
+        len1: 'Strain code must be exactly 1 digit',
+        len1to2: 'Strain code must be 1-2 digits'
       },
       breedStrainName: { required: 'Name is required' },
       motherCode: { required: 'Maternal line is required' },
@@ -568,7 +569,7 @@ export default {
       earNo: 'Ear No.',
       earTag: 'Ear tag',
       pigSex: 'Sex',
-      pigType: 'Type',
+      pigType: 'Pig Type',
       currentStatus: 'Current state',
       pigBreedCode: 'Breed',
       pigStrainCode: 'Strain',
@@ -578,7 +579,7 @@ export default {
       penId: 'Pen',
       barn: 'Barn',
       pen: 'Pen',
-      motherEar: 'Mother ear',
+      motherEar: 'Maternal Ear Tag',
       fatherEar: 'Father ear',
       parity: 'Parity',
       matingCount: 'Mating count',
@@ -607,7 +608,7 @@ export default {
       earNo: 'Enter ear number',
       barnId: 'Enter barn id',
       penId: 'Enter pen id',
-      motherEar: 'Enter mother ear no.'
+      motherEar: 'Enter maternal ear tag'
     },
     event: {
       empty: 'No available events for current state',
@@ -751,15 +752,18 @@ export default {
         durationDays: 'Days',
         relatedEventId: 'Related ID',
         pigId: 'Pig ID',
-        id: 'Log ID'
+        id: 'Log ID',
+        changeBy: 'Changed By'
       },
       field: {
         earNo: 'Ear No.',
         eventType: 'Event type',
-        newStatus: 'New state'
+        newStatus: 'New state',
+        changeBy: 'Changed By'
       },
       placeholder: {
-        earNo: 'Exact match'
+        earNo: 'Exact match',
+        changeBy: 'Enter the name of the person who made the change'
       }
     },
     growth: {
@@ -906,12 +910,16 @@ export default {
       field: {
         bigPenCount: 'Big Pen Count',
         limitPenCount: 'Stall Count',
-        bedCount: 'Farrowing Bed Count'
+        bedCount: 'Farrowing Bed Count',
+        scatterPenCount: 'Scatter Pen Count',
+        nurseryPenCount: 'Nursery Pen Count'
       },
       placeholder: {
         bigPenCount: 'Enter big pen count',
         limitPenCount: 'Enter stall count',
-        bedCount: 'Enter farrowing bed count'
+        bedCount: 'Enter farrowing bed count',
+        scatterPenCount: 'Enter scatter pen count',
+        nurseryPenCount: 'Enter nursery pen count'
       },
       rule: {
         countRequired: 'Enter a count (>= 0)'
@@ -1317,7 +1325,7 @@ export default {
       remainingExpectedTon: 'Remaining Expected (t)'
     },
     card: {
-      currentPlanted: 'Currently Planted',
+      currentPlanted: 'Planted Plots',
       currentPlantedArea: 'Planted Area (mu)',
       planGroup: 'Plan',
       doneGroup: 'Completed',
@@ -1378,13 +1386,13 @@ export default {
       cropImage: 'Crop Image',
       cropName: 'Crop Name',
       cropCode: 'Crop Code',
-      plantByName: 'Planted By',
+      plantByName: 'Planting Team',
       expectedYield: 'Est. Yield/mu',
       earliestHarvestdate: 'Est. Earliest Harvest',
       actualYield: 'Actual Yield/mu',
       beginHarvestdate: 'Harvest Start',
       endHarvestdate: 'Harvest End',
-      harvestByName: 'Harvested By'
+      harvestByName: 'Harvest Team'
     },
     farmwork: {
       farmDate: 'Work Date',
@@ -1422,6 +1430,7 @@ export default {
       plotArea: 'Area (mu)',
       isLease: 'Leased',
       plotRemark: 'Plot Remark',
+      plotImage: 'Image',
       plotImagePreview: 'Thumbnail',
       plotImageUrl: 'Plot Images',
       plotLocationDesc: 'Location Description',
@@ -1579,13 +1588,14 @@ export default {
     planting: {
       plantDate: 'Plant Date',
       plotName: 'Plot',
-      plantTeamName: 'Planter',
+      plotCode: 'Plot Code',
+      plantTeamName: 'Planting Team',
       predictedPer: 'Expected Yield (kg)',
       earliestHarvestDate: 'Earliest Harvest Date',
       actualPer: 'Actual Yield (kg)',
       pickStartDate: 'Pick Start Date',
       pickEndDate: 'Pick End Date',
-      pickTeamName: 'Picker',
+      pickTeamName: 'Harvest Team',
       empty: 'No planting records'
     },
     farmwork: {

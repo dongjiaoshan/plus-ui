@@ -1,9 +1,9 @@
 <template>
-  <el-dialog v-model="visible" :title="t('plantPlot.title.view')" destroy-on-close append-to-body width="900px">
+  <el-dialog v-model="visible" :title="t('plantPlot.title.view')" destroy-on-close append-to-body width="1200px">
     <el-tabs v-model="activeTab">
       <!-- Tab 1：种植信息（默认选中，11 列） -->
       <el-tab-pane :label="t('plantPlot.tab.planting')" name="planting">
-        <el-table :data="plantingList" border size="small" max-height="420">
+        <el-table :data="plantingList" border size="small" max-height="560">
           <el-table-column :label="t('plantPlot.planting.plantDate')" prop="plantDate" width="110" align="center" />
           <el-table-column :label="t('plantPlot.planting.cropImage')" width="70" align="center">
             <template #default="{ row }">
@@ -18,15 +18,14 @@
             </template>
           </el-table-column>
           <el-table-column :label="t('plantPlot.planting.cropName')" prop="cropName" min-width="120" show-overflow-tooltip />
-          <el-table-column :label="t('plantPlot.planting.cropCode')" prop="cropCode" width="120" show-overflow-tooltip />
           <el-table-column :label="t('plantPlot.planting.plantByName')" prop="plantByName" width="110" align="center" show-overflow-tooltip />
           <el-table-column :label="t('plantPlot.planting.expectedYield')" prop="expectedYield" width="120" align="right">
             <template #default="{ row }">{{ row.expectedYield != null ? `${row.expectedYield} kg/亩` : '-' }}</template>
           </el-table-column>
-          <el-table-column :label="t('plantPlot.planting.earliestHarvestdate')" prop="earliestHarvestdate" width="130" align="center" />
           <el-table-column :label="t('plantPlot.planting.actualYield')" prop="actualYield" width="120" align="right">
             <template #default="{ row }">{{ row.actualYield != null ? `${row.actualYield} kg/亩` : '-' }}</template>
           </el-table-column>
+          <el-table-column :label="t('plantPlot.planting.earliestHarvestdate')" prop="earliestHarvestdate" width="130" align="center" />
           <el-table-column :label="t('plantPlot.planting.beginHarvestdate')" prop="beginHarvestdate" width="120" align="center" />
           <el-table-column :label="t('plantPlot.planting.endHarvestdate')" prop="endHarvestdate" width="120" align="center" />
           <el-table-column :label="t('plantPlot.planting.harvestByName')" prop="harvestByName" width="110" align="center" show-overflow-tooltip />
@@ -38,7 +37,7 @@
 
       <!-- Tab 2：农事信息 -->
       <el-tab-pane :label="t('plantPlot.tab.farmwork')" name="farmwork">
-        <el-table :data="farmworkList" border size="small" max-height="420">
+        <el-table :data="farmworkList" border size="small" max-height="560">
           <el-table-column :label="t('plantPlot.farmwork.farmDate')" prop="farmDate" width="120" align="center" />
           <el-table-column :label="t('plantPlot.farmwork.farmType')" width="120" align="center">
             <template #default="{ row }">
@@ -54,24 +53,7 @@
         </el-table>
       </el-tab-pane>
 
-      <!-- Tab 3：认证信息 -->
-      <el-tab-pane :label="t('plantPlot.tab.cert')" name="cert">
-        <el-table :data="organicList" border size="small" max-height="420">
-          <el-table-column :label="t('plantPlot.cert.organicNo')" prop="organicNo" min-width="160" show-overflow-tooltip />
-          <el-table-column :label="t('plantPlot.cert.organicCompany')" prop="organicCompany" min-width="160" show-overflow-tooltip />
-          <el-table-column :label="t('plantPlot.cert.organicValid')" prop="organicValid" width="130" align="center" />
-          <el-table-column :label="t('plantPlot.cert.isWarning')" width="100" align="center">
-            <template #default="{ row }">
-              <dict-tag :options="djs_yes_no" :value="row.isWarning" />
-            </template>
-          </el-table-column>
-          <template #empty>
-            <el-empty :image-size="60" />
-          </template>
-        </el-table>
-      </el-tab-pane>
-
-      <!-- Tab 4：基础信息 -->
+      <!-- Tab 3：基础信息 -->
       <el-tab-pane :label="t('plantPlot.title.baseInfo')" name="info">
         <el-descriptions :column="2" border>
           <el-descriptions-item :label="t('plantPlot.field.plotCode')">{{ data.plotCode || '-' }}</el-descriptions-item>
@@ -107,7 +89,7 @@
             <dict-tag :options="djs_drain_condition" :value="data.drainCondition" />
           </el-descriptions-item>
           <el-descriptions-item :label="t('plantPlot.field.plotLocationDesc')" :span="2">{{ data.plotLocationDesc || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantPlot.field.plotImageUrl')" :span="2">
+          <el-descriptions-item :label="t('plantPlot.field.plotImage')" :span="2">
             <image-preview v-if="plotImageUrl" :src="plotImageUrl" :width="160" :height="120" />
             <el-text v-else type="info">-</el-text>
           </el-descriptions-item>
@@ -123,8 +105,8 @@
 </template>
 
 <script setup lang="ts">
-import { getPlot, listPlantingByPlot, listFarmworkByPlot, listOrganicByPlot } from '@/api/djs-plant/plot';
-import type { PlotFarmworkRecordVO, PlotInfoVO, PlotOrganicRefVO, PlotPlantingRecordVO } from '@/api/djs-plant/plot/types';
+import { getPlot, listPlantingByPlot, listFarmworkByPlot } from '@/api/djs-plant/plot';
+import type { PlotFarmworkRecordVO, PlotInfoVO, PlotPlantingRecordVO } from '@/api/djs-plant/plot/types';
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
@@ -135,7 +117,6 @@ const {
   djs_plot_type,
   djs_plot_status,
   djs_plot_lease,
-  djs_yes_no,
   djs_soil_type,
   djs_soil_fertility,
   djs_terrain_condition,
@@ -147,7 +128,6 @@ const {
     'djs_plot_type',
     'djs_plot_status',
     'djs_plot_lease',
-    'djs_yes_no',
     'djs_soil_type',
     'djs_soil_fertility',
     'djs_terrain_condition',
@@ -163,7 +143,6 @@ const data = ref<Partial<PlotInfoVO>>({});
 const plotImageUrl = ref<string>('');
 const plantingList = ref<PlotPlantingRecordVO[]>([]);
 const farmworkList = ref<PlotFarmworkRecordVO[]>([]);
-const organicList = ref<PlotOrganicRefVO[]>([]);
 const cropImgUrlMap = ref<Record<string, string>>({});
 
 const open = async (id: number | string) => {
@@ -171,7 +150,6 @@ const open = async (id: number | string) => {
   plotImageUrl.value = '';
   plantingList.value = [];
   farmworkList.value = [];
-  organicList.value = [];
   cropImgUrlMap.value = {};
   activeTab.value = 'planting';
   visible.value = true;
@@ -191,8 +169,8 @@ const open = async (id: number | string) => {
     }
   }
 
-  // 并发拉 3 张子表
-  const [planting, farmwork, organic] = await Promise.all([
+  // 并发拉 2 张子表
+  const [planting, farmwork] = await Promise.all([
     listPlantingByPlot(id).catch((e) => {
       console.warn('[PlotView] listPlantingByPlot failed', e);
       return { data: [] } as any;
@@ -200,15 +178,10 @@ const open = async (id: number | string) => {
     listFarmworkByPlot(id).catch((e) => {
       console.warn('[PlotView] listFarmworkByPlot failed', e);
       return { data: [] } as any;
-    }),
-    listOrganicByPlot(id).catch((e) => {
-      console.warn('[PlotView] listOrganicByPlot failed', e);
-      return { data: [] } as any;
     })
   ]);
   plantingList.value = (planting.data ?? []) as PlotPlantingRecordVO[];
   farmworkList.value = (farmwork.data ?? []) as PlotFarmworkRecordVO[];
-  organicList.value = (organic.data ?? []) as PlotOrganicRefVO[];
 
   await loadCropImgUrls();
 };

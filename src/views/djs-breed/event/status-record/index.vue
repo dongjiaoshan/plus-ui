@@ -65,6 +65,7 @@ const searchModel = reactive<PigStatusRecordQuery>({
   earNo: undefined,
   eventType: undefined,
   newStatus: undefined,
+  createByName: undefined,
   changeTimeStart: undefined,
   changeTimeEnd: undefined
 });
@@ -78,7 +79,14 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
     clearable: true
   },
   { field: 'eventType', label: t('breedEvent.ledger.field.eventType'), type: 'select', dictType: 'djs_pig_status_event', clearable: true },
-  { field: 'newStatus', label: t('breedEvent.ledger.field.newStatus'), type: 'select', dictType: 'djs_pig_lifecycle', clearable: true }
+  { field: 'newStatus', label: t('breedEvent.ledger.field.newStatus'), type: 'select', dictType: 'djs_pig_lifecycle', clearable: true },
+  {
+    field: 'createByName',
+    label: t('breedEvent.ledger.field.changeBy'),
+    type: 'input',
+    placeholder: t('breedEvent.ledger.placeholder.changeBy'),
+    clearable: true
+  }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -87,6 +95,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'eventType', label: t('breedEvent.ledger.column.eventType'), width: 110, align: 'center', dictType: 'djs_pig_status_event' },
   { prop: 'transition', label: t('breedEvent.ledger.column.transition'), width: 180, align: 'center' },
   { prop: 'durationDays', label: t('breedEvent.ledger.column.durationDays'), width: 90, align: 'center' },
+  { prop: 'createByName', label: t('breedEvent.ledger.column.changeBy'), width: 100, align: 'center' },
   { prop: 'relatedEventId', label: t('breedEvent.ledger.column.relatedEventId'), width: 180, align: 'center', visible: false },
   { prop: 'pigId', label: t('breedEvent.ledger.column.pigId'), width: 180, align: 'center', visible: false },
   { prop: 'id', label: t('breedEvent.ledger.column.id'), width: 180, align: 'center', visible: false }
@@ -119,6 +128,7 @@ function handleReset() {
     earNo: undefined,
     eventType: undefined,
     newStatus: undefined,
+    createByName: undefined,
     changeTimeStart: undefined,
     changeTimeEnd: undefined
   });

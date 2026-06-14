@@ -8,18 +8,13 @@
               v-model="form.breedStrainCode"
               :placeholder="t('breeding.placeholder.breedStrainCode')"
               :disabled="!!form.id"
-              :maxlength="form.breedStrain === 2 ? 1 : 2"
+              :maxlength="2"
             />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item :label="t('breeding.field.breedStrainName')" prop="breedStrainName">
             <el-input v-model="form.breedStrainName" :placeholder="t('breeding.placeholder.breedStrainName')" maxlength="64" />
-          </el-form-item>
-        </el-col>
-        <el-col v-if="showParentCode" :span="12">
-          <el-form-item :label="t('breeding.field.parentCode')" prop="parentCode">
-            <el-input v-model="form.parentCode" :placeholder="t('breeding.placeholder.parentCode')" maxlength="32" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -69,16 +64,14 @@ const defaultForm = (breedStrain = 1): BreedInfoFormType => ({
 
 const form = ref<BreedInfoFormType>(defaultForm());
 
-const showParentCode = computed(() => form.value.breedStrain === 2);
-
 const rules = computed(() => {
-  // 编码 = 耳号位码（ADR-0011 §2.1）：品系（breedStrain=2）恰好 1 位纯数字，品种（breedStrain=1）恰好 2 位纯数字。
+  // 编码 = 耳号位码（ADR-0011 §2.1）：品种（breedStrain=1）恰好 2 位纯数字。
   const isStrain = form.value.breedStrain === 2;
   return {
     breedStrainCode: [
       { required: true, message: t('breeding.rule.breedStrainCode.required'), trigger: 'blur' },
       isStrain
-        ? { pattern: /^\d$/, message: t('breeding.rule.breedStrainCode.len1'), trigger: 'blur' }
+        ? { pattern: /^\d{1,2}$/, message: t('breeding.rule.breedStrainCode.len1to2'), trigger: 'blur' }
         : { pattern: /^\d{2}$/, message: t('breeding.rule.breedStrainCode.len2'), trigger: 'blur' }
     ],
     breedStrainName: [{ required: true, message: t('breeding.rule.breedStrainName.required'), trigger: 'blur' }]

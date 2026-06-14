@@ -1,22 +1,23 @@
 <template>
-  <el-dialog v-model="visible" :title="t('plantCrop.title.view')" destroy-on-close append-to-body width="900px">
+  <el-dialog v-model="visible" :title="t('plantCrop.title.view')" destroy-on-close append-to-body width="1200px">
     <el-tabs v-model="activeTab">
       <el-tab-pane :label="t('plantCrop.tab.planting')" name="planting">
-        <el-table :data="plantingList" v-loading="subLoading" border size="small" max-height="360">
+        <el-table :data="plantingList" v-loading="subLoading" border size="small" max-height="520">
           <el-table-column type="index" :label="t('plantCrop.sub.index')" width="55" align="center" />
           <el-table-column prop="plantDate" :label="t('plantCrop.planting.plantDate')" min-width="120" align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.plantDate, '{y}-{m}-{d}') || '-' }}</template>
           </el-table-column>
+          <el-table-column prop="plotCode" :label="t('plantCrop.planting.plotCode')" min-width="100" show-overflow-tooltip />
           <el-table-column prop="plotName" :label="t('plantCrop.planting.plotName')" min-width="110" show-overflow-tooltip />
           <el-table-column prop="plantTeamName" :label="t('plantCrop.planting.plantTeamName')" min-width="100" show-overflow-tooltip />
           <el-table-column prop="predictedPer" :label="t('plantCrop.planting.predictedPer')" min-width="120" align="right">
-            <template #default="{ row }">{{ row.predictedPer != null ? `${row.predictedPer} kg/亩` : '-' }}</template>
+            <template #default="{ row }">{{ row.predictedPer != null ? `${Number(row.predictedPer).toFixed(2)} kg/亩` : '-' }}</template>
+          </el-table-column>
+          <el-table-column prop="actualPer" :label="t('plantCrop.planting.actualPer')" min-width="120" align="right">
+            <template #default="{ row }">{{ row.actualPer != null ? `${Number(row.actualPer).toFixed(2)} kg/亩` : '-' }}</template>
           </el-table-column>
           <el-table-column prop="earliestHarvestDate" :label="t('plantCrop.planting.earliestHarvestDate')" min-width="140" align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.earliestHarvestDate, '{y}-{m}-{d}') || '-' }}</template>
-          </el-table-column>
-          <el-table-column prop="actualPer" :label="t('plantCrop.planting.actualPer')" min-width="120" align="right">
-            <template #default="{ row }">{{ row.actualPer != null ? `${row.actualPer} kg/亩` : '-' }}</template>
           </el-table-column>
           <el-table-column prop="pickStartDate" :label="t('plantCrop.planting.pickStartDate')" min-width="120" align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.pickStartDate, '{y}-{m}-{d}') || '-' }}</template>
@@ -32,7 +33,7 @@
       </el-tab-pane>
 
       <el-tab-pane :label="t('plantCrop.tab.farmwork')" name="farmwork">
-        <el-table :data="farmworkList" v-loading="subLoading" border size="small" max-height="360">
+        <el-table :data="farmworkList" v-loading="subLoading" border size="small" max-height="520">
           <el-table-column type="index" :label="t('plantCrop.sub.index')" width="55" align="center" />
           <el-table-column prop="farmDate" :label="t('plantCrop.farmwork.farmDate')" min-width="120" align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.farmDate, '{y}-{m}-{d}') || '-' }}</template>
@@ -70,7 +71,7 @@
           }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.irrigationInterval')">{{ intervalText(data.irrigationInterval) }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.predictedPer')">{{
-            data.predictedPer != null ? `${data.predictedPer} kg/亩` : '-'
+            data.predictedPer != null ? `${Number(data.predictedPer).toFixed(2)} kg/亩` : '-'
           }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.pickUnitPrice')">{{
             data.pickUnitPrice != null ? `¥${data.pickUnitPrice}/斤` : '-'
