@@ -24,6 +24,9 @@
       </el-button>
     </template>
   </BizTable>
+
+  <!-- 追溯码打印弹框（录重量 + 结构化标签卡 + 二维码） -->
+  <TraceLabelDialog ref="labelDialogRef" />
 </template>
 
 <script setup name="VegTracePanel" lang="ts">
@@ -31,10 +34,12 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
 import { listTrace } from '@/api/warehouse/trace';
 import type { TraceCodeVO, TraceCodeQuery } from '@/api/warehouse/trace/types';
+import TraceLabelDialog from './TraceLabelDialog.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const labelDialogRef = ref<InstanceType<typeof TraceLabelDialog>>();
 
 const list = ref<TraceCodeVO[]>([]);
 const total = ref(0);
@@ -42,8 +47,12 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-// 原型搜索：到店日期 / 序号 / 产品名称
-const searchModel = reactive<Record<string, unknown>>({ arrivalDate: undefined, serialNo: undefined, productName: undefined });
+// 原型搜索：到店日期 / 序号 / 产品名称。默认显示「当天到店」果蔬，故 arrivalDate 初值为今天
+function todayYmd(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+const searchModel = reactive<Record<string, unknown>>({ arrivalDate: todayYmd(), serialNo: undefined, productName: undefined });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), type: 'date' },
@@ -74,9 +83,9 @@ async function fetchList() {
       pageSize: pageSize.value,
       codeType: 'veg',
       productName: (searchModel.productName as string) || undefined,
-      // 到店日期：单日 → beginDate/endDate 同日（后端按生成时间区间过滤）
-      beginDate: arrival ? `${arrival} 00:00:00` : undefined,
-      endDate: arrival ? `${arrival} 23:59:59` : undefined
+      // 到店日期：单日 → arrivalBeginDate/arrivalEndDate 同日（后端按 trace_event arrival 到店事件过滤）
+      arrivalBeginDate: arrival ? `${arrival} 00:00:00` : undefined,
+      arrivalEndDate: arrival ? `${arrival} 23:59:59` : undefined
     };
     // 序号精确查：后端 TraceCodeQuery 暂无 serialNo 过滤（backendGap），先随参带上，后端补后即生效
     const serialNo = (searchModel.serialNo as string) || undefined;
@@ -104,25 +113,29 @@ function handlePageChange(p: number, s: number) {
   fetchList();
 }
 
-// 追溯码打印：浏览器打印一张含追溯码的标签（V1 简版）
+// 追溯码打印：弹框录重量（默认 row.actualWeight）→ 结构化 8 字段标签卡 + 二维码 → 打印
 function handlePrint(row: BizRow) {
-  const code = String((row as unknown as TraceCodeVO).produceCode ?? '');
-  const name = String((row as unknown as TraceCodeVO).productName ?? '');
+  const r = row as unknown as TraceCodeVO;
+  const code = String(r.produceCode ?? '');
   if (!code) {
     proxy?.$modal.msgWarning(t('storeTrace.veg.noCode'));
     return;
   }
-  const w = window.open('', '_blank', 'width=420,height=320');
-  if (!w) return;
-  w.document.write(
-    `<html><head><title>${code}</title></head><body style="font-family:sans-serif;text-align:center;padding:24px">` +
-      `<h3 style="margin:0 0 12px">${name}</h3>` +
-      `<div style="font-size:20px;letter-spacing:1px;border:1px dashed #333;padding:16px;border-radius:8px">${code}</div>` +
-      `</body></html>`
+  labelDialogRef.value?.open(
+    {
+      productCode: r.produceCode,
+      serialNo: r.serialNo,
+      packCode: r.produceNo,
+      produceDate: r.arrivalDate,
+      productName: r.productName,
+      storeName: r.storeName,
+      sourceLabel: t('storeTrace.label.plotNo'),
+      sourceValue: r.plotName,
+      produceCode: r.produceCode,
+      traceType: 'veg'
+    },
+    r.actualWeight
   );
-  w.document.close();
-  w.focus();
-  w.print();
 }
 
 onMounted(() => fetchList());

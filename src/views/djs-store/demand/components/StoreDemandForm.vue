@@ -191,7 +191,7 @@ async function openCreate() {
 }
 
 async function loadDetail(id: string) {
-  await Promise.all([loadStoreOptions(), loadProductOptions()]);
+  await loadStoreOptions();
   const res = await getStoreDemand(id);
   const detail = (res as unknown as { data?: Record<string, unknown> }).data;
   if (!detail) {
@@ -211,6 +211,8 @@ async function loadDetail(id: string) {
     demandRemark: detail.demandRemark,
     remark: detail.remark
   });
+  // 写入真实业态后再拉产品下拉，确保按该需求的 productType 过滤产品
+  await loadProductOptions();
   demandNo.value = String(detail.demandNo ?? '');
   return true;
 }

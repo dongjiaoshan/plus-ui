@@ -1,5 +1,5 @@
 <template>
-  <!-- 作物详情抽屉（替代旧整页路由页 /djs-plant/overview/crop-detail）：14 列只读明细 + 导出 + 分页 -->
+  <!-- 作物详情抽屉（替代旧整页路由页 /djs-plant/overview/crop-detail）：只读明细 + 导出 + 分页 -->
   <el-drawer v-model="visible" :title="drawerTitle" size="80%" :destroy-on-close="true" @open="onOpen">
     <!-- 右上 icon-only 导出按钮（无文字 label） -->
     <template #header="{ titleId, titleClass }">
@@ -11,18 +11,14 @@
       </div>
     </template>
 
-    <!-- 14 列只读明细表（按原型列顺序）：无行操作列、无筛选条 -->
+    <!-- 只读明细表（按原型列顺序）：无行操作列、无筛选条 -->
     <el-table v-loading="loading" :data="list" row-key="id" border stripe>
       <el-table-column :label="t('plantOverview.detail.col.cropName')" prop="cropName" min-width="110" show-overflow-tooltip />
+      <el-table-column :label="t('plantOverview.detail.col.plotCode')" prop="plotCode" min-width="100" show-overflow-tooltip />
       <el-table-column :label="t('plantOverview.detail.col.plotName')" prop="plotName" min-width="120" show-overflow-tooltip />
       <el-table-column :label="t('plantOverview.detail.col.harvestStatus')" min-width="100" align="center">
         <template #default="{ row }">
           <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
-        </template>
-      </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.planSeason')" min-width="100" align="center">
-        <template #default="{ row }">
-          <dict-tag :options="djs_planting_season" :value="row.planSeason" />
         </template>
       </el-table-column>
       <el-table-column :label="t('plantOverview.detail.col.planPlantDate')" min-width="110" align="center">
@@ -50,10 +46,10 @@
         <template #default="{ row }">{{ row.plotArea ?? '-' }}</template>
       </el-table-column>
       <el-table-column :label="t('plantOverview.detail.col.expectedYield')" min-width="120" align="right">
-        <template #default="{ row }">{{ row.expectedYield ?? '-' }}</template>
+        <template #default="{ row }">{{ row.expectedYield == null ? '-' : Number(row.expectedYield).toFixed(2) }}</template>
       </el-table-column>
       <el-table-column :label="t('plantOverview.detail.col.actualYield')" min-width="120" align="right">
-        <template #default="{ row }">{{ row.actualYield ?? '-' }}</template>
+        <template #default="{ row }">{{ row.actualYield == null ? '-' : Number(row.actualYield).toFixed(2) }}</template>
       </el-table-column>
     </el-table>
 
@@ -82,7 +78,7 @@ import type { ComponentInternalInstance } from 'vue';
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-const { djs_pick_status, djs_planting_season } = toRefs<any>(proxy?.useDict('djs_pick_status', 'djs_planting_season'));
+const { djs_pick_status } = toRefs<any>(proxy?.useDict('djs_pick_status'));
 
 /** 抽屉开关（父用 v-model 控制）。 */
 const visible = defineModel<boolean>({ required: true });

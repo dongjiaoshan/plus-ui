@@ -5,7 +5,32 @@
  * ID 字段全 string（snowflake 19 位，Number 会截断，见 skill coder-djs-cross-layer-contract 契约 1）。
  */
 
-/** 绩效列表行。 */
+/**
+ * 主列表行（班组 × 月聚合，rework 134/135）。
+ *
+ * 镜像后端 PerfListRow。列表行无唯一 id，前端 row-key / 详情寻址用 teamId+statMonth 复合键。
+ */
+export interface PerfListRowVO {
+  /** 统计月份 yyyy-MM */
+  statMonth: string;
+  teamId?: string;
+  /** service enrich：班组名 */
+  teamName?: string;
+  /** 采摘总量（斤，= SUM(pick_weight)） */
+  totalPickWeight?: number | string;
+  /** 该班组该月绩效总额（元，= SUM(performance_amount)） */
+  teamMonthAmount?: number | string;
+  /** 作物种类数 */
+  cropCount?: number;
+  /** 农事次数（该班组该月全部农事类型计数） */
+  farmCount?: number;
+}
+
+/**
+ * 逐作物绩效行（详情「产量绩效」tab 按作物分行，rework 135）。
+ *
+ * 镜像后端 PlantWorkPerformanceVo。ID 字段全 string（snowflake 19 位，Number 会截断）。
+ */
 export interface PlantWorkPerformanceVO {
   id: string;
   /** 统计月份 yyyy-MM */
@@ -33,5 +58,4 @@ export interface PlantWorkPerformanceQuery extends PageQuery {
   /** 统计月份 yyyy-MM（精确匹配） */
   statMonth?: string;
   teamId?: number | string;
-  cropId?: number | string;
 }

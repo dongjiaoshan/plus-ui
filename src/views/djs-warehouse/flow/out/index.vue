@@ -39,6 +39,25 @@ const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
 
+/** djs_flow_type 是出入合并字典，出库方式下拉只保留出库方向的值（按 value 白名单过滤，不动字典 seed） */
+const FLOW_TYPE_OUT_VALUES = [
+  'pick_out',
+  'loss',
+  'cut_out',
+  'slaughter_burn',
+  'ship_out',
+  'check_out',
+  'pack_consume',
+  'backstage_out',
+  'other'
+];
+const { djs_flow_type } = toRefs<Record<string, any>>(proxy?.useDict('djs_flow_type'));
+const outModeOptions = computed(() =>
+  (djs_flow_type.value ?? [])
+    .filter((d: any) => FLOW_TYPE_OUT_VALUES.includes(String(d.value)))
+    .map((d: any) => ({ label: d.label, value: d.value }))
+);
+
 /** 库存查询行钻取带入的 productId 预过滤（route query，仅本次进入生效） */
 const drillProductId = ref<string | undefined>(undefined);
 
@@ -67,7 +86,7 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('djs.warehouse.flowOut.flowDate'), type: 'daterange' },
   { field: 'productName', label: t('djs.warehouse.flowOut.productName'), type: 'input' },
-  { field: 'flowType', label: t('djs.warehouse.flowOut.outMode'), type: 'select', dictType: 'djs_flow_type' },
+  { field: 'flowType', label: t('djs.warehouse.flowOut.outMode'), type: 'select', options: outModeOptions.value },
   { field: 'warehouseId', label: t('djs.warehouse.flowOut.location'), type: 'select', options: locationOptions.value },
   { field: 'stockOutDest', label: t('djs.warehouse.flowOut.stockOutDest'), type: 'select', dictType: 'djs_stock_out_dest' },
   { field: 'operatorName', label: t('djs.warehouse.flowOut.operator'), type: 'input' },
@@ -76,18 +95,17 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'flowDate', label: t('djs.warehouse.flowOut.flowDate'), minWidth: 160, formatter: (row: any) => proxy?.parseTime?.(row.flowDate, '{y}-{m}-{d} {h}:{i}') },
-  { prop: 'flowNo', label: t('djs.warehouse.flowOut.flowNo'), minWidth: 160 },
-  { prop: 'productCode', label: t('djs.warehouse.flowOut.productCode'), minWidth: 110 },
-  { prop: 'productName', label: t('djs.warehouse.flowOut.productName'), minWidth: 160 },
-  { prop: 'flowType', label: t('djs.warehouse.flowOut.outMode'), dictType: 'djs_flow_type', minWidth: 110 },
-  { prop: 'locationName', label: t('djs.warehouse.flowOut.location'), minWidth: 120 },
-  { prop: 'changeQuantity', label: t('djs.warehouse.flowOut.changeQuantity'), minWidth: 110 },
-  { prop: 'productUnit', label: t('djs.warehouse.flowOut.productUnit'), minWidth: 80 },
-  { prop: 'blockNo', label: t('djs.warehouse.flowOut.blockNo'), minWidth: 110 },
-  { prop: 'earNo', label: t('djs.warehouse.flowOut.earNo'), minWidth: 120 },
-  { prop: 'operatorName', label: t('djs.warehouse.flowOut.operator'), minWidth: 100 },
-  { prop: 'createTime', label: t('djs.warehouse.flowOut.createTime'), minWidth: 160, formatter: 'datetime' }
+  { prop: 'flowDate', label: t('djs.warehouse.flowOut.flowDate'), minWidth: 160, align: 'center', formatter: (row: any) => proxy?.parseTime?.(row.flowDate, '{y}-{m}-{d} {h}:{i}') },
+  { prop: 'flowNo', label: t('djs.warehouse.flowOut.flowNo'), minWidth: 160, align: 'center' },
+  { prop: 'productCode', label: t('djs.warehouse.flowOut.productCode'), minWidth: 110, align: 'center' },
+  { prop: 'productName', label: t('djs.warehouse.flowOut.productName'), minWidth: 160, align: 'center' },
+  { prop: 'flowType', label: t('djs.warehouse.flowOut.outMode'), dictType: 'djs_flow_type', minWidth: 110, align: 'center' },
+  { prop: 'locationName', label: t('djs.warehouse.flowOut.location'), minWidth: 120, align: 'center' },
+  { prop: 'changeQuantity', label: t('djs.warehouse.flowOut.changeQuantity'), minWidth: 110, align: 'center' },
+  { prop: 'productUnit', label: t('djs.warehouse.flowOut.productUnit'), minWidth: 80, align: 'center' },
+  { prop: 'blockNo', label: t('djs.warehouse.flowOut.blockNo'), minWidth: 110, align: 'center' },
+  { prop: 'earNo', label: t('djs.warehouse.flowOut.earNo'), minWidth: 120, align: 'center' },
+  { prop: 'operatorName', label: t('djs.warehouse.flowOut.operator'), minWidth: 100, align: 'center' }
 ]);
 
 /** searchModel → 后端 query（daterange 拆 dateFrom/dateTo；空串归一 undefined） */

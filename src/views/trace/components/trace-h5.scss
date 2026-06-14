@@ -1,0 +1,223 @@
+/* 公开追溯 H5 共享样式（主色 #2f7c44 浅绿 tint，避免污染 Element Plus 全局主题） */
+$trace-primary: #2f7c44;
+$trace-primary-tint: #e8f3ec;
+$trace-text-strong: #303133;
+$trace-text-body: #4a4a4a;
+$trace-text-secondary: #606266;
+$trace-text-faint: #909399;
+
+.t-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+.t-card + .t-card {
+  margin-top: 12px;
+}
+
+.t-section-title {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: $trace-text-strong;
+  margin-bottom: 12px;
+
+  &::before {
+    content: '';
+    width: 4px;
+    height: 15px;
+    background: $trace-primary;
+    border-radius: 2px;
+    margin-right: 8px;
+  }
+}
+
+.t-product-body {
+  display: flex;
+  gap: 12px;
+}
+.t-product-img {
+  flex: 0 0 96px;
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f7fa;
+}
+.t-product-img :deep(img),
+.t-product-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.t-img-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c0c4cc;
+  font-size: 12px;
+}
+.t-product-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.t-product-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: $trace-text-strong;
+}
+.t-product-meta {
+  font-size: 13px;
+  color: $trace-text-secondary;
+  word-break: break-all;
+}
+.t-tag {
+  display: inline-block;
+  background: #fdf0e3;
+  color: #e6791a;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  align-self: flex-start;
+}
+
+/* KV 行 */
+.t-kv {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+}
+.t-kv__label {
+  flex: 0 0 64px;
+  font-size: 13px;
+  color: $trace-text-faint;
+}
+.t-kv__val {
+  font-size: 14px;
+  color: $trace-text-body;
+  word-break: break-all;
+}
+.t-chip {
+  display: inline-block;
+  background: $trace-primary-tint;
+  color: $trace-primary;
+  font-size: 13px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* 时间轴 */
+.t-timeline-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+}
+.t-timeline-dot {
+  flex: 0 0 12px;
+  width: 12px;
+  height: 12px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: $trace-primary;
+  box-shadow: 0 0 0 4px $trace-primary-tint;
+}
+.t-timeline-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.t-timeline-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: $trace-text-body;
+}
+.t-timeline-time {
+  font-size: 12px;
+  color: $trace-text-faint;
+  font-variant-numeric: tabular-nums;
+}
+.t-timeline-op {
+  font-size: 12px;
+  color: $trace-text-secondary;
+}
+
+/* 下钻入口行 */
+.t-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  background: $trace-primary-tint;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.t-entry + .t-entry {
+  margin-top: 10px;
+}
+.t-entry__main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 14px;
+  color: $trace-text-body;
+}
+.t-entry__sub {
+  font-size: 12px;
+  color: $trace-text-secondary;
+}
+.t-entry__arrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: $trace-primary;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* 空态 */
+.t-empty {
+  text-align: center;
+  color: $trace-text-faint;
+  font-size: 13px;
+  padding: 24px 0;
+}
+
+/* 谱系卡 */
+.t-pedigree-cards {
+  display: flex;
+  gap: 12px;
+}
+.t-pedigree-card {
+  flex: 1;
+  min-width: 0;
+  background: #f7f9f8;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.t-pedigree-head {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  padding: 2px 12px;
+  border-radius: 10px;
+}
+.t-pedigree-head--sire {
+  background: #4a90d9;
+}
+.t-pedigree-head--dam {
+  background: #d96aa0;
+}

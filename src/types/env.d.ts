@@ -20,6 +20,8 @@ interface ImportMetaEnv {
   VITE_APP_CLIENT_ID: string;
   VITE_APP_WEBSOCKET: string;
   VITE_APP_SSE: string;
+  /** 追溯 H5 二维码 encode 基址（生产公网域名；缺省回退 location.origin） */
+  VITE_APP_TRACE_BASE?: string;
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;

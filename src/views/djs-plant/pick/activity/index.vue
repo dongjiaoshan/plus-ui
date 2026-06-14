@@ -60,12 +60,12 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'activityDate', label: t('pickActivity.column.activityDate'), width: 140, align: 'center' },
-  { prop: 'cropName', label: t('pickActivity.column.cropName'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'plotCount', label: t('pickActivity.column.plotCount'), width: 120, align: 'center' },
-  { prop: 'todayPickWeight', label: t('pickActivity.column.todayPickWeight'), width: 150, align: 'right' },
-  { prop: 'expectedYield', label: t('pickActivity.column.expectedYield'), width: 150, align: 'right' },
-  { prop: 'cumulativePickWeight', label: t('pickActivity.column.cumulativePickWeight'), width: 150, align: 'right' }
+  { prop: 'activityDate', label: t('pickActivity.column.activityDate'), minWidth: 140, align: 'center' },
+  { prop: 'cropName', label: t('pickActivity.column.cropName'), minWidth: 130, showOverflowTooltip: true, align: 'center' },
+  { prop: 'plotCount', label: t('pickActivity.column.plotCount'), minWidth: 120, align: 'center' },
+  { prop: 'todayPickWeight', label: t('pickActivity.column.todayPickWeight'), minWidth: 150, align: 'right' },
+  { prop: 'expectedYield', label: t('pickActivity.column.expectedYield'), minWidth: 150, align: 'right' },
+  { prop: 'cumulativePickWeight', label: t('pickActivity.column.cumulativePickWeight'), minWidth: 150, align: 'right' }
 ]);
 
 const cropOptions = ref<Array<{ label: string; value: string }>>([]);

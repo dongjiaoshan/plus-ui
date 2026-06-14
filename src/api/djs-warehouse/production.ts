@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { ProductProductionVO, ProductProductionQuery } from './production/types';
+import type { ProductProductionGroupVO, ProductProductionVO, ProductProductionQuery } from './production/types';
 
 /**
  * 发货产品生产记录 API（WMS-PACK-001 admin 只读）。
@@ -10,8 +10,8 @@ import type { ProductProductionVO, ProductProductionQuery } from './production/t
  * 写入由 mp 端 /applet/warehouse/pack/{veg,gift,dry,celery}；admin 只 list / 详情 / 导出。
  */
 
-/** 分页查询 */
-export const listProduction = (query: ProductProductionQuery): AxiosPromise<ProductProductionVO[]> => {
+/** 产品维度聚合分页查询（主列表概览：生产日期 + 产品分组） */
+export const listProduction = (query: ProductProductionQuery): AxiosPromise<ProductProductionGroupVO[]> => {
   return request({
     url: '/djs/warehouse/production/list',
     method: 'get',

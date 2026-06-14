@@ -42,7 +42,6 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import RecordDetailDrawer from './components/RecordDetailDrawer.vue';
 import { listFarmRecords } from '@/api/djs-plant/farm-records';
-import { listPlot } from '@/api/djs-plant/plot';
 import { listAllTeam } from '@/api/djs-plant/team';
 import type { FarmRecordQuery, FarmRecordVO } from '@/api/djs-plant/farm-records/types';
 import { useI18n } from 'vue-i18n';
@@ -79,7 +78,6 @@ const pageSize = ref(10);
 const detailVisible = ref(false);
 const currentId = ref<string>('');
 
-const plotOptions = ref<Array<{ label: string; value: string }>>([]);
 const teamOptions = ref<Array<{ label: string; value: string }>>([]);
 
 // 农事类型下拉（djs_farm_work_type 排除灾害 + 采摘活动 —— 这两类有独立页）
@@ -91,14 +89,16 @@ const farmTypeOptions = computed<Array<{ label: string; value: string }>>(() =>
 const searchModel = reactive<Record<string, any>>({
   farmType: undefined,
   farmDate: undefined,
-  plotId: undefined,
+  cropName: undefined,
+  plotName: undefined,
   farmBy: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'farmType', label: t('plantWork.field.farmType'), type: 'select', options: farmTypeOptions.value },
   { field: 'farmDate', label: t('plantWork.field.dateRange'), type: 'daterange' },
-  { field: 'plotId', label: t('plantWork.field.plot'), type: 'select', options: plotOptions.value },
+  { field: 'cropName', label: t('plantWork.field.crop'), type: 'input' },
+  { field: 'plotName', label: t('plantWork.field.plot'), type: 'input' },
   { field: 'farmBy', label: t('plantWork.field.team'), type: 'select', options: teamOptions.value }
 ]);
 
@@ -126,7 +126,8 @@ function buildQuery(): FarmRecordQuery {
     pageNum: pageNum.value,
     pageSize: pageSize.value,
     farmWorkTypes: resolveWorkTypes(),
-    plotId: searchModel.plotId || undefined,
+    cropName: searchModel.cropName || undefined,
+    plotName: searchModel.plotName || undefined,
     farmBy: searchModel.farmBy || undefined,
     farmDateBegin: Array.isArray(range) && range[0] ? range[0] : undefined,
     farmDateEnd: Array.isArray(range) && range[1] ? range[1] : undefined
@@ -141,17 +142,6 @@ async function fetchList() {
     total.value = res.total ?? 0;
   } finally {
     loading.value = false;
-  }
-}
-
-async function loadPlotOptions() {
-  try {
-    const res = await listPlot({ pageNum: 1, pageSize: 999 });
-    const rows = (res.rows ?? res.data ?? []) as Array<{ id: string | number; plotName: string }>;
-    plotOptions.value = rows.map((p) => ({ label: p.plotName, value: String(p.id) }));
-  } catch (e) {
-    console.warn('[FarmRecord] listPlot failed', e);
-    plotOptions.value = [];
   }
 }
 
@@ -191,7 +181,8 @@ function handleExport() {
     'djs/plant/farm/export',
     {
       farmWorkTypes: resolveWorkTypes(),
-      plotId: searchModel.plotId || undefined,
+      cropName: searchModel.cropName || undefined,
+      plotName: searchModel.plotName || undefined,
       farmBy: searchModel.farmBy || undefined,
       farmDateBegin: Array.isArray(range) && range[0] ? range[0] : undefined,
       farmDateEnd: Array.isArray(range) && range[1] ? range[1] : undefined
@@ -201,7 +192,6 @@ function handleExport() {
 }
 
 onMounted(() => {
-  loadPlotOptions();
   loadTeamOptions();
   fetchList();
 });

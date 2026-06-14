@@ -1,23 +1,22 @@
 <template>
   <el-drawer v-model="visible" :title="t('plantPerformance.detail.title')" size="640px" destroy-on-close>
     <el-tabs v-model="activeTab">
-      <!-- tab1 产量绩效 -->
+      <!-- tab1 产量绩效：按作物分行（采摘量 × 单价快照 = 该作物绩效额） -->
       <el-tab-pane :label="t('plantPerformance.detail.tabYield')" name="yield">
-        <el-descriptions v-loading="loading" :column="1" border>
-          <el-descriptions-item :label="t('plantPerformance.column.statMonth')">{{ detail?.statMonth ?? '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantPerformance.column.team')">{{ detail?.teamName ?? '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantPerformance.column.crop')">{{ detail?.cropName ?? '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantPerformance.column.pickWeight')">
-            {{ detail?.pickWeight != null ? `${detail.pickWeight} 斤` : '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantPerformance.column.unitPrice')">
-            {{ detail?.unitPriceSnapshot != null ? `¥${detail.unitPriceSnapshot}/斤` : '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantPerformance.column.amount')">
-            <span class="font-bold text-red-500">{{ detail?.performanceAmount != null ? `¥${detail.performanceAmount}` : '-' }}</span>
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantPerformance.detail.rule')">{{ detail?.performanceRule ?? '-' }}</el-descriptions-item>
-        </el-descriptions>
+        <el-table v-loading="loading" :data="cropRows" border size="small" show-summary :summary-method="yieldSummary">
+          <el-table-column prop="cropName" :label="t('plantPerformance.detail.cropName')" min-width="120" show-overflow-tooltip />
+          <el-table-column :label="t('plantPerformance.detail.cropPickWeight')" width="130" align="right">
+            <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(2)} 斤` : '-' }}</template>
+          </el-table-column>
+          <el-table-column :label="t('plantPerformance.detail.cropUnitPrice')" width="130" align="right">
+            <template #default="{ row }">{{ row.unitPriceSnapshot != null ? `${row.unitPriceSnapshot} 元/斤` : '-' }}</template>
+          </el-table-column>
+          <el-table-column :label="t('plantPerformance.detail.cropAmount')" width="130" align="right">
+            <template #default="{ row }">
+              <span class="font-bold text-red-500">{{ row.performanceAmount != null ? `¥${row.performanceAmount}` : '-' }}</span>
+            </template>
+          </el-table-column>
+        </el-table>
       </el-tab-pane>
 
       <!-- tab2 农事记录（按班组 + 月份过滤，复用 PLT-WORK-002 接口） -->
@@ -39,13 +38,14 @@
 </template>
 
 <script setup name="PerformanceDetailDrawer" lang="ts">
-import { getPerformance } from '@/api/djs-plant/performance';
+import { getCropRows } from '@/api/djs-plant/performance';
 import type { PlantWorkPerformanceVO } from '@/api/djs-plant/performance/types';
 import { listFarmRecords } from '@/api/djs-plant/farm-records';
 import type { FarmRecordQuery, FarmRecordVO } from '@/api/djs-plant/farm-records/types';
 import { useI18n } from 'vue-i18n';
 import { getCurrentInstance } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
+import type { TableColumnCtx } from 'element-plus';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -56,8 +56,27 @@ const visible = ref(false);
 const activeTab = ref<'yield' | 'farm'>('yield');
 const loading = ref(false);
 const farmLoading = ref(false);
-const detail = ref<PlantWorkPerformanceVO>();
+const cropRows = ref<PlantWorkPerformanceVO[]>([]);
 const farmList = ref<FarmRecordVO[]>([]);
+
+/** 产量绩效表合计行：采摘量合计 + 绩效额合计（单价列无意义合计，留空）。 */
+function yieldSummary({ columns }: { columns: TableColumnCtx<PlantWorkPerformanceVO>[] }): string[] {
+  const sums: string[] = [];
+  const weightSum = cropRows.value.reduce((acc, r) => acc + Number(r.pickWeight ?? 0), 0);
+  const amountSum = cropRows.value.reduce((acc, r) => acc + Number(r.performanceAmount ?? 0), 0);
+  columns.forEach((_col, idx) => {
+    if (idx === 0) {
+      sums[idx] = t('plantPerformance.detail.totalAmount');
+    } else if (idx === 1) {
+      sums[idx] = `${weightSum.toFixed(2)} 斤`;
+    } else if (idx === 2) {
+      sums[idx] = '';
+    } else {
+      sums[idx] = `¥${amountSum.toFixed(2)}`;
+    }
+  });
+  return sums;
+}
 
 /** 由月份 yyyy-MM 推算当月起止日（含闰月），给农事记录按日期范围过滤。 */
 function monthRange(statMonth: string): { begin: string; end: string } {
@@ -90,15 +109,16 @@ async function loadFarmRecords(teamId?: string, statMonth?: string) {
   }
 }
 
-async function open(id: string) {
+async function open(teamId: string, statMonth: string) {
   visible.value = true;
   activeTab.value = 'yield';
   loading.value = true;
+  cropRows.value = [];
   farmList.value = [];
   try {
-    const res = await getPerformance(id);
-    detail.value = res.data as PlantWorkPerformanceVO;
-    await loadFarmRecords(detail.value?.teamId, detail.value?.statMonth);
+    const res = await getCropRows(teamId, statMonth);
+    cropRows.value = (res.data as PlantWorkPerformanceVO[]) || [];
+    await loadFarmRecords(teamId, statMonth);
   } finally {
     loading.value = false;
   }

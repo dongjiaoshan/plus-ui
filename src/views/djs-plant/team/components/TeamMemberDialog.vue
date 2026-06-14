@@ -16,7 +16,7 @@
             </template>
           </el-table-column>
           <el-table-column :label="t('plantTeam.member.colPhone')" prop="phonenumber" width="130" />
-          <el-table-column :label="t('common.action')" width="200" align="center">
+          <el-table-column :label="t('plantTeam.member.colAction')" width="200" align="center">
             <template #default="{ row }">
               <el-button v-if="row.isLeader !== 1" v-hasPermi="['djs:plant:team:edit']" type="warning" link size="small" @click="onSetLeader(row)">
                 {{ t('plantTeam.member.setLeaderBtn') }}

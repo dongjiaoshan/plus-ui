@@ -2,7 +2,7 @@
   <transition :enter-active-class="proxy?.animate?.searchAnimate?.enter" :leave-active-class="proxy?.animate?.searchAnimate?.leave">
     <div v-show="visible" class="mb-[10px]">
       <el-card shadow="hover">
-        <el-form ref="formRef" :model="innerModel" :inline="true" @submit.prevent>
+        <el-form ref="formRef" :model="innerModel" :inline="true" label-width="auto" @submit.prevent>
           <el-form-item v-for="field in schema" :key="field.field" :label="field.label" :prop="field.field">
             <!-- input -->
             <el-input

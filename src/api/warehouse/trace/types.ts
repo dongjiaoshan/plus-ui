@@ -99,4 +99,8 @@ export interface TraceCodeQuery extends PageQuery {
   beginDate?: string;
   /** 生成时间止 yyyy-MM-dd HH:mm:ss */
   endDate?: string;
+  /** 到店日期起 yyyy-MM-dd HH:mm:ss（按 trace_event arrival 事件过滤，果蔬默认当天到店） */
+  arrivalBeginDate?: string;
+  /** 到店日期止 yyyy-MM-dd HH:mm:ss（按 trace_event arrival 事件过滤） */
+  arrivalEndDate?: string;
 }

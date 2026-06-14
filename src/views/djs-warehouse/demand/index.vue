@@ -76,63 +76,81 @@ const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
+  productType: undefined,
+  demandStatus: undefined,
   beginDate: undefined,
   endDate: undefined
 });
 
 /**
- * 汇总列表查询区（group-list 仅支持 需求产品名 / 起止日期 三个过滤；
- * 三态 + 7 态业态过滤在分组语义下不适用，放到确认页做）。
+ * 汇总列表查询区：需求产品名 / 需求产品类型(业态字典) / 需求状态(聚合三态) / 起止日期。
+ * 需求状态用聚合三态（PENDING/ALL_CONFIRMED/PARTIAL），非原始 7 态 djs_demand_status——
+ * 7 态在分组语义下过滤不到任何聚合行，故走静态三态 options。
  */
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('demand.field.searchProductName'), type: 'input' },
+  { field: 'productType', label: t('demand.field.productType'), type: 'select', dictType: 'djs_demand_product_type' },
+  {
+    field: 'demandStatus',
+    label: t('demand.field.demandStatus'),
+    type: 'select',
+    options: [
+      { label: t('demand.groupStatus.PENDING'), value: 'PENDING' },
+      { label: t('demand.groupStatus.ALL_CONFIRMED'), value: 'ALL_CONFIRMED' },
+      { label: t('demand.groupStatus.PARTIAL'), value: 'PARTIAL' }
+    ]
+  },
   { field: 'beginDate', label: t('demand.field.beginDate'), type: 'date' },
   { field: 'endDate', label: t('demand.field.endDate'), type: 'date' }
 ]);
 
-/** 汇总列（对齐原型 bc5e5339：11 数据列 + 1 操作列）。 */
+/** 汇总列（对齐原型 bc5e5339：11 数据列 + 1 操作列）。统一居中 + 统一 minWidth。 */
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'demandDate', label: t('demand.column.demandDate'), width: 120, align: 'center' },
-  { prop: 'productName', label: t('demand.column.productName'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'productSpec', label: t('demand.column.productSpec'), width: 110, showOverflowTooltip: true },
+  { prop: 'demandDate', label: t('demand.column.demandDate'), minWidth: 120, align: 'center' },
+  { prop: 'productName', label: t('demand.column.productName'), minWidth: 140, align: 'center', showOverflowTooltip: true },
+  { prop: 'productSpec', label: t('demand.column.productSpec'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   {
     prop: 'demandQuantity',
     label: t('demand.column.demandQuantity'),
-    width: 100,
-    align: 'right',
-    formatter: (row: BizRow) => formatNumber((row as unknown as DemandGroupVO).demandQuantity)
+    minWidth: 120,
+    align: 'center',
+    formatter: (row: BizRow) => formatInt((row as unknown as DemandGroupVO).demandQuantity)
   },
-  { prop: 'productType', label: t('demand.column.productType'), width: 120, align: 'center', dictType: 'djs_demand_product_type' },
-  { prop: 'rawMaterial', label: t('demand.column.rawMaterial'), width: 110, showOverflowTooltip: true },
+  { prop: 'productType', label: t('demand.column.productType'), minWidth: 120, align: 'center', dictType: 'djs_demand_product_type' },
+  { prop: 'rawMaterial', label: t('demand.column.rawMaterial'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   {
     prop: 'materialQty',
     label: t('demand.column.materialQty'),
-    width: 120,
-    align: 'right',
+    minWidth: 120,
+    align: 'center',
     formatter: (row: BizRow) => formatNumber((row as unknown as DemandGroupVO).materialQty)
   },
   {
     prop: 'storeCount',
     label: t('demand.column.storeCount'),
-    width: 110,
+    minWidth: 120,
     align: 'center',
     formatter: (row: BizRow) => String((row as unknown as DemandGroupVO).storeCount ?? 0)
   },
-  { prop: 'demandStatus', label: t('demand.column.demandStatus'), width: 110, align: 'center' },
+  { prop: 'demandStatus', label: t('demand.column.demandStatus'), minWidth: 120, align: 'center' },
   {
     prop: 'confirmRate',
     label: t('demand.column.confirmRate'),
-    width: 100,
+    minWidth: 120,
     align: 'center',
     formatter: (row: BizRow) => formatRate((row as unknown as DemandGroupVO).confirmRate)
   },
-  { prop: 'lastConfirmTime', label: t('demand.column.lastConfirmTime'), width: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'lastConfirmTime', label: t('demand.column.lastConfirmTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'actions', label: t('demand.column.actions'), width: 110, fixed: 'right', align: 'center' }
 ]);
 
-/** 数量两位小数显示（需求量 / 原材料计算量）。 */
+/** 原材料计算量：两位小数显示。 */
 function formatNumber(v: number | string | undefined): string {
   return Number(v ?? 0).toFixed(2);
+}
+/** 需求量：整数显示（原材料计算量仍保留小数）。 */
+function formatInt(v: number | string | undefined): string {
+  return String(Math.round(Number(v ?? 0)));
 }
 /** 确认率：后端 0~1 小数 → 百分比整数。 */
 function formatRate(v: number | string | undefined): string {
@@ -168,6 +186,8 @@ async function fetchList() {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       productName: searchModel.productName,
+      productType: searchModel.productType,
+      demandStatus: searchModel.demandStatus,
       beginDate: searchModel.beginDate,
       endDate: searchModel.endDate
     };

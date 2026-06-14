@@ -6,12 +6,21 @@
  */
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { ReturnConfirmBody, ReturnProductForm, ReturnProductQuery, ReturnProductVO } from './return/types';
+import type { ReturnConfirmBody, ReturnProductForm, ReturnProductQuery, ReturnProductVO, ReturnStoreDailyVO } from './return/types';
 
-/** 列表（分页） */
+/** 列表（分页，逐条明细；明细弹窗下钻复用） */
 export const listReturn = (query?: ReturnProductQuery): AxiosPromise<ReturnProductVO[]> => {
   return request({
     url: '/djs/warehouse/return/list',
+    method: 'get',
+    params: query
+  });
+};
+
+/** 外层「门店 + 当日」汇总列表（图 153，主从视图外层） */
+export const listReturnStoreDaily = (query?: ReturnProductQuery): AxiosPromise<ReturnStoreDailyVO[]> => {
+  return request({
+    url: '/djs/warehouse/return/store-daily',
     method: 'get',
     params: query
   });

@@ -28,7 +28,7 @@
         </div>
       </template>
 
-      <!-- 编辑态时基本信息中 planSeason / plantDate 可改；其余只读 -->
+      <!-- 编辑态时基本信息中 planSeason 可改；其余只读 -->
       <el-descriptions :column="4" border size="small">
         <el-descriptions-item :label="t('plantPlan.field.planNo')">{{ plan?.plan?.planNo }}</el-descriptions-item>
         <el-descriptions-item :label="t('plantPlan.field.planYear')">{{ plan?.plan?.planYear }}</el-descriptions-item>
@@ -57,14 +57,6 @@
         <el-descriptions-item :label="t('plantPlan.field.plantStatus')">
           <dict-tag :options="djs_plant_plan_status" :value="plan?.plan?.plantStatus" />
         </el-descriptions-item>
-        <el-descriptions-item :label="t('plantPlan.field.plantDate')">
-          <template v-if="editMode">
-            <el-input v-model="editForm.plantDate" size="small" :placeholder="t('plantPlan.placeholder.plantDate')" style="width: 200px" clearable />
-          </template>
-          <template v-else>
-            {{ plan?.plan?.plantDate || '-' }}
-          </template>
-        </el-descriptions-item>
       </el-descriptions>
     </el-card>
 
@@ -81,7 +73,7 @@
       <!-- 只读模式 -->
       <el-table v-if="!editMode" :data="plan?.details || []" stripe size="small" border>
         <el-table-column :label="t('plantPlan.field.plotCode')" prop="plotCode" width="100" />
-        <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="120" show-overflow-tooltip />
+        <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="90" show-overflow-tooltip />
         <el-table-column :label="t('plantPlan.field.plantMonth')" width="100" align="center">
           <template #default="{ row }">{{ row.plantMonth }} 月</template>
         </el-table-column>
@@ -119,7 +111,7 @@
       -->
       <el-table v-else :data="editDetails" stripe size="small" border>
         <el-table-column :label="t('plantPlan.field.plotCode')" prop="plotCode" width="100" />
-        <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="120" show-overflow-tooltip />
+        <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="90" show-overflow-tooltip />
         <el-table-column :label="t('plantPlan.field.plantMonth')" width="100" align="center">
           <template #default="{ row }">{{ row.plantMonth }} 月</template>
         </el-table-column>
@@ -160,7 +152,7 @@
         {{ t('plantPlan.gantt.empty') }}
       </div>
 
-      <div v-else class="gantt-wrap">
+      <div v-else ref="ganttWrapRef" class="gantt-wrap">
         <div class="gantt-legend mb-2 flex gap-4 text-xs">
           <span><i class="legend-block plan-bar" /> {{ t('plantPlan.gantt.legend.plan') }}</span>
           <span><i class="legend-block actual-bar" /> {{ t('plantPlan.gantt.legend.actual') }}</span>
@@ -173,7 +165,7 @@
 
         <div v-for="row in ganttRows" :key="row.detailId" class="gantt-row flex items-center">
           <div class="gantt-row-label truncate" :title="row.plotName">{{ row.plotName || row.plotCode || '-' }}</div>
-          <div class="gantt-track relative" :style="{ width: cellWidth * 12 + 'px' }">
+          <div class="gantt-track relative" :style="{ width: cellWidth * 12 + 'px', '--gantt-cell-w': cellWidth + 'px' }">
             <div
               v-if="row.earliestHarvestdate && row.lastHarvestdate"
               class="gantt-bar plan-bar"
@@ -234,7 +226,17 @@ const editDetails = ref<EditDetailRow[]>([]);
 // 班组下拉数据
 const teamOptions = ref<Array<{ id: string; teamName: string }>>([]);
 
-const cellWidth = 60;
+// 甘特图月份格宽：按容器宽度动态平铺 12 个月，撑满页面（行标签占 140px）。
+// 容器太窄时退回最小格宽 48px，由 .gantt-wrap 横向滚动兜底。
+const GANTT_ROW_LABEL_WIDTH = 140;
+const GANTT_MIN_CELL_WIDTH = 48;
+const ganttWrapRef = ref<HTMLElement | null>(null);
+const { width: ganttWrapWidth } = useElementSize(ganttWrapRef);
+const cellWidth = computed<number>(() => {
+  const avail = ganttWrapWidth.value - GANTT_ROW_LABEL_WIDTH;
+  if (avail <= 0) return GANTT_MIN_CELL_WIDTH;
+  return Math.max(GANTT_MIN_CELL_WIDTH, avail / 12);
+});
 const ganttRows = computed<PlantPlanGanttRow[]>(() => gantt.value?.rows || []);
 
 /** 是否允许进入编辑态 */
@@ -362,8 +364,9 @@ function barStyle(start?: string, end?: string, topOffset = 6) {
   const span = yearEnd - yearStart;
   const startT = Math.max(new Date(start).getTime(), yearStart);
   const endT = end ? Math.min(new Date(end).getTime(), yearEnd) : startT + 86400000;
-  const left = ((startT - yearStart) / span) * (cellWidth * 12);
-  const width = Math.max(8, ((endT - startT) / span) * (cellWidth * 12));
+  const trackWidth = cellWidth.value * 12;
+  const left = ((startT - yearStart) / span) * trackWidth;
+  const width = Math.max(8, ((endT - startT) / span) * trackWidth);
   return {
     left: `${left}px`,
     width: `${width}px`,
@@ -405,7 +408,7 @@ function goList() {
 .gantt-track {
   position: relative;
   height: 48px;
-  background-image: repeating-linear-gradient(to right, #f7f8fa 0 1px, transparent 1px 60px);
+  background-image: repeating-linear-gradient(to right, #f7f8fa 0 1px, transparent 1px var(--gantt-cell-w, 60px));
 }
 .gantt-bar {
   position: absolute;

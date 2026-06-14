@@ -8,7 +8,10 @@
       <el-card
         v-for="c in filteredCrops"
         :key="c.id"
-        :class="['cursor-pointer transition', selectedId === String(c.id) ? 'border-primary shadow' : '']"
+        :class="[
+          'cursor-pointer border-2 border-transparent transition-all duration-200',
+          selectedId === String(c.id) ? '!border-primary shadow' : ''
+        ]"
         shadow="hover"
         body-style="padding:12px"
         @click="select(c)"

@@ -114,27 +114,27 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 // 列对齐原型：需求日期/产品名称/产品规格/需求量/单位/需求类型/备注/预计到店重量/需求状态/需求确认时间/需求确认人/操作
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'demandDate', label: t('storeDemand.column.demandDate'), width: 110, align: 'center' },
-  { prop: 'productName', label: t('storeDemand.column.productName'), minWidth: 130, showOverflowTooltip: true },
-  { prop: 'productSpec', label: t('storeDemand.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true },
+  { prop: 'demandDate', label: t('storeDemand.column.demandDate'), minWidth: 110, align: 'center' },
+  { prop: 'productName', label: t('storeDemand.column.productName'), minWidth: 130, align: 'center', showOverflowTooltip: true },
+  { prop: 'productSpec', label: t('storeDemand.column.productSpec'), minWidth: 110, align: 'center', showOverflowTooltip: true },
   {
     prop: 'demandQuantity',
     label: t('storeDemand.column.demandQuantity'),
-    width: 90,
-    align: 'right',
+    minWidth: 110,
+    align: 'center',
     // 89-1：后端返 BigDecimal（3 位小数），需求量取整展示，无值显 '—'
     formatter: (row: BizRow) => {
       const v = (row as StoreDemandVO).demandQuantity;
       return v == null || v === '' ? '—' : String(Math.round(Number(v)));
     }
   },
-  { prop: 'productUnit', label: t('storeDemand.column.productUnit'), width: 70, align: 'center' },
-  { prop: 'demandType', label: t('storeDemand.column.demandType'), width: 100, align: 'center', dictType: 'djs_demand_mailing_type' },
-  { prop: 'demandRemark', label: t('storeDemand.column.demandRemark'), minWidth: 120, showOverflowTooltip: true },
-  { prop: 'expectedWeight', label: t('storeDemand.column.expectedWeight'), width: 120, align: 'right' },
-  { prop: 'storeDemandStatus', label: t('storeDemand.column.demandStatus'), width: 100, align: 'center', dictType: 'djs_store_demand_status' },
-  { prop: 'confirmerTime', label: t('storeDemand.column.confirmerTime'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'demandConfirmerName', label: t('storeDemand.column.demandConfirmer'), width: 100, align: 'center' },
+  { prop: 'productUnit', label: t('storeDemand.column.productUnit'), minWidth: 110, align: 'center' },
+  { prop: 'demandType', label: t('storeDemand.column.demandType'), minWidth: 110, align: 'center', dictType: 'djs_demand_mailing_type' },
+  { prop: 'demandRemark', label: t('storeDemand.column.demandRemark'), minWidth: 130, align: 'center', showOverflowTooltip: true },
+  { prop: 'expectedWeight', label: t('storeDemand.column.expectedWeight'), minWidth: 130, align: 'center' },
+  { prop: 'storeDemandStatus', label: t('storeDemand.column.demandStatus'), minWidth: 110, align: 'center', dictType: 'djs_store_demand_status' },
+  { prop: 'confirmerTime', label: t('storeDemand.column.confirmerTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'demandConfirmerName', label: t('storeDemand.column.demandConfirmer'), minWidth: 110, align: 'center' },
   { prop: 'actions', label: t('storeDemand.column.actions'), width: 200, fixed: 'right', align: 'center' }
 ]);
 

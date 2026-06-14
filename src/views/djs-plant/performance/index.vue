@@ -28,7 +28,7 @@
       :search-model="searchModel"
       :page-num="pageNum"
       :page-size="pageSize"
-      row-key="id"
+      row-key="listKey"
       show-export
       :show-add="false"
       :show-batch-del="false"
@@ -56,9 +56,8 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import PerformanceDetailDrawer from './components/PerformanceDetailDrawer.vue';
 import { generatePerformance, listPerformance } from '@/api/djs-plant/performance';
-import type { PlantWorkPerformanceQuery, PlantWorkPerformanceVO } from '@/api/djs-plant/performance/types';
+import type { PerfListRowVO, PlantWorkPerformanceQuery } from '@/api/djs-plant/performance/types';
 import { listAllTeam } from '@/api/djs-plant/team';
-import { listCrop } from '@/api/djs-plant/crop';
 import { useI18n } from 'vue-i18n';
 import { getCurrentInstance } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
@@ -69,7 +68,10 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const tableRef = ref<BizTableExpose>();
 const drawerRef = ref<InstanceType<typeof PerformanceDetailDrawer>>();
 
-const list = ref<PlantWorkPerformanceVO[]>([]);
+/** 列表行 = 聚合行 + 复合 row-key（列表无唯一单列 id）。 */
+type PerfRow = PerfListRowVO & { listKey: string };
+
+const list = ref<PerfRow[]>([]);
 const total = ref(0);
 const loading = ref(false);
 const generating = ref(false);
@@ -79,46 +81,36 @@ const pageSize = ref(10);
 /** 顶部"生成结算"独立月份（与筛选月份解耦）。 */
 const genMonth = ref<string>('');
 
-/** 班组 / 作物筛选下拉数据。 */
+/** 班组筛选下拉数据。 */
 const teamOptions = ref<Array<{ label: string; value: string | number }>>([]);
-const cropOptions = ref<Array<{ label: string; value: string | number }>>([]);
 
 const searchModel = reactive<Record<string, unknown>>({
   statMonth: undefined,
-  teamId: undefined,
-  cropId: undefined
+  teamId: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'statMonth', label: t('plantPerformance.field.statMonth'), type: 'month', placeholder: t('plantPerformance.toolbar.pickMonth') },
-  { field: 'teamId', label: t('plantPerformance.field.team'), type: 'select', options: teamOptions.value },
-  { field: 'cropId', label: t('plantPerformance.field.crop'), type: 'select', options: cropOptions.value }
+  { field: 'teamId', label: t('plantPerformance.field.team'), type: 'select', options: teamOptions.value }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'statMonth', label: t('plantPerformance.column.statMonth'), minWidth: 120, align: 'center' },
   { prop: 'teamName', label: t('plantPerformance.column.team'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'cropName', label: t('plantPerformance.column.crop'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'farmCount', label: t('plantPerformance.column.farmCount'), minWidth: 110, align: 'center' },
   {
-    prop: 'pickWeight',
+    prop: 'totalPickWeight',
     label: t('plantPerformance.column.pickWeight'),
     minWidth: 140,
     align: 'right',
-    formatter: (r: BizRow) => (r.pickWeight != null ? `${r.pickWeight} 斤` : '-')
+    formatter: (r: BizRow) => (r.totalPickWeight != null ? `${Number(r.totalPickWeight).toFixed(2)} 斤` : '-')
   },
   {
-    prop: 'unitPriceSnapshot',
-    label: t('plantPerformance.column.unitPrice'),
-    minWidth: 140,
-    align: 'right',
-    formatter: (r: BizRow) => (r.unitPriceSnapshot != null ? `¥${r.unitPriceSnapshot}/斤` : '-')
-  },
-  {
-    prop: 'performanceAmount',
+    prop: 'teamMonthAmount',
     label: t('plantPerformance.column.amount'),
     minWidth: 140,
     align: 'right',
-    formatter: (r: BizRow) => (r.performanceAmount != null ? `¥${r.performanceAmount}` : '-')
+    formatter: (r: BizRow) => (r.teamMonthAmount != null ? `¥${r.teamMonthAmount}` : '-')
   }
 ]);
 
@@ -127,7 +119,7 @@ async function loadList() {
   try {
     const params: PlantWorkPerformanceQuery = { ...searchModel, pageNum: pageNum.value, pageSize: pageSize.value };
     const res = await listPerformance(params);
-    list.value = (res.rows as PlantWorkPerformanceVO[]) || [];
+    list.value = ((res.rows as PerfListRowVO[]) || []).map((r) => ({ ...r, listKey: `${r.statMonth}|${r.teamId ?? ''}` }));
     total.value = res.total || 0;
   } finally {
     loading.value = false;
@@ -137,8 +129,6 @@ async function loadList() {
 async function loadOptions() {
   const teamRes = await listAllTeam();
   teamOptions.value = (teamRes.data || []).map((it) => ({ label: it.teamName, value: it.id }));
-  const cropRes = await listCrop({ pageNum: 1, pageSize: 200 } as never);
-  cropOptions.value = (cropRes.rows || []).map((it) => ({ label: it.cropName, value: it.id }));
 }
 
 const handleSearch = (payload?: Record<string, any>) => {
@@ -179,7 +169,7 @@ const handleGenerate = async () => {
 };
 
 const handleDetail = (row: BizRow) => {
-  drawerRef.value?.open(row.id as string);
+  drawerRef.value?.open(row.teamId as string, row.statMonth as string);
 };
 
 const handleExport = () => {

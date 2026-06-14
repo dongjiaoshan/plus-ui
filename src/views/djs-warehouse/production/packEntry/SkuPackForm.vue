@@ -3,32 +3,34 @@
     <div class="station-title">{{ title }}</div>
 
     <div class="station-body">
-      <!-- 左：产品卡片网格 + 底部需求门店 tags -->
+      <!-- 左：产品卡片网格（可滚动）+ 底部固定需求门店 tags -->
       <div class="station-left">
-        <ProductCardGrid
-          v-model="form.productId"
-          :items="products"
-          :loading="productLoading"
-          :demand-map="demandMap"
-          :stock-map="stockMap"
-          :show-stock="showStock"
-          @change="onProductChange"
-        />
+        <div class="card-scroll">
+          <ProductCardGrid
+            v-model="form.productId"
+            :items="products"
+            :loading="productLoading"
+            :demand-map="demandMap"
+            :stock-map="stockMap"
+            :show-stock="showStock"
+            @change="onProductChange"
+          />
+        </div>
 
-        <!-- 底部需求门店 tags：选目标产品后展示各门店未发货需求份数 -->
+        <!-- 底部固定需求门店 tags：选目标产品后展示各门店未发货需求份数（整数、0 不显示） -->
         <div v-if="form.productId" class="demand-bar">
           <span class="demand-label">{{ t('djs.warehouse.packEntry.demandStores') }}</span>
           <div v-loading="demandLoading" class="demand-tags">
-            <template v-if="storeDemands.length > 0">
+            <template v-if="visibleStoreDemands.length > 0">
               <el-tag
-                v-for="sd in storeDemands"
+                v-for="sd in visibleStoreDemands"
                 :key="String(sd.storeId)"
                 class="mr-2 mb-1 cursor-pointer"
                 :type="String(form.storeId) === String(sd.storeId) ? 'primary' : 'info'"
                 :effect="String(form.storeId) === String(sd.storeId) ? 'dark' : 'plain'"
                 @click="pickDemandStore(sd.storeId)"
               >
-                {{ sd.storeName }}({{ sd.copies }}{{ t('djs.warehouse.packEntry.copiesUnit') }})
+                {{ sd.storeName }}({{ Math.round(Number(sd.copies) || 0) }}{{ t('djs.warehouse.packEntry.copiesUnit') }})
               </el-tag>
             </template>
             <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.noDemand') }}</span>
@@ -279,11 +281,25 @@ function pickDemandStore(storeId: number | string) {
   form.value.storeId = storeId;
 }
 
+// 需求门店 tags：只显示份数 > 0 的门店（原型/测试：0 份不显示）
+const visibleStoreDemands = computed(() => storeDemands.value.filter((sd) => (Number(sd.copies) || 0) > 0));
+
 watch(
   () => form.value.productId,
   (pid) => {
     void loadStoreDemand(pid);
   }
+);
+
+// 发送位置默认选第一项（发货月台 platform）；礼盒无 sendDests 时保持空
+watch(
+  sendDests,
+  (dests) => {
+    if (!form.value.deliverDest && dests.length > 0) {
+      form.value.deliverDest = dests[0].value as DeliverDest;
+    }
+  },
+  { immediate: true }
 );
 
 // 卡片网格「需求量」聚合：各产品所有门店未发货需求份数之和（productId → 总份数）
@@ -505,25 +521,39 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 收银系统风格：整页定高，中部产品卡片可滚动，右侧操作面板 + 底部需求门店条固定不滚 */
 .pack-station {
   padding: 12px;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
 }
 .station-title {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 12px;
+  flex: 0 0 auto;
 }
 .station-body {
+  flex: 1;
+  min-height: 0;
   display: flex;
   gap: 16px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .station-left {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+}
+/* 中部：仅产品卡片区可滑动 */
+.card-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 .station-right {
   flex: 0 0 320px;
@@ -532,6 +562,10 @@ onMounted(async () => {
   border-radius: 8px;
   padding: 16px;
   background: var(--el-bg-color);
+  align-self: stretch;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 .panel-title {
   font-size: 14px;
@@ -551,7 +585,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: auto;
+  padding-top: 20px;
 }
 .action-btn {
   width: 100%;

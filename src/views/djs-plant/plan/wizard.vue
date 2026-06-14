@@ -55,7 +55,7 @@
             </div>
           </template>
         </el-alert>
-        <PlotPeriodPicker v-model="form.details" />
+        <PlotPeriodPicker v-model="form.details" :plan-year="form.planYear" />
       </template>
 
       <div class="mt-6 flex justify-center gap-3">

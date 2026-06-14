@@ -62,7 +62,9 @@ export interface CropDetailVO {
   id: string;
   /** 1 作物名称。 */
   cropName?: string;
-  /** 2 种植地块（plot_name）。 */
+  /** 2 地块编号（plot_code，用户手填业务码）。 */
+  plotCode?: string;
+  /** 3 种植地块（plot_name）。 */
   plotName?: string;
   /** 3 采摘状态（字典 djs_pick_status）。 */
   harvestStatus?: string;

@@ -11,7 +11,7 @@
       :dict-types="['djs_check_result']"
       :page-num="pageNum"
       :page-size="pageSize"
-      :action-width="280"
+      :action-width="320"
       row-key="id"
       perm-prefix="djs:warehouse:stock"
       show-export
@@ -49,6 +49,7 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import StockOutDialog from './components/StockOutDialog.vue';
 import { listStock } from '@/api/djs-warehouse/stock';
 import type { LocationStockQuery, LocationStockVO } from '@/api/djs-warehouse/stock/types';
+import { listLocation } from '@/api/djs-warehouse/location';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
@@ -68,25 +69,30 @@ const pageSize = ref(10);
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
   earNo: undefined,
-  blockNo: undefined
+  blockNo: undefined,
+  locationId: undefined
 });
+
+/** 库位下拉选项（按 id/locationName 拉取，供搜索精确过滤 locationId）。 */
+const locationOptions = ref<Array<{ label: string; value: string | number }>>([]);
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('stock.field.productName'), type: 'input' },
   { field: 'earNo', label: t('stock.field.earNo'), type: 'input' },
-  { field: 'blockNo', label: t('stock.field.blockNo'), type: 'input' }
+  { field: 'blockNo', label: t('stock.field.blockNo'), type: 'input' },
+  { field: 'locationId', label: t('stock.field.locationName'), type: 'select', options: locationOptions.value, clearable: true }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'productCode', label: t('stock.column.productCode'), width: 120, align: 'center', showOverflowTooltip: true },
-  { prop: 'locationName', label: t('stock.column.locationName'), width: 140, showOverflowTooltip: true },
-  { prop: 'productName', label: t('stock.column.productName'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'productStock', label: t('stock.column.productStock'), width: 110, align: 'right', formatter: (row: BizRow) => formatStock(row.productStock) },
-  { prop: 'productUnit', label: t('stock.column.productUnit'), width: 80, align: 'center' },
-  { prop: 'earNo', label: t('stock.column.earNo'), width: 140, align: 'center' },
-  { prop: 'blockNo', label: t('stock.column.blockNo'), width: 130, align: 'center' },
-  { prop: 'latestCheckTime', label: t('stock.column.latestCheckTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'checkResult', label: t('stock.column.checkResult'), width: 90, align: 'center', dictType: 'djs_check_result' }
+  { prop: 'productCode', label: t('stock.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'locationName', label: t('stock.column.locationName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'productName', label: t('stock.column.productName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'productStock', label: t('stock.column.productStock'), minWidth: 120, align: 'center', formatter: (row: BizRow) => formatStock(row.productStock) },
+  { prop: 'productUnit', label: t('stock.column.productUnit'), minWidth: 120, align: 'center' },
+  { prop: 'earNo', label: t('stock.column.earNo'), minWidth: 120, align: 'center' },
+  { prop: 'blockNo', label: t('stock.column.blockNo'), minWidth: 120, align: 'center' },
+  { prop: 'latestCheckTime', label: t('stock.column.latestCheckTime'), minWidth: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'checkResult', label: t('stock.column.checkResult'), minWidth: 120, align: 'center', dictType: 'djs_check_result' }
 ]);
 
 /** 当前库存格式化：保留两位小数（后端 BigDecimal 序列化可能是 string / 整数 / 多位小数）。 */
@@ -104,7 +110,8 @@ async function fetchList() {
       pageSize: pageSize.value,
       productName: searchModel.productName || undefined,
       earNo: searchModel.earNo || undefined,
-      blockNo: searchModel.blockNo || undefined
+      blockNo: searchModel.blockNo || undefined,
+      locationId: searchModel.locationId || undefined
     };
     const res = await listStock(query);
     list.value = (res.rows ?? res.data ?? []) as LocationStockVO[];
@@ -123,16 +130,15 @@ function handleProductOut(row: LocationStockVO) {
  * 行级钻取：入库 → 入库记录页（9240 `flow/in`）/ 出库 → 出库记录页（9241 `flow/out`），
  * 带 productId 预过滤；盘点 → 盘点记录页（9250 `check`），带 locationId 预过滤（盘点单为库位级）。
  *
- * 路由 path 按 plus-ui 动态路由：父菜单 path `djs-warehouse`(9000) + 子 path。
- * 旧入口 `stockFlow`(9110) 已隐藏（visible='1'），隐藏菜单不生成动态路由会 404，故对齐可见的
- * 入库/出库记录权威菜单 9240/9241。
+ * 路由 path 按 plus-ui 动态路由：父 path 前缀拼子 path。IA 重构（ADMIN-MENU-IA-001）后
+ * 9240/9241/9250 改挂 9302(`wh-stock-mgmt`)，真实路由前缀为 `djs-warehouse/wh-stock-mgmt`。
  */
 function drillTo(kind: 'in' | 'out' | 'check', row: LocationStockVO) {
   if (kind === 'check') {
-    router.push({ path: '/djs-warehouse/check', query: { locationId: row.locationId } });
+    router.push({ path: '/djs-warehouse/wh-stock-mgmt/check', query: { locationId: row.locationId } });
   } else {
     router.push({
-      path: kind === 'in' ? '/djs-warehouse/flow/in' : '/djs-warehouse/flow/out',
+      path: kind === 'in' ? '/djs-warehouse/wh-stock-mgmt/flow/in' : '/djs-warehouse/wh-stock-mgmt/flow/out',
       query: { productId: row.productId }
     });
   }
@@ -159,13 +165,22 @@ function handleExport() {
     {
       productName: searchModel.productName || undefined,
       earNo: searchModel.earNo || undefined,
-      blockNo: searchModel.blockNo || undefined
+      blockNo: searchModel.blockNo || undefined,
+      locationId: searchModel.locationId || undefined
     },
     `stock_${new Date().getTime()}.xlsx`
   );
 }
 
+/** 拉取库位列表填充搜索下拉（精确过滤 locationId）。 */
+async function loadLocationOptions() {
+  const res = await listLocation({ pageNum: 1, pageSize: 1000 });
+  const rows = (res.rows ?? res.data ?? []) as Array<{ id: number | string; locationName: string }>;
+  locationOptions.value = rows.map((r) => ({ label: r.locationName, value: r.id }));
+}
+
 onMounted(() => {
+  loadLocationOptions();
   fetchList();
 });
 </script>

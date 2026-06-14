@@ -59,17 +59,17 @@ const codeOptions = ref<Array<{ label: string; value: string }>>([]);
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   {
     field: 'breedStrainCode',
-    label: t('breeding.field.breedStrainCode'),
+    label: t('breeding.field.typeCode'),
     type: 'select',
     options: codeOptions.value
   },
-  { field: 'breedStrainName', label: t('breeding.field.breedStrainName'), type: 'input' },
+  { field: 'breedStrainName', label: t('breeding.field.typeName'), type: 'input' },
   { field: 'createTimeRange', label: t('breeding.field.createTimeRange'), type: 'daterange' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'breedStrainCode', label: t('breeding.column.breedStrainCode'), width: 160 },
-  { prop: 'breedStrainName', label: t('breeding.column.breedStrainName'), minWidth: 160 },
+  { prop: 'breedStrainCode', label: t('breeding.column.typeCode'), width: 160 },
+  { prop: 'breedStrainName', label: t('breeding.column.typeName'), minWidth: 160 },
   { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'createByName', label: t('breeding.column.createBy'), width: 120, align: 'center' }
 ]);

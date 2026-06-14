@@ -29,7 +29,6 @@
           :placeholder="t('stock.outDialog.quantityPlaceholder')"
           style="width: 100%"
         />
-        <span v-if="unit" class="ml-2 text-gray-400">{{ unit }}</span>
       </el-form-item>
       <el-form-item :label="t('stock.outDialog.stockOutDest')" prop="stockOutDest">
         <el-select v-model="form.stockOutDest" :placeholder="t('stock.outDialog.stockOutDestPlaceholder')" style="width: 100%">

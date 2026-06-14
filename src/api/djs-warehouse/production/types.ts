@@ -40,16 +40,36 @@ export interface ProductProductionVO {
   createTime?: string;
 }
 
+/**
+ * 产品维度聚合行（主列表「产品生产」概览）。
+ * 后端 ProductProductionGroupVo：按 (product_id, DATE(produce_date)) 分组。
+ * productId 走 string 契约避雪花精度截断；「查看」下钻携 produceDate + productId。
+ */
+export interface ProductProductionGroupVO {
+  produceDate: string;
+  productId: number | string;
+  productName: string;
+  productUnit?: string;
+  productSpec?: string;
+  belongType?: string;
+  productType?: number;
+  produceQty: number;
+  itemCount: number;
+}
+
 export interface ProductProductionQuery {
   produceNo?: string;
   productId?: number | string;
   productType?: number;
+  belongType?: string;
   productSort?: number;
   packStatus?: string;
   earNo?: string;
   plotId?: number | string;
   storeId?: number | string;
   produceDate?: string;
+  produceDateFrom?: string;
+  produceDateTo?: string;
   produceTimeFrom?: string;
   produceTimeTo?: string;
   pageNum?: number;

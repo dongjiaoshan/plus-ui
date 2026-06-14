@@ -32,9 +32,8 @@
         <span v-else class="text-gray-400">—</span>
       </template>
       <template #cell-totalAcreage="{ row }">{{ row.totalAcreage != null ? `${row.totalAcreage} 亩` : '-' }}</template>
-      <template #cell-demandQty="{ row }">{{ row.demandQty != null ? `${row.demandQty} kg` : '-' }}</template>
-      <template #cell-actualYield="{ row }">{{ row.actualYield != null ? `${row.actualYield} kg` : '-' }}</template>
-      <template #cell-disasterLoss="{ row }">{{ row.disasterLoss != null ? `${row.disasterLoss} kg` : '-' }}</template>
+      <template #cell-actualYield="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(2)} kg` : '-' }}</template>
+      <template #cell-disasterLoss="{ row }">{{ row.disasterLoss != null ? `${Number(row.disasterLoss).toFixed(2)} kg` : '-' }}</template>
       <template #cell-activityPlotCount="{ row }">
         <el-tag v-if="row.activityPlotCount > 0" type="warning" size="small">{{ row.activityPlotCount }}</el-tag>
         <span v-else>-</span>
@@ -96,14 +95,13 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 // 预计需求量 / 当年已采摘量 / 当年种植地块总数 / 预计灾害损失量 / 采摘活动地块数 / 操作
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropImageUrl', label: t('pickPlan.column.cropImage'), width: 80, align: 'center' },
-  { prop: 'cropName', label: t('pickPlan.column.cropName'), minWidth: 120, showOverflowTooltip: true },
+  { prop: 'cropName', label: t('pickPlan.column.cropName'), minWidth: 120, showOverflowTooltip: true, align: 'center' },
   { prop: 'planEarliest', label: t('pickPlan.column.planEarliest'), minWidth: 120, align: 'center' },
   { prop: 'planLatest', label: t('pickPlan.column.planLatest'), minWidth: 120, align: 'center' },
-  { prop: 'totalAcreage', label: t('pickPlan.column.totalAcreage'), minWidth: 120, align: 'right' },
-  { prop: 'demandQty', label: t('pickPlan.column.demandQty'), minWidth: 120, align: 'right' },
-  { prop: 'actualYield', label: t('pickPlan.column.actualYield'), minWidth: 130, align: 'right' },
+  { prop: 'totalAcreage', label: t('pickPlan.column.totalAcreage'), minWidth: 120, align: 'center' },
+  { prop: 'actualYield', label: t('pickPlan.column.actualYield'), minWidth: 130, align: 'center' },
   { prop: 'plotTotalCount', label: t('pickPlan.column.plotTotalCount'), minWidth: 130, align: 'center' },
-  { prop: 'disasterLoss', label: t('pickPlan.column.disasterLoss'), minWidth: 130, align: 'right' },
+  { prop: 'disasterLoss', label: t('pickPlan.column.disasterLoss'), minWidth: 130, align: 'center' },
   { prop: 'activityPlotCount', label: t('pickPlan.column.activityPlotCount'), minWidth: 120, align: 'center' }
 ]);
 

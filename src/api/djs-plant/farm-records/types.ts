@@ -122,6 +122,10 @@ export interface FarmRecordQuery extends PageQuery {
   /** 5 Tab 分组对应的 farm_work_type 字典值多选（service IN 过滤） */
   farmWorkTypes?: string[];
   plotId?: number | string;
+  /** 地块名称模糊搜索（后端经 plot_info 反查 plotId 列表后 IN 过滤） */
+  plotName?: string;
+  /** 作物名称模糊搜索（后端 crop_name 已落主表，直接 like） */
+  cropName?: string;
   /** 处理班组 ID */
   farmBy?: number | string;
   farmDateBegin?: string;

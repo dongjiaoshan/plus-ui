@@ -46,7 +46,7 @@
           clearable
           style="width: 180px"
         >
-          <el-option v-for="d in djs_demand_status" :key="d.value" :label="d.label" :value="d.value" />
+          <el-option v-for="d in statusFilterOptions" :key="d.value" :label="d.label" :value="d.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -63,28 +63,28 @@
     </div>
 
     <el-table v-loading="loading" :data="list" border :empty-text="t('demand.confirmPage.empty')">
-      <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="140" show-overflow-tooltip />
-      <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" width="110" show-overflow-tooltip />
-      <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" width="100" align="right">
+      <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="120" align="center" show-overflow-tooltip />
+      <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" min-width="120" align="center" show-overflow-tooltip />
+      <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center">
         <template #default="{ row }">{{ formatQty(row.demandQuantity) }}</template>
       </el-table-column>
       <el-table-column :label="t('demand.confirmPage.column.productUnit')" prop="productUnit" width="70" align="center" />
-      <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="130" show-overflow-tooltip>
+      <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="120" align="center" show-overflow-tooltip>
         <template #default="{ row }">{{ storeNameOf(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="140" show-overflow-tooltip />
-      <el-table-column :label="t('demand.confirmPage.column.demandStatus')" width="100" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="120" align="center" show-overflow-tooltip />
+      <el-table-column :label="t('demand.confirmPage.column.demandStatus')" min-width="120" align="center">
         <template #default="{ row }">
           <dict-tag :options="djs_demand_status" :value="row.demandStatus" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.confirmerTime')" prop="confirmerTime" width="160" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.confirmerTime')" prop="confirmerTime" min-width="120" align="center">
         <template #default="{ row }">{{ row.confirmerTime ? proxy?.parseTime?.(row.confirmerTime) : '—' }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.demandConfirmer')" width="100" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.demandConfirmer')" min-width="120" align="center">
         <template #default="{ row }">{{ row.demandConfirmerName || '—' }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.pigAssigned')" width="100" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.pigAssigned')" min-width="120" align="center">
         <template #default="{ row }">{{ pigAssignedLabel(row) }}</template>
       </el-table-column>
       <el-table-column :label="t('demand.confirmPage.column.actions')" width="240" fixed="right" align="center">
@@ -112,7 +112,7 @@
     <el-dialog v-model="adjustVisible" :title="t('demand.confirmPage.adjust.title')" width="420px" destroy-on-close append-to-body>
       <el-form ref="adjustFormRef" :model="adjustForm" :rules="adjustRules" label-width="80px">
         <el-form-item :label="t('demand.confirmPage.adjust.demandQuantity')" prop="demandQuantity">
-          <el-input-number v-model="adjustForm.demandQuantity" :min="0.01" :step="1" :precision="2" controls-position="right" />
+          <el-input-number v-model="adjustForm.demandQuantity" :min="1" :step="1" :precision="0" controls-position="right" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -138,7 +138,27 @@ import type { DemandManageForm, DemandManageQuery, DemandManageVO, DemandProduct
 const { t } = useI18n();
 const route = useRoute();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// 表格状态列 dict-tag 仍用全量字典（展示某行真实仓库态，不裁剪）
 const { djs_demand_status } = toRefs<any>(proxy?.useDict('djs_demand_status'));
+
+/**
+ * 状态筛选下拉门店视角裁剪为 4 态（待确认/已确认/已发货/确认到店），
+ * 砍掉门店不关心的 DRAFT/IN_PRODUCTION/CANCELLED/DELETED。
+ *
+ * value 用原始仓库 demand_status 码，才能命中后端 list 端点的 .eq 等值过滤。
+ * 映射：待确认=SUBMITTED；已确认=CONFIRMED；已发货=PARTIAL_SHIPPED；确认到店=COMPLETED。
+ * 限制（后端纯前端范围内无法消除）：
+ *  - 「已发货」门店语义实含 PARTIAL_SHIPPED + COMPLETED 两码，后端单值 .eq 只能匹配一个，
+ *    本下拉用 PARTIAL_SHIPPED；COMPLETED 行归到「确认到店」option。
+ *  - 「确认到店」真实定义是 received_time IS NOT NULL（派生态），list 端点无该过滤参数，
+ *    此处以 COMPLETED 作就近代理，并非严格按收货时间筛选；如需精确筛选需后端补 received_time 参数。
+ */
+const statusFilterOptions = computed(() => [
+  { label: t('demand.confirmPage.storeStatus.SUBMITTED'), value: 'SUBMITTED' },
+  { label: t('demand.confirmPage.storeStatus.CONFIRMED'), value: 'CONFIRMED' },
+  { label: t('demand.confirmPage.storeStatus.SHIPPED'), value: 'PARTIAL_SHIPPED' },
+  { label: t('demand.confirmPage.storeStatus.ARRIVED'), value: 'COMPLETED' }
+]);
 
 /** 路由 query 锁定的需求日期 + 产品（确认页只看某日某产品的所有门店需求单）。 */
 const demandDate = String(route.query.demandDate ?? '');
@@ -327,6 +347,9 @@ onMounted(async () => {
 }
 .search-bar {
   margin-bottom: 8px;
+}
+.search-bar :deep(.el-form-item__label) {
+  white-space: nowrap;
 }
 .pig-tip {
   margin: 4px 0 12px;

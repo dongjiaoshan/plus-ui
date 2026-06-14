@@ -101,7 +101,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'checkDate', label: t('djs.warehouse.check.checkDate'), minWidth: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'checkDate', label: t('djs.warehouse.check.checkDate'), minWidth: 160, align: 'center', formatter: 'date' },
   { prop: 'locationName', label: t('djs.warehouse.check.checkWarehouse'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'lineCount', label: t('djs.warehouse.check.goodsCount'), width: 120, align: 'center' },
   { prop: 'abnormalCount', label: t('djs.warehouse.check.abnormalCount'), width: 120, align: 'center' },

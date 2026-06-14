@@ -66,7 +66,11 @@ export interface DemandManageForm {
 export interface DemandManageQuery extends PageQuery {
   demandNo?: string;
   productType?: DemandProductType;
-  demandStatus?: DemandStatusCode;
+  /**
+   * 状态过滤。明细列表传 7 态 DemandStatusCode；
+   * 汇总分组列表（group-list）传聚合三态 DemandGroupStatusCode（后端 queryGroupList 内存过滤）。
+   */
+  demandStatus?: DemandStatusCode | DemandGroupStatusCode;
   productName?: string;
   storeId?: string;
   /** 产品 ID 精确过滤（确认页：某产品某日的所有门店需求单）。 */

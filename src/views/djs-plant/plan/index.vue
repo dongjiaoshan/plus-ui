@@ -20,15 +20,14 @@
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
-      selectable
       show-export
-      :show-row-del="false"
+      :show-batch-del="false"
       perm-prefix="djs:plant:plan"
       @search="handleSearch"
       @reset="handleReset"
       @add="handleAdd"
       @edit="handleEdit"
-      @del="handleDel"
+      @del="handleDelOne"
       @export="handleExport"
       @page-change="handlePageChange"
     >
@@ -104,10 +103,10 @@ const searchModel = reactive<Record<string, unknown>>({
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'planDate', label: t('plantPlan.field.planDate'), type: 'input', placeholder: t('plantPlan.placeholder.planDateFilter') },
-  { field: 'cropId', label: t('plantPlan.field.crop'), type: 'select', options: cropOptions.value, placeholder: t('plantPlan.placeholder.crop') },
-  { field: 'queryUpdateTime', label: t('plantPlan.field.updateTime'), type: 'date', placeholder: t('plantPlan.placeholder.updateTime') },
-  { field: 'queryCreateBy', label: t('plantPlan.field.createBy'), type: 'select', options: userOptions.value, placeholder: t('plantPlan.placeholder.createBy') }
+  { field: 'planDate', label: t('plantPlan.field.planDate'), type: 'daterange', placeholder: t('plantPlan.placeholder.planDateFilter'), width: 240 },
+  { field: 'cropId', label: t('plantPlan.field.crop'), type: 'select', options: cropOptions.value, placeholder: t('plantPlan.placeholder.crop'), width: 160 },
+  { field: 'queryUpdateTime', label: t('plantPlan.field.updateTime'), type: 'date', placeholder: t('plantPlan.placeholder.updateTime'), width: 160 },
+  { field: 'queryCreateBy', label: t('plantPlan.field.createBy'), type: 'select', options: userOptions.value, placeholder: t('plantPlan.placeholder.createBy'), width: 160 }
 ]);
 
 // ---- 列：原型 14 列序（去首列 planNo + plantDate 文本列；最早/最晚改取开始日期；时间列用 updateTime） ----
@@ -116,7 +115,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'earliestBegindate', label: t('plantPlan.column.earliestBegindate'), minWidth: 130, align: 'center' },
   { prop: 'lastBegindate', label: t('plantPlan.column.lastBegindate'), minWidth: 130, align: 'center' },
   { prop: 'cropImage', label: t('plantPlan.column.cropImage'), width: 90, align: 'center' },
-  { prop: 'cropName', label: t('plantPlan.column.crop'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'cropName', label: t('plantPlan.column.crop'), minWidth: 140, align: 'center', showOverflowTooltip: true },
   {
     prop: 'totalPlot',
     label: t('plantPlan.column.totalPlot'),
@@ -136,26 +135,26 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('plantPlan.column.expectedYield'),
     minWidth: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.expectedYield != null ? `${r.expectedYield} kg` : '-')
+    formatter: (r: BizRow) => (r.expectedYield != null ? `${Number(r.expectedYield).toFixed(2)} kg` : '-')
   },
   {
     prop: 'actualYield',
     label: t('plantPlan.column.actualYield'),
     minWidth: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.actualYield != null ? `${r.actualYield} kg` : '-')
+    formatter: (r: BizRow) => (r.actualYield != null ? `${Number(r.actualYield).toFixed(2)} kg` : '-')
   },
   {
     prop: 'finishedPlot',
     label: t('plantPlan.column.finishedPlot'),
-    minWidth: 120,
+    minWidth: 150,
     align: 'center',
     formatter: (r: BizRow) => (r.finishedPlot != null ? String(r.finishedPlot) : '-')
   },
   {
     prop: 'completionRate',
     label: t('plantPlan.column.completionRate'),
-    minWidth: 110,
+    minWidth: 130,
     align: 'right',
     formatter: (r: BizRow) => (r.completionRate != null ? `${r.completionRate}%` : '-')
   },
@@ -197,10 +196,23 @@ async function loadUserOptions() {
   }
 }
 
+// 计划日期 daterange [开始, 结束] 拆为后端 beginPlanDate/endPlanDate；移除原始数组字段
+function buildQueryParams(): PlantPlanQuery {
+  const { planDate, ...rest } = searchModel as Record<string, unknown>;
+  const range = Array.isArray(planDate) ? (planDate as string[]) : [];
+  return {
+    ...rest,
+    beginPlanDate: range[0] || undefined,
+    endPlanDate: range[1] || undefined,
+    pageNum: pageNum.value,
+    pageSize: pageSize.value
+  };
+}
+
 async function loadList() {
   loading.value = true;
   try {
-    const params: PlantPlanQuery = { ...searchModel, pageNum: pageNum.value, pageSize: pageSize.value };
+    const params: PlantPlanQuery = buildQueryParams();
     const res = await listPlan(params);
     list.value = (res.rows as PlantPlanVO[]) || [];
     total.value = res.total || 0;
@@ -238,15 +250,6 @@ const handleDetail = (row: BizRow) => {
   router.push(`${PLAN_BASE}/detail?id=${row.id}`);
 };
 
-const handleDel = async (rows: BizRow[]) => {
-  if (!rows.length) return;
-  await ElMessageBox.confirm(t('plantPlan.confirm.del', { count: rows.length }), t('common.tip'), { type: 'warning' });
-  await delPlan(rows.map((r) => r.id as string));
-  ElMessage.success(t('common.deleteSuccess'));
-  loadList();
-  loadStats();
-};
-
 const handleDelOne = async (row: BizRow) => {
   await ElMessageBox.confirm(t('plantPlan.confirm.del', { count: 1 }), t('common.tip'), { type: 'warning' });
   await delPlan([row.id as string]);
@@ -256,7 +259,8 @@ const handleDelOne = async (row: BizRow) => {
 };
 
 const handleExport = () => {
-  proxy?.download('djs/plant/plan/export', { ...searchModel }, `${t('plantPlan.pageTitle')}_${new Date().getTime()}.xlsx`);
+  const { pageNum: _pn, pageSize: _ps, ...exportParams } = buildQueryParams();
+  proxy?.download('djs/plant/plan/export', exportParams, `${t('plantPlan.pageTitle')}_${new Date().getTime()}.xlsx`);
 };
 
 onMounted(() => {
@@ -298,5 +302,10 @@ onMounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 4px;
+}
+
+/* 列表表头单行不换行 */
+:deep(.el-table th .cell) {
+  white-space: nowrap;
 }
 </style>

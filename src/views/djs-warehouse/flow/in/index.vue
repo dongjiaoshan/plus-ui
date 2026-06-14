@@ -39,6 +39,29 @@ const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
 
+/** djs_flow_type 是出入合并字典，入库方式下拉只保留入库方向的值（按 value 白名单过滤，不动字典 seed） */
+const FLOW_TYPE_IN_VALUES = [
+  'return_in',
+  'cut_out_in',
+  'veg_stock_in',
+  'bar_in_stock',
+  'check_in',
+  'supplier_in',
+  'purchase_in',
+  'pack_in',
+  'veg_receive_in',
+  'veg_purchase_in',
+  'receive_in',
+  'return_goods_in',
+  'other'
+];
+const { djs_flow_type } = toRefs<Record<string, any>>(proxy?.useDict('djs_flow_type'));
+const inModeOptions = computed(() =>
+  (djs_flow_type.value ?? [])
+    .filter((d: any) => FLOW_TYPE_IN_VALUES.includes(String(d.value)))
+    .map((d: any) => ({ label: d.label, value: d.value }))
+);
+
 /** 库存查询行钻取带入的 productId 预过滤（route query，仅本次进入生效） */
 const drillProductId = ref<string | undefined>(undefined);
 
@@ -66,7 +89,7 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('djs.warehouse.flowIn.flowDate'), type: 'daterange' },
   { field: 'productName', label: t('djs.warehouse.flowIn.productName'), type: 'input' },
-  { field: 'flowType', label: t('djs.warehouse.flowIn.inMode'), type: 'select', dictType: 'djs_flow_type' },
+  { field: 'flowType', label: t('djs.warehouse.flowIn.inMode'), type: 'select', options: inModeOptions.value },
   { field: 'warehouseId', label: t('djs.warehouse.flowIn.location'), type: 'select', options: locationOptions.value },
   { field: 'operatorName', label: t('djs.warehouse.flowIn.operator'), type: 'input' },
   { field: 'blockNo', label: t('djs.warehouse.flowIn.blockNo'), type: 'input' },
@@ -74,18 +97,17 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'flowDate', label: t('djs.warehouse.flowIn.flowDate'), minWidth: 160, formatter: 'datetime' },
-  { prop: 'flowNo', label: t('djs.warehouse.flowIn.flowNo'), minWidth: 160 },
-  { prop: 'productCode', label: t('djs.warehouse.flowIn.productCode'), minWidth: 110 },
-  { prop: 'productName', label: t('djs.warehouse.flowIn.productName'), minWidth: 160 },
-  { prop: 'flowType', label: t('djs.warehouse.flowIn.inMode'), dictType: 'djs_flow_type', minWidth: 110 },
-  { prop: 'locationName', label: t('djs.warehouse.flowIn.location'), minWidth: 120 },
-  { prop: 'changeQuantity', label: t('djs.warehouse.flowIn.changeQuantity'), minWidth: 110 },
-  { prop: 'productUnit', label: t('djs.warehouse.flowIn.productUnit'), minWidth: 80 },
-  { prop: 'blockNo', label: t('djs.warehouse.flowIn.blockNo'), minWidth: 110 },
-  { prop: 'earNo', label: t('djs.warehouse.flowIn.earNo'), minWidth: 120 },
-  { prop: 'operatorName', label: t('djs.warehouse.flowIn.operator'), minWidth: 100 },
-  { prop: 'createTime', label: t('djs.warehouse.flowIn.createTime'), minWidth: 160, formatter: 'datetime' }
+  { prop: 'flowDate', label: t('djs.warehouse.flowIn.flowDate'), minWidth: 160, formatter: 'datetime', align: 'center' },
+  { prop: 'flowNo', label: t('djs.warehouse.flowIn.flowNo'), minWidth: 160, align: 'center' },
+  { prop: 'productCode', label: t('djs.warehouse.flowIn.productCode'), minWidth: 110, align: 'center' },
+  { prop: 'productName', label: t('djs.warehouse.flowIn.productName'), minWidth: 160, align: 'center' },
+  { prop: 'flowType', label: t('djs.warehouse.flowIn.inMode'), dictType: 'djs_flow_type', minWidth: 110, align: 'center' },
+  { prop: 'locationName', label: t('djs.warehouse.flowIn.location'), minWidth: 120, align: 'center' },
+  { prop: 'changeQuantity', label: t('djs.warehouse.flowIn.changeQuantity'), minWidth: 110, align: 'center' },
+  { prop: 'productUnit', label: t('djs.warehouse.flowIn.productUnit'), minWidth: 80, align: 'center' },
+  { prop: 'blockNo', label: t('djs.warehouse.flowIn.blockNo'), minWidth: 110, align: 'center' },
+  { prop: 'earNo', label: t('djs.warehouse.flowIn.earNo'), minWidth: 120, align: 'center' },
+  { prop: 'operatorName', label: t('djs.warehouse.flowIn.operator'), minWidth: 100, align: 'center' }
 ]);
 
 /** searchModel → 后端 query（daterange 拆 dateFrom/dateTo；空串归一 undefined） */

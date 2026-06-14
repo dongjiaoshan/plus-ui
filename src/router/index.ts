@@ -53,6 +53,15 @@ export const constantRoutes: RouteRecordRaw[] = [
     hidden: true
   },
   {
+    // 公开追溯 H5 落地页（C 端顾客扫码访问，无 token；whiteList /trace/** 放行）
+    // type = pork | veg | grow | cert | plot-records；code = produce_code 业务码
+    path: '/trace/:type/:code',
+    component: () => import('@/views/trace/index.vue'),
+    name: 'TracePublic',
+    hidden: true,
+    meta: { title: '产品溯源' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     component: () => import('@/views/error/404.vue'),
     hidden: true

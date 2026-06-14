@@ -14,8 +14,10 @@ export interface PlantPlanQuery {
   planSeason?: string;
   cropId?: number | string;
   plantStatus?: string;
-  /** 计划日期模糊（原型「计划日期」筛选，对后端 plant_date）。 */
-  planDate?: string;
+  /** 计划日期范围-起（原型「计划日期」筛选，按计划最早开始日期 earliestBegindate 搜索）。 */
+  beginPlanDate?: string;
+  /** 计划日期范围-止（含当日）。 */
+  endPlanDate?: string;
   /** 计划更新时间（按天，原型「计划更新时间」筛选）。 */
   queryUpdateTime?: string;
   /** 计划编制人 user_id（原型「计划编制人」筛选，对 create_by）。 */

@@ -11,7 +11,7 @@
       :dict-types="['djs_return_direction', 'djs_return_status', 'djs_yes_no', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
-      row-key="id"
+      row-key="_rowKey"
       perm-prefix="djs:warehouse:return"
       show-export
       :show-add="true"
@@ -23,18 +23,58 @@
       @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
     >
       <template #action="{ row }">
-        <el-button v-if="(row as ReturnProductVO).isConfirm === 0" type="primary" link @click="openConfirmDialog(row as ReturnProductVO)">
-          {{ t('djs.warehouse.return.confirm') }}
+        <el-button type="primary" link @click="openDetailDialog(row as ReturnStoreDailyVO)">
+          {{ t('djs.warehouse.return.viewDetail') }}
         </el-button>
-        <el-button v-if="(row as ReturnProductVO).isConfirm === 0" type="primary" link @click="openEditDialog(row as ReturnProductVO)">
-          {{ t('common.edit') }}
-        </el-button>
-        <el-button v-if="(row as ReturnProductVO).isConfirm === 0" type="danger" link @click="handleDelete(row as ReturnProductVO)">
-          {{ t('common.delete') }}
-        </el-button>
-        <span v-if="(row as ReturnProductVO).isConfirm === 1" class="text-gray-400">{{ t('djs.warehouse.return.confirmed') }}</span>
       </template>
     </BizTable>
+
+    <!-- 门店当日退货明细（主从视图明细层） -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      :title="t('djs.warehouse.return.detailDialogTitle')"
+      destroy-on-close
+      append-to-body
+      :close-on-click-modal="true"
+      width="960px"
+    >
+      <div v-if="currentDaily" class="mb-2 text-gray-500">{{ currentDaily.storeName }} · {{ currentDaily.returnDate }}</div>
+      <el-table v-loading="detailLoading" :data="detailRows" border height="460">
+        <el-table-column prop="returnCategory" :label="t('djs.warehouse.return.returnCategory')" min-width="110">
+          <template #default="{ row }">
+            <dict-tag :options="djs_belong_type" :value="row.returnCategory" />
+          </template>
+        </el-table-column>
+        <el-table-column prop="returnProductCode" :label="t('djs.warehouse.return.returnProductCode')" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="productName" :label="t('djs.warehouse.return.returnProduct')" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="productUnit" :label="t('djs.warehouse.return.productUnit')" min-width="80" />
+        <el-table-column prop="returnWeight" :label="t('djs.warehouse.return.returnWeight')" min-width="100">
+          <template #default="{ row }">{{ formatWeight(row.returnWeight) }}</template>
+        </el-table-column>
+        <el-table-column prop="confirmWeight" :label="t('djs.warehouse.return.confirmWeight')" min-width="100">
+          <template #default="{ row }">{{ formatWeight(row.confirmWeight) }}</template>
+        </el-table-column>
+        <el-table-column prop="weightDiff" :label="t('djs.warehouse.return.weightDiff')" min-width="100">
+          <template #default="{ row }">{{ formatWeight(row.weightDiff) }}</template>
+        </el-table-column>
+        <el-table-column prop="confirmTime" :label="t('djs.warehouse.return.confirmTime')" min-width="160" />
+        <el-table-column prop="confirmUserName" :label="t('djs.warehouse.return.confirmUser')" min-width="100" />
+        <el-table-column :label="t('common.operate')" fixed="right" width="180">
+          <template #default="{ row }">
+            <el-button v-if="row.isConfirm === 0" type="primary" link @click="openConfirmDialog(row as ReturnProductVO)">
+              {{ t('djs.warehouse.return.confirm') }}
+            </el-button>
+            <el-button v-if="row.isConfirm === 0" type="primary" link @click="openEditDialog(row as ReturnProductVO)">
+              {{ t('common.edit') }}
+            </el-button>
+            <el-button v-if="row.isConfirm === 0" type="danger" link @click="handleDelete(row as ReturnProductVO)">
+              {{ t('common.delete') }}
+            </el-button>
+            <span v-if="row.isConfirm === 1" class="text-gray-400">{{ t('djs.warehouse.return.confirmed') }}</span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
 
     <!-- 新增 / 编辑 -->
     <el-dialog
@@ -84,7 +124,14 @@
     </el-dialog>
 
     <!-- 确认退货 -->
-    <el-dialog v-model="confirmDialogVisible" :title="t('djs.warehouse.return.confirmDialogTitle')" destroy-on-close append-to-body :close-on-click-modal="true" width="480px">
+    <el-dialog
+      v-model="confirmDialogVisible"
+      :title="t('djs.warehouse.return.confirmDialogTitle')"
+      destroy-on-close
+      append-to-body
+      :close-on-click-modal="true"
+      width="480px"
+    >
       <el-form ref="confirmFormRef" :model="confirmForm" :rules="confirmRules" label-width="120px">
         <el-form-item label="退货单号">
           <span>{{ currentRow?.returnNo }}</span>
@@ -121,8 +168,8 @@
 <script setup name="ReturnProduct" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { addReturn, confirmReturn, delReturn, exportReturn, listReturn, updateReturn } from '@/api/djs-warehouse/return';
-import type { ReturnConfirmBody, ReturnProductForm, ReturnProductQuery, ReturnProductVO } from '@/api/djs-warehouse/return/types';
+import { addReturn, confirmReturn, delReturn, exportReturn, listReturn, listReturnStoreDaily, updateReturn } from '@/api/djs-warehouse/return';
+import type { ReturnConfirmBody, ReturnProductForm, ReturnProductQuery, ReturnProductVO, ReturnStoreDailyVO } from '@/api/djs-warehouse/return/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { listProduct } from '@/api/djs-warehouse/product';
@@ -133,11 +180,12 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 // ADR-0004 §2.4 Vue3 字典消费范式：弹窗下拉 / dict-tag 走全局字典（消除本地双源）
-const { djs_return_direction } = toRefs<any>(proxy?.useDict('djs_return_direction'));
+const { djs_return_direction, djs_belong_type } = toRefs<any>(proxy?.useDict('djs_return_direction', 'djs_belong_type'));
 
 const tableRef = ref<BizTableExpose>();
 
-const list = ref<ReturnProductVO[]>([]);
+// 外层 = 门店当日汇总行（图 153）；逐条明细放进「查看详情」弹窗
+const list = ref<ReturnStoreDailyVO[]>([]);
 const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
@@ -166,18 +214,29 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'storeId', label: t('djs.warehouse.return.storeId'), type: 'select', options: storeSearchOptions.value }
 ]);
 
-// 对齐原型列：退货日期/退货品类/退货产品编号/退货产品/退货单位/产品原材料/退货重量/退货门店/实收重量/重量差异/退货确认时间/退货确认人
+// 图 153 外层汇总列：退货日期/退货门店/品种数/退货重量/确认重量/重量差异/确认时间/确认人
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'applyTime', label: t('djs.warehouse.return.returnDate'), minWidth: 160 },
-  { prop: 'returnCategory', label: t('djs.warehouse.return.returnCategory'), dictType: 'djs_belong_type', minWidth: 110 },
-  { prop: 'returnProductCode', label: t('djs.warehouse.return.returnProductCode'), minWidth: 120 },
-  { prop: 'productName', label: t('djs.warehouse.return.returnProduct'), minWidth: 120 },
-  { prop: 'productUnit', label: t('djs.warehouse.return.productUnit'), minWidth: 90 },
-  { prop: 'productMaterialName', label: t('djs.warehouse.return.productMaterialName'), minWidth: 110 },
-  { prop: 'returnWeight', label: t('djs.warehouse.return.returnWeight'), minWidth: 100, formatter: (row: any) => formatWeight(row.returnWeight) },
-  { prop: 'storeName', label: t('djs.warehouse.return.storeId'), minWidth: 110 },
-  { prop: 'confirmWeight', label: t('djs.warehouse.return.confirmWeight'), minWidth: 100, formatter: (row: any) => formatWeight(row.confirmWeight) },
-  { prop: 'weightDiff', label: t('djs.warehouse.return.weightDiff'), minWidth: 100, formatter: (row: any) => formatWeight(row.weightDiff) },
+  { prop: 'returnDate', label: t('djs.warehouse.return.returnDate'), minWidth: 120 },
+  { prop: 'storeName', label: t('djs.warehouse.return.storeId'), minWidth: 130 },
+  { prop: 'productKindCount', label: t('djs.warehouse.return.productKindCount'), minWidth: 90 },
+  {
+    prop: 'returnWeightTotal',
+    label: t('djs.warehouse.return.returnWeightTotal'),
+    minWidth: 100,
+    formatter: (row: any) => formatWeight(row.returnWeightTotal)
+  },
+  {
+    prop: 'confirmWeightTotal',
+    label: t('djs.warehouse.return.confirmWeightTotal'),
+    minWidth: 100,
+    formatter: (row: any) => formatWeight(row.confirmWeightTotal)
+  },
+  {
+    prop: 'weightDiffTotal',
+    label: t('djs.warehouse.return.weightDiffTotal'),
+    minWidth: 100,
+    formatter: (row: any) => formatWeight(row.weightDiffTotal)
+  },
   { prop: 'confirmTime', label: t('djs.warehouse.return.confirmTime'), minWidth: 160 },
   { prop: 'confirmUserName', label: t('djs.warehouse.return.confirmUser'), minWidth: 100 }
 ]);
@@ -200,6 +259,41 @@ async function loadProductOptions() {
 function onProductChange(id: string) {
   const p = productOptions.value.find((x) => String(x.id) === String(id));
   form.productName = p?.productName;
+}
+
+// 门店当日退货明细弹窗（主从视图明细层）
+const detailDialogVisible = ref(false);
+const detailLoading = ref(false);
+const detailRows = ref<ReturnProductVO[]>([]);
+const currentDaily = ref<ReturnStoreDailyVO | null>(null);
+
+function openDetailDialog(row: ReturnStoreDailyVO) {
+  currentDaily.value = row;
+  detailDialogVisible.value = true;
+  loadDetailRows();
+}
+
+async function loadDetailRows() {
+  if (!currentDaily.value) return;
+  detailLoading.value = true;
+  try {
+    const res = await listReturn({
+      storeId: currentDaily.value.storeId,
+      applyDateFrom: currentDaily.value.returnDate,
+      applyDateTo: currentDaily.value.returnDate,
+      pageNum: 1,
+      pageSize: 500
+    });
+    detailRows.value = (res as any).rows ?? [];
+  } finally {
+    detailLoading.value = false;
+  }
+}
+
+// 明细弹窗内操作（确认 / 编辑 / 删除）后刷新明细 + 外层汇总
+async function refreshAfterDetailMutation() {
+  await loadDetailRows();
+  await loadList();
 }
 
 // 新增 / 编辑
@@ -276,7 +370,8 @@ async function handleSubmit() {
       proxy?.$modal.msgSuccess(t('djs.warehouse.return.editSuccess'));
     }
     dialogVisible.value = false;
-    await loadList();
+    // 编辑来自明细弹窗 → 同步刷新明细 + 汇总；新增来自外层 → 只刷汇总
+    await (detailDialogVisible.value ? refreshAfterDetailMutation() : loadList());
   } finally {
     submitting.value = false;
   }
@@ -286,7 +381,7 @@ async function handleDelete(row: ReturnProductVO) {
   await proxy?.$modal.confirm(t('djs.warehouse.return.deleteConfirm', { no: row.returnNo }));
   await delReturn(row.id!);
   proxy?.$modal.msgSuccess(t('djs.warehouse.return.deleteSuccess'));
-  await loadList();
+  await refreshAfterDetailMutation();
 }
 
 // 确认退货
@@ -320,7 +415,7 @@ async function handleConfirmSubmit() {
     await confirmReturn(currentRow.value.id!, confirmForm);
     proxy?.$modal.msgSuccess(t('djs.warehouse.return.confirmSuccess'));
     confirmDialogVisible.value = false;
-    await loadList();
+    await refreshAfterDetailMutation();
   } finally {
     confirmSubmitting.value = false;
   }
@@ -346,8 +441,12 @@ async function loadList() {
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
-    const res = await listReturn(params);
-    list.value = (res as any).rows ?? [];
+    const res = await listReturnStoreDaily(params);
+    const rows: ReturnStoreDailyVO[] = (res as any).rows ?? [];
+    rows.forEach((r) => {
+      r._rowKey = `${r.returnDate}|${r.storeId ?? ''}`;
+    });
+    list.value = rows;
     total.value = (res as any).total ?? 0;
   } finally {
     loading.value = false;

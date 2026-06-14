@@ -142,7 +142,9 @@ export default {
     disabled: '已停用',
     to: '至',
     prev: '上一步',
-    next: '下一步'
+    next: '下一步',
+    yes: '是',
+    no: '否'
   },
   // 供应商管理（SYS-MD-003 + SYS-MD-FIX-002）
   supplier: {
@@ -384,6 +386,10 @@ export default {
     column: {
       breedStrainCode: '编码',
       breedStrainName: '名称',
+      lineCode: '品系编码',
+      lineName: '品系名称',
+      typeCode: '品种编码',
+      typeName: '品种名称',
       parentCode: '父级编码',
       description: '描述',
       remark: '备注',
@@ -402,6 +408,10 @@ export default {
       breedStrain: '类型',
       breedStrainCode: '编码',
       breedStrainName: '名称',
+      lineCode: '品系编码',
+      lineName: '品系名称',
+      typeCode: '品种编码',
+      typeName: '品种名称',
       parentCode: '父级编码',
       description: '描述',
       remark: '备注',
@@ -414,6 +424,10 @@ export default {
     placeholder: {
       breedStrainCode: '请输入编码（字母/数字/下划线/连字符）',
       breedStrainName: '请输入名称',
+      lineCode: '请输入品系编码（字母/数字/下划线/连字符）',
+      lineName: '请输入品系名称',
+      typeCode: '请输入品种编码（字母/数字/下划线/连字符）',
+      typeName: '请输入品种名称',
       parentCode: '请输入父级编码（仅品系填）',
       motherCode: '请选择母系',
       fatherCode: '请选择父系',
@@ -1277,7 +1291,8 @@ export default {
     field: {
       productName: '产品名称',
       earNo: '耳号',
-      blockNo: '地块编号'
+      blockNo: '地块编号',
+      locationName: '库位'
     },
     column: {
       locationName: '库位',
@@ -1300,14 +1315,14 @@ export default {
       title: '产品出库',
       outDate: '出库日期',
       outDatePlaceholder: '请选择出库日期',
-      quantity: '出库数量',
-      quantityPlaceholder: '请输入出库数量',
+      quantity: '出库量',
+      quantityPlaceholder: '请输入出库量',
       stockOutDest: '出库去向',
       stockOutDestPlaceholder: '请选择出库去向',
       confirm: '确定',
       rule: {
         outDate: '请选择出库日期',
-        quantity: '请输入出库数量',
+        quantity: '请输入出库量',
         stockOutDest: '请选择出库去向'
       }
     }
@@ -1336,7 +1351,8 @@ export default {
       expectedYield: '预计产量(kg)',
       doneArea: '已种面积(亩)',
       donePlotCount: '已种地数',
-      harvestYield: '已摘产量(kg)'
+      harvestYield: '已摘产量(kg)',
+      completionRate: '计划完成率'
     },
     detail: {
       title: '作物详情',
@@ -1344,12 +1360,13 @@ export default {
       export: '导出',
       col: {
         cropName: '作物名称',
+        plotCode: '地块编号',
         plotName: '种植地块',
         harvestStatus: '采摘状态',
         planSeason: '种植季',
         planPlantDate: '计划种植日期',
         plantDate: '种植日期',
-        plantTeamName: '种植人员',
+        plantTeamName: '种植班组',
         beginHarvestdate: '实际开始采摘日期',
         endHarvestdate: '实际结束采摘日期',
         earliestHarvestdate: '最早起始采摘时间',
@@ -1692,6 +1709,7 @@ export default {
       colNickName: '姓名',
       colPhone: '手机号',
       colDept: '部门',
+      colAction: '操作',
       addBtn: '加入班组',
       removeBtn: '调出',
       setLeaderBtn: '设为负责人',
@@ -1749,7 +1767,7 @@ export default {
       lastHarvestdate: '最晚采摘',
       expectedYield: '预计产量(kg)',
       actualYield: '实际产量(kg)',
-      finishedPlot: '已完成种植地数量',
+      finishedPlot: '已完成种植地块数量',
       completionRate: '计划完成率(%)',
       plantStatus: '计划状态',
       updateTime: '计划更新时间',
@@ -1761,7 +1779,7 @@ export default {
       planSeason: '请选择种植季节',
       plantDate: '例：4 月上旬（可选填）',
       team: '请选择班组',
-      planDateFilter: '请输入计划日期',
+      planDateFilter: '请选择计划日期范围',
       crop: '请选择农作物',
       updateTime: '请选择计划更新时间',
       createBy: '请选择计划编制人'
@@ -1851,7 +1869,7 @@ export default {
       missingId: '缺少计划 ID'
     },
     gantt: {
-      title: '双甘特图（计划 vs 实际）',
+      title: '采摘甘特图',
       v1Note: 'V1 简化版',
       empty: '暂无明细，无法绘制甘特图',
       legend: { plan: '计划范围', actual: '实际执行' }
@@ -2239,7 +2257,13 @@ export default {
         editSuccess: '退货已编辑',
         deleteConfirm: '确认删除退货单【{no}】？',
         deleteSuccess: '退货已删除',
-        confirmSuccess: '退货已确认'
+        confirmSuccess: '退货已确认',
+        viewDetail: '查看详情',
+        productKindCount: '品种数',
+        returnWeightTotal: '退货重量',
+        confirmWeightTotal: '确认重量',
+        weightDiffTotal: '重量差异',
+        detailDialogTitle: '退货明细'
       },
       check: {
         checkId: '盘点单号',
@@ -2267,9 +2291,9 @@ export default {
         productCode: '产品码',
         productUnit: '单位',
         lossWeight: '损耗重量 (kg)',
-        sysStock: '系统量',
+        sysStock: '盘点前库存',
         checkStock: '实盘量',
-        diffStock: '差异',
+        diffStock: '差异量',
         checkResultType: '结果',
         diffReason: '差异原因',
         checkBy: '盘点人',
@@ -2375,7 +2399,15 @@ export default {
           productSpec: '规格',
           productSort: '产品序号',
           productWeight: '产品重量',
-          storeName: '需求门店'
+          storeName: '需求门店',
+          packStatus: '打包状态',
+          earNo: '来源耳号',
+          plotName: '来源地块',
+          produceTime: '生产时间',
+          isDeliveryCheck: '已清点',
+          isArrivalConfirm: '已到货',
+          createByName: '录入人',
+          remark: '备注'
         },
         button: {
           traceCode: '追溯码'
@@ -2636,6 +2668,13 @@ export default {
         storePh: '请选择需求门店',
         demandStatus: '需求状态',
         statusPh: '请选择需求状态'
+      },
+      // 状态筛选下拉门店视角 4 态裁剪（value 映射原始仓库码，详见 confirm/index.vue 注释）
+      storeStatus: {
+        SUBMITTED: '待确认',
+        CONFIRMED: '已确认',
+        SHIPPED: '已发货',
+        ARRIVED: '确认到店'
       },
       pigTip: {
         prefix: '当前可出栏猪只',
@@ -3049,6 +3088,27 @@ export default {
       veg: '果蔬追溯',
       pork: '猪肉追溯'
     },
+    // 追溯码打印弹框（录重量 + 结构化标签卡 + 二维码）
+    label: {
+      dialogTitle: '追溯码打印',
+      weight: '产品重量(kg)',
+      weightPlaceholder: '请输入产品重量(kg)',
+      confirmPrint: '确认并打印',
+      cancel: '取消',
+      productCode: '产品编码',
+      serialNo: '生产序号',
+      packCode: '打包编码',
+      produceDate: '生产日期',
+      productName: '产品名称',
+      productWeight: '产品重量',
+      plotNo: '地块编号',
+      earNo: '猪只耳号',
+      storeName: '销售门店',
+      weightUnit: 'kg',
+      noCode: '该行无追溯码可打印',
+      scanHint: '扫码查看溯源',
+      printFailed: '生成打印文件失败，请重试'
+    },
     veg: {
       arrivalDate: '到店日期',
       produceNo: '生产编号',
@@ -3318,6 +3378,8 @@ export default {
     field: {
       recordNo: '记录号',
       dateRange: '农事日期',
+      farmType: '农事类型',
+      crop: '作物',
       plot: '地块',
       team: '处理班组'
     },
@@ -3348,15 +3410,13 @@ export default {
     },
     field: {
       statMonth: '月份',
-      team: '班组',
-      crop: '作物'
+      team: '班组'
     },
     column: {
       statMonth: '月份',
       team: '班组',
-      crop: '作物',
+      farmCount: '农事次数',
       pickWeight: '采摘总量',
-      unitPrice: '绩效单价',
       amount: '绩效总额',
       action: '操作'
     },
@@ -3375,6 +3435,11 @@ export default {
       tabYield: '产量绩效',
       tabFarm: '农事记录',
       rule: '绩效规则',
+      cropName: '作物',
+      cropPickWeight: '采摘量',
+      cropUnitPrice: '单价',
+      cropAmount: '绩效额',
+      totalAmount: '合计',
       recordNo: '记录号',
       farmType: '农事类型',
       plot: '地块',
@@ -3502,6 +3567,155 @@ export default {
     pdf: {
       title: '产品追溯码',
       serialNo: '序号'
+    }
+  },
+  // 公开追溯 H5 落地页（C 端顾客扫码访问，TRACE-H5）
+  tracePublic: {
+    state: {
+      loading: '加载中…',
+      notFound: '未查询到该追溯码',
+      missingCode: '缺少追溯码',
+      loadFailed: '加载失败，请稍后重试'
+    },
+    title: {
+      pork: '猪肉追溯',
+      veg: '蔬果追溯',
+      grow: '生长追溯',
+      cert: '有机检验证书',
+      cropCert: '果蔬有机检验证书',
+      plotCert: '地块有机检验证书',
+      plotRecords: '作物农事记录'
+    },
+    product: {
+      title: '产品信息',
+      noImage: '暂无图',
+      name: '名称',
+      weight: '重量',
+      spec: '规格',
+      code: '编码',
+      description: '产品描述',
+      plotNo: '地块编号',
+      variety: '品种',
+      growthDays: '生长天数',
+      harvestDate: '采摘日期',
+      daysUnit: '天'
+    },
+    pig: {
+      title: '猪只追溯',
+      earNo: '耳号',
+      sex: '性别',
+      weight: '体重',
+      breed: '品种',
+      farm: '农场',
+      barn: '栋舍',
+      birth: '出生',
+      ageDays: '日龄',
+      market: '出栏',
+      daysUnit: '天',
+      photo: '猪只照片'
+    },
+    timeline: {
+      title: '流程处理时间轴',
+      empty: '暂无流程记录'
+    },
+    growEntry: {
+      growth: '生长记录：{n} 次',
+      medication: '疫苗保健：{n} 次',
+      view: '查看详情'
+    },
+    pedigree: {
+      title: '父系 / 母系信息',
+      sire: '父系',
+      dam: '母系',
+      earNo: '耳号',
+      breed: '品种',
+      ageDays: '日龄',
+      parity: '胎次',
+      parityValue: '第 {n} 胎',
+      daysUnit: '天'
+    },
+    quarantine: {
+      title: '检验检疫',
+      certNo: '检疫证号',
+      agency: '检疫机构'
+    },
+    store: {
+      title: '销售门店',
+      name: '门店名称',
+      address: '门店地址'
+    },
+    grow: {
+      tabGrowth: '生长记录',
+      tabMedication: '疫苗保健记录',
+      ageDays: '日龄',
+      weight: '体重',
+      backfat: '背膘',
+      operator: '操作人',
+      reason: '原因',
+      daysUnit: '天',
+      weightUnit: 'kg',
+      backfatUnit: 'mm',
+      emptyGrowth: '暂无生长记录',
+      emptyMedication: '暂无疫苗保健记录'
+    },
+    plot: {
+      title: '地块信息',
+      plotName: '地块',
+      zoneName: '片区',
+      area: '面积',
+      areaUnit: '亩'
+    },
+    entry: {
+      farmRecords: '作物农事记录',
+      cropCert: '果蔬有机检验证书',
+      plotCert: '地块有机检验证书',
+      plotRecords: '地块种植记录'
+    },
+    cert: {
+      issuer: '颁发机构',
+      certNo: '证书编号',
+      validity: '有效期',
+      validTo: '至',
+      empty: '暂无有机认证证书'
+    },
+    plotRecords: {
+      title: '作物农事记录',
+      empty: '暂无农事记录'
+    },
+    content: {
+      marketing: '营销出栏',
+      singe: '燎毛',
+      slaughter: '屠宰',
+      acid: '排酸',
+      inStock: '入库',
+      ship: '发货',
+      arrival: '到店'
+    },
+    medType: {
+      health: '保健',
+      treatment: '治疗',
+      vaccine: '疫苗'
+    },
+    workType: {
+      tillageBreak: '翻耕',
+      tillagePrepare: '整地',
+      fertilize: '施肥',
+      transplant: '移栽',
+      waterFertilize: '水肥',
+      irrigation: '浇灌',
+      weed: '除草',
+      pestControl: '病虫防治',
+      pruning: '整枝绑蔓',
+      rotation: '退茬',
+      disaster: '灾害损失',
+      harvestActivity: '采摘活动'
+    },
+    pigSex: {
+      female: '母',
+      male: '公'
+    },
+    pigBreed: {
+      black: '黑猪'
     }
   }
 };

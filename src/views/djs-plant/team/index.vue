@@ -9,6 +9,7 @@
       :search-schema="searchSchema"
       :search-model="searchModel"
       :dict-types="dictTypes"
+      :action-width="230"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -22,9 +23,6 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-teamStatus="{ row }">
-        <dict-tag :options="commonStatusDict" :value="String(row.teamStatus)" />
-      </template>
       <template #cell-leaderName="{ row }">
         <span v-if="row.leaderName">{{ pureName(row.leaderName) }}</span>
         <span v-else class="muted">{{ t('plantTeam.member.noLeader') }}</span>
@@ -71,7 +69,6 @@ const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const dictTypes = ['djs_common_status'];
-const commonStatusDict = computed(() => proxy?.useDict('djs_common_status')?.djs_common_status?.value ?? []);
 
 const list = ref<PlantWorkTeamVO[]>([]);
 const total = ref(0);
@@ -96,7 +93,7 @@ const columns: BizTableColumn[] = [
   { prop: 'memberCount', label: t('plantTeam.column.memberCount'), minWidth: 120, align: 'center' },
   { prop: 'leaderName', label: t('plantTeam.column.leader'), minWidth: 160, align: 'center', showOverflowTooltip: true },
   { prop: 'leaderPhone', label: t('plantTeam.column.leaderPhone'), minWidth: 150, align: 'center' },
-  { prop: 'teamStatus', label: t('plantTeam.column.teamStatus'), minWidth: 120, align: 'center' },
+  { prop: 'teamStatus', label: t('plantTeam.column.teamStatus'), minWidth: 120, align: 'center', dictType: 'djs_common_status' },
   { prop: 'remark', label: t('plantTeam.column.remark'), minWidth: 200, showOverflowTooltip: true },
   { prop: 'createTime', label: t('plantTeam.column.createTime'), minWidth: 170, align: 'center', formatter: 'datetime' }
 ];

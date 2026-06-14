@@ -3,18 +3,13 @@
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-row :gutter="16">
         <el-col :span="12">
-          <el-form-item :label="t('breeding.field.breedStrainCode')" prop="breedStrainCode">
-            <el-input
-              v-model="form.breedStrainCode"
-              :placeholder="t('breeding.placeholder.breedStrainCode')"
-              :disabled="!!form.id"
-              :maxlength="2"
-            />
+          <el-form-item :label="codeLabel" prop="breedStrainCode">
+            <el-input v-model="form.breedStrainCode" :placeholder="codePlaceholder" :disabled="!!form.id" :maxlength="2" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="t('breeding.field.breedStrainName')" prop="breedStrainName">
-            <el-input v-model="form.breedStrainName" :placeholder="t('breeding.placeholder.breedStrainName')" maxlength="64" />
+          <el-form-item :label="nameLabel" prop="breedStrainName">
+            <el-input v-model="form.breedStrainName" :placeholder="namePlaceholder" maxlength="64" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -63,6 +58,13 @@ const defaultForm = (breedStrain = 1): BreedInfoFormType => ({
 });
 
 const form = ref<BreedInfoFormType>(defaultForm());
+
+// 编码 / 名称 label 与 placeholder 按 breedStrain 维度区分：品系（=2）显示「品系编码 / 品系名称」，品种（=1）显示「品种编码 / 品种名称」。
+const isStrainForm = computed(() => form.value.breedStrain === 2);
+const codeLabel = computed(() => (isStrainForm.value ? t('breeding.field.lineCode') : t('breeding.field.typeCode')));
+const codePlaceholder = computed(() => (isStrainForm.value ? t('breeding.placeholder.lineCode') : t('breeding.placeholder.typeCode')));
+const nameLabel = computed(() => (isStrainForm.value ? t('breeding.field.lineName') : t('breeding.field.typeName')));
+const namePlaceholder = computed(() => (isStrainForm.value ? t('breeding.placeholder.lineName') : t('breeding.placeholder.typeName')));
 
 const rules = computed(() => {
   // 编码 = 耳号位码（ADR-0011 §2.1）：品种（breedStrain=1）恰好 2 位纯数字。

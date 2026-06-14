@@ -39,6 +39,33 @@ export interface ReturnProductVO {
   createTime?: string;
 }
 
+/**
+ * 退货管理「门店 + 当日」汇总行（图 153，外层主从视图外层）。
+ * 一行 = 某门店某天全部退货行的聚合，点「查看详情」下钻该门店当天逐条明细。
+ */
+export interface ReturnStoreDailyVO {
+  /** 退货日期（apply_time 截到天，yyyy-MM-dd） */
+  returnDate: string;
+  storeId?: string;
+  /** 门店名称（后端回填） */
+  storeName?: string;
+  /** 退货品种数 = 该组 distinct product_id 计数 */
+  productKindCount: number;
+  /** 退货重量合计 */
+  returnWeightTotal?: number;
+  /** 确认重量合计 */
+  confirmWeightTotal?: number;
+  /** 重量差异合计 = 退货重量合计 - 确认重量合计 */
+  weightDiffTotal?: number;
+  /** 确认时间（该组最近一条已确认行） */
+  confirmTime?: string;
+  confirmUser?: string;
+  /** 确认人姓名（该组最近一条已确认行，后端翻译） */
+  confirmUserName?: string;
+  /** 前端合成行键（returnDate + storeId），表格 row-key 用，非后端字段 */
+  _rowKey?: string;
+}
+
 export interface ReturnProductForm {
   id?: string;
   storeId?: string;

@@ -13,7 +13,7 @@
     </template>
 
     <!-- 表格上方筛选：是否采摘活动 + 采摘状态 -->
-    <el-form :inline="true" class="mb-3">
+    <el-form :inline="true" class="mb-3 pick-adjust-filter">
       <el-form-item :label="t('pickPlan.adjust.filter.isPick')">
         <el-select v-model="filterIsPick" :placeholder="t('pickPlan.adjust.placeholder.isPick')" clearable style="width: 200px">
           <el-option :label="t('pickPlan.adjust.activityOptYes')" :value="1" />
@@ -29,6 +29,7 @@
 
     <el-table v-loading="loading" :data="filteredRows" border stripe row-key="id" :empty-text="t('common.empty')">
       <el-table-column :label="t('pickPlan.adjust.col.cropName')" prop="cropName" width="120" show-overflow-tooltip />
+      <el-table-column :label="t('pickPlan.adjust.col.plotCode')" prop="plotCode" width="120" show-overflow-tooltip />
       <el-table-column :label="t('pickPlan.adjust.col.plotName')" prop="plotName" width="140" show-overflow-tooltip />
       <el-table-column :label="t('pickPlan.adjust.col.isPick')" width="120" align="center">
         <template #default="{ row }">
@@ -245,3 +246,10 @@ async function open(payload: { cropId: number | string; cropName?: string }) {
 
 defineExpose({ open });
 </script>
+
+<style scoped>
+/* 筛选区 inline label 不换行（避免「是否采摘活动」6 字被折成两行） */
+.pick-adjust-filter :deep(.el-form-item__label) {
+  white-space: nowrap;
+}
+</style>

@@ -56,6 +56,7 @@
                 {{ t('plantOverview.card.currentPlantedArea') }} {{ c.currentPlantedArea ?? 0 }}
               </div>
             </div>
+            <div class="crop-rate">{{ t('plantOverview.card.completionRate') }}：{{ completionRate(c) }}%</div>
           </div>
 
           <!-- 双栏：计划 / 已完成（label 文案已含单位） -->
@@ -133,6 +134,14 @@ async function loadThumbUrls() {
   }
 }
 
+/** 计划完成率 = 已种地块 / 计划地块数 * 100，保留两位小数；计划地块为 0 时兜底 0.00 防除零。 */
+function completionRate(c: CropOverviewCardVO): string {
+  const plan = Number(c.planPlotCount ?? 0);
+  if (plan <= 0) return '0.00';
+  const done = Number(c.donePlotCount ?? 0);
+  return ((done / plan) * 100).toFixed(2);
+}
+
 /** 整卡点击下钻：打开作物详情抽屉（携 cropId + cropName 回填标题）。 */
 function goCropDetail(c: CropOverviewCardVO) {
   detailCropId.value = c.cropId;
@@ -205,10 +214,20 @@ onMounted(loadSummary);
     }
 
     .crop-head {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 12px;
+
+      .crop-rate {
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--el-color-primary);
+      }
 
       .crop-thumb {
         width: 56px;

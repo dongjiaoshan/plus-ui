@@ -142,7 +142,9 @@ export default {
     disabled: 'Disabled',
     to: 'to',
     prev: 'Prev',
-    next: 'Next'
+    next: 'Next',
+    yes: 'Yes',
+    no: 'No'
   },
   // Supplier master data (SYS-MD-003 + SYS-MD-FIX-002)
   supplier: {
@@ -384,6 +386,10 @@ export default {
     column: {
       breedStrainCode: 'Code',
       breedStrainName: 'Name',
+      lineCode: 'Strain Code',
+      lineName: 'Strain Name',
+      typeCode: 'Breed Code',
+      typeName: 'Breed Name',
       parentCode: 'Parent Code',
       description: 'Description',
       remark: 'Remark',
@@ -402,6 +408,10 @@ export default {
       breedStrain: 'Type',
       breedStrainCode: 'Code',
       breedStrainName: 'Name',
+      lineCode: 'Strain Code',
+      lineName: 'Strain Name',
+      typeCode: 'Breed Code',
+      typeName: 'Breed Name',
       parentCode: 'Parent Code',
       description: 'Description',
       remark: 'Remark',
@@ -414,6 +424,10 @@ export default {
     placeholder: {
       breedStrainCode: 'Enter code (letters / digits / underscore / hyphen)',
       breedStrainName: 'Enter name',
+      lineCode: 'Enter strain code (letters / digits / underscore / hyphen)',
+      lineName: 'Enter strain name',
+      typeCode: 'Enter breed code (letters / digits / underscore / hyphen)',
+      typeName: 'Enter breed name',
       parentCode: 'Enter parent code (strain only)',
       motherCode: 'Select maternal line',
       fatherCode: 'Select paternal line',
@@ -1275,7 +1289,8 @@ export default {
     field: {
       productName: 'Product',
       earNo: 'Ear No.',
-      blockNo: 'Plot No.'
+      blockNo: 'Plot No.',
+      locationName: 'Location'
     },
     column: {
       locationName: 'Location',
@@ -1298,14 +1313,14 @@ export default {
       title: 'Product Stock Out',
       outDate: 'Out Date',
       outDatePlaceholder: 'Select out date',
-      quantity: 'Quantity',
-      quantityPlaceholder: 'Enter quantity',
+      quantity: 'Out Qty',
+      quantityPlaceholder: 'Enter out qty',
       stockOutDest: 'Destination',
       stockOutDestPlaceholder: 'Select destination',
       confirm: 'Confirm',
       rule: {
         outDate: 'Please select out date',
-        quantity: 'Please enter quantity',
+        quantity: 'Please enter out qty',
         stockOutDest: 'Please select destination'
       }
     }
@@ -1334,7 +1349,8 @@ export default {
       expectedYield: 'Expected Yield (kg)',
       doneArea: 'Planted Area (mu)',
       donePlotCount: 'Planted Plots',
-      harvestYield: 'Harvested Yield (kg)'
+      harvestYield: 'Harvested Yield (kg)',
+      completionRate: 'Completion Rate'
     },
     detail: {
       title: 'Crop Detail',
@@ -1342,12 +1358,13 @@ export default {
       export: 'Export',
       col: {
         cropName: 'Crop Name',
+        plotCode: 'Plot No.',
         plotName: 'Plot',
         harvestStatus: 'Harvest Status',
         planSeason: 'Season',
         planPlantDate: 'Planned Date',
         plantDate: 'Plant Date',
-        plantTeamName: 'Planted By',
+        plantTeamName: 'Planting Team',
         beginHarvestdate: 'Harvest Start',
         endHarvestdate: 'Harvest End',
         earliestHarvestdate: 'Earliest Harvest',
@@ -1690,6 +1707,7 @@ export default {
       colNickName: 'Name',
       colPhone: 'Phone',
       colDept: 'Department',
+      colAction: 'Action',
       addBtn: 'Add to team',
       removeBtn: 'Remove',
       setLeaderBtn: 'Set as leader',
@@ -1759,7 +1777,7 @@ export default {
       planSeason: 'Select planting season',
       plantDate: 'e.g. early April (optional)',
       team: 'Select team',
-      planDateFilter: 'Enter plan date',
+      planDateFilter: 'Select plan date range',
       crop: 'Select crop',
       updateTime: 'Select updated time',
       createBy: 'Select creator'
@@ -1849,7 +1867,7 @@ export default {
       missingId: 'Missing plan id'
     },
     gantt: {
-      title: 'Dual Gantt (Plan vs Actual)',
+      title: 'Harvest Gantt',
       v1Note: 'V1 simplified',
       empty: 'No details; gantt unavailable',
       legend: { plan: 'Plan range', actual: 'Actual' }
@@ -2237,7 +2255,13 @@ export default {
         editSuccess: 'Return updated',
         deleteConfirm: 'Delete return [{no}]?',
         deleteSuccess: 'Return deleted',
-        confirmSuccess: 'Return confirmed'
+        confirmSuccess: 'Return confirmed',
+        viewDetail: 'View Detail',
+        productKindCount: 'Kinds',
+        returnWeightTotal: 'Return Weight',
+        confirmWeightTotal: 'Confirmed Weight',
+        weightDiffTotal: 'Weight Diff',
+        detailDialogTitle: 'Return Detail'
       },
       check: {
         checkId: 'Check No.',
@@ -2265,9 +2289,9 @@ export default {
         productCode: 'Product Code',
         productUnit: 'Unit',
         lossWeight: 'Loss Weight (kg)',
-        sysStock: 'System Qty',
+        sysStock: 'Stock Before Count',
         checkStock: 'Actual Qty',
-        diffStock: 'Diff',
+        diffStock: 'Diff Qty',
         checkResultType: 'Result',
         diffReason: 'Diff Reason',
         checkBy: 'Checked By',
@@ -2373,7 +2397,15 @@ export default {
           productSpec: 'Spec',
           productSort: 'Product Seq',
           productWeight: 'Product Weight',
-          storeName: 'Store'
+          storeName: 'Store',
+          packStatus: 'Pack Status',
+          earNo: 'Source Ear No.',
+          plotName: 'Source Plot',
+          produceTime: 'Produce Time',
+          isDeliveryCheck: 'Checked',
+          isArrivalConfirm: 'Arrived',
+          createByName: 'Operator',
+          remark: 'Remark'
         },
         button: {
           traceCode: 'Trace Code'
@@ -2634,6 +2666,13 @@ export default {
         storePh: 'Select store',
         demandStatus: 'Demand Status',
         statusPh: 'Select demand status'
+      },
+      // Store-view 4-state trimmed status filter (values map to raw warehouse codes; see confirm/index.vue)
+      storeStatus: {
+        SUBMITTED: 'To Confirm',
+        CONFIRMED: 'Confirmed',
+        SHIPPED: 'Shipped',
+        ARRIVED: 'Arrived'
       },
       pigTip: {
         prefix: 'Available pigs for outbound',
@@ -3048,6 +3087,26 @@ export default {
       veg: 'Vegetable Trace',
       pork: 'Pork Trace'
     },
+    label: {
+      dialogTitle: 'Print Trace Label',
+      weight: 'Product Weight (kg)',
+      weightPlaceholder: 'Enter product weight (kg)',
+      confirmPrint: 'Confirm & Print',
+      cancel: 'Cancel',
+      productCode: 'Product Code',
+      serialNo: 'Production Serial',
+      packCode: 'Pack Code',
+      produceDate: 'Production Date',
+      productName: 'Product Name',
+      productWeight: 'Product Weight',
+      plotNo: 'Plot No.',
+      earNo: 'Ear Tag',
+      storeName: 'Sales Store',
+      weightUnit: 'kg',
+      noCode: 'No trace code to print for this row',
+      scanHint: 'Scan to view traceability',
+      printFailed: 'Failed to generate print file, please retry'
+    },
     veg: {
       arrivalDate: 'Arrival Date',
       produceNo: 'Produce No.',
@@ -3317,6 +3376,8 @@ export default {
     field: {
       recordNo: 'Record No.',
       dateRange: 'Farm Date',
+      farmType: 'Farm Type',
+      crop: 'Crop',
       plot: 'Plot',
       team: 'Work Team'
     },
@@ -3347,15 +3408,13 @@ export default {
     },
     field: {
       statMonth: 'Month',
-      team: 'Team',
-      crop: 'Crop'
+      team: 'Team'
     },
     column: {
       statMonth: 'Month',
       team: 'Team',
-      crop: 'Crop',
+      farmCount: 'Farm Ops',
       pickWeight: 'Harvest Total',
-      unitPrice: 'Performance Unit Price',
       amount: 'Performance Total',
       action: 'Action'
     },
@@ -3374,6 +3433,11 @@ export default {
       tabYield: 'Yield Performance',
       tabFarm: 'Farm Records',
       rule: 'Rule',
+      cropName: 'Crop',
+      cropPickWeight: 'Harvest',
+      cropUnitPrice: 'Unit Price',
+      cropAmount: 'Amount',
+      totalAmount: 'Total',
       recordNo: 'Record No.',
       farmType: 'Farm Type',
       plot: 'Plot',
@@ -3501,6 +3565,155 @@ export default {
     pdf: {
       title: 'Product Trace Code',
       serialNo: 'No.'
+    }
+  },
+  // Public traceability H5 landing page (TRACE-H5)
+  tracePublic: {
+    state: {
+      loading: 'Loading…',
+      notFound: 'Trace code not found',
+      missingCode: 'Missing trace code',
+      loadFailed: 'Failed to load, please retry later'
+    },
+    title: {
+      pork: 'Pork Traceability',
+      veg: 'Vegetable Traceability',
+      grow: 'Growth Records',
+      cert: 'Organic Certificate',
+      cropCert: 'Crop Organic Certificate',
+      plotCert: 'Plot Organic Certificate',
+      plotRecords: 'Farm Work Records'
+    },
+    product: {
+      title: 'Product Info',
+      noImage: 'No Image',
+      name: 'Name',
+      weight: 'Weight',
+      spec: 'Spec',
+      code: 'Code',
+      description: 'Description',
+      plotNo: 'Plot No.',
+      variety: 'Variety',
+      growthDays: 'Growth Days',
+      harvestDate: 'Harvest Date',
+      daysUnit: 'd'
+    },
+    pig: {
+      title: 'Pig Traceability',
+      earNo: 'Ear Tag',
+      sex: 'Sex',
+      weight: 'Weight',
+      breed: 'Breed',
+      farm: 'Farm',
+      barn: 'Barn',
+      birth: 'Birth',
+      ageDays: 'Age',
+      market: 'Market',
+      daysUnit: 'd',
+      photo: 'Pig Photo'
+    },
+    timeline: {
+      title: 'Process Timeline',
+      empty: 'No process records'
+    },
+    growEntry: {
+      growth: 'Growth records: {n}',
+      medication: 'Vaccine & health: {n}',
+      view: 'View details'
+    },
+    pedigree: {
+      title: 'Sire / Dam Info',
+      sire: 'Sire',
+      dam: 'Dam',
+      earNo: 'Ear Tag',
+      breed: 'Breed',
+      ageDays: 'Age',
+      parity: 'Parity',
+      parityValue: 'Parity {n}',
+      daysUnit: 'd'
+    },
+    quarantine: {
+      title: 'Quarantine',
+      certNo: 'Cert No.',
+      agency: 'Agency'
+    },
+    store: {
+      title: 'Sales Store',
+      name: 'Store Name',
+      address: 'Address'
+    },
+    grow: {
+      tabGrowth: 'Growth Records',
+      tabMedication: 'Vaccine & Health',
+      ageDays: 'Age',
+      weight: 'Weight',
+      backfat: 'Backfat',
+      operator: 'Operator',
+      reason: 'Reason',
+      daysUnit: 'd',
+      weightUnit: 'kg',
+      backfatUnit: 'mm',
+      emptyGrowth: 'No growth records',
+      emptyMedication: 'No vaccine & health records'
+    },
+    plot: {
+      title: 'Plot Info',
+      plotName: 'Plot',
+      zoneName: 'Zone',
+      area: 'Area',
+      areaUnit: 'mu'
+    },
+    entry: {
+      farmRecords: 'Crop Farm Records',
+      cropCert: 'Crop Organic Certificate',
+      plotCert: 'Plot Organic Certificate',
+      plotRecords: 'Plot Planting Records'
+    },
+    cert: {
+      issuer: 'Issuer',
+      certNo: 'Cert No.',
+      validity: 'Validity',
+      validTo: 'to',
+      empty: 'No organic certificate'
+    },
+    plotRecords: {
+      title: 'Crop Farm Records',
+      empty: 'No farm records'
+    },
+    content: {
+      marketing: 'Marketing',
+      singe: 'Singeing',
+      slaughter: 'Slaughter',
+      acid: 'Acid Discharge',
+      inStock: 'In Stock',
+      ship: 'Shipment',
+      arrival: 'Arrival'
+    },
+    medType: {
+      health: 'Health',
+      treatment: 'Treatment',
+      vaccine: 'Vaccine'
+    },
+    workType: {
+      tillageBreak: 'Tillage',
+      tillagePrepare: 'Soil Prep',
+      fertilize: 'Fertilize',
+      transplant: 'Transplant',
+      waterFertilize: 'Fertigation',
+      irrigation: 'Irrigation',
+      weed: 'Weeding',
+      pestControl: 'Pest Control',
+      pruning: 'Pruning',
+      rotation: 'Rotation',
+      disaster: 'Disaster Loss',
+      harvestActivity: 'Harvest'
+    },
+    pigSex: {
+      female: 'Female',
+      male: 'Male'
+    },
+    pigBreed: {
+      black: 'Black Pig'
     }
   }
 };
