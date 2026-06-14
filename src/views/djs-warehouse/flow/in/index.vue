@@ -16,6 +16,8 @@
       show-export
       :show-add="false"
       :show-batch-del="false"
+      :show-row-edit="false"
+      :show-row-del="false"
       @search="handleSearch"
       @reset="handleReset"
       @export="handleExport"

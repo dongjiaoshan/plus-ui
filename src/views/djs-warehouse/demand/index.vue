@@ -99,6 +99,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'demandNo', label: t('demand.field.demandNo'), type: 'input' },
   { field: 'productType', label: t('demand.field.productType'), type: 'select', dictType: 'djs_demand_product_type' },
   { field: 'demandStatus', label: t('demand.field.demandStatus'), type: 'select', dictType: 'djs_demand_status' },
+  { field: 'productName', label: t('demand.field.searchProductName'), type: 'input' },
   { field: 'beginDate', label: t('demand.field.beginDate'), type: 'date' },
   { field: 'endDate', label: t('demand.field.endDate'), type: 'date' }
 ]);

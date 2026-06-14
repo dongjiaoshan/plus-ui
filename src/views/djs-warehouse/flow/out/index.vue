@@ -16,6 +16,8 @@
       show-export
       :show-add="false"
       :show-batch-del="false"
+      :show-row-edit="false"
+      :show-row-del="false"
       @search="handleSearch"
       @reset="handleReset"
       @export="handleExport"
@@ -74,7 +76,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'flowDate', label: t('djs.warehouse.flowOut.flowDate'), minWidth: 160, formatter: 'datetime' },
+  { prop: 'flowDate', label: t('djs.warehouse.flowOut.flowDate'), minWidth: 160, formatter: (row: any) => proxy?.parseTime?.(row.flowDate, '{y}-{m}-{d} {h}:{i}') },
   { prop: 'flowNo', label: t('djs.warehouse.flowOut.flowNo'), minWidth: 160 },
   { prop: 'productCode', label: t('djs.warehouse.flowOut.productCode'), minWidth: 110 },
   { prop: 'productName', label: t('djs.warehouse.flowOut.productName'), minWidth: 160 },

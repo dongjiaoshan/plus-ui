@@ -25,7 +25,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_demand_status', 'djs_demand_mailing_type']"
+      :dict-types="['djs_store_demand_status', 'djs_demand_mailing_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -55,7 +55,7 @@
             </el-button>
           </template>
         </template>
-        <!-- 已确认（CONFIRMED）：确认收货 -->
+        <!-- 已发货（PARTIAL_SHIPPED/COMPLETED 未收货）：确认收货 → 确认到店 -->
         <el-button
           v-else-if="canReceive(row)"
           v-hasPermi="['djs:store:demand:receive']"
@@ -66,7 +66,7 @@
         >
           {{ t('storeDemand.action.receive') }}
         </el-button>
-        <!-- 已发货 / 确认到店 等终态：无操作 -->
+        <!-- 已确认 / 确认到店 / 已删除 等：无操作 -->
         <span v-else class="text-placeholder">/</span>
       </template>
     </BizTable>
@@ -132,16 +132,20 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'demandType', label: t('storeDemand.column.demandType'), width: 100, align: 'center', dictType: 'djs_demand_mailing_type' },
   { prop: 'demandRemark', label: t('storeDemand.column.demandRemark'), minWidth: 120, showOverflowTooltip: true },
   { prop: 'expectedWeight', label: t('storeDemand.column.expectedWeight'), width: 120, align: 'right' },
-  { prop: 'demandStatus', label: t('storeDemand.column.demandStatus'), width: 100, align: 'center', dictType: 'djs_demand_status' },
+  { prop: 'storeDemandStatus', label: t('storeDemand.column.demandStatus'), width: 100, align: 'center', dictType: 'djs_store_demand_status' },
   { prop: 'confirmerTime', label: t('storeDemand.column.confirmerTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'demandConfirmerName', label: t('storeDemand.column.demandConfirmer'), width: 100, align: 'center' },
   { prop: 'actions', label: t('storeDemand.column.actions'), width: 200, fixed: 'right', align: 'center' }
 ]);
 
-// 待确认 = SUBMITTED（门店发起后即 SUBMITTED）
+// 待确认 = SUBMITTED（门店发起后即 SUBMITTED）；待确认才可编辑 / 删除
 const isPending = (r: BizRow) => (r as StoreDemandVO).demandStatus === 'SUBMITTED';
-// 已确认（CONFIRMED）且未收货 → 门店可确认收货
-const canReceive = (r: BizRow) => (r as StoreDemandVO).demandStatus === 'CONFIRMED' && !(r as StoreDemandVO).receivedTime;
+// 原型 0613-04 点4：「确认收货」仅在「已发货」行展示。
+// 门店视角「已发货」= 仓库 PARTIAL_SHIPPED / COMPLETED 且未收货；点后 → 确认到店。
+const canReceive = (r: BizRow) => {
+  const s = (r as StoreDemandVO).demandStatus;
+  return (s === 'PARTIAL_SHIPPED' || s === 'COMPLETED') && !(r as StoreDemandVO).receivedTime;
+};
 // 个人邮寄
 const isMailing = (r: BizRow) => (r as StoreDemandVO).demandType === 'mailing';
 

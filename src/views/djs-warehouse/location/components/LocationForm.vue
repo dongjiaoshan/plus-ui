@@ -38,18 +38,6 @@
             />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('location.field.capacity')" prop="capacity">
-            <el-input-number
-              v-model="form.capacity"
-              :min="0"
-              :precision="2"
-              :step="100"
-              :placeholder="t('location.placeholder.capacity')"
-              style="width: 100%"
-            />
-          </el-form-item>
-        </el-col>
         <el-col :span="24">
           <el-form-item :label="t('location.field.locationDesc')" prop="locationDesc">
             <el-input
@@ -108,7 +96,6 @@ const defaultForm = (): LocationInfoForm => ({
   locationStatus: 1,
   locationSort: 0,
   locationDesc: undefined,
-  capacity: undefined,
   remark: undefined
 });
 
@@ -143,8 +130,7 @@ const openEdit = async (id: number | string) => {
   const data = res.data;
   form.value = {
     ...defaultForm(),
-    ...data,
-    capacity: data.capacity != null ? Number(data.capacity) : undefined
+    ...data
   };
   visible.value = true;
   // 回填 OssUpload 已有图片（OssUpload 内部不主动反查 URL，必须父组件调 setExistingFiles）

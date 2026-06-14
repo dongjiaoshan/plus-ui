@@ -15,8 +15,11 @@ export type StoreDemandTabType = 'white_bar' | 'pork' | 'vegetable' | 'dry_good'
 /** 需求类型（字典 djs_demand_mailing_type：store 门店 / mailing 个人邮寄）。 */
 export type StoreDemandMailingType = 'store' | 'mailing';
 
-/** 需求状态 7 态（与字典 djs_demand_status 对齐）。 */
-export type StoreDemandStatusCode = 'DRAFT' | 'SUBMITTED' | 'CONFIRMED' | 'IN_PRODUCTION' | 'PARTIAL_SHIPPED' | 'COMPLETED' | 'CANCELLED';
+/** 需求状态 7 态（仓库落库值，与字典 djs_demand_status 对齐）。 */
+export type StoreDemandStatusCode = 'DRAFT' | 'SUBMITTED' | 'CONFIRMED' | 'IN_PRODUCTION' | 'PARTIAL_SHIPPED' | 'COMPLETED' | 'CANCELLED' | 'DELETED';
+
+/** 门店视角派生状态 5 态（字典 djs_store_demand_status，0613-04）。 */
+export type StoreDemandViewStatusCode = 'SUBMITTED' | 'CONFIRMED' | 'SHIPPED' | 'ARRIVED' | 'DELETED';
 
 export interface StoreDemandVO extends BaseEntity {
   id: string;
@@ -34,6 +37,8 @@ export interface StoreDemandVO extends BaseEntity {
   demandRemark?: string;
   demandExplain?: string;
   demandStatus: StoreDemandStatusCode;
+  /** 门店视角派生状态（后端按 demand_status/received_time 算，列表 dict-tag 用 djs_store_demand_status）。 */
+  storeDemandStatus?: StoreDemandViewStatusCode;
   demandConfirmer?: string;
   demandConfirmerName?: string;
   confirmerTime?: string;

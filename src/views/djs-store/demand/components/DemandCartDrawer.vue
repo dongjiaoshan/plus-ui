@@ -19,6 +19,14 @@
           height="100%"
           :empty-text="t('storeDemand.create.emptyProducts')"
         >
+          <!-- 产品图片（所有 tab 都显示，imageUrl 由后端 listProduct 回填） -->
+          <el-table-column :label="t('storeDemand.create.productImage')" width="90" align="center">
+            <template #default="{ row }">
+              <ImagePreview v-if="row.imageUrl" :width="48" :height="48" :src="row.imageUrl" :preview-src-list="[row.imageUrl]" />
+              <span v-else>{{ dash }}</span>
+            </template>
+          </el-table-column>
+
           <el-table-column :label="t('storeDemand.create.productName')" min-width="160" show-overflow-tooltip>
             <template #default="{ row }">{{ row.productName }}</template>
           </el-table-column>
@@ -121,6 +129,7 @@
 
 <script setup lang="ts">
 import { CircleCloseFilled } from '@element-plus/icons-vue';
+import ImagePreview from '@/components/ImagePreview/index.vue';
 import { batchCreateStoreDemand, listStoreDemandAvailablePigs } from '@/api/djs-store/demand';
 import type { StoreDemandBatchItem, StoreDemandProductType, StoreDemandTabType } from '@/api/djs-store/demand/types';
 import { listProduct } from '@/api/djs-warehouse/product';
@@ -171,20 +180,20 @@ const cart = ref<CartLine[]>([]);
 
 const currentTab = computed<TabDef>(() => TABS.find((x) => x.key === activeTab.value) ?? TABS[0]);
 
-/** 每 tab 列开关（对齐原型 7 张图）。 */
+/** 每 tab 列开关（原材料库存所有 tab 恒显示）。 */
 const cols = computed(() => {
   switch (activeTab.value) {
     case 'white_bar':
-      // 产品名称 / 可出栏猪只头数 / 单位 / 需求量
-      return { spec: false, unit: true, material: false };
+      // 产品图片 / 产品名称 / 可出栏猪只头数 / 单位 / 原材料库存 / 需求量
+      return { spec: false, unit: true, material: true };
     case 'vegetable':
-      // 产品名称 / 规格 / 原材料库存 / 剩余地块 / 预计产量 / 采摘日期×2 / 需求量（无单位列）
+      // 产品图片 / 产品名称 / 规格 / 原材料库存 / 剩余地块 / 预计产量 / 采摘日期×2 / 需求量（无单位列）
       return { spec: true, unit: false, material: true };
     case 'gift_box':
-      // 产品名称 / 单位 / 规格 / 需求量（无原材料库存）
-      return { spec: true, unit: true, material: false };
+      // 产品图片 / 产品名称 / 单位 / 规格 / 原材料库存 / 需求量
+      return { spec: true, unit: true, material: true };
     default:
-      // 猪/干货/鸡蛋/其他：产品名称 / 规格 / 单位 / 原材料库存 / 需求量
+      // 猪/干货/鸡蛋/其他：产品图片 / 产品名称 / 规格 / 单位 / 原材料库存 / 需求量
       return { spec: true, unit: true, material: true };
   }
 });

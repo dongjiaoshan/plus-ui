@@ -49,10 +49,13 @@
           :min="0"
           :precision="2"
           :controls="false"
-          style="width: calc(100% - 36px)"
+          style="width: 100%"
           :placeholder="t('djs.warehouse.outsourcePig.placeholder.pigWeight')"
-        />
-        <span class="ml-2 text-gray-500">kg</span>
+        >
+          <template #suffix>
+            <span class="text-gray-500">kg</span>
+          </template>
+        </el-input-number>
       </el-form-item>
 
       <el-form-item :label="t('djs.warehouse.outsourcePig.field.supplier')" prop="supplierId">

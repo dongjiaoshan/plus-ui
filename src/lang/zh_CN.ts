@@ -131,6 +131,7 @@ export default {
     opSuccess: '操作成功',
     search: '搜索',
     reset: '重置',
+    refresh: '刷新',
     add: '新增',
     save: '保存',
     empty: '暂无数据',
@@ -1165,7 +1166,7 @@ export default {
     column: {
       productId: '编码',
       productName: '名称',
-      productType: '类型',
+      productType: '产品类型',
       productAttr: '产品属性',
       productWorkshop: '生产车间',
       storeLocation: '存储仓库',
@@ -2453,7 +2454,8 @@ export default {
       'productId.required': '产品不能为空',
       productName: '产品名称',
       'productName.required': '产品名称不能为空',
-      productType: '业态',
+      searchProductName: '需求产品',
+      productType: '需求产品类型',
       productSpec: '规格',
       demandQuantity: '需求量',
       'demandQuantity.required': '需求量不能为空',
@@ -2463,7 +2465,7 @@ export default {
       materialQty: '原材料计算量',
       demandRemark: '需求备注',
       demandExplain: '需求说明',
-      demandStatus: '状态',
+      demandStatus: '需求状态',
       expectedArriveDate: '期望到货日',
       beginDate: '开始日期',
       endDate: '结束日期',
@@ -2619,13 +2621,14 @@ export default {
       cartEmpty: '请在左侧选择产品并填写需求量',
       emptyProducts: '该类型下暂无产品',
       productName: '产品名称',
+      productImage: '产品图片',
       availablePigs: '可出栏猪只头数',
       unit: '单位',
       demandQuantity: '需求量',
       mailing: '个人邮寄',
       remark: '备注：',
       remarkPh: '请输入备注信息',
-      confirm: '需求确认',
+      confirm: '确认下单',
       spec: '规格',
       materialStock: '原材料库存',
       remainPlot: '剩余地块',
@@ -2656,7 +2659,7 @@ export default {
       'productId.required': '产品不能为空',
       productName: '产品名称',
       'productName.required': '产品名称不能为空',
-      productType: '业态',
+      productType: '需求产品类型',
       productSpec: '规格',
       demandQuantity: '需求量',
       'demandQuantity.required': '需求量不能为空',
@@ -3047,7 +3050,7 @@ export default {
       productName: '产品名称',
       productSpec: '规格',
       locationName: '入库库位',
-      returnQuantity: '退货量',
+      returnQuantity: '退回量',
       unit: '单位',
       goodsWeight: '货物重量',
       receivedQty: '仓库实收量',
@@ -3075,10 +3078,11 @@ export default {
       title: '退回操作',
       returnWeight: '退回产品重量(KG)',
       weightPlaceholder: '请输入退回重量(KG)',
-      emptyCandidates: '请先选择门店；该门店暂无关联产品',
+      emptyCandidates: '请先选择门店；猪肉为固定清单，果蔬为该门店当天已确认到店的需求产品',
       submit: '确认提交',
       submitConfirm: '确认提交 {n} 条退回？',
-      quantityPlaceholder: '请输入退回量'
+      quantityPlaceholder: '请输入退回量',
+      vegBothRequired: '果蔬「{name}」需同时填写退回量和退回产品重量'
     },
     placeholder: {
       returnDirection: '请选择退回方向',
@@ -3148,7 +3152,7 @@ export default {
       title: '新增当日盘点',
       storePlaceholder: '请选择门店',
       datePlaceholder: '请选择盘点日期',
-      emptyCandidates: '该门店暂无关联产品，请先在「产品管理」配置可售产品',
+      emptyCandidates: '该门店当日暂无可盘产品（仅显示昨日盘点尚有库存的产品，以及已确认收货的需求产品）',
       submit: '盘点完成',
       submitConfirm: '确认提交 {n} 个产品的盘点数据？'
     }
@@ -3314,18 +3318,22 @@ export default {
   storeDashboard: {
     title: {
       home: '门店总览',
-      top10Donut: '当日热销产品 TOP10',
-      top10: '当日热销产品 TOP10 排行',
-      saleReturnTrend: '销售量与退货量趋势',
-      saleAmountTrend: '销售额变化趋势'
+      saleOrderGroup: '销售订单',
+      memberGroup: '会员信息',
+      monthProductStructure: '当月订单产品结构',
+      monthTop10ByOrder: '当月热门产品排行 TOP10（按订单数）',
+      memberOrderTrend: '近十日订单数与新会员趋势',
+      saleAvgPriceTrend: '销售额与客单价趋势'
     },
     kpi: {
       todaySale: '今日销售额',
       monthSale: '本月累计销售额',
       todayOrder: '今日订单数',
-      monthOrder: '本月订单数',
-      totalMembers: '会员数',
-      todayNewMembers: '今日新增会员',
+      monthOrder: '本月累计订单数',
+      totalMembers: '会员总数',
+      todayNewMembers: '今日新增会员数',
+      repeatCustomer: '老客复购数',
+      monthAvgPrice: '本月客单价',
       amountUnit: '元',
       orderUnit: '单',
       memberUnit: '人'
@@ -3350,11 +3358,14 @@ export default {
       saleAmount: '销售额',
       saleQty: '销售量',
       returnQty: '退货量',
+      newMembers: '新增会员',
       avgPrice: '客单价'
     },
     axis: {
       saleAmount: '销售额（元）',
-      avgPrice: '客单价（元）'
+      avgPrice: '客单价（元）',
+      orderCount: '订单数（单）',
+      newMembers: '新增会员（人）'
     },
     chart: {
       noData: '暂无数据'
@@ -3363,8 +3374,8 @@ export default {
       refresh: '刷新'
     },
     empty: {
-      top10: '当日暂无销售记录',
-      trend: '近 10 日暂无销售记录'
+      top10: '当月暂无销售记录',
+      trend: '近期暂无销售记录'
     }
   },
   warehouseTrace: {

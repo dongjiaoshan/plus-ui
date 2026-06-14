@@ -44,6 +44,22 @@ export interface StoreReturnVO {
   createTime?: string;
 }
 
+/** 退回操作「猪肉产品」tab 固定候选行（belong_type IN pork/white_bar，与门店关联无关） */
+export interface StoreReturnPorkCandidateVO {
+  /** 产品雪花 ID（提交退回时作 productId） */
+  productId: string;
+  productName: string;
+  productUnit?: string;
+}
+
+/** 退回操作「果蔬产品」tab 候选行（= 该门店当天已确认到店的果蔬需求产品，按 product_id 去重） */
+export interface StoreReturnVegCandidateVO {
+  /** 产品雪花 ID（提交退回时作 productId） */
+  productId: string;
+  productName: string;
+  productUnit?: string;
+}
+
 /** 退回操作批量录入单行 */
 export interface StoreReturnBatchItem {
   productId: string;

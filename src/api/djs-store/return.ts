@@ -7,7 +7,15 @@
  */
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { StoreReturnBatchForm, StoreReturnConfirmForm, StoreReturnForm, StoreReturnQuery, StoreReturnVO } from './return/types';
+import type {
+  StoreReturnBatchForm,
+  StoreReturnConfirmForm,
+  StoreReturnForm,
+  StoreReturnPorkCandidateVO,
+  StoreReturnVegCandidateVO,
+  StoreReturnQuery,
+  StoreReturnVO
+} from './return/types';
 
 /** 列表（分页） */
 export const listStoreReturn = (query?: StoreReturnQuery): AxiosPromise<StoreReturnVO[]> => {
@@ -50,6 +58,23 @@ export const batchCreateStoreReturn = (data: StoreReturnBatchForm) => {
     url: '/djs/store/return/operation/batch',
     method: 'post',
     data
+  });
+};
+
+/** 退回操作「猪肉产品」tab 固定候选（belong_type IN pork/white_bar，固定展示与门店无关） */
+export const listPorkReturnCandidates = (): AxiosPromise<StoreReturnPorkCandidateVO[]> => {
+  return request({
+    url: '/djs/store/return/operation/pork-candidates',
+    method: 'get'
+  });
+};
+
+/** 退回操作「果蔬产品」tab 候选（= 该门店当天已确认到店的果蔬需求产品，按 product_id 去重） */
+export const listVegReturnCandidates = (storeId: string): AxiosPromise<StoreReturnVegCandidateVO[]> => {
+  return request({
+    url: '/djs/store/return/operation/veg-candidates',
+    method: 'get',
+    params: { storeId }
   });
 };
 

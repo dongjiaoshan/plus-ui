@@ -131,6 +131,7 @@ export default {
     opSuccess: 'Operation succeeded',
     search: 'Search',
     reset: 'Reset',
+    refresh: 'Refresh',
     add: 'Add',
     save: 'Save',
     empty: 'No data',
@@ -2451,7 +2452,8 @@ export default {
       'productId.required': 'Product is required',
       productName: 'Product Name',
       'productName.required': 'Product name is required',
-      productType: 'Category',
+      searchProductName: 'Demand Product',
+      productType: 'Demand Product Type',
       productSpec: 'Spec',
       demandQuantity: 'Quantity',
       'demandQuantity.required': 'Quantity is required',
@@ -2461,7 +2463,7 @@ export default {
       materialQty: 'Material Qty',
       demandRemark: 'Remark',
       demandExplain: 'Explanation',
-      demandStatus: 'Status',
+      demandStatus: 'Demand Status',
       expectedArriveDate: 'Expected Arrive',
       beginDate: 'Begin Date',
       endDate: 'End Date',
@@ -2617,13 +2619,14 @@ export default {
       cartEmpty: 'Select products on the left and enter quantities',
       emptyProducts: 'No products under this type',
       productName: 'Product name',
+      productImage: 'Product Image',
       availablePigs: 'Available pigs',
       unit: 'Unit',
       demandQuantity: 'Quantity',
       mailing: 'Personal mailing',
       remark: 'Remark:',
       remarkPh: 'Enter remark',
-      confirm: 'Confirm demand',
+      confirm: 'Confirm Order',
       spec: 'Spec',
       materialStock: 'Raw Material Stock',
       remainPlot: 'Remaining Plots',
@@ -2654,7 +2657,7 @@ export default {
       'productId.required': 'Product is required',
       productName: 'Product name',
       'productName.required': 'Product name is required',
-      productType: 'Type',
+      productType: 'Demand Product Type',
       productSpec: 'Spec',
       demandQuantity: 'Quantity',
       'demandQuantity.required': 'Quantity is required',
@@ -3074,10 +3077,11 @@ export default {
       title: 'Return Operation',
       returnWeight: 'Return Weight (KG)',
       weightPlaceholder: 'Enter return weight (KG)',
-      emptyCandidates: 'Select a store first; this store has no linked products',
+      emptyCandidates: 'Select a store first; pork is a fixed list, produce shows this store\'s demands confirmed-received today',
       submit: 'Submit',
       submitConfirm: 'Submit {n} returns?',
-      quantityPlaceholder: 'Enter return quantity'
+      quantityPlaceholder: 'Enter return quantity',
+      vegBothRequired: 'Produce "{name}" requires both return quantity and return weight'
     },
     placeholder: {
       returnDirection: 'Select direction',
@@ -3147,7 +3151,7 @@ export default {
       title: 'New Daily Check',
       storePlaceholder: 'Select store',
       datePlaceholder: 'Select date',
-      emptyCandidates: 'No linked products for this store. Configure sellable products in Product Mgmt first.',
+      emptyCandidates: "No products to check for this store today (only products with remaining stock from yesterday's check, and products from confirmed-received demands).",
       submit: 'Finish Check',
       submitConfirm: 'Submit check data for {n} products?'
     }
@@ -3313,18 +3317,22 @@ export default {
   storeDashboard: {
     title: {
       home: 'Store Overview',
-      top10Donut: "Today Hot TOP10 Products",
-      top10: "Today Hot TOP10 Ranking",
-      saleReturnTrend: 'Sales & Return Qty Trend',
-      saleAmountTrend: 'Sales Amount Trend'
+      saleOrderGroup: 'Sales Orders',
+      memberGroup: 'Member Info',
+      monthProductStructure: 'Monthly Order Product Structure',
+      monthTop10ByOrder: 'Monthly Hot TOP10 (by Orders)',
+      memberOrderTrend: 'Orders & New Members (Last 10 Days)',
+      saleAvgPriceTrend: 'Sales & Avg Price Trend'
     },
     kpi: {
       todaySale: 'Today Sales',
       monthSale: 'Monthly Sales',
       todayOrder: 'Today Orders',
       monthOrder: 'Monthly Orders',
-      totalMembers: 'Members',
+      totalMembers: 'Total Members',
       todayNewMembers: 'New Members Today',
+      repeatCustomer: 'Repeat Customers',
+      monthAvgPrice: 'Monthly Avg Price',
       amountUnit: 'CNY',
       orderUnit: 'orders',
       memberUnit: 'people'
@@ -3349,11 +3357,14 @@ export default {
       saleAmount: 'Sales',
       saleQty: 'Sale Qty',
       returnQty: 'Return Qty',
+      newMembers: 'New Members',
       avgPrice: 'Avg Price'
     },
     axis: {
       saleAmount: 'Sales (CNY)',
-      avgPrice: 'Avg Price (CNY)'
+      avgPrice: 'Avg Price (CNY)',
+      orderCount: 'Orders',
+      newMembers: 'New Members'
     },
     chart: {
       noData: 'No data'
@@ -3362,8 +3373,8 @@ export default {
       refresh: 'Refresh'
     },
     empty: {
-      top10: 'No sales records today',
-      trend: 'No sales records in last 10 days'
+      top10: 'No sales records this month',
+      trend: 'No recent sales records'
     }
   },
   warehouseTrace: {

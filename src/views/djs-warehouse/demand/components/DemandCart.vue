@@ -17,9 +17,7 @@
         </el-input>
         <el-table :data="filteredProducts" height="100%" border class="cart-product-table" :empty-text="t('demand.cart.emptyProducts')">
           <el-table-column :label="t('demand.column.productName')" min-width="160" show-overflow-tooltip>
-            <template #default="{ row }"
-              >{{ row.productName }} <span class="cart-product-code">({{ row.productId }})</span></template
-            >
+            <template #default="{ row }">{{ row.productName }}</template>
           </el-table-column>
           <el-table-column :label="t('demand.field.productSpec')" prop="productSpec" width="120" show-overflow-tooltip />
           <el-table-column :label="t('demand.field.productUnit')" prop="productUnit" width="80" align="center" />
@@ -345,10 +343,6 @@ defineExpose({ open });
 }
 .cart-product-table {
   flex: 1;
-}
-.cart-product-code {
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
 }
 .cart-list {
   flex: 1;

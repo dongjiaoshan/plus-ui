@@ -84,26 +84,19 @@
 </template>
 
 <script setup name="StoreReturnOperationPanel" lang="ts">
-import { batchCreateStoreReturn } from '@/api/djs-store/return';
+import { batchCreateStoreReturn, listPorkReturnCandidates, listVegReturnCandidates } from '@/api/djs-store/return';
 import type { StoreReturnBatchItem } from '@/api/djs-store/return/types';
-import { listStoreRelation } from '@/api/djs-store/operation/relation';
-import type { StoreProductRelationVO } from '@/api/djs-store/operation/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
-import { listProduct } from '@/api/djs-warehouse/product';
-import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-const PORK_BELONG_TYPES = ['pork', 'white_bar'];
-
 interface MatrixRow {
   productId: string;
   productName: string;
   productUnit?: string;
-  category: 'pork' | 'vegetable';
   /** 退回量（果蔬录入，份/把/盒等） */
   returnQuantity?: number;
   /** 退回产品重量(kg) */
@@ -115,19 +108,16 @@ const activeCat = ref<'pork' | 'vegetable'>('pork');
 const loading = ref(false);
 const submitLoading = ref(false);
 const storeOptions = ref<StoreVO[]>([]);
-const rows = ref<MatrixRow[]>([]);
 
-// 产品 snowflake id → belongType（pork/veg 分类）
-const belongTypeMap = ref<Map<string, string | undefined>>(new Map());
+/** 猪肉产品：固定候选（belong_type IN pork/white_bar，与门店关联无关，原型「字典固定展示」口径）。 */
+const porkRows = ref<MatrixRow[]>([]);
+/** 果蔬产品：该门店当天已确认到店的需求产品（按 product_id 去重）。 */
+const vegRows = ref<MatrixRow[]>([]);
 
-const porkRows = computed(() => rows.value.filter((r) => r.category === 'pork'));
-const vegRows = computed(() => rows.value.filter((r) => r.category === 'vegetable'));
 const currentRows = computed(() => (activeCat.value === 'pork' ? porkRows.value : vegRows.value));
-const filledCount = computed(() => rows.value.filter((r) => (r.returnWeight ?? 0) > 0 || (r.returnQuantity ?? 0) > 0).length);
-
-function categoryOf(belongType?: string): 'pork' | 'vegetable' {
-  return belongType && PORK_BELONG_TYPES.includes(belongType) ? 'pork' : 'vegetable';
-}
+const filledCount = computed(
+  () => [...porkRows.value, ...vegRows.value].filter((r) => (r.returnWeight ?? 0) > 0 || (r.returnQuantity ?? 0) > 0).length
+);
 
 async function loadStoreOptions() {
   try {
@@ -139,32 +129,38 @@ async function loadStoreOptions() {
   }
 }
 
-async function loadProductMeta() {
+/** 猪肉 tab：从后端固定候选拉取（与门店无关，进入页面即固定展示）。 */
+async function loadPorkCandidates() {
   try {
-    const res = await listProduct({ pageNum: 1, pageSize: 500 });
-    const products = ((res as unknown as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
-    const m = new Map<string, string | undefined>();
-    products.forEach((p) => m.set(String(p.id), p.belongType));
-    belongTypeMap.value = m;
+    const res = await listPorkReturnCandidates();
+    const list = res.data ?? [];
+    porkRows.value = list.map((p) => ({
+      productId: String(p.productId),
+      productName: p.productName ?? '',
+      productUnit: p.productUnit,
+      returnQuantity: undefined,
+      returnWeight: undefined
+    }));
   } catch (e) {
-    console.warn('[ReturnOperationPanel] loadProductMeta failed', e);
+    console.warn('[ReturnOperationPanel] loadPorkCandidates failed', e);
+    porkRows.value = [];
   }
 }
 
-async function loadCandidates() {
+/** 果蔬 tab：该门店当天已确认到店的需求产品（按 product_id 去重，由后端聚合）。 */
+async function loadVegRows() {
   if (!storeId.value) {
-    rows.value = [];
+    vegRows.value = [];
     return;
   }
   loading.value = true;
   try {
-    const res = await listStoreRelation(storeId.value);
-    const relations = (res.data ?? []) as StoreProductRelationVO[];
-    rows.value = relations.map((r) => ({
-      productId: String(r.productId),
-      productName: r.productName ?? '',
-      productUnit: r.productUnit,
-      category: categoryOf(belongTypeMap.value.get(String(r.productId))),
+    const res = await listVegReturnCandidates(storeId.value);
+    const list = res.data ?? [];
+    vegRows.value = list.map((p) => ({
+      productId: String(p.productId),
+      productName: p.productName ?? '',
+      productUnit: p.productUnit,
       returnQuantity: undefined,
       returnWeight: undefined
     }));
@@ -174,14 +170,25 @@ async function loadCandidates() {
 }
 
 function handleStoreChange() {
-  loadCandidates();
+  loadVegRows();
 }
 
 async function handleSubmit() {
-  const items: StoreReturnBatchItem[] = rows.value
+  if (!storeId.value) {
+    return;
+  }
+  // 果蔬行：退回量 + 退回产品重量两值都必填（原型「果蔬同时录入退回量和对应重量」口径）
+  const vegPartial = vegRows.value.find(
+    (r) => ((r.returnQuantity ?? 0) > 0 || (r.returnWeight ?? 0) > 0) && !((r.returnQuantity ?? 0) > 0 && (r.returnWeight ?? 0) > 0)
+  );
+  if (vegPartial) {
+    proxy?.$modal.msgWarning(t('storeReturn.operation.vegBothRequired', { name: vegPartial.productName }));
+    return;
+  }
+  const items: StoreReturnBatchItem[] = [...porkRows.value, ...vegRows.value]
     .filter((r) => (r.returnWeight ?? 0) > 0 || (r.returnQuantity ?? 0) > 0)
     .map((r) => ({ productId: r.productId, returnQuantity: r.returnQuantity, returnWeight: r.returnWeight }));
-  if (!storeId.value || !items.length) {
+  if (!items.length) {
     return;
   }
   await proxy?.$modal.confirm(t('storeReturn.operation.submitConfirm', { n: items.length }));
@@ -189,7 +196,7 @@ async function handleSubmit() {
   try {
     await batchCreateStoreReturn({ storeId: storeId.value, items });
     proxy?.$modal.msgSuccess(t('common.opSuccess'));
-    rows.value.forEach((r) => {
+    [...porkRows.value, ...vegRows.value].forEach((r) => {
       r.returnQuantity = undefined;
       r.returnWeight = undefined;
     });
@@ -199,7 +206,7 @@ async function handleSubmit() {
 }
 
 onMounted(async () => {
-  await Promise.all([loadStoreOptions(), loadProductMeta()]);
+  await Promise.all([loadStoreOptions(), loadPorkCandidates()]);
 });
 </script>
 

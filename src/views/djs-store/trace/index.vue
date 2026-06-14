@@ -19,5 +19,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const activeTab = ref<'veg' | 'pork'>('veg');
+// 二级菜单（果蔬追溯码管理 / 猪肉追溯码管理）经 query_param 预选 tab
+const route = useRoute();
+const activeTab = ref<'veg' | 'pork'>(route.query.tab === 'pork' ? 'pork' : 'veg');
 </script>

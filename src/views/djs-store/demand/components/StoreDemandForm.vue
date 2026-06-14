@@ -18,11 +18,6 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="t('storeDemand.field.expectedArriveDate')" prop="expectedArriveDate">
-            <el-date-picker v-model="form.expectedArriveDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
           <el-form-item :label="t('storeDemand.field.storeId')" prop="storeId">
             <el-select v-model="form.storeId" filterable :placeholder="t('storeDemand.placeholder.storeId')" style="width: 100%">
               <el-option v-for="s in storeOptions" :key="String(s.id)" :label="s.storeName" :value="String(s.id)" />
@@ -56,7 +51,7 @@
           <el-form-item :label="t('storeDemand.field.demandQuantity')" prop="demandQuantity">
             <el-input-number
               v-model="form.demandQuantity"
-              :precision="3"
+              :precision="0"
               :min="0"
               :step="1"
               :placeholder="t('storeDemand.placeholder.demandQuantity')"
@@ -214,7 +209,6 @@ async function loadDetail(id: string) {
     demandQuantity: detail.demandQuantity != null ? Number(detail.demandQuantity) : undefined,
     productUnit: detail.productUnit,
     demandRemark: detail.demandRemark,
-    expectedArriveDate: detail.expectedArriveDate,
     remark: detail.remark
   });
   demandNo.value = String(detail.demandNo ?? '');

@@ -1,100 +1,130 @@
 <template>
   <div class="store-dashboard p-2">
-    <!-- KPI 横条：销售订单组 + 客户/会员组（对齐原型门店总览顶部两组卡） -->
-    <el-row :gutter="16" class="kpi-row">
-      <el-col :xs="12" :sm="8" :md="4">
-        <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">{{ t('storeDashboard.kpi.todaySale') }}</div>
-          <div class="kpi-value">{{ summary?.todaySaleAmount ?? 0 }}</div>
-          <div class="kpi-foot">
-            <span class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</span>
-            <span v-if="yoyText(summary?.todaySaleAmountYoy)" class="kpi-yoy" :class="yoyClass(summary?.todaySaleAmountYoy)">{{ yoyText(summary?.todaySaleAmountYoy) }}</span>
+    <!-- 销售订单板块：今日销售额 / 本月累计销售额 / 今日订单数 / 本月累计订单数 -->
+    <el-card shadow="never" class="kpi-group">
+      <template #header>
+        <span class="group-title">{{ t('storeDashboard.title.saleOrderGroup') }}</span>
+      </template>
+      <el-row :gutter="16">
+        <el-col :xs="12" :sm="6">
+          <div class="kpi-card">
+            <div class="kpi-label">{{ t('storeDashboard.kpi.todaySale') }}</div>
+            <div class="kpi-value">{{ summary?.todaySaleAmount ?? 0 }}</div>
+            <div class="kpi-foot">
+              <span class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</span>
+              <span v-if="yoyText(summary?.todaySaleAmountYoy)" class="kpi-yoy" :class="yoyClass(summary?.todaySaleAmountYoy)">{{ yoyText(summary?.todaySaleAmountYoy) }}</span>
+            </div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="4">
-        <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">{{ t('storeDashboard.kpi.monthSale') }}</div>
-          <div class="kpi-value">{{ summary?.monthSaleAmount ?? 0 }}</div>
-          <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</span></div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="4">
-        <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">{{ t('storeDashboard.kpi.todayOrder') }}</div>
-          <div class="kpi-value">{{ summary?.todayOrderCount ?? 0 }}</div>
-          <div class="kpi-foot">
-            <span class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</span>
-            <span v-if="yoyText(summary?.todayOrderCountYoy)" class="kpi-yoy" :class="yoyClass(summary?.todayOrderCountYoy)">{{ yoyText(summary?.todayOrderCountYoy) }}</span>
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <div class="kpi-card">
+            <div class="kpi-label">{{ t('storeDashboard.kpi.monthSale') }}</div>
+            <div class="kpi-value">{{ summary?.monthSaleAmount ?? 0 }}</div>
+            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</span></div>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="4">
-        <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">{{ t('storeDashboard.kpi.monthOrder') }}</div>
-          <div class="kpi-value">{{ summary?.monthOrderCount ?? 0 }}</div>
-          <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</span></div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="4">
-        <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">{{ t('storeDashboard.kpi.totalMembers') }}</div>
-          <div class="kpi-value">{{ summary?.totalMembers ?? 0 }}</div>
-          <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
-        </el-card>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="4">
-        <el-card shadow="never" class="kpi-card">
-          <div class="kpi-label">{{ t('storeDashboard.kpi.todayNewMembers') }}</div>
-          <div class="kpi-value accent">{{ summary?.todayNewMembers ?? 0 }}</div>
-          <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <div class="kpi-card">
+            <div class="kpi-label">{{ t('storeDashboard.kpi.todayOrder') }}</div>
+            <div class="kpi-value">{{ summary?.todayOrderCount ?? 0 }}</div>
+            <div class="kpi-foot">
+              <span class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</span>
+              <span v-if="yoyText(summary?.todayOrderCountYoy)" class="kpi-yoy" :class="yoyClass(summary?.todayOrderCountYoy)">{{ yoyText(summary?.todayOrderCountYoy) }}</span>
+            </div>
+          </div>
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <div class="kpi-card">
+            <div class="kpi-label">{{ t('storeDashboard.kpi.monthOrder') }}</div>
+            <div class="kpi-value">{{ summary?.monthOrderCount ?? 0 }}</div>
+            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.orderUnit') }}</span></div>
+          </div>
+        </el-col>
+      </el-row>
+    </el-card>
+
+    <!-- 会员信息板块：今日新增会员数 / 会员总数 / 老客复购数 / 本月客单价 -->
+    <el-card shadow="never" class="kpi-group">
+      <template #header>
+        <div class="group-header">
+          <span class="group-title">{{ t('storeDashboard.title.memberGroup') }}</span>
+          <el-button size="small" :loading="loading" @click="load">{{ t('storeDashboard.action.refresh') }}</el-button>
+        </div>
+      </template>
+      <el-row :gutter="16">
+        <el-col :xs="12" :sm="6">
+          <div class="kpi-card">
+            <div class="kpi-label">{{ t('storeDashboard.kpi.todayNewMembers') }}</div>
+            <div class="kpi-value accent">{{ summary?.todayNewMembers ?? 0 }}</div>
+            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
+          </div>
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <div class="kpi-card">
+            <div class="kpi-label">{{ t('storeDashboard.kpi.totalMembers') }}</div>
+            <div class="kpi-value">{{ summary?.totalMembers ?? 0 }}</div>
+            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
+          </div>
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <div class="kpi-card">
+            <div class="kpi-label">{{ t('storeDashboard.kpi.repeatCustomer') }}</div>
+            <div class="kpi-value">{{ summary?.repeatCustomer ?? 0 }}</div>
+            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
+          </div>
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <div class="kpi-card">
+            <div class="kpi-label">{{ t('storeDashboard.kpi.monthAvgPrice') }}</div>
+            <div class="kpi-value">{{ summary?.monthAvgPrice ?? 0 }}</div>
+            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.amountUnit') }}</span></div>
+          </div>
+        </el-col>
+      </el-row>
+    </el-card>
 
     <el-row :gutter="16">
-      <!-- 当日热销产品 TOP10 环形（donut，name=产品名 / value=销售额） -->
-      <el-col :xs="24" :md="8">
+      <!-- 当月订单产品结构：饼图（各产品订单占比） -->
+      <el-col :xs="24" :md="9">
         <el-card shadow="never" class="block-card">
           <template #header>
-            <div class="card-header">
-              <span class="title">{{ t('storeDashboard.title.top10Donut') }}</span>
-              <el-button size="small" :loading="loading" @click="load">{{ t('storeDashboard.action.refresh') }}</el-button>
-            </div>
+            <span class="title">{{ t('storeDashboard.title.monthProductStructure') }}</span>
           </template>
-          <div ref="top10DonutEl" v-loading="loading" class="chart-canvas"></div>
+          <div ref="productStructureEl" v-loading="loading" class="chart-canvas"></div>
         </el-card>
       </el-col>
 
-      <!-- 当日热销产品 TOP10 横条 bar（productName 当类目 / saleAmount 为值） -->
-      <el-col :xs="24" :md="16">
+      <!-- 当月热门产品排行 TOP10（按订单数）：横向柱状图 -->
+      <el-col :xs="24" :md="15">
         <el-card shadow="never" class="block-card">
           <template #header>
-            <span class="title">{{ t('storeDashboard.title.top10') }}</span>
+            <span class="title">{{ t('storeDashboard.title.monthTop10ByOrder') }}</span>
           </template>
           <div ref="top10BarEl" v-loading="loading" class="chart-canvas"></div>
         </el-card>
       </el-col>
     </el-row>
 
+    <!-- 近十日订单数与新会员趋势：竖柱（新会员）+ 折线（订单数），双轴 -->
     <el-row :gutter="16">
-      <!-- 销售量与退货量趋势：近 10 日双柱（saleQty / returnQty） -->
-      <el-col :xs="24" :md="12">
+      <el-col :span="24">
         <el-card shadow="never" class="block-card">
           <template #header>
-            <span class="title">{{ t('storeDashboard.title.saleReturnTrend') }}</span>
+            <span class="title">{{ t('storeDashboard.title.memberOrderTrend') }}</span>
           </template>
-          <div ref="saleReturnBarEl" v-loading="loading" class="chart-canvas"></div>
+          <div ref="memberOrderTrendEl" v-loading="loading" class="chart-canvas"></div>
         </el-card>
       </el-col>
+    </el-row>
 
-      <!-- 销售额变化趋势：近 10 日单折线（saleAmount） -->
-      <el-col :xs="24" :md="12">
+    <!-- 销售额与客单价趋势：竖柱（销售额）+ 折线（客单价），双轴，横轴本月每天 -->
+    <el-row :gutter="16">
+      <el-col :span="24">
         <el-card shadow="never" class="block-card">
           <template #header>
-            <span class="title">{{ t('storeDashboard.title.saleAmountTrend') }}</span>
+            <span class="title">{{ t('storeDashboard.title.saleAvgPriceTrend') }}</span>
           </template>
-          <div ref="saleAmountLineEl" v-loading="loading" class="chart-canvas"></div>
+          <div ref="saleAvgPriceTrendEl" v-loading="loading" class="chart-canvas"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -103,22 +133,25 @@
 
 <script setup lang="ts">
 /**
- * 门店总览 admin 端入口（STR-DASH-001 / STORE-REALIGN-DASH-001 对齐原型门店首页）。
+ * 门店总览 admin 端（0613-02 对齐原型 6 板块）。
+ *
+ * KPI 两组：
+ *  - 销售订单：今日销售额 / 本月累计销售额 / 今日订单数 / 本月累计订单数
+ *  - 会员信息：今日新增会员数 / 会员总数 / 老客复购数 / 本月客单价
  *
  * 4 ECharts（后端 summary 已返序列，前端只渲染层）：
- *  1. 当日热销产品 TOP10 环形 donut（top10Products，name=productName / value=saleAmount）
- *  2. 当日热销产品 TOP10 横条 bar（top10Products，productName 当类目 / saleAmount 为值）
- *  3. 销售量与退货量趋势双柱（trend10Days.saleQty / returnQty）
- *  4. 销售额变化趋势单折线（trend10Days.saleAmount）
+ *  1. 当月订单产品结构 饼图（monthProductStructure，name=产品名 / value=当月订单数）
+ *  2. 当月热门产品排行 TOP10（monthTop10ByOrder，productName 当类目 / orderCount 为值，横向柱）
+ *  3. 近十日订单数与新会员趋势（双轴：竖柱=memberGrowth10Days.count 新会员 / 折线=trend10Days.orderCount 订单数）
+ *  4. 销售额与客单价趋势（双轴：竖柱=monthDailyTrend.saleAmount / 折线=monthDailyTrend.avgPrice，横轴本月每天）
  *
- * KPI：销售订单组（今日/本月 销售额 + 订单数 + 同比）+ 客户/会员组（会员数 + 今日新增）。
  * ECharts 4 件套：onMounted init / onUnmounted dispose+clearInterval / window resize / 5 分钟轮询。
- * 只用现有 echarts 6.0.0，不引新库。snowflake productId 不当数值轴（丢精度）。
+ * 只用现有 echarts，不引新库。snowflake productId 不当数值轴（丢精度）。
  */
 import { ref, onMounted, onUnmounted, nextTick, getCurrentInstance } from 'vue';
 import * as echarts from 'echarts';
 import { useI18n } from 'vue-i18n';
-import { getStoreDashboardSummary, type StoreDashboardSummaryVo } from '@/api/djs-store/dashboard';
+import { getStoreDashboardSummary, type StoreDashboardSummaryVo, type StoreTrendPoint, type StoreMemberGrowthPoint } from '@/api/djs-store/dashboard';
 import { STORE_CHART_COLOR, REFRESH_INTERVAL_MS } from './constants';
 
 const { t } = useI18n();
@@ -127,15 +160,15 @@ getCurrentInstance();
 const summary = ref<StoreDashboardSummaryVo | null>(null);
 const loading = ref(false);
 
-const top10DonutEl = ref<HTMLDivElement>();
+const productStructureEl = ref<HTMLDivElement>();
 const top10BarEl = ref<HTMLDivElement>();
-const saleReturnBarEl = ref<HTMLDivElement>();
-const saleAmountLineEl = ref<HTMLDivElement>();
+const memberOrderTrendEl = ref<HTMLDivElement>();
+const saleAvgPriceTrendEl = ref<HTMLDivElement>();
 
-let top10Donut: echarts.ECharts | null = null;
+let productStructure: echarts.ECharts | null = null;
 let top10Bar: echarts.ECharts | null = null;
-let saleReturnBar: echarts.ECharts | null = null;
-let saleAmountLine: echarts.ECharts | null = null;
+let memberOrderTrend: echarts.ECharts | null = null;
+let saleAvgPriceTrend: echarts.ECharts | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
 
 /** 同比角标文案：null/undefined 不显示，正负带箭头 + 百分号 */
@@ -158,6 +191,13 @@ function emptyOption() {
   };
 }
 
+/** 'YYYY-MM-DD' → 'MM-DD'（趋势图横轴更紧凑） */
+function shortDate(date: string): string {
+  if (!date) return '';
+  const parts = date.split('-');
+  return parts.length === 3 ? `${parts[1]}-${parts[2]}` : date;
+}
+
 async function load() {
   loading.value = true;
   try {
@@ -171,26 +211,26 @@ async function load() {
 }
 
 function renderAll() {
-  renderTop10Donut();
+  renderProductStructure();
   renderTop10Bar();
-  renderSaleReturnBar();
-  renderSaleAmountLine();
+  renderMemberOrderTrend();
+  renderSaleAvgPriceTrend();
 }
 
-/** 当日热销产品 TOP10 环形 donut：name=产品名，value=销售额 */
-function renderTop10Donut() {
-  if (!top10DonutEl.value) return;
-  if (!top10Donut) top10Donut = echarts.init(top10DonutEl.value);
-  const list = summary.value?.top10Products ?? [];
+/** 当月订单产品结构 饼图：name=产品名，value=当月订单数 */
+function renderProductStructure() {
+  if (!productStructureEl.value) return;
+  if (!productStructure) productStructure = echarts.init(productStructureEl.value);
+  const list = summary.value?.monthProductStructure ?? [];
   if (!list.length) {
-    top10Donut.clear();
-    top10Donut.setOption(emptyOption());
+    productStructure.clear();
+    productStructure.setOption(emptyOption());
     return;
   }
-  const data = list.map((p) => ({ name: p.productName, value: p.saleAmount }));
-  top10Donut.setOption({
+  const data = list.map((p) => ({ name: p.key, value: p.value }));
+  productStructure.setOption({
     color: [...STORE_CHART_COLOR.pie],
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    tooltip: { trigger: 'item', formatter: `{b}: {c} ${t('storeDashboard.kpi.orderUnit')} ({d}%)` },
     legend: { type: 'scroll', bottom: 0, textStyle: { fontSize: 11 } },
     series: [
       {
@@ -205,20 +245,20 @@ function renderTop10Donut() {
   });
 }
 
-/** 当日热销产品 TOP10 横条 bar：y=productName（类目），x=saleAmount（值）；saleQty 进 tooltip */
+/** 当月热门产品排行 TOP10（按订单数）：y=productName（类目），x=orderCount（值）；销售额进 tooltip */
 function renderTop10Bar() {
   if (!top10BarEl.value) return;
   if (!top10Bar) top10Bar = echarts.init(top10BarEl.value);
-  const list = summary.value?.top10Products ?? [];
+  const list = summary.value?.monthTop10ByOrder ?? [];
   if (!list.length) {
     top10Bar.clear();
     top10Bar.setOption(emptyOption());
     return;
   }
-  // 横条 bar 自下而上递增，倒序使销售额最大者落在最顶部
-  const sorted = [...list].sort((a, b) => Number(a.saleAmount) - Number(b.saleAmount));
+  // 横条 bar 自下而上递增，倒序使订单数最大者落在最顶部
+  const sorted = [...list].sort((a, b) => Number(a.orderCount ?? 0) - Number(b.orderCount ?? 0));
   const names = sorted.map((p) => p.productName);
-  const qtyMap = new Map(sorted.map((p) => [p.productName, p.saleQty]));
+  const amountMap = new Map(sorted.map((p) => [p.productName, p.saleAmount]));
   top10Bar.setOption({
     color: [STORE_CHART_COLOR.bar],
     tooltip: {
@@ -226,12 +266,12 @@ function renderTop10Bar() {
       axisPointer: { type: 'shadow' },
       formatter: (params: TooltipParam[]) => {
         const p = params[0];
-        const qty = qtyMap.get(String(p.name)) ?? 0;
-        return `${p.name}<br/>${t('storeDashboard.column.saleAmount')}: ${p.value}<br/>${t('storeDashboard.column.saleQty')}: ${qty}`;
+        const amount = amountMap.get(String(p.name)) ?? 0;
+        return `${p.name}<br/>${t('storeDashboard.column.orderCount')}: ${p.value}<br/>${t('storeDashboard.column.saleAmount')}: ${amount}`;
       }
     },
     grid: { left: 12, right: 50, top: 16, bottom: 16, containLabel: true },
-    xAxis: { type: 'value' },
+    xAxis: { type: 'value', name: t('storeDashboard.column.orderCount') },
     yAxis: {
       type: 'category',
       data: names,
@@ -239,68 +279,90 @@ function renderTop10Bar() {
     },
     series: [
       {
-        name: t('storeDashboard.column.saleAmount'),
+        name: t('storeDashboard.column.orderCount'),
         type: 'bar',
         barWidth: '55%',
         label: { show: true, position: 'right', fontSize: 11 },
-        data: sorted.map((p) => p.saleAmount)
+        data: sorted.map((p) => p.orderCount ?? 0)
       }
     ]
   });
 }
 
-/** 销售量与退货量趋势：近 10 日双柱（x=date，柱1=saleQty，柱2=returnQty） */
-function renderSaleReturnBar() {
-  if (!saleReturnBarEl.value) return;
-  if (!saleReturnBar) saleReturnBar = echarts.init(saleReturnBarEl.value);
-  const list = summary.value?.trend10Days ?? [];
-  if (!list.length) {
-    saleReturnBar.clear();
-    saleReturnBar.setOption(emptyOption());
+/**
+ * 近十日订单数与新会员趋势：双轴。
+ * x=最近 10 天日期；竖柱（左轴）=新会员数；折线（右轴）=订单数。
+ * 两个序列按日期 union 取并集，缺日补 0。
+ */
+function renderMemberOrderTrend() {
+  if (!memberOrderTrendEl.value) return;
+  if (!memberOrderTrend) memberOrderTrend = echarts.init(memberOrderTrendEl.value);
+  const orders = summary.value?.trend10Days ?? [];
+  const members = summary.value?.memberGrowth10Days ?? [];
+  if (!orders.length && !members.length) {
+    memberOrderTrend.clear();
+    memberOrderTrend.setOption(emptyOption());
     return;
   }
-  const saleName = t('storeDashboard.legend.saleQty');
-  const returnName = t('storeDashboard.legend.returnQty');
-  saleReturnBar.setOption({
+  const dates = mergeDates([orders.map((p) => p.date), members.map((p) => p.date)]);
+  const orderMap = new Map(orders.map((p: StoreTrendPoint) => [p.date, p.orderCount]));
+  const memberMap = new Map(members.map((p: StoreMemberGrowthPoint) => [p.date, p.count]));
+  const memberName = t('storeDashboard.legend.newMembers');
+  const orderName = t('storeDashboard.legend.orderCount');
+  memberOrderTrend.setOption({
     color: [STORE_CHART_COLOR.primary, STORE_CHART_COLOR.accent],
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    legend: { data: [saleName, returnName], bottom: 0, textStyle: { fontSize: 11 } },
-    grid: { left: 12, right: 16, top: 24, bottom: 36, containLabel: true },
-    xAxis: { type: 'category', data: list.map((p) => p.date), axisLabel: { fontSize: 11, rotate: list.length > 7 ? 30 : 0 } },
-    yAxis: { type: 'value' },
+    tooltip: { trigger: 'axis' },
+    legend: { data: [memberName, orderName], bottom: 0, textStyle: { fontSize: 11 } },
+    grid: { left: 12, right: 24, top: 24, bottom: 36, containLabel: true },
+    xAxis: { type: 'category', data: dates.map(shortDate), axisLabel: { fontSize: 11, rotate: dates.length > 7 ? 30 : 0 } },
+    yAxis: [
+      { type: 'value', name: t('storeDashboard.axis.newMembers'), position: 'left' },
+      { type: 'value', name: t('storeDashboard.axis.orderCount'), position: 'right' }
+    ],
     series: [
-      { name: saleName, type: 'bar', barGap: 0, barWidth: '32%', data: list.map((p) => p.saleQty) },
-      { name: returnName, type: 'bar', barWidth: '32%', data: list.map((p) => p.returnQty) }
+      { name: memberName, type: 'bar', barWidth: '40%', yAxisIndex: 0, data: dates.map((d) => Number(memberMap.get(d) ?? 0)) },
+      { name: orderName, type: 'line', smooth: true, yAxisIndex: 1, data: dates.map((d) => Number(orderMap.get(d) ?? 0)) }
     ]
   });
 }
 
-/** 销售额变化趋势：近 10 日单折线（x=date，line=saleAmount） */
-function renderSaleAmountLine() {
-  if (!saleAmountLineEl.value) return;
-  if (!saleAmountLine) saleAmountLine = echarts.init(saleAmountLineEl.value);
-  const list = summary.value?.trend10Days ?? [];
+/**
+ * 销售额与客单价趋势：双轴。
+ * x=本月每天；竖柱（左轴）=销售额；折线（右轴）=客单价。
+ */
+function renderSaleAvgPriceTrend() {
+  if (!saleAvgPriceTrendEl.value) return;
+  if (!saleAvgPriceTrend) saleAvgPriceTrend = echarts.init(saleAvgPriceTrendEl.value);
+  const list = summary.value?.monthDailyTrend ?? [];
   if (!list.length) {
-    saleAmountLine.clear();
-    saleAmountLine.setOption(emptyOption());
+    saleAvgPriceTrend.clear();
+    saleAvgPriceTrend.setOption(emptyOption());
     return;
   }
-  saleAmountLine.setOption({
-    color: [STORE_CHART_COLOR.primary],
+  const saleName = t('storeDashboard.legend.saleAmount');
+  const avgName = t('storeDashboard.legend.avgPrice');
+  saleAvgPriceTrend.setOption({
+    color: [STORE_CHART_COLOR.primary, STORE_CHART_COLOR.accent],
     tooltip: { trigger: 'axis' },
-    grid: { left: 12, right: 16, top: 24, bottom: 24, containLabel: true },
-    xAxis: { type: 'category', boundaryGap: false, data: list.map((p) => p.date), axisLabel: { fontSize: 11, rotate: list.length > 7 ? 30 : 0 } },
-    yAxis: { type: 'value', name: t('storeDashboard.axis.saleAmount') },
+    legend: { data: [saleName, avgName], bottom: 0, textStyle: { fontSize: 11 } },
+    grid: { left: 12, right: 24, top: 24, bottom: 36, containLabel: true },
+    xAxis: { type: 'category', data: list.map((p) => shortDate(p.date)), axisLabel: { fontSize: 11, rotate: list.length > 10 ? 45 : 30 } },
+    yAxis: [
+      { type: 'value', name: t('storeDashboard.axis.saleAmount'), position: 'left' },
+      { type: 'value', name: t('storeDashboard.axis.avgPrice'), position: 'right' }
+    ],
     series: [
-      {
-        name: t('storeDashboard.legend.saleAmount'),
-        type: 'line',
-        smooth: true,
-        areaStyle: { opacity: 0.08 },
-        data: list.map((p) => p.saleAmount)
-      }
+      { name: saleName, type: 'bar', barWidth: '50%', yAxisIndex: 0, data: list.map((p) => p.saleAmount) },
+      { name: avgName, type: 'line', smooth: true, yAxisIndex: 1, data: list.map((p) => p.avgPrice) }
     ]
   });
+}
+
+/** 多组日期数组合并去重 + 升序（双序列 union 横轴） */
+function mergeDates(dateLists: string[][]): string[] {
+  const set = new Set<string>();
+  dateLists.forEach((list) => list.forEach((d) => set.add(d)));
+  return Array.from(set).sort();
 }
 
 /** ECharts tooltip formatter 回调参数最小类型（避免 any，CLAUDE.md §6 #7） */
@@ -310,21 +372,21 @@ interface TooltipParam {
 }
 
 function disposeCharts() {
-  top10Donut?.dispose();
-  top10Donut = null;
+  productStructure?.dispose();
+  productStructure = null;
   top10Bar?.dispose();
   top10Bar = null;
-  saleReturnBar?.dispose();
-  saleReturnBar = null;
-  saleAmountLine?.dispose();
-  saleAmountLine = null;
+  memberOrderTrend?.dispose();
+  memberOrderTrend = null;
+  saleAvgPriceTrend?.dispose();
+  saleAvgPriceTrend = null;
 }
 
 function handleResize() {
-  top10Donut?.resize();
+  productStructure?.resize();
   top10Bar?.resize();
-  saleReturnBar?.resize();
-  saleAmountLine?.resize();
+  memberOrderTrend?.resize();
+  saleAvgPriceTrend?.resize();
 }
 
 onMounted(async () => {
@@ -345,12 +407,23 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .store-dashboard {
-  .kpi-row {
+  .kpi-group {
     margin-bottom: 16px;
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .group-title {
+      font-weight: 600;
+    }
   }
 
   .kpi-card {
     text-align: center;
+    padding: 8px 0;
 
     .kpi-label {
       font-size: 13px;
@@ -395,12 +468,6 @@ onUnmounted(() => {
 
   .block-card {
     margin-bottom: 16px;
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
 
     .title {
       font-weight: 600;

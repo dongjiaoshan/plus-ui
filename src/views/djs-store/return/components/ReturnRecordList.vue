@@ -20,64 +20,25 @@
       :selectable="false"
       :show-add="false"
       :show-row-edit="false"
+      :show-row-del="false"
+      :show-batch-del="false"
       :show-export="true"
       perm-prefix="djs:store:return"
       @search="handleSearch"
       @reset="handleReset"
       @export="handleExport"
       @page-change="handlePageChange"
-    >
-      <template #action="{ row }">
-        <el-button
-          v-if="row.returnStatus === 'pending'"
-          v-hasPermi="['djs:store:return:confirm']"
-          link
-          type="primary"
-          icon="Select"
-          @click="handleConfirm(row)"
-        >
-          {{ t('storeReturn.action.confirm') }}
-        </el-button>
-        <span v-else class="text-muted">—</span>
-      </template>
-    </BizTable>
-
-    <!-- 仓库确认实收对话框（点蒙层可关，Element Plus 默认） -->
-    <el-dialog v-model="confirmVisible" :title="t('storeReturn.dialog.confirm')" width="480px" append-to-body @closed="resetConfirm">
-      <el-form ref="confirmFormRef" :model="confirmForm" :rules="confirmRules" label-width="110px">
-        <el-form-item :label="t('storeReturn.column.productName')">
-          <span>{{ confirmRow?.productName }}（{{ t('storeReturn.column.goodsWeight') }} {{ confirmRow?.goodsWeight ?? '-' }}）</span>
-        </el-form-item>
-        <el-form-item :label="t('storeReturn.field.location')" prop="locationId">
-          <el-select v-model="confirmForm.locationId" filterable :placeholder="t('storeReturn.placeholder.location')" style="width: 100%">
-            <el-option v-for="l in locationOptions" :key="l.id" :label="l.locationName" :value="String(l.id)" />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="t('storeReturn.column.receivedQty')" prop="receivedQty">
-          <el-input-number v-model="confirmForm.receivedQty" :min="0.01" :precision="2" :step="1" style="width: 100%" />
-        </el-form-item>
-        <el-form-item :label="t('storeReturn.column.receivedWeight')" prop="receivedWeight">
-          <el-input-number v-model="confirmForm.receivedWeight" :min="0" :precision="2" :step="1" style="width: 100%" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="confirmVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="confirmLoading" @click="submitConfirm">{{ t('common.confirm') }}</el-button>
-      </template>
-    </el-dialog>
+    />
   </div>
 </template>
 
 <script setup name="StoreReturnRecordList" lang="ts">
-import type { FormInstance, FormRules } from 'element-plus';
 import BizTable from '@/components/BizTable/index.vue';
-import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listStoreReturn, confirmStoreReturn } from '@/api/djs-store/return';
-import type { StoreReturnConfirmForm, StoreReturnQuery, StoreReturnVO } from '@/api/djs-store/return/types';
+import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import { listStoreReturn } from '@/api/djs-store/return';
+import type { StoreReturnQuery, StoreReturnVO } from '@/api/djs-store/return/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
-import { listLocation } from '@/api/djs-warehouse/location';
-import type { LocationInfoVO } from '@/api/djs-warehouse/location/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -90,7 +51,6 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 const productOptions = ref<ProductInfoVO[]>([]);
-const locationOptions = ref<LocationInfoVO[]>([]);
 
 const activeTab = ref<'pork' | 'vegetable'>('pork');
 const PORK_BELONG_TYPES = ['pork', 'white_bar'];
@@ -164,16 +124,6 @@ async function loadProductOptions() {
   }
 }
 
-async function loadLocationOptions() {
-  try {
-    const res = await listLocation({ pageNum: 1, pageSize: 200 });
-    locationOptions.value = ((res as unknown as { rows?: LocationInfoVO[]; data?: LocationInfoVO[] }).rows ?? []) as LocationInfoVO[];
-  } catch (e) {
-    console.warn('[ReturnRecordList] loadLocationOptions failed', e);
-    locationOptions.value = [];
-  }
-}
-
 async function fetchList() {
   loading.value = true;
   try {
@@ -214,57 +164,8 @@ function handleExport(query?: Record<string, unknown>) {
   proxy?.download('djs/store/return/export', { ...(query ?? {}) }, `store_return_${new Date().getTime()}.xlsx`);
 }
 
-// ---------- 仓库确认实收 ----------
-const confirmVisible = ref(false);
-const confirmLoading = ref(false);
-const confirmFormRef = ref<FormInstance>();
-const confirmRow = ref<(StoreReturnVO & { unit?: string }) | null>(null);
-const confirmForm = reactive<StoreReturnConfirmForm>({ id: undefined, locationId: undefined, receivedQty: undefined, receivedWeight: undefined });
-
-const confirmRules = computed<FormRules>(() => ({
-  locationId: [{ required: true, message: t('storeReturn.placeholder.location'), trigger: 'change' }],
-  receivedQty: [{ required: true, message: t('storeReturn.rule.receivedQty'), trigger: 'blur' }]
-}));
-
-function resetConfirm() {
-  confirmRow.value = null;
-  Object.assign(confirmForm, { id: undefined, locationId: undefined, receivedQty: undefined, receivedWeight: undefined });
-  confirmFormRef.value?.clearValidate();
-}
-
-function handleConfirm(row: BizRow) {
-  const r = row as unknown as StoreReturnVO & { unit?: string };
-  confirmRow.value = r;
-  Object.assign(confirmForm, {
-    id: r.id,
-    locationId: undefined,
-    receivedQty: r.returnQuantity,
-    receivedWeight: r.goodsWeight
-  });
-  confirmVisible.value = true;
-}
-
-async function submitConfirm() {
-  await confirmFormRef.value?.validate();
-  confirmLoading.value = true;
-  try {
-    await confirmStoreReturn(confirmForm);
-    proxy?.$modal.msgSuccess(t('common.opSuccess'));
-    confirmVisible.value = false;
-    fetchList();
-  } finally {
-    confirmLoading.value = false;
-  }
-}
-
 onMounted(async () => {
-  await Promise.all([loadProductOptions(), loadLocationOptions()]);
+  await loadProductOptions();
   fetchList();
 });
 </script>
-
-<style lang="scss" scoped>
-.text-muted {
-  color: #c0c4cc;
-}
-</style>

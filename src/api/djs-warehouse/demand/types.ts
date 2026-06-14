@@ -65,9 +65,41 @@ export interface DemandManageQuery extends PageQuery {
   demandNo?: string;
   productType?: DemandProductType;
   demandStatus?: DemandStatusCode;
+  productName?: string;
   storeId?: string;
+  /** 产品 ID 精确过滤（确认页：某产品某日的所有门店需求单）。 */
+  productId?: string;
+  /** 需求日期精确过滤（确认页：配合 productId）。 */
+  demandDate?: string;
   beginDate?: string;
   endDate?: string;
+}
+
+/** 分组三态（0613-10 点4，前端文案 map djs_demand_group_status）。 */
+export type DemandGroupStatusCode = 'PENDING' | 'ALL_CONFIRMED' | 'PARTIAL';
+
+/**
+ * 需求汇总分组 VO（0613-10）：按「需求日期 + 需求产品」聚合。
+ *
+ * productId string 避雪花精度；「查看需求」携 demandDate+productId 下钻确认页。
+ */
+export interface DemandGroupVO {
+  demandDate: string;
+  productId: string;
+  productName: string;
+  productSpec?: string;
+  productType: DemandProductType;
+  rawMaterial?: string;
+  demandQuantity: number | string;
+  materialQty?: number | string;
+  productUnit?: string;
+  storeCount: number;
+  confirmedStoreCount: number;
+  /** 三态：PENDING 待确认 / ALL_CONFIRMED 已全部确认 / PARTIAL 部分确认。 */
+  demandStatus: DemandGroupStatusCode;
+  /** 确认率（0~1 小数；前端 *100 toFixed 转 %）。 */
+  confirmRate: number | string;
+  lastConfirmTime?: string;
 }
 
 export interface DemandPigVO {

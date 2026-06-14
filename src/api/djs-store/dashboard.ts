@@ -21,16 +21,26 @@ export interface StoreGroupCount {
   value: number;
 }
 
-/** 当月 TOP10 产品排行单行（与后端 StoreProductRankItemVo 对齐） */
+/** TOP10 产品排行单行（与后端 StoreProductRankItemVo 对齐） */
 export interface StoreProductRankItem {
   /** 产品 ID（snowflake，string） */
   productId: string;
   /** 产品名称 */
   productName: string;
-  /** 当月销售额 */
+  /** 销售额 */
   saleAmount: number;
-  /** 当月销售数量 */
+  /** 销售数量 */
   saleQty: number;
+  /** 订单数（当月热门产品 TOP10 按订单数排行用） */
+  orderCount?: number;
+}
+
+/** 近 N 日新增会员趋势单点（与后端 StoreMemberGrowthPointVo 对齐） */
+export interface StoreMemberGrowthPoint {
+  /** 日期 'YYYY-MM-DD' */
+  date: string;
+  /** 当日新增会员数 */
+  count: number;
 }
 
 /** 近 10 日趋势单点（与后端 StoreTrendPointVo 对齐） */
@@ -63,20 +73,32 @@ export interface StoreDashboardSummaryVo {
   pendingShipCount: number;
   /** 待采购数 */
   pendingPurchaseCount: number;
-  /** 会员总数（原型客户/会员信息组） */
+  /** 会员总数（原型会员信息组） */
   totalMembers: number;
-  /** 今日新增会员（原型客户/会员信息组） */
+  /** 今日新增会员（原型会员信息组） */
   todayNewMembers: number;
+  /** 老客复购数（当月消费 ≥2 次会员数，原型会员信息组） */
+  repeatCustomer: number;
+  /** 本月客单价（monthSaleAmount/monthOrderCount，原型会员信息组） */
+  monthAvgPrice: number;
   /** 今日销售额同比 %（上期为 0 时 null） */
   todaySaleAmountYoy?: number | null;
   /** 今日订单数同比 %（上期为 0 时 null） */
   todayOrderCountYoy?: number | null;
-  /** 当日产品结构（业态:需求量，原型已弃用，保留兼容） */
+  /** 当日产品结构（业态:需求量，保留兼容） */
   productStructure: StoreGroupCount[];
-  /** 当日热销产品 TOP10 排行 */
+  /** 当月订单产品结构（产品名:订单数，原型「当月订单产品结构」饼图） */
+  monthProductStructure: StoreGroupCount[];
+  /** 当日热销产品 TOP10 排行（按销售额） */
   top10Products: StoreProductRankItem[];
-  /** 近 10 日趋势 */
+  /** 当月热门产品 TOP10 排行（按订单数，原型横向柱） */
+  monthTop10ByOrder: StoreProductRankItem[];
+  /** 近 10 日趋势（订单数/销售额/客单价/销售量/退货量） */
   trend10Days: StoreTrendPoint[];
+  /** 近 10 日新增会员趋势（原型「近十日订单数与新会员趋势」竖柱） */
+  memberGrowth10Days: StoreMemberGrowthPoint[];
+  /** 本月逐日趋势（原型「销售额与客单价趋势」竖柱=销售额+折线=客单价，横轴本月每天） */
+  monthDailyTrend: StoreTrendPoint[];
 }
 
 /** 门店看板汇总（storeId 可选，不传按数据权限范围聚合） */

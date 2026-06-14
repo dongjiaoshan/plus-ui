@@ -11,7 +11,7 @@
           :loading="productLoading"
           :demand-map="demandMap"
           :stock-map="stockMap"
-          :show-stock="kind !== 'gift'"
+          :show-stock="showStock"
           @change="onProductChange"
         />
 
@@ -179,12 +179,15 @@ const props = withDefaults(
     sendDestKinds?: DeliverDest[];
     /** 是否显示「确认并打印追溯码」 */
     showPrintTrace?: boolean;
+    /** 卡片是否显示「原材料库存」行（其他产品打包原型无此行；缺省随业态：礼盒不显示其余显示） */
+    showStock?: boolean;
     /** 顶部地块卡片选择（果蔬打包专用：按来源 plotId 分组，选地块再选该地块来源） */
     plotGroup?: boolean;
   }>(),
   {
     sendDestKinds: () => ['platform', 'mail', 'gift'],
     showPrintTrace: true,
+    showStock: undefined,
     plotGroup: false
   }
 );
@@ -192,6 +195,9 @@ const props = withDefaults(
 const { t } = useI18n();
 
 const showPrintTrace = computed(() => props.showPrintTrace);
+
+// 缺省随业态：礼盒无原材料库存，其余显示；显式传 showStock 时以传入为准（其他产品打包传 false）
+const showStock = computed(() => (props.showStock == null ? props.kind !== 'gift' : props.showStock));
 
 const SEND_DEST_LABEL_KEY: Record<DeliverDest, string> = {
   platform: 'djs.warehouse.packEntry.sendDestPlatform',

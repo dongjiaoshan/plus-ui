@@ -19,6 +19,7 @@ export function useDemandList(productType?: DemandProductType) {
     demandNo: undefined,
     productType: undefined,
     demandStatus: undefined,
+    productName: undefined,
     storeId: undefined,
     beginDate: undefined,
     endDate: undefined
@@ -34,6 +35,7 @@ export function useDemandList(productType?: DemandProductType) {
         productType: productType ?? (searchModel.productType as DemandProductType | undefined),
         demandNo: searchModel.demandNo,
         demandStatus: searchModel.demandStatus,
+        productName: searchModel.productName,
         storeId: searchModel.storeId,
         beginDate: searchModel.beginDate,
         endDate: searchModel.endDate

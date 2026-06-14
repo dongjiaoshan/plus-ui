@@ -17,7 +17,6 @@ export interface LocationInfoVO extends BaseEntity {
   locationSort?: number;
   /** 库位说明 */
   locationDesc?: string;
-  capacity?: number | string;
   remark?: string;
   /** 更新人姓名（后端 @Translation 回填） */
   updateByName?: string;
@@ -40,8 +39,6 @@ export interface LocationInfoForm {
   locationSort?: number;
   /** 库位说明 */
   locationDesc?: string;
-  /** 表单层用 number；后端 BigDecimal 序列化对接（后端 schema DECIMAL(12,2)） */
-  capacity?: number;
   remark?: string;
 }
 

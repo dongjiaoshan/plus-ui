@@ -89,13 +89,6 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('product.field.isBuyOutSupport')">
-              <el-radio-group v-model="form.isBuyOut">
-                <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
           <!-- WMS-BELONGTYPE-001：外购发货品（如外购白条）需选归属业态，否则发货按业态匹配落空；物资类可留空 -->
           <el-col :span="12">
             <el-form-item :label="t('product.field.belongType')" prop="belongType">
@@ -143,7 +136,7 @@
         </el-form-item>
       </template>
 
-      <!-- 共有：图片 / 状态 / 是否发货 / 描述 / 备注 -->
+      <!-- 共有：图片 / 是否支持外购 / 状态 / 是否发货 / 描述 / 备注 -->
       <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item :label="t('product.field.productThumb')" prop="productThumb">
@@ -151,9 +144,10 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item :label="t('product.field.imageOssId')" prop="imageOssId">
-            <OssUpload ref="ossMainRef" v-model="mainImageIdsModel" biz-type="md_image_library" :limit="1" :file-size="10" />
-            <div class="form-tip">{{ t('product.field.imageOssIdTip') }}</div>
+          <el-form-item :label="t('product.field.isBuyOutSupport')">
+            <el-radio-group v-model="form.isBuyOut">
+              <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
+            </el-radio-group>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -220,7 +214,6 @@ const submitting = ref(false);
 const lockType = ref(false);
 const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
-const ossMainRef = ref<InstanceType<typeof OssUpload>>();
 
 const supplierOptions = ref<Array<{ id: number | string; supplierName: string }>>([]);
 const componentCandidates = ref<ProductInfoVO[]>([]);
@@ -236,8 +229,6 @@ const defaultForm = (): ProductInfoForm => ({
   buyClass: undefined,
   productThumb: undefined,
   productImg: undefined,
-  imageOssId: null,
-  imageSource: undefined,
   productAttr: undefined,
   productWorkshop: undefined,
   storeLocationId: undefined,
@@ -259,13 +250,6 @@ const thumbOssIdsModel = computed<string[]>({
   get: () => (form.value.productThumb ? [form.value.productThumb] : []),
   set: (val: string[]) => {
     form.value.productThumb = val && val.length > 0 ? val[0] : undefined;
-  }
-});
-// 主图（IMG-LIB-001）单 ossId
-const mainImageIdsModel = computed<string[]>({
-  get: () => (form.value.imageOssId ? [form.value.imageOssId] : []),
-  set: (val: string[]) => {
-    form.value.imageOssId = val && val.length > 0 ? val[0] : null;
   }
 });
 
@@ -351,19 +335,6 @@ const openEdit = async (id: number | string) => {
       ossThumbRef.value?.setExistingFiles(items);
     } catch (e) {
       console.warn('[ProductInfoForm] listOssByIds thumb failed', e);
-    }
-  }
-  if (form.value.imageOssId) {
-    try {
-      const ossRes = await listOssByIds(form.value.imageOssId);
-      const items = (ossRes.data || []).map((o) => ({
-        ossId: String(o.ossId),
-        url: o.url,
-        originalName: o.originalName
-      }));
-      ossMainRef.value?.setExistingFiles(items);
-    } catch (e) {
-      console.warn('[ProductInfoForm] listOssByIds mainImage failed', e);
     }
   }
 };
@@ -458,10 +429,6 @@ const submit = () => {
       proxy?.$modal.msgWarning(t('product.rule.giftComponents.required'));
       return;
     }
-    // IMG-LIB-001：用户手选了主图 → 标记手动（imageSource=1），后端 rematch 不覆盖
-    if (form.value.imageOssId) {
-      form.value.imageSource = 1;
-    }
     submitting.value = true;
     try {
       if (form.value.id) {
@@ -478,12 +445,3 @@ const submit = () => {
   });
 };
 </script>
-
-<style scoped>
-.form-tip {
-  margin-top: 4px;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  line-height: 1.4;
-}
-</style>

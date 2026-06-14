@@ -18,7 +18,9 @@ import ReturnRecordList from './components/ReturnRecordList.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
-const activeMainTab = ref<'operation' | 'record'>('operation');
+// 二级菜单（退回操作 / 退回记录）经 query_param 预选 tab
+const route = useRoute();
+const activeMainTab = ref<'operation' | 'record'>(route.query.tab === 'record' ? 'record' : 'operation');
 </script>
 
 <style lang="scss" scoped>
