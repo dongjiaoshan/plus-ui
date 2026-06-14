@@ -2147,8 +2147,16 @@ export default {
         isHalf: '分割方式',
         whole: '整只',
         half: '半扇',
-        confirmPickup: '确认领用',
+        confirmPickup: '确认出库',
         pickupSuccess: '白条已领用进分割车间',
+        barCardTitle: '白条（整只）',
+        inTimeLabel: '入库时间',
+        agingDurationLabel: '排酸时长',
+        inWeightLabel: '入库重量',
+        pigAssignLabel: '猪只指定',
+        noBars: '暂无待领用白条',
+        agingHour: '小时',
+        agingMinute: '分',
         confirmShipOut: '确认发货出库',
         shipOutSuccess: '白条/猪肉已发货出库',
         specLabel: '规格',
@@ -2488,13 +2496,21 @@ export default {
       demandQuantity: '需求量',
       productUnit: '单位',
       rawMaterial: '原材料',
-      demandStatus: '状态',
+      demandStatus: '需求状态',
       shippedCount: '已发货',
-      storeCount: '需求门店数',
+      storeCount: '需求门店数量',
+      materialQty: '原材料计算量',
+      confirmRate: '需求确认率',
+      lastConfirmTime: '需求最终确认时间',
       expectedArriveDate: '期望到货',
       createByName: '创建人',
       createTime: '创建时间',
       actions: '操作'
+    },
+    groupStatus: {
+      PENDING: '待确认',
+      ALL_CONFIRMED: '已全部确认',
+      PARTIAL: '部分确认'
     },
     placeholder: {
       demandNoAuto: '保存后自动生成',
@@ -2516,7 +2532,8 @@ export default {
       cancel: '取消',
       assignPig: '指定猪只',
       history: '状态历史',
-      detail: '详情'
+      detail: '详情',
+      viewDemand: '查看需求'
     },
     detail: {
       title: '产品需求详情',
@@ -2594,6 +2611,46 @@ export default {
       submitAllSuccess: '已提交 {count} 条需求',
       submitPartial: '成功 {ok} 条，失败 {fail} 条：{names}，请重新提交失败项',
       submitAllFailed: '提交失败：{names}'
+    },
+    // 需求确认页（0613-11，从需求管理列表「查看需求」下钻）
+    confirmPage: {
+      title: '需求确认',
+      yes: '是',
+      no: '否',
+      empty: '暂无需求订单',
+      confirmDelete: '确认删除该需求订单？删除后置「已删除」终态',
+      filter: {
+        productName: '需求产品名称',
+        productNamePh: '请输入需求产品名称',
+        storeId: '需求门店',
+        storePh: '请选择需求门店',
+        demandStatus: '需求状态',
+        statusPh: '请选择需求状态'
+      },
+      pigTip: {
+        prefix: '当前可出栏猪只',
+        suffix: '头'
+      },
+      column: {
+        productName: '产品名称',
+        productSpec: '产品规格',
+        demandQuantity: '总需求量',
+        productUnit: '单位',
+        storeName: '需求门店',
+        demandRemark: '需求备注',
+        demandStatus: '需求状态',
+        confirmerTime: '需求最终确认时间',
+        demandConfirmer: '需求确认人',
+        pigAssigned: '是否指定猪只',
+        actions: '操作'
+      },
+      action: {
+        adjust: '调整'
+      },
+      adjust: {
+        title: '调整',
+        demandQuantity: '需求量'
+      }
     }
   },
   // 门店端发起需求（STR-DEMAND-001，复用 WMS demand 表）

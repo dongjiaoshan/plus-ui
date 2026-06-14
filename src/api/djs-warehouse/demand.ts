@@ -3,6 +3,7 @@ import { AxiosPromise } from 'axios';
 import type {
   AssignPigForm,
   AuditHistoryEntryVO,
+  DemandGroupVO,
   DemandManageForm,
   DemandManageQuery,
   DemandManageVO,
@@ -20,9 +21,17 @@ import type {
  * 后端：org.dromara.djs.warehouse.demand.controller.DemandManageController  /djs/warehouse/demand
  */
 
-/** 分页查询。 */
+/** 分页查询（明细：每条需求单一行）。 */
 export const listDemand = (query: DemandManageQuery): AxiosPromise<DemandManageVO[]> =>
   request({ url: '/djs/warehouse/demand/list', method: 'get', params: query });
+
+/**
+ * 需求汇总分组列表（0613-10）：按「需求日期 + 需求产品」聚合，同日同产品 N 门店合并一行。
+ *
+ * 后端 GET /djs/warehouse/demand/group-list（仅按 productName / beginDate / endDate 过滤）。
+ */
+export const listDemandGroup = (query: DemandManageQuery): AxiosPromise<DemandGroupVO[]> =>
+  request({ url: '/djs/warehouse/demand/group-list', method: 'get', params: query });
 
 /** 详情。 */
 export const getDemand = (id: string | number): AxiosPromise<DemandManageVO> =>

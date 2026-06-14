@@ -36,6 +36,8 @@ export interface DemandManageVO extends BaseEntity {
   confirmedCount: number | string;
   /** 该产品被去重门店需求数（后端按 productId 分组统计）。 */
   storeCount?: number;
+  /** 是否已指定猪只（确认页带 productId 时后端回填；白条/猪业态有意义）。 */
+  pigAssigned?: boolean;
   /** JSON 字符串；前端解析后渲染 timeline。 */
   auditHistory?: string;
   /** @Translation 后端 enrich */
@@ -100,6 +102,8 @@ export interface DemandGroupVO {
   /** 确认率（0~1 小数；前端 *100 toFixed 转 %）。 */
   confirmRate: number | string;
   lastConfirmTime?: string;
+  /** 前端注入的复合 row-key（demandDate + productId），后端不返回。 */
+  rowKey?: string;
 }
 
 export interface DemandPigVO {

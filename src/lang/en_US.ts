@@ -2145,8 +2145,16 @@ export default {
         isHalf: 'Cut Mode',
         whole: 'Whole',
         half: 'Half',
-        confirmPickup: 'Confirm Pickup',
+        confirmPickup: 'Confirm Out',
         pickupSuccess: 'Bar picked to cutting',
+        barCardTitle: 'White Bar (Whole)',
+        inTimeLabel: 'Inbound Time',
+        agingDurationLabel: 'Aging Duration',
+        inWeightLabel: 'Inbound Weight',
+        pigAssignLabel: 'Pig Assignment',
+        noBars: 'No bars available',
+        agingHour: 'h',
+        agingMinute: 'm',
         confirmShipOut: 'Confirm Ship Out',
         shipOutSuccess: 'White bar / pork shipped out',
         specLabel: 'Spec',
@@ -2486,13 +2494,21 @@ export default {
       demandQuantity: 'Quantity',
       productUnit: 'Unit',
       rawMaterial: 'Raw Material',
-      demandStatus: 'Status',
+      demandStatus: 'Demand Status',
       shippedCount: 'Shipped',
       storeCount: 'Stores',
+      materialQty: 'Material Qty',
+      confirmRate: 'Confirm Rate',
+      lastConfirmTime: 'Last Confirm Time',
       expectedArriveDate: 'Expected',
       createByName: 'Creator',
       createTime: 'Created',
       actions: 'Actions'
+    },
+    groupStatus: {
+      PENDING: 'Pending',
+      ALL_CONFIRMED: 'All Confirmed',
+      PARTIAL: 'Partial'
     },
     placeholder: {
       demandNoAuto: 'Auto-generated on save',
@@ -2514,7 +2530,8 @@ export default {
       cancel: 'Cancel',
       assignPig: 'Assign Pig',
       history: 'History',
-      detail: 'Detail'
+      detail: 'Detail',
+      viewDemand: 'View Demand'
     },
     detail: {
       title: 'Product Demand Detail',
@@ -2592,6 +2609,46 @@ export default {
       submitAllSuccess: '{count} demand(s) submitted',
       submitPartial: '{ok} succeeded, {fail} failed: {names}. Please resubmit the failed items',
       submitAllFailed: 'Submit failed: {names}'
+    },
+    // Demand confirm page (0613-11, drilled from demand list "View Demand")
+    confirmPage: {
+      title: 'Demand Confirm',
+      yes: 'Yes',
+      no: 'No',
+      empty: 'No demand orders',
+      confirmDelete: 'Delete this demand order? It will be set to the DELETED terminal state',
+      filter: {
+        productName: 'Product Name',
+        productNamePh: 'Enter product name',
+        storeId: 'Store',
+        storePh: 'Select store',
+        demandStatus: 'Demand Status',
+        statusPh: 'Select demand status'
+      },
+      pigTip: {
+        prefix: 'Available pigs for outbound',
+        suffix: ''
+      },
+      column: {
+        productName: 'Product Name',
+        productSpec: 'Spec',
+        demandQuantity: 'Total Quantity',
+        productUnit: 'Unit',
+        storeName: 'Store',
+        demandRemark: 'Remark',
+        demandStatus: 'Status',
+        confirmerTime: 'Final Confirm Time',
+        demandConfirmer: 'Confirmed By',
+        pigAssigned: 'Pig Assigned',
+        actions: 'Action'
+      },
+      action: {
+        adjust: 'Adjust'
+      },
+      adjust: {
+        title: 'Adjust',
+        demandQuantity: 'Quantity'
+      }
     }
   },
   // Store-side demand (STR-DEMAND-001, reuses WMS demand table)
