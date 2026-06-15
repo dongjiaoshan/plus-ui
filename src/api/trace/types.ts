@@ -39,6 +39,8 @@ export interface TraceEventVo {
   traceTime?: string;
   /** 操作人姓名（后端已翻译，无裸 id） */
   operatorName?: string;
+  /** 该节点工序重量 kg（后端解析 event_data 的 weight；有才展示「· 5.20kg」） */
+  weight?: string;
 }
 
 /** 猪只信息块（pork 专属）。 */

@@ -1327,6 +1327,41 @@ export default {
       }
     }
   },
+  // 种植看板（PLT-DASH-001 富图看板）
+  plantDashboard: {
+    title: '种植看板',
+    refresh: '刷新',
+    lastRefresh: '最近刷新',
+    land: {
+      title: '土地总览',
+      pending: '未安排地块',
+      planting: '持续种植',
+      planted: '已种植',
+      currentArea: '当前种植面积(亩)',
+      currentYield: '当前预计产量(万斤)'
+    },
+    today: {
+      title: '今日工作',
+      empty: '今日暂无农事'
+    },
+    cert: {
+      title: '有机证书情况一览',
+      plotMinDays: '土地有机证书到期天数',
+      cropMinDays: '作物有机证书最早到期天数',
+      cropNoCert: '作物无证书品类数',
+      cropReserved: '预留证书品类数'
+    },
+    cropStat: {
+      title: '实时种植物统计',
+      plotCount: '种植地块数',
+      expectedYield: '预计产量(Kg)'
+    },
+    gantt: {
+      plantTitle: '种植计划',
+      pickTitle: '采摘周期',
+      progress: '进度'
+    }
+  },
   // 种植 - 片区（PLT-MD-001）
   // 种植总览（FIX-PLT-AD-OVERVIEW-001）
   plantOverview: {
@@ -3616,7 +3651,8 @@ export default {
     },
     timeline: {
       title: '流程处理时间轴',
-      empty: '暂无流程记录'
+      empty: '暂无流程记录',
+      weightUnit: 'kg'
     },
     growEntry: {
       growth: '生长记录：{n} 次',

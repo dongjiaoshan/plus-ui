@@ -70,6 +70,7 @@
         <div class="t-timeline-dot"></div>
         <div class="t-timeline-content">
           <span class="t-timeline-name">{{ traceContentLabel(node.traceContent) }}</span>
+          <span v-if="node.weight" class="t-timeline-weight">· {{ node.weight }}{{ t('tracePublic.timeline.weightUnit') }}</span>
           <span v-if="node.traceTime" class="t-timeline-time">{{ node.traceTime }}</span>
           <span v-if="node.operatorName" class="t-timeline-op">{{ node.operatorName }}</span>
         </div>

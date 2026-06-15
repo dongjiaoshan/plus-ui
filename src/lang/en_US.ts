@@ -1327,6 +1327,40 @@ export default {
   },
   // Planting - Zone (PLT-MD-001)
   // Plant Overview (FIX-PLT-AD-OVERVIEW-001)
+  plantDashboard: {
+    title: 'Plant Dashboard',
+    refresh: 'Refresh',
+    lastRefresh: 'Last refresh',
+    land: {
+      title: 'Land Overview',
+      pending: 'Unscheduled Plots',
+      planting: 'Planting',
+      planted: 'Planted',
+      currentArea: 'Current Planting Area (mu)',
+      currentYield: 'Current Expected Yield (10k jin)'
+    },
+    today: {
+      title: "Today's Work",
+      empty: 'No farm work today'
+    },
+    cert: {
+      title: 'Organic Certificate Overview',
+      plotMinDays: 'Land Cert Days to Expiry',
+      cropMinDays: 'Crop Cert Earliest Days to Expiry',
+      cropNoCert: 'Crops Without Cert',
+      cropReserved: 'Reserved Cert Categories'
+    },
+    cropStat: {
+      title: 'Real-time Crop Statistics',
+      plotCount: 'Planting Plots',
+      expectedYield: 'Expected Yield (kg)'
+    },
+    gantt: {
+      plantTitle: 'Planting Plan',
+      pickTitle: 'Harvest Cycle',
+      progress: 'Progress'
+    }
+  },
   plantOverview: {
     title: 'Plant Overview',
     empty: 'No crop data',
@@ -3614,7 +3648,8 @@ export default {
     },
     timeline: {
       title: 'Process Timeline',
-      empty: 'No process records'
+      empty: 'No process records',
+      weightUnit: 'kg'
     },
     growEntry: {
       growth: 'Growth records: {n}',
