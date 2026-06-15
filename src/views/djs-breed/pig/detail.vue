@@ -51,11 +51,11 @@
             {{ detail.lastMatingDate }}
           </el-descriptions-item>
           <el-descriptions-item :label="t('pig.column.motherEar')">
-            <el-link v-if="detail.motherEar" type="primary" @click="openByEarNo(detail.motherEar)">{{ detail.motherEar }}</el-link>
+            <el-link v-if="detail.motherEar" type="primary" @click="openByEarNo(detail.motherEar)">{{ detail.motherEarTag || detail.motherEar }}</el-link>
             <span v-else>—</span>
           </el-descriptions-item>
           <el-descriptions-item :label="t('pig.column.fatherEar')">
-            <el-link v-if="detail.fatherEar" type="primary" @click="openByEarNo(detail.fatherEar)">{{ detail.fatherEar }}</el-link>
+            <el-link v-if="detail.fatherEar" type="primary" @click="openByEarNo(detail.fatherEar)">{{ detail.fatherEarTag || detail.fatherEar }}</el-link>
             <span v-else>—</span>
           </el-descriptions-item>
           <el-descriptions-item :label="t('pig.detail.creator')">{{ detail.createName || '—' }}</el-descriptions-item>

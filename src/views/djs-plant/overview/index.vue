@@ -51,12 +51,12 @@
             <div v-else class="crop-thumb crop-thumb-empty"><el-icon><Picture /></el-icon></div>
             <div class="crop-head-info">
               <div class="crop-name">{{ c.cropName || '-' }}</div>
-              <div class="crop-current">
-                {{ t('plantOverview.card.currentPlanted') }}：{{ c.currentPlantedPlotCount ?? 0 }} /
-                {{ t('plantOverview.card.currentPlantedArea') }} {{ c.currentPlantedArea ?? 0 }}
-              </div>
+              <div v-if="c.cropCode" class="crop-code">{{ c.cropCode }}</div>
             </div>
-            <div class="crop-rate">{{ t('plantOverview.card.completionRate') }}：{{ completionRate(c) }}%</div>
+            <div class="crop-rate">
+              <span class="crop-rate-label">{{ t('plantOverview.card.completionRate') }}</span>
+              <span class="crop-rate-value">{{ completionRate(c) }}%</span>
+            </div>
           </div>
 
           <!-- 双栏：计划 / 已完成（label 文案已含单位） -->
@@ -224,9 +224,19 @@ onMounted(loadSummary);
         position: absolute;
         top: 0;
         right: 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--el-color-primary);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+
+        .crop-rate-label {
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+        }
+        .crop-rate-value {
+          font-size: 22px;
+          font-weight: 600;
+          color: var(--el-color-primary);
+        }
       }
 
       .crop-thumb {
@@ -248,9 +258,9 @@ onMounted(loadSummary);
         .crop-name {
           font-size: 16px;
           font-weight: 600;
-          margin-bottom: 4px;
         }
-        .crop-current {
+        .crop-code {
+          margin-top: 2px;
           font-size: 12px;
           color: var(--el-text-color-secondary);
         }
@@ -264,6 +274,7 @@ onMounted(loadSummary);
       .metric-group {
         flex: 1;
         min-width: 0;
+        text-align: center;
         .metric-group-title {
           font-size: 13px;
           font-weight: 600;

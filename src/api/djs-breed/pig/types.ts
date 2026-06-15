@@ -79,9 +79,19 @@ export interface PigVO {
   penName?: string;
   matingId?: number | string;
   motherEar?: string;
+  /** 母系全版耳号（service enrich，按 motherEar 反查；详情用，查不到回落短号） */
+  motherEarTag?: string;
   fatherEar?: string;
-  /** 母猪累计配种次数（matingCount，由 BREED 事件后置原子 +=1 维护） */
+  /** 父系全版耳号（service enrich，按 fatherEar 反查；详情用，查不到回落短号） */
+  fatherEarTag?: string;
+  /** 配种次数（母猪=累计 BREED +=1；公猪=按配种记录 COUNT 真实统计 service enrich） */
   matingCount?: number;
+  /** 活仔数（母猪列表，所有分娩记录 SUM(live_born) 只算活口径；service enrich） */
+  liveBornCount?: number;
+  /** 断奶仔猪数（母猪列表，所有断奶记录 SUM(weaned_count)；service enrich） */
+  weanedCount?: number;
+  /** 窝均仔数（活仔数 ÷ 胎次，1 位小数；parity=0/null 时 null；service enrich） */
+  avgLitterSize?: number;
   /** 上次配种日（payload.breedingDate） */
   lastMatingDate?: string;
   remark?: string;
@@ -124,7 +134,11 @@ export interface PigQuery extends PageQuery {
   pigType?: PigType;
   currentStatus?: PigLifecycle;
   barnId?: number | string;
+  /** 栋舍名称模糊（反查 barn_id 集合再过滤） */
+  barnName?: string;
   penId?: number | string;
+  /** 栏位名称模糊（反查 pen_id 集合再过滤） */
+  penName?: string;
   /** true 时过滤掉终态 END 行 */
   excludeEnd?: boolean;
   motherEar?: string;

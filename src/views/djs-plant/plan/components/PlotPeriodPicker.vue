@@ -207,7 +207,7 @@ onMounted(async () => {
     const [zoneRes, teamRes] = await Promise.all([listAvailablePlots(), listAllTeam({ teamStatus: 1 })]);
     zones.value = (zoneRes.data || []) as PlotByZoneVO[];
     teams.value = (teamRes.data || []) as PlantWorkTeamVO[];
-    activeZones.value = zones.value.map((z) => String(z.zoneId ?? 'orphan'));
+    activeZones.value = [];
   } finally {
     loading.value = false;
   }

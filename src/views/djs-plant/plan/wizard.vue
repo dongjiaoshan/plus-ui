@@ -58,7 +58,7 @@
         <PlotPeriodPicker v-model="form.details" :plan-year="form.planYear" />
       </template>
 
-      <div class="mt-6 flex justify-center gap-3">
+      <div class="mt-6 flex justify-center gap-3 wizard-footer">
         <el-button v-if="currentStep > 0" @click="prevStep">{{ t('common.prev') }}</el-button>
         <el-button v-if="currentStep < 2" type="primary" @click="nextStep">{{ t('common.next') }}</el-button>
         <el-button v-if="currentStep === 2" type="primary" :loading="submitting" @click="submit">
@@ -194,3 +194,15 @@ function goList() {
   router.push(PLAN_BASE);
 }
 </script>
+
+<style scoped>
+/* 底部操作栏：滚动时常驻底部 */
+.wizard-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding: 12px 0;
+  background-color: var(--el-bg-color);
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+</style>

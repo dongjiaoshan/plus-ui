@@ -15,7 +15,11 @@
         >
           <el-icon><PriceTag /></el-icon>
           <span class="chip-main">{{ r.earNo ?? r.cutId }}</span>
-          <span class="chip-sub">{{ cutStatusLabel(r.cutStatus) }}</span>
+          <span class="chip-sub">
+            {{ r.isHalf === 1 ? t('djs.warehouse.packEntry.half') : t('djs.warehouse.packEntry.whole') }}
+            <template v-if="r.pickupWeight != null"> · {{ r.pickupWeight }}kg</template>
+            · {{ cutStatusLabel(r.cutStatus) }}
+          </span>
         </button>
       </template>
       <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.noCuttable') }}</span>

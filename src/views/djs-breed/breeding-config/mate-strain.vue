@@ -67,11 +67,11 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'motherCode', label: t('breeding.column.motherCode'), width: 140 },
-  { prop: 'motherName', label: t('breeding.column.motherName'), width: 140 },
+  { prop: 'motherName', label: t('breeding.column.motherName'), minWidth: 140 },
   { prop: 'fatherCode', label: t('breeding.column.fatherCode'), width: 140 },
-  { prop: 'fatherName', label: t('breeding.column.fatherName'), width: 140 },
+  { prop: 'fatherName', label: t('breeding.column.fatherName'), minWidth: 140 },
   { prop: 'cubCode', label: t('breeding.column.cubCode'), width: 140 },
-  { prop: 'offspringName', label: t('breeding.column.offspringName'), width: 140 },
+  { prop: 'offspringName', label: t('breeding.column.offspringName'), minWidth: 140 },
   { prop: 'createTime', label: t('breeding.column.changeTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'createByName', label: t('breeding.column.changeBy'), width: 120, align: 'center' }
 ]);

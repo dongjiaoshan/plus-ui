@@ -16,8 +16,10 @@ export interface UsePigListExtraQuery {
   earNo?: string;
   pigSex?: 'F' | 'M';
   currentStatus?: PigLifecycle;
-  barnId?: number | string;
-  penId?: number | string;
+  /** 栋舍名称模糊（后端反查 barn_id 集合过滤） */
+  barnName?: string;
+  /** 栏位名称模糊（后端反查 pen_id 集合过滤） */
+  penName?: string;
   motherEar?: string;
 }
 
@@ -32,8 +34,8 @@ export function usePigListByType(pigType: PigType) {
     earNo: undefined,
     pigSex: undefined,
     currentStatus: undefined,
-    barnId: undefined,
-    penId: undefined,
+    barnName: undefined,
+    penName: undefined,
     motherEar: undefined,
     excludeEnd: true
   });
@@ -67,8 +69,8 @@ export function usePigListByType(pigType: PigType) {
       earNo: undefined,
       pigSex: undefined,
       currentStatus: undefined,
-      barnId: undefined,
-      penId: undefined,
+      barnName: undefined,
+      penName: undefined,
       motherEar: undefined,
       excludeEnd: true
     });

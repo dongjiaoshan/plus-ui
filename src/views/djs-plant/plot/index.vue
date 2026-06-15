@@ -96,8 +96,7 @@ const plotSearchModel = reactive<Record<string, any>>({
   plotCode: undefined,
   plotName: undefined,
   plotType: undefined,
-  plotStatus: undefined,
-  isLease: undefined
+  plotStatus: undefined
 });
 
 const plotSearchSchema = computed<SearchFieldSchema[]>(() => [
@@ -111,12 +110,11 @@ const plotSearchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'plotCode', label: t('plantPlot.field.plotCode'), type: 'input' },
   { field: 'plotName', label: t('plantPlot.field.plotName'), type: 'input' },
   { field: 'plotType', label: t('plantPlot.field.plotType'), type: 'select', dictType: 'djs_plot_type' },
-  { field: 'plotStatus', label: t('plantPlot.field.plotStatus'), type: 'select', dictType: 'djs_plot_status' },
-  { field: 'isLease', label: t('plantPlot.field.isLease'), type: 'select', dictType: 'djs_plot_lease' }
+  { field: 'plotStatus', label: t('plantPlot.field.plotStatus'), type: 'select', dictType: 'djs_plot_status' }
 ]);
 
 const plotColumns = computed<BizTableColumn[]>(() => [
-  { prop: 'plotCode', label: t('plantPlot.column.plotCode'), width: 120, showOverflowTooltip: true },
+  { prop: 'plotCode', label: t('plantPlot.column.plotCode'), width: 180, showOverflowTooltip: true },
   { prop: 'plotName', label: t('plantPlot.column.plotName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'zoneName', label: t('plantPlot.column.zoneName'), width: 130, showOverflowTooltip: true },
   { prop: 'plotType', label: t('plantPlot.column.plotType'), width: 90, align: 'center', dictType: 'djs_plot_type' },
@@ -131,7 +129,6 @@ const plotColumns = computed<BizTableColumn[]>(() => [
     align: 'right',
     formatter: (r: BizRow) => (r.plotArea != null ? `${r.plotArea} 亩` : '-')
   },
-  { prop: 'isLease', label: t('plantPlot.column.isLease'), width: 80, align: 'center', dictType: 'djs_plot_lease' },
   { prop: 'createTime', label: t('plantPlot.column.createTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'updateTime', label: t('plantPlot.column.updateTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'updateByName', label: t('common.updateByName'), width: 100, align: 'center' }
@@ -145,8 +142,7 @@ function buildQuery(): PlotInfoQuery {
     plotCode: plotSearchModel.plotCode || undefined,
     plotName: plotSearchModel.plotName || undefined,
     plotType: plotSearchModel.plotType || undefined,
-    plotStatus: plotSearchModel.plotStatus === undefined || plotSearchModel.plotStatus === '' ? undefined : Number(plotSearchModel.plotStatus),
-    isLease: plotSearchModel.isLease === undefined || plotSearchModel.isLease === '' ? undefined : Number(plotSearchModel.isLease)
+    plotStatus: plotSearchModel.plotStatus === undefined || plotSearchModel.plotStatus === '' ? undefined : Number(plotSearchModel.plotStatus)
   };
 }
 
@@ -230,8 +226,7 @@ function handleExportPlot() {
       plotCode: plotSearchModel.plotCode || undefined,
       plotName: plotSearchModel.plotName || undefined,
       plotType: plotSearchModel.plotType || undefined,
-      plotStatus: plotSearchModel.plotStatus === undefined || plotSearchModel.plotStatus === '' ? undefined : Number(plotSearchModel.plotStatus),
-      isLease: plotSearchModel.isLease === undefined || plotSearchModel.isLease === '' ? undefined : Number(plotSearchModel.isLease)
+      plotStatus: plotSearchModel.plotStatus === undefined || plotSearchModel.plotStatus === '' ? undefined : Number(plotSearchModel.plotStatus)
     },
     `plot_${new Date().getTime()}.xlsx`
   );

@@ -142,10 +142,10 @@ const searchModel = reactive<PigQuery>({
   pigSex: undefined,
   currentStatus: undefined,
   pigType: undefined,
-  barnId: undefined,
-  penId: undefined,
+  barnName: undefined,
+  penName: undefined,
   motherEar: undefined,
-  excludeEnd: undefined
+  excludeEnd: true
 });
 
 const searchSchema: SearchFieldSchema[] = [
@@ -162,8 +162,8 @@ const searchSchema: SearchFieldSchema[] = [
   },
   { field: 'currentStatus', label: t('pig.column.currentStatus'), type: 'select', dictType: 'djs_pig_lifecycle', clearable: true },
   { field: 'pigType', label: t('pig.column.pigType'), type: 'select', dictType: 'djs_pig_type', clearable: true },
-  { field: 'barnId', label: t('pig.column.barnId'), type: 'number', placeholder: t('pig.placeholder.barnId') },
-  { field: 'penId', label: t('pig.column.penId'), type: 'number', placeholder: t('pig.placeholder.penId') },
+  { field: 'barnName', label: t('pig.column.barn'), type: 'input', placeholder: t('pig.placeholder.barnName'), clearable: true },
+  { field: 'penName', label: t('pig.column.pen'), type: 'input', placeholder: t('pig.placeholder.penName'), clearable: true },
   { field: 'motherEar', label: t('pig.column.motherEar'), type: 'input', placeholder: t('pig.placeholder.motherEar'), clearable: true }
 ];
 
@@ -213,10 +213,10 @@ function handleReset() {
     pigSex: undefined,
     currentStatus: undefined,
     pigType: undefined,
-    barnId: undefined,
-    penId: undefined,
+    barnName: undefined,
+    penName: undefined,
     motherEar: undefined,
-    excludeEnd: undefined
+    excludeEnd: true
   });
   pageNum.value = 1;
   load();

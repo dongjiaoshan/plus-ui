@@ -444,7 +444,6 @@ export default {
         required: '编码不能为空',
         pattern: '编码仅允许字母、数字、下划线、连字符',
         len2: '品种编码必须为 2 位数字',
-        len1: '品系编码必须为 1 位数字',
         len1to2: '品系编码须为1-2位数字'
       },
       breedStrainName: { required: '名称不能为空' },
@@ -594,14 +593,18 @@ export default {
       barn: '栋舍',
       pen: '栏位',
       motherEar: '母系耳号',
-      fatherEar: '父猪耳号',
+      fatherEar: '父系耳号',
       parity: '胎次',
       matingCount: '配种次数',
       lastMatingDate: '上次配种日',
       enterFattenAt: '入栏时间',
       statusStartedAt: '进入状态时间',
+      statusStartedDate: '进入状态日期',
       endReason: '终止原因',
-      remark: '备注'
+      remark: '备注',
+      liveBornCount: '活仔数',
+      weanedCount: '断奶仔猪数',
+      avgLitterSize: '窝均仔数'
     },
     perf: {
       totalBorn: '产仔总数',
@@ -622,7 +625,9 @@ export default {
       earNo: '请输入耳号',
       barnId: '请输入栋舍 ID',
       penId: '请输入栏位 ID',
-      motherEar: '请输入母系耳号'
+      motherEar: '请输入母系耳号',
+      barnName: '请输入栋舍名称',
+      penName: '请输入栏位名称'
     },
     event: {
       empty: '当前状态下无可触发事件',
@@ -774,7 +779,7 @@ export default {
         changeBy: '变更人'
       },
       placeholder: {
-        earNo: '精确匹配',
+        earNo: '请输入耳号',
         changeBy: '请输入变更人姓名'
       }
     },
@@ -909,6 +914,8 @@ export default {
         bigPenCount: '大栏数量',
         limitPenCount: '限位栏数量',
         bedCount: '产床数量',
+        scatterPenCount: '散栏数量',
+        nurseryPenCount: '保育栏数量',
         liveCount: '当前猪只存栏数量',
         updateTime: '更新时间',
         updateBy: '更新人员',
@@ -939,7 +946,9 @@ export default {
       tab: {
         big: '大栏',
         stall: '限位栏',
-        farrow: '产床'
+        farrow: '产床',
+        scatter: '散栏',
+        nurseryPen: '保育栏'
       },
       confirmDelPen: '是否确认删除栏位「{name}」？删除前需先转走该栏内所有存栏猪只。'
     },
@@ -1342,14 +1351,24 @@ export default {
     },
     today: {
       title: '今日工作',
-      empty: '今日暂无农事'
+      empty: '(已废弃，可删 - 今日工作改固定6格无空态)',
+      planting: '种植',
+      harvest: '采摘',
+      idleMgmt: '空地管理',
+      plantMgmt: '种植管理',
+      disaster: '灾害损失',
+      pickActivity: '采摘活动',
+      unitPlot: '地块'
     },
     cert: {
       title: '有机证书情况一览',
-      plotMinDays: '土地有机证书到期天数',
-      cropMinDays: '作物有机证书最早到期天数',
+      plotMinDays: '(已废弃，可删)',
+      cropMinDays: '(已废弃，可删)',
       cropNoCert: '作物无证书品类数',
-      cropReserved: '预留证书品类数'
+      cropReserved: '(已废弃，可删)',
+      cropCertExpiryDate: '果蔬有机证到期日',
+      cropCertDaysToExpiry: '果蔬有机证书到期天数',
+      cropCertCategoryCount: '果蔬有机证书品类数'
     },
     cropStat: {
       title: '实时种植物统计',
@@ -2238,7 +2257,14 @@ export default {
         cutStatusPendingPickup: '待领用',
         cutStatusPicked: '已领用',
         cutStatusCutting: '称重中',
-        cutStatusDone: '已完成'
+        cutStatusDone: '已完成',
+        outLocation: '出库位置',
+        outToCut: '分割车间',
+        outToShip: '发货月台',
+        outLocationRequired: '请选择出库位置',
+        packNo: '打包序号',
+        pickupPageTitle: '白条领用',
+        shipSourceNotFound: '该白条暂无可发货来源（请确认已完成燎毛入库）'
       },
       shipment: {
         title: '发货流水',
@@ -3160,7 +3186,7 @@ export default {
     },
     pork: {
       pickPig: '追溯猪只',
-      noPig: '暂无可追溯猪只（已出栏育肥猪）',
+      noPig: '暂无当天确认收货白条',
       pickCut: '选择追溯部位',
       opPanel: '操作',
       pigId: '猪只ID',
@@ -3448,11 +3474,12 @@ export default {
       team: '班组'
     },
     column: {
-      statMonth: '月份',
-      team: '班组',
-      farmCount: '农事次数',
-      pickWeight: '采摘总量',
-      amount: '绩效总额',
+      statMonth: '绩效月份',
+      team: '班组名称',
+      teamMemberCount: '班组人数',
+      farmCount: '农事处理总数',
+      pickWeight: '采摘总产量',
+      amount: '采摘绩效总额',
       action: '操作'
     },
     action: {

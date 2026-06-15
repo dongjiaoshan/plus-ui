@@ -97,7 +97,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'statMonth', label: t('plantPerformance.column.statMonth'), minWidth: 120, align: 'center' },
   { prop: 'teamName', label: t('plantPerformance.column.team'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'farmCount', label: t('plantPerformance.column.farmCount'), minWidth: 110, align: 'center' },
+  { prop: 'teamMemberCount', label: t('plantPerformance.column.teamMemberCount'), minWidth: 110, align: 'center' },
   {
     prop: 'totalPickWeight',
     label: t('plantPerformance.column.pickWeight'),
@@ -111,7 +111,8 @@ const columns = computed<BizTableColumn[]>(() => [
     minWidth: 140,
     align: 'right',
     formatter: (r: BizRow) => (r.teamMonthAmount != null ? `¥${r.teamMonthAmount}` : '-')
-  }
+  },
+  { prop: 'farmCount', label: t('plantPerformance.column.farmCount'), minWidth: 130, align: 'center' }
 ]);
 
 async function loadList() {

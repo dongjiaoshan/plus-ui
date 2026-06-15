@@ -53,13 +53,13 @@ export interface PigCutRecordVO {
 /** 发送位置字典 djs_pack_send_dest：platform 发货月台 / mail 邮寄 / gift 礼盒 */
 export type DeliverDest = 'platform' | 'mail' | 'gift';
 
-/** 肉品/其他产品打包 BO（dry 口：选目标 SKU） */
+/** 肉品/其他产品打包 BO（dry 口：选目标 SKU；locationId 收银台不采集，可空 → service 默认库位兜底） */
 export interface DryPackBo {
   sourceInhouseId: number | string;
   productId: number | string;
   productWeight: number;
   productUnit: string;
-  locationId: number | string;
+  locationId?: number | string;
   storeId?: number | string;
   deliverDest?: DeliverDest;
   productSpec?: string;
@@ -67,23 +67,23 @@ export interface DryPackBo {
   remark?: string;
 }
 
-/** 礼盒打包 BO（service 按 box_product_id 自动查组件清单） */
+/** 礼盒打包 BO（service 按 box_product_id 自动查组件清单；locationId 收银台不采集，可空 → service 默认库位兜底） */
 export interface GiftPackBo {
   giftBoxProductId: number | string;
   packBoxCount: number;
-  locationId: number | string;
+  locationId?: number | string;
   storeId?: number | string;
   deliverDest?: DeliverDest;
   proofOssIds?: string;
   remark?: string;
 }
 
-/** 果蔬打包 BO（地块来源蔬菜） */
+/** 果蔬打包 BO（地块来源蔬菜；locationId 收银台不采集，可空 → service 默认库位兜底） */
 export interface VegPackBo {
   sourceInhouseId: number | string;
   productId: number | string;
   productWeight: number;
-  locationId: number | string;
+  locationId?: number | string;
   materialConsume?: number;
   materialId?: number | string;
   storeId?: number | string;
@@ -135,10 +135,10 @@ export interface PigCutDoneBo {
   remark?: string;
 }
 
-/** 白条领用到分割车间 BO */
+/** 白条领用到分割车间 BO（locationId 领用阶段可空，实际入冻品库位在 cutOut 阶段采集） */
 export interface PigCutPickupBo {
   barInfoId: number | string;
-  locationId: number | string;
+  locationId?: number | string;
   targetStoreId?: number | string;
   targetDemandId?: number | string;
   isHalf?: number;

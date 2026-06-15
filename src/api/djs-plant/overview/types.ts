@@ -16,6 +16,8 @@ export interface CropOverviewCardVO {
   cropId: string;
   /** 作物名称。 */
   cropName?: string;
+  /** 作物编码（卡片上随作物名展示，区分同名不同编码作物）。 */
+  cropCode?: string;
   /** 作物缩略图 ossId（卡片缩略图，listByIds 换 url）。 */
   cropImageOssId?: string | null;
   /** 当前地已种（已实际开始种植地块数，卡片头展示）。 */

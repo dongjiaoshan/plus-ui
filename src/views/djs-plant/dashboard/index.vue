@@ -42,15 +42,14 @@
 
           <el-divider class="inner-divider" />
 
-          <!-- 区块 ② 今日工作 KPI -->
+          <!-- 区块 ② 今日工作 KPI（固定 6 格） -->
           <div class="kpi-line">
             <div class="kpi-line-tag"><span class="tag-main">{{ t('plantDashboard.today.title') }}</span></div>
             <div class="kpi-items">
-              <div v-for="w in todayWorkItems" :key="w.farmType" class="kpi-item">
-                <div class="kpi-value">{{ w.count }}</div>
+              <div v-for="w in todayWorkItems" :key="w.key" class="kpi-item">
+                <div class="kpi-value">{{ w.value }}<span v-if="w.unit" class="kpi-unit">{{ w.unit }}</span></div>
                 <div class="kpi-label">{{ w.label }}</div>
               </div>
-              <el-empty v-if="todayWorkItems.length === 0" :description="t('plantDashboard.today.empty')" :image-size="48" />
             </div>
           </div>
         </el-card>
@@ -63,14 +62,14 @@
           <el-row :gutter="8">
             <el-col :span="12">
               <div class="cert-item">
-                <div class="cert-value">{{ certDaysText(summary?.organicCertOverview?.plotCertMinDays) }}</div>
-                <div class="cert-label">{{ t('plantDashboard.cert.plotMinDays') }}</div>
+                <div class="cert-value">{{ summary?.organicCertOverview?.cropCertExpiryDate || '-' }}</div>
+                <div class="cert-label">{{ t('plantDashboard.cert.cropCertExpiryDate') }}</div>
               </div>
             </el-col>
             <el-col :span="12">
               <div class="cert-item">
-                <div class="cert-value">{{ certDaysText(summary?.organicCertOverview?.cropCertMinDays) }}</div>
-                <div class="cert-label">{{ t('plantDashboard.cert.cropMinDays') }}</div>
+                <div class="cert-value">{{ certDaysText(summary?.organicCertOverview?.cropCertDaysToExpiry) }}</div>
+                <div class="cert-label">{{ t('plantDashboard.cert.cropCertDaysToExpiry') }}</div>
               </div>
             </el-col>
             <el-col :span="12">
@@ -81,8 +80,8 @@
             </el-col>
             <el-col :span="12">
               <div class="cert-item">
-                <div class="cert-value">{{ summary?.organicCertOverview?.cropReservedCount ?? 0 }}</div>
-                <div class="cert-label">{{ t('plantDashboard.cert.cropReserved') }}</div>
+                <div class="cert-value">{{ summary?.organicCertOverview?.cropCertCategoryCount ?? 0 }}</div>
+                <div class="cert-label">{{ t('plantDashboard.cert.cropCertCategoryCount') }}</div>
               </div>
             </el-col>
           </el-row>
@@ -120,7 +119,7 @@
  *
  * 对照原型 doc/origin/prototype/admin/.../种植管理/种植看板/06edfbc1-...png，6 区块：
  *  ① 土地总览 KPI（未安排 / 持续种植 / 已种植 / 当前种植面积亩 / 当前预计产量万斤）
- *  ② 今日工作 KPI（按 farm_type 分桶，label 走 djs_farm_work_type 字典）
+ *  ② 今日工作 KPI（固定 6 格：种植 / 采摘 / 空地管理 / 种植管理 / 灾害损失 地块数 + 采摘活动 kg）
  *  ③ 有机证书情况一览（土地 / 作物证书最早到期天数 + 无证书 / 已建档品类数）
  *  ④ 实时种植物统计（bar=在种地块数 + line=预计产量 kg，双轴，by 作物）— ECharts
  *  ⑤ 种植计划甘特（绿 / 橙）— ECharts custom
@@ -129,7 +128,7 @@
  * 5 分钟自动轮询（onMounted setInterval，onUnmounted 清理 + dispose 图表）。
  * 与「种植总览」（djs-plant/overview）是两个独立页，本页是富图看板，总览是列表着陆页。
  */
-import { ref, computed, onMounted, onUnmounted, nextTick, getCurrentInstance, toRefs, type ComponentInternalInstance } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import * as echarts from 'echarts';
 import { useI18n } from 'vue-i18n';
 import { getPlantDashboardSummary, getPlantDashboardGantt } from '@/api/djs-plant/dashboard';
@@ -137,8 +136,6 @@ import type { PlantDashboardSummaryVO, GanttItemVO } from '@/api/djs-plant/dashb
 import { CROP_STAT_COLOR, GANTT_COLOR, REFRESH_INTERVAL_MS, kgToWanJin, certDaysText } from './constants';
 
 const { t } = useI18n();
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_farm_work_type } = toRefs<any>(proxy?.useDict('djs_farm_work_type'));
 
 const summary = ref<PlantDashboardSummaryVO | null>(null);
 const gantt = ref<GanttItemVO[]>([]);
@@ -154,20 +151,19 @@ let plantGanttChart: echarts.ECharts | null = null;
 let pickGanttChart: echarts.ECharts | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
 
-/** farm_type code → 中文 label（走字典，未命中回落 code）。 */
-function farmTypeLabel(code: string): string {
-  const dict = (djs_farm_work_type?.value ?? []) as Array<{ label: string; value: string }>;
-  return dict.find((d) => d.value === code)?.label ?? code;
-}
-
-/** 今日工作 KPI 项（farm_type + count + label）。 */
-const todayWorkItems = computed(() =>
-  (summary.value?.todayFarmWork ?? []).map((w) => ({
-    farmType: w.farmType,
-    count: w.count,
-    label: farmTypeLabel(w.farmType)
-  }))
-);
+/** 今日工作固定 6 格（种植 / 采摘 / 空地管理 / 种植管理 / 灾害损失 地块数 + 采摘活动 kg）。 */
+const todayWorkItems = computed(() => {
+  const s = summary.value;
+  const plotUnit = t('plantDashboard.today.unitPlot');
+  return [
+    { key: 'planting', value: s?.todayPlantingPlotCount ?? 0, unit: plotUnit, label: t('plantDashboard.today.planting') },
+    { key: 'harvest', value: s?.todayHarvestPlotCount ?? 0, unit: plotUnit, label: t('plantDashboard.today.harvest') },
+    { key: 'idleMgmt', value: s?.todayIdleMgmtPlotCount ?? 0, unit: plotUnit, label: t('plantDashboard.today.idleMgmt') },
+    { key: 'plantMgmt', value: s?.todayPlantMgmtPlotCount ?? 0, unit: plotUnit, label: t('plantDashboard.today.plantMgmt') },
+    { key: 'disaster', value: s?.todayDisasterPlotCount ?? 0, unit: plotUnit, label: t('plantDashboard.today.disaster') },
+    { key: 'pickActivity', value: Number(s?.todayPickActivityWeight ?? 0).toFixed(0), unit: 'kg', label: t('plantDashboard.today.pickActivity') }
+  ];
+});
 
 function nowTimeText(): string {
   const d = new Date();
@@ -413,6 +409,12 @@ onUnmounted(() => {
   font-weight: 700;
   color: #2c3e50;
   line-height: 1.2;
+}
+.kpi-unit {
+  margin-left: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
 }
 .kpi-label {
   margin-top: 4px;

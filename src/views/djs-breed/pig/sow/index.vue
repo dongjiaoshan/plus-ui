@@ -37,7 +37,7 @@
 /**
  * 母猪列表（BRD-LIST-001）— admin 端 4 类独立 vue 之一。
  *
- * 列：耳号 / 当前状态 / 状态进入时间 / 胎次 / 配种次数 / 上次配种日 / 栋舍 / 栏位 / 备注
+ * 列：耳号 / 当前状态 / 进入状态日期 / 胎次 / 上次配种日 / 栋舍 / 栏位 / 备注
  * 隐藏：父猪耳号 / 出生日期（母猪场景不重要）
  * 操作：详情（独立路由 `/djs-breed/pig/detail/:id`）—— admin 只读，事件录入只走 mp（doc/12 偏离审计决策 a）
  */
@@ -57,22 +57,24 @@ const { list, total, loading, pageNum, pageSize, searchModel, load, handleSearch
 const searchSchema: SearchFieldSchema[] = [
   { field: 'earNo', label: t('pig.column.earNo'), type: 'input', placeholder: t('pig.placeholder.earNo'), clearable: true },
   { field: 'currentStatus', label: t('pig.column.currentStatus'), type: 'select', dictType: 'djs_pig_lifecycle', clearable: true },
-  { field: 'barnId', label: t('pig.column.barnId'), type: 'number', placeholder: t('pig.placeholder.barnId') },
-  { field: 'penId', label: t('pig.column.penId'), type: 'number', placeholder: t('pig.placeholder.penId') }
+  { field: 'barnName', label: t('pig.column.barn'), type: 'input', placeholder: t('pig.placeholder.barnName'), clearable: true },
+  { field: 'penName', label: t('pig.column.pen'), type: 'input', placeholder: t('pig.placeholder.penName'), clearable: true }
 ];
 
 const columns: BizTableColumn[] = [
-  { prop: 'earNo', label: t('pig.column.earNo'), minWidth: 140, fixed: 'left' },
-  { prop: 'currentStatus', label: t('pig.column.currentStatus'), width: 110, align: 'center', dictType: 'djs_pig_lifecycle' },
-  { prop: 'statusStartedAt', label: t('pig.column.statusStartedAt'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'parity', label: t('pig.column.parity'), width: 80, align: 'center' },
-  { prop: 'matingCount', label: t('pig.column.matingCount'), width: 100, align: 'center' },
-  { prop: 'lastMatingDate', label: t('pig.column.lastMatingDate'), width: 120, align: 'center', formatter: 'date' },
-  { prop: 'barnCode', label: t('pig.column.barn'), width: 90, align: 'center' },
-  { prop: 'penCode', label: t('pig.column.pen'), width: 90, align: 'center' },
-  { prop: 'pigBreedCode', label: t('pig.column.pigBreedCode'), width: 110, align: 'center', visible: false },
-  { prop: 'pigStrainCode', label: t('pig.column.pigStrainCode'), width: 110, align: 'center', visible: false },
-  { prop: 'birthDate', label: t('pig.column.birthDate'), width: 110, align: 'center', formatter: 'date', visible: false },
+  { prop: 'earNo', label: t('pig.column.earNo'), minWidth: 130, align: 'center', fixed: 'left' },
+  { prop: 'currentStatus', label: t('pig.column.currentStatus'), minWidth: 130, align: 'center', dictType: 'djs_pig_lifecycle' },
+  { prop: 'statusStartedAt', label: t('pig.column.statusStartedDate'), minWidth: 130, align: 'center', formatter: 'date' },
+  { prop: 'parity', label: t('pig.column.parity'), minWidth: 130, align: 'center' },
+  { prop: 'liveBornCount', label: t('pig.column.liveBornCount'), minWidth: 130, align: 'center' },
+  { prop: 'weanedCount', label: t('pig.column.weanedCount'), minWidth: 130, align: 'center' },
+  { prop: 'avgLitterSize', label: t('pig.column.avgLitterSize'), minWidth: 130, align: 'center' },
+  { prop: 'lastMatingDate', label: t('pig.column.lastMatingDate'), minWidth: 130, align: 'center', formatter: 'date' },
+  { prop: 'barnName', label: t('pig.column.barn'), minWidth: 130, align: 'center' },
+  { prop: 'penName', label: t('pig.column.pen'), minWidth: 130, align: 'center' },
+  { prop: 'pigBreedCode', label: t('pig.column.pigBreedCode'), width: 120, align: 'center', visible: false },
+  { prop: 'pigStrainCode', label: t('pig.column.pigStrainCode'), width: 120, align: 'center', visible: false },
+  { prop: 'birthDate', label: t('pig.column.birthDate'), width: 120, align: 'center', formatter: 'date', visible: false },
   { prop: 'remark', label: t('pig.column.remark'), minWidth: 120, visible: false }
 ];
 

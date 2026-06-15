@@ -127,21 +127,21 @@ const columns = computed<BizTableColumn[]>(() => [
     prop: 'totalArea',
     label: t('plantPlan.column.totalArea'),
     minWidth: 110,
-    align: 'right',
+    align: 'center',
     formatter: (r: BizRow) => (r.totalArea != null ? `${r.totalArea} ${t('plantPlan.unit.mu')}` : '-')
   },
   {
     prop: 'expectedYield',
     label: t('plantPlan.column.expectedYield'),
     minWidth: 120,
-    align: 'right',
+    align: 'center',
     formatter: (r: BizRow) => (r.expectedYield != null ? `${Number(r.expectedYield).toFixed(2)} kg` : '-')
   },
   {
     prop: 'actualYield',
     label: t('plantPlan.column.actualYield'),
     minWidth: 120,
-    align: 'right',
+    align: 'center',
     formatter: (r: BizRow) => (r.actualYield != null ? `${Number(r.actualYield).toFixed(2)} kg` : '-')
   },
   {
@@ -155,7 +155,7 @@ const columns = computed<BizTableColumn[]>(() => [
     prop: 'completionRate',
     label: t('plantPlan.column.completionRate'),
     minWidth: 130,
-    align: 'right',
+    align: 'center',
     formatter: (r: BizRow) => (r.completionRate != null ? `${r.completionRate}%` : '-')
   },
   // 「执行延期」红高亮由字典 djs_plant_plan_status (delayed → list_class='danger') 自动着色

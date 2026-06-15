@@ -74,6 +74,42 @@
             <template #empty><el-empty :description="t('farm.proto.empty')" /></template>
           </el-table>
         </el-tab-pane>
+
+        <!-- 散栏：序号 + 头数（多头栏，克隆大栏） -->
+        <el-tab-pane name="scatter" :label="`${t('farm.proto.tab.scatter')}(${counts.scatter})`">
+          <el-table v-loading="loading" :data="rows.scatter" border>
+            <el-table-column :label="t('farm.proto.col.bigSeq')" prop="penName" align="center" />
+            <el-table-column :label="t('farm.proto.col.headCount')" align="center">
+              <template #default="{ row }">{{ row.headCount ?? 0 }}</template>
+            </el-table-column>
+            <el-table-column :label="t('biz.table.column.action')" width="120" align="center">
+              <template #default="{ row }">
+                <el-button v-hasPermi="['djs:breed:pen:remove']" link type="danger" @click="onDel(row, 'scatter')">
+                  {{ t('common.delete') }}
+                </el-button>
+              </template>
+            </el-table-column>
+            <template #empty><el-empty :description="t('farm.proto.empty')" /></template>
+          </el-table>
+        </el-tab-pane>
+
+        <!-- 保育栏：序号 + 头数（多头栏，克隆大栏） -->
+        <el-tab-pane name="nursery_pen" :label="`${t('farm.proto.tab.nurseryPen')}(${counts.nursery_pen})`">
+          <el-table v-loading="loading" :data="rows.nursery_pen" border>
+            <el-table-column :label="t('farm.proto.col.bigSeq')" prop="penName" align="center" />
+            <el-table-column :label="t('farm.proto.col.headCount')" align="center">
+              <template #default="{ row }">{{ row.headCount ?? 0 }}</template>
+            </el-table-column>
+            <el-table-column :label="t('biz.table.column.action')" width="120" align="center">
+              <template #default="{ row }">
+                <el-button v-hasPermi="['djs:breed:pen:remove']" link type="danger" @click="onDel(row, 'nursery_pen')">
+                  {{ t('common.delete') }}
+                </el-button>
+              </template>
+            </el-table-column>
+            <template #empty><el-empty :description="t('farm.proto.empty')" /></template>
+          </el-table>
+        </el-tab-pane>
       </el-tabs>
     </el-card>
   </div>
@@ -88,9 +124,9 @@ import { useI18n } from 'vue-i18n';
 
 /**
  * 栏位详情子页（对齐原型）：从农场栋舍管理行操作「栏位详情」进入。
- * 3-tab 按 penType 展示：大栏（头数）/ 限位栏（单头耳号）/ 产床（耳号 + 仔猪数）。只删不增。
+ * 5-tab 按 penType 展示：大栏（头数）/ 限位栏（单头耳号）/ 产床（耳号 + 仔猪数）/ 散栏（头数）/ 保育栏（头数）。只删不增。
  */
-type PenType = 'big' | 'stall' | 'farrow';
+type PenType = 'big' | 'stall' | 'farrow' | 'scatter' | 'nursery_pen';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -101,8 +137,8 @@ const barnId = computed(() => String(route.params.barnId ?? ''));
 const activeTab = ref<PenType>('big');
 const loading = ref(false);
 
-const rows = reactive<Record<PenType, PenDetailVO[]>>({ big: [], stall: [], farrow: [] });
-const counts = reactive<Record<PenType, number>>({ big: 0, stall: 0, farrow: 0 });
+const rows = reactive<Record<PenType, PenDetailVO[]>>({ big: [], stall: [], farrow: [], scatter: [], nursery_pen: [] });
+const counts = reactive<Record<PenType, number>>({ big: 0, stall: 0, farrow: 0, scatter: 0, nursery_pen: 0 });
 
 async function loadType(type: PenType) {
   const res = await penDetail(barnId.value, type);
@@ -115,14 +151,14 @@ async function loadAll() {
   if (!barnId.value) return;
   loading.value = true;
   try {
-    await Promise.all([loadType('big'), loadType('stall'), loadType('farrow')]);
+    await Promise.all([loadType('big'), loadType('stall'), loadType('farrow'), loadType('scatter'), loadType('nursery_pen')]);
   } finally {
     loading.value = false;
   }
 }
 
 function goBack() {
-  router.push({ path: '/djs-breed/farm' });
+  router.back();
 }
 function goPig(pigId: number | string) {
   router.push({ path: `/djs-breed/pig/detail/${pigId}` });

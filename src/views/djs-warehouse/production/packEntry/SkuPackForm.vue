@@ -40,7 +40,20 @@
 
       <!-- 右：操作 panel -->
       <div class="station-right">
-        <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
+        <div class="panel-head">
+          <span class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</span>
+          <span class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
+        </div>
+
+        <!-- 肉品打包：右台顶部回显选中猪只耳号 chip（对齐原型） -->
+        <div v-if="showEarChip" class="panel-section">
+          <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
+          <div v-if="selectedSource && selectedSource.earNo" class="ear-chip">
+            <el-icon><PriceTag /></el-icon>
+            <span>{{ selectedSource.earNo }}</span>
+          </div>
+          <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.sourceRequired') }}</span>
+        </div>
 
         <!-- 果蔬：地块 button-toggle（顶部，选地块再过滤来源） -->
         <template v-if="plotGroup">
@@ -57,20 +70,17 @@
           </div>
         </template>
 
-        <!-- 来源过程产品（肉品/果蔬=来源；礼盒无） -->
+        <!-- 来源过程产品（肉品/果蔬=来源 chip 选择；礼盒无） -->
         <div v-if="kind !== 'gift'" class="panel-section">
           <div class="panel-label">{{ kind === 'veg' ? t('djs.warehouse.packEntry.sourceVeg') : t('djs.warehouse.packEntry.source') }}</div>
-          <el-select
-            v-model="form.sourceInhouseId"
-            filterable
-            clearable
-            :loading="sourceLoading"
-            :placeholder="t('djs.warehouse.packEntry.sourcePlaceholder')"
-            style="width: 100%"
-            @change="onSourceChange"
-          >
-            <el-option v-for="s in displaySources" :key="String(s.id)" :label="sourceOptionLabel(s)" :value="s.id" />
-          </el-select>
+          <div v-loading="sourceLoading">
+            <DestToggle
+              v-model="form.sourceInhouseId"
+              :options="sourceToggleOptions"
+              :empty-text="t('djs.warehouse.packEntry.sourcePlaceholder')"
+              @change="onSourceChange"
+            />
+          </div>
         </div>
 
         <!-- 重量 numpad（普通打包）/ 盒数 numpad（礼盒） -->
@@ -92,43 +102,10 @@
           />
         </div>
 
-        <!-- 单位（仅肉品/其他打包需 kg/个）+ 规格（可选）：折叠进 panel 小区 -->
-        <div v-if="kind === 'dry'" class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.productUnit') }}</div>
-          <DestToggle
-            v-model="form.productUnit"
-            :options="[
-              { value: 'kg', label: 'kg' },
-              { value: '个', label: t('djs.warehouse.packEntry.unitPiece') }
-            ]"
-          />
-        </div>
-
-        <!-- 入库库位 -->
-        <div class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.location') }}</div>
-          <el-select
-            v-model="form.locationId"
-            filterable
-            clearable
-            :loading="locationLoading"
-            :placeholder="t('djs.warehouse.packEntry.locationPlaceholder')"
-            style="width: 100%"
-          >
-            <el-option v-for="l in locations" :key="String(l.id)" :label="`${l.locationCode} - ${l.locationName}`" :value="l.id" />
-          </el-select>
-        </div>
-
         <!-- 发送位置 button-toggle（其他产品打包二选无礼盒；礼盒不显示） -->
         <div v-if="sendDests.length > 0" class="panel-section">
           <div class="panel-label">{{ kind === 'veg' || kind === 'dry' ? t('djs.warehouse.packEntry.sendDest') : t('djs.warehouse.packEntry.sendType') }}</div>
           <DestToggle v-model="form.deliverDest" :options="sendDests" />
-        </div>
-
-        <!-- 凭证图（折叠在底部，不抢 numpad 视觉中心） -->
-        <div class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.proof') }}</div>
-          <OssUpload ref="ossRef" v-model="proofModel" biz-type="warehouse_pack_proof" :limit="5" :file-size="10" />
         </div>
 
         <div class="panel-actions">
@@ -148,7 +125,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import OssUpload from '@/components/OssUpload/index.vue';
+import { PriceTag } from '@element-plus/icons-vue';
 import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
 import DestToggle from './components/DestToggle.vue';
@@ -213,21 +190,23 @@ const sendDests = computed(() =>
 const {
   products,
   productLoading,
-  locations,
-  locationLoading,
   sources,
   sourceLoading,
   plotMap,
   plotLoading,
   loadProducts,
-  loadLocations,
   loadStores,
   loadSources,
   loadPlots
 } = usePackEntryOptions();
 
-const ossRef = ref<InstanceType<typeof OssUpload>>();
 const submitting = ref(false);
+
+/** 打包序号 NO.x：会话内递增（每次成功提交 +1），对齐原型右台「打包序号 NO.2」展示。 */
+const packNo = ref(1);
+
+/** 肉品打包右台顶部回显猪只耳号 chip：dry 业态且来源带耳号时显示。 */
+const showEarChip = computed(() => props.kind === 'dry');
 
 interface PackFormShape {
   sourceInhouseId: number | string | '';
@@ -342,13 +321,6 @@ function onProductChange(item: ProductInfoVO) {
   if (item.productSpec && !form.value.productSpec) form.value.productSpec = item.productSpec;
 }
 
-const proofModel = computed<string[]>({
-  get: () => (form.value.proofOssIds ? form.value.proofOssIds.split(',').filter(Boolean) : []),
-  set: (val: string[]) => {
-    form.value.proofOssIds = val && val.length > 0 ? val.join(',') : undefined;
-  }
-});
-
 // 果蔬地块：按来源 plotId 分组成 button-toggle；选地块后来源下拉只显示该地块来源
 const selectedPlotId = ref<number | string | ''>('');
 
@@ -370,6 +342,23 @@ const displaySources = computed(() => {
   return sources.value.filter((s) => String(s.plotId) === String(selectedPlotId.value));
 });
 
+// 当前选中来源（右台顶部回显耳号 / 提交时取规格）
+const selectedSource = computed<PackSourceVO | undefined>(() =>
+  sources.value.find((s) => String(s.id) === String(form.value.sourceInhouseId))
+);
+
+function sourceChipLabel(s: PackSourceVO): string {
+  if (props.kind === 'dry' && s.earNo) {
+    return s.earNo;
+  }
+  return `${s.productName} ${t('djs.warehouse.packEntry.remainShort')} ${s.productWeight}${s.productUnit || 'kg'}`;
+}
+
+// 来源 chip 选择项（替代 el-select，对齐原型右台 chip）：肉品=猪只耳号 chip，果蔬=蔬菜名+剩余
+const sourceToggleOptions = computed<{ value: number | string; label: string }[]>(() =>
+  displaySources.value.map((s) => ({ value: s.id, label: sourceChipLabel(s) }))
+);
+
 function onPlotChange() {
   const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
   if (src && String(src.plotId) !== String(selectedPlotId.value)) {
@@ -381,14 +370,6 @@ const selectedUnit = computed<string>(() => {
   if (props.kind === 'veg') return 'kg';
   return form.value.productUnit || 'kg';
 });
-
-function sourceOptionLabel(s: PackSourceVO): string {
-  const parts: string[] = [s.productName];
-  if (s.earNo) parts.push(`${t('djs.warehouse.packEntry.earNoShort')} ${s.earNo}`);
-  if (s.plotId && !props.plotGroup) parts.push(`${t('djs.warehouse.packEntry.plot')} ${plotMap.value[String(s.plotId)] || s.plotId}`);
-  parts.push(`${t('djs.warehouse.packEntry.remainShort')} ${s.productWeight}${s.productUnit || 'kg'}`);
-  return parts.join(' / ');
-}
 
 function onSourceChange() {
   const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
@@ -417,10 +398,7 @@ function validate(): boolean {
       return false;
     }
   }
-  if (!form.value.locationId) {
-    ElMessage.warning(t('djs.warehouse.packEntry.locationRequired'));
-    return false;
-  }
+  // 入库库位不再前端采集（service 默认取产品配置库位/首个可用库位兜底，FIX-WMS-PACK-CASHIER）
   return true;
 }
 
@@ -428,7 +406,6 @@ function handleReset() {
   form.value = defaultForm();
   storeDemands.value = [];
   selectedPlotId.value = '';
-  ossRef.value?.setExistingFiles?.([]);
 }
 
 /** printTrace=true：提交后弹出追溯码供「打印」展示（仅肉品/果蔬有此按钮）。 */
@@ -438,13 +415,12 @@ async function handleSubmit(printTrace: boolean) {
   try {
     let res: any;
     if (props.kind === 'gift') {
+      // 入库库位不再前端采集（locationId 省略；service 默认取产品配置库位/首个可用库位兜底）
       const bo: GiftPackBo = {
         giftBoxProductId: form.value.productId as number | string,
         packBoxCount: form.value.packBoxCount as number,
-        locationId: form.value.locationId as number | string,
         storeId: form.value.storeId || undefined,
         deliverDest: form.value.deliverDest,
-        proofOssIds: form.value.proofOssIds,
         remark: form.value.remark
       };
       res = await submitGiftPack(bo);
@@ -453,11 +429,9 @@ async function handleSubmit(printTrace: boolean) {
         sourceInhouseId: form.value.sourceInhouseId as number | string,
         productId: form.value.productId as number | string,
         productWeight: form.value.productWeight as number,
-        locationId: form.value.locationId as number | string,
         storeId: form.value.storeId || undefined,
         deliverDest: form.value.deliverDest,
         productSpec: form.value.productSpec,
-        proofOssIds: form.value.proofOssIds,
         remark: form.value.remark
       };
       res = await submitVegPack(bo);
@@ -467,15 +441,14 @@ async function handleSubmit(printTrace: boolean) {
         productId: form.value.productId as number | string,
         productWeight: form.value.productWeight as number,
         productUnit: form.value.productUnit,
-        locationId: form.value.locationId as number | string,
         storeId: form.value.storeId || undefined,
         deliverDest: form.value.deliverDest,
         productSpec: form.value.productSpec,
-        proofOssIds: form.value.proofOssIds,
         remark: form.value.remark
       };
       res = await submitDryPack(bo);
     }
+    packNo.value += 1;
     ElMessage.success(t('djs.warehouse.packEntry.submitSuccess'));
     const traceCode: string | undefined = res?.data?.traceCode;
     if (printTrace) {
@@ -510,7 +483,7 @@ function printTraceCode(code: string) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadProducts(props.productType), loadLocations(), loadStores()]);
+  await Promise.all([loadProducts(props.productType), loadStores()]);
   if (props.kind === 'veg') {
     await Promise.all([loadSources('veg'), props.plotGroup ? loadPlots() : Promise.resolve()]);
   } else if (props.kind === 'dry') {
@@ -567,11 +540,32 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
 }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
 .panel-title {
   font-size: 14px;
   font-weight: 600;
-  margin-bottom: 14px;
   color: var(--el-text-color-secondary);
+}
+.pack-no {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--el-color-primary);
+}
+.ear-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--el-color-warning-light-9);
+  color: var(--el-color-warning-dark-2);
+  border: 1px solid var(--el-color-warning-light-5);
+  font-weight: 600;
 }
 .panel-section {
   margin-bottom: 16px;

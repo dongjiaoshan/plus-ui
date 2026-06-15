@@ -57,20 +57,20 @@ const { list, total, loading, pageNum, pageSize, searchModel, load, handleSearch
 const searchSchema: SearchFieldSchema[] = [
   { field: 'earNo', label: t('pig.column.earNo'), type: 'input', placeholder: t('pig.placeholder.earNo'), clearable: true },
   { field: 'currentStatus', label: t('pig.column.currentStatus'), type: 'select', dictType: 'djs_pig_lifecycle', clearable: true },
-  { field: 'barnId', label: t('pig.column.barnId'), type: 'number', placeholder: t('pig.placeholder.barnId') }
+  { field: 'barnName', label: t('pig.column.barn'), type: 'input', placeholder: t('pig.placeholder.barnName'), clearable: true }
 ];
 
 const columns: BizTableColumn[] = [
-  { prop: 'earNo', label: t('pig.column.earNo'), minWidth: 140, fixed: 'left' },
-  { prop: 'currentStatus', label: t('pig.column.currentStatus'), width: 110, align: 'center', dictType: 'djs_pig_lifecycle' },
-  { prop: 'statusStartedAt', label: t('pig.column.statusStartedAt'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'matingCount', label: t('pig.column.matingCount'), width: 100, align: 'center' },
-  { prop: 'pigBreedCode', label: t('pig.column.pigBreedCode'), width: 110, align: 'center' },
-  { prop: 'pigStrainCode', label: t('pig.column.pigStrainCode'), width: 110, align: 'center' },
-  { prop: 'barnCode', label: t('pig.column.barn'), width: 90, align: 'center' },
-  { prop: 'penCode', label: t('pig.column.pen'), width: 90, align: 'center' },
-  { prop: 'birthDate', label: t('pig.column.birthDate'), width: 110, align: 'center', formatter: 'date', visible: false },
-  { prop: 'introduceDate', label: t('pig.column.introduceDate'), width: 110, align: 'center', formatter: 'date', visible: false },
+  { prop: 'earNo', label: t('pig.column.earNo'), minWidth: 130, align: 'center', fixed: 'left' },
+  { prop: 'currentStatus', label: t('pig.column.currentStatus'), minWidth: 130, align: 'center', dictType: 'djs_pig_lifecycle' },
+  { prop: 'statusStartedAt', label: t('pig.column.statusStartedAt'), minWidth: 130, align: 'center', formatter: 'datetime' },
+  { prop: 'matingCount', label: t('pig.column.matingCount'), minWidth: 130, align: 'center' },
+  { prop: 'pigBreedName', label: t('pig.column.pigBreedCode'), minWidth: 130, align: 'center' },
+  { prop: 'pigStrainName', label: t('pig.column.pigStrainCode'), minWidth: 130, align: 'center' },
+  { prop: 'barnName', label: t('pig.column.barn'), minWidth: 130, align: 'center' },
+  { prop: 'penName', label: t('pig.column.pen'), minWidth: 130, align: 'center' },
+  { prop: 'birthDate', label: t('pig.column.birthDate'), width: 120, align: 'center', formatter: 'date', visible: false },
+  { prop: 'introduceDate', label: t('pig.column.introduceDate'), width: 120, align: 'center', formatter: 'date', visible: false },
   { prop: 'remark', label: t('pig.column.remark'), minWidth: 120, visible: false }
 ];
 

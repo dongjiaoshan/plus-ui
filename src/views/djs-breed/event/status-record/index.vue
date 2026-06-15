@@ -1,6 +1,5 @@
 <template>
   <div class="p-2">
-    <el-alert type="info" :closable="false" class="mb-2" :title="t('breedEvent.ledger.readonlyTip')" />
     <BizTable
       ref="tableRef"
       :data="list"
@@ -17,6 +16,8 @@
       :show-add="false"
       :show-batch-del="false"
       :show-export="false"
+      :show-row-edit="false"
+      :show-row-del="false"
       @search="handleSearch"
       @reset="handleReset"
       @page-change="handlePageChange"
@@ -91,14 +92,14 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'changeTime', label: t('breedEvent.ledger.column.changeTime'), width: 165, align: 'center', formatter: 'datetime', fixed: 'left' },
-  { prop: 'earNo', label: t('breedEvent.ledger.column.earNo'), width: 140, align: 'center' },
-  { prop: 'eventType', label: t('breedEvent.ledger.column.eventType'), width: 110, align: 'center', dictType: 'djs_pig_status_event' },
-  { prop: 'transition', label: t('breedEvent.ledger.column.transition'), width: 180, align: 'center' },
-  { prop: 'durationDays', label: t('breedEvent.ledger.column.durationDays'), width: 90, align: 'center' },
-  { prop: 'createByName', label: t('breedEvent.ledger.column.changeBy'), width: 100, align: 'center' },
-  { prop: 'relatedEventId', label: t('breedEvent.ledger.column.relatedEventId'), width: 180, align: 'center', visible: false },
-  { prop: 'pigId', label: t('breedEvent.ledger.column.pigId'), width: 180, align: 'center', visible: false },
-  { prop: 'id', label: t('breedEvent.ledger.column.id'), width: 180, align: 'center', visible: false }
+  { prop: 'earNo', label: t('breedEvent.ledger.column.earNo'), minWidth: 140, align: 'center' },
+  { prop: 'eventType', label: t('breedEvent.ledger.column.eventType'), minWidth: 110, align: 'center', dictType: 'djs_pig_status_event' },
+  { prop: 'transition', label: t('breedEvent.ledger.column.transition'), minWidth: 180, align: 'center' },
+  { prop: 'durationDays', label: t('breedEvent.ledger.column.durationDays'), minWidth: 90, align: 'center' },
+  { prop: 'createByName', label: t('breedEvent.ledger.column.changeBy'), minWidth: 100, align: 'center' },
+  { prop: 'relatedEventId', label: t('breedEvent.ledger.column.relatedEventId'), minWidth: 180, align: 'center', visible: false },
+  { prop: 'pigId', label: t('breedEvent.ledger.column.pigId'), minWidth: 180, align: 'center', visible: false },
+  { prop: 'id', label: t('breedEvent.ledger.column.id'), minWidth: 180, align: 'center', visible: false }
 ]);
 
 async function load() {

@@ -16,13 +16,15 @@ export interface PerfListRowVO {
   teamId?: string;
   /** service enrich：班组名 */
   teamName?: string;
+  /** service enrich：班组人数（该班组 t_plant_work_people 活动成员数） */
+  teamMemberCount?: number;
   /** 采摘总量（斤，= SUM(pick_weight)） */
   totalPickWeight?: number | string;
   /** 该班组该月绩效总额（元，= SUM(performance_amount)） */
   teamMonthAmount?: number | string;
   /** 作物种类数 */
   cropCount?: number;
-  /** 农事次数（该班组该月全部农事类型计数） */
+  /** 农事处理总数（该班组该月全部农事类型计数） */
   farmCount?: number;
 }
 

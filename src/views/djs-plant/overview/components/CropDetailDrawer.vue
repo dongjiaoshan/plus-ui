@@ -14,7 +14,7 @@
     <!-- 只读明细表（按原型列顺序）：无行操作列、无筛选条 -->
     <el-table v-loading="loading" :data="list" row-key="id" border stripe>
       <el-table-column :label="t('plantOverview.detail.col.cropName')" prop="cropName" min-width="110" show-overflow-tooltip />
-      <el-table-column :label="t('plantOverview.detail.col.plotCode')" prop="plotCode" min-width="100" show-overflow-tooltip />
+      <el-table-column :label="t('plantOverview.detail.col.plotCode')" prop="plotCode" min-width="150" show-overflow-tooltip />
       <el-table-column :label="t('plantOverview.detail.col.plotName')" prop="plotName" min-width="120" show-overflow-tooltip />
       <el-table-column :label="t('plantOverview.detail.col.harvestStatus')" min-width="100" align="center">
         <template #default="{ row }">
@@ -26,9 +26,6 @@
       </el-table-column>
       <el-table-column :label="t('plantOverview.detail.col.plantDate')" min-width="120" align="center">
         <template #default="{ row }">{{ row.plantDate || '-' }}</template>
-      </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.plantTeamName')" prop="plantTeamName" min-width="120" show-overflow-tooltip>
-        <template #default="{ row }">{{ row.plantTeamName || '-' }}</template>
       </el-table-column>
       <el-table-column :label="t('plantOverview.detail.col.beginHarvestdate')" min-width="130" align="center">
         <template #default="{ row }">{{ row.beginHarvestdate || '-' }}</template>

@@ -1,175 +1,80 @@
 <template>
   <div class="p-2">
-    <el-tabs v-model="activeTab" class="px-2">
-      <!-- 出库位置 = 分割车间：白条领用进分割（pickup） -->
-      <el-tab-pane :label="t('djs.warehouse.packEntry.pickupToCut')" name="cut">
-        <div class="pack-station">
-          <div class="station-title">{{ t('djs.warehouse.packEntry.pickupToCut') }}</div>
+    <div class="pack-station">
+      <div class="station-title">{{ t('djs.warehouse.packEntry.pickupPageTitle') }}</div>
 
-          <div class="station-body">
-            <!-- 左：待领用白条卡片网格 -->
-            <div class="station-left">
-              <div v-loading="barLoading" class="bar-grid">
-                <button
-                  v-for="b in bars"
-                  :key="String(b.id)"
-                  type="button"
-                  class="bar-card"
-                  :class="{ active: String(pickupForm.barInfoId) === String(b.id) }"
-                  @click="pickupForm.barInfoId = b.id"
-                >
-                  <div class="bar-card-head">
-                    <span class="bar-card-title">{{ t('djs.warehouse.packEntry.barCardTitle') }}</span>
-                    <span class="bar-chip">
-                      <el-icon><PriceTag /></el-icon>
-                      <span>{{ b.earNo ?? b.barId }}</span>
-                    </span>
-                  </div>
-                  <div class="bar-card-body">
-                    <div class="bar-row">
-                      <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inTimeLabel') }}</span>
-                      <span class="bar-row-value">{{ b.inTime ?? '-' }}</span>
-                    </div>
-                    <div class="bar-row">
-                      <span class="bar-row-label">{{ t('djs.warehouse.packEntry.agingDurationLabel') }}</span>
-                      <span class="bar-row-value">{{ agingDuration(b.inTime) }}</span>
-                    </div>
-                    <div class="bar-row">
-                      <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inWeightLabel') }}</span>
-                      <span class="bar-row-value">{{ b.inWeight != null ? `${b.inWeight}kg` : '-' }}</span>
-                    </div>
-                    <div class="bar-row">
-                      <span class="bar-row-label">{{ t('djs.warehouse.packEntry.pigAssignLabel') }}</span>
-                      <span class="bar-row-value">{{ assignedStoreName }}</span>
-                    </div>
-                  </div>
-                </button>
-                <span v-if="!barLoading && bars.length === 0" class="bar-empty">{{ t('djs.warehouse.packEntry.noBars') }}</span>
-              </div>
-            </div>
-
-            <!-- 右：操作 panel（仿 cut 320px 面板） -->
-            <div class="station-right">
-              <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
-
-              <!-- 猪只耳号 chip（当前选中白条回显） -->
-              <div class="panel-section">
-                <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
-                <div v-if="selectedBar" class="ear-chip">
+      <div class="station-body">
+        <!-- 左：待领用白条卡片网格（耳号/入库时间/排酸时长/入库重量） -->
+        <div class="station-left">
+          <div v-loading="barLoading" class="bar-grid">
+            <button
+              v-for="b in bars"
+              :key="String(b.id)"
+              type="button"
+              class="bar-card"
+              :class="{ active: String(pickupForm.barInfoId) === String(b.id) }"
+              @click="pickupForm.barInfoId = b.id"
+            >
+              <div class="bar-card-head">
+                <span class="bar-card-title">{{ t('djs.warehouse.packEntry.barCardTitle') }}</span>
+                <span class="bar-chip">
                   <el-icon><PriceTag /></el-icon>
-                  <span>{{ selectedBar.earNo ?? selectedBar.barId }}</span>
+                  <span>{{ b.earNo ?? b.barId }}</span>
+                </span>
+              </div>
+              <div class="bar-card-body">
+                <div class="bar-row">
+                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inTimeLabel') }}</span>
+                  <span class="bar-row-value">{{ b.inTime ?? '-' }}</span>
                 </div>
-                <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.barRequired') }}</span>
-              </div>
-
-              <!-- 分割方式 -->
-              <div class="panel-section">
-                <div class="panel-label">{{ t('djs.warehouse.packEntry.isHalf') }}</div>
-                <DestToggle v-model="pickupForm.isHalf" :options="isHalfOptions" />
-              </div>
-
-              <!-- 需求门店 -->
-              <div class="panel-section">
-                <div class="panel-label">{{ t('djs.warehouse.packEntry.store') }}</div>
-                <el-select
-                  v-model="pickupForm.targetStoreId"
-                  filterable
-                  clearable
-                  :loading="storeLoading"
-                  :placeholder="t('djs.warehouse.packEntry.storePlaceholder')"
-                  style="width: 100%"
-                >
-                  <el-option v-for="s in stores" :key="String(s.id)" :label="s.storeName" :value="s.id" />
-                </el-select>
-              </div>
-
-              <!-- 出库位置（分割车间）button-toggle -->
-              <div class="panel-section">
-                <div class="panel-label">{{ t('djs.warehouse.packEntry.cutWorkshop') }}</div>
-                <div v-loading="locationLoading">
-                  <DestToggle
-                    v-model="pickupForm.locationId"
-                    :options="locationOptions"
-                    :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')"
-                  />
+                <div class="bar-row">
+                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.agingDurationLabel') }}</span>
+                  <span class="bar-row-value">{{ agingDuration(b.inTime) }}</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inWeightLabel') }}</span>
+                  <span class="bar-row-value">{{ b.inWeight != null ? `${b.inWeight}kg` : '-' }}</span>
                 </div>
               </div>
-
-              <!-- 备注 -->
-              <div class="panel-section">
-                <div class="panel-label">{{ t('djs.warehouse.packEntry.remark') }}</div>
-                <el-input v-model="pickupForm.remark" type="textarea" :rows="2" maxlength="500" />
-              </div>
-
-              <div class="panel-actions">
-                <el-button type="primary" size="large" class="action-btn" :loading="pickupSubmitting" @click="handlePickup">
-                  {{ t('djs.warehouse.packEntry.confirmPickup') }}
-                </el-button>
-              </div>
-            </div>
+            </button>
+            <span v-if="!barLoading && bars.length === 0" class="bar-empty">{{ t('djs.warehouse.packEntry.noBars') }}</span>
           </div>
         </div>
-      </el-tab-pane>
 
-      <!-- 出库位置 = 发货月台：白条/猪肉发货领用（whiteBarOut） -->
-      <el-tab-pane :label="t('djs.warehouse.packEntry.pickupToShip')" name="ship">
-        <el-card shadow="never" class="pack-card">
-          <el-form ref="shipRef" :model="shipForm" :rules="shipRules" label-width="120px" class="max-w-3xl">
-            <el-form-item :label="t('djs.warehouse.packEntry.source')" prop="sourceInhouseId">
-              <el-select
-                v-model="shipForm.sourceInhouseId"
-                filterable
-                clearable
-                :loading="sourceLoading"
-                :placeholder="t('djs.warehouse.packEntry.sourcePlaceholder')"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="s in sources"
-                  :key="String(s.id)"
-                  :label="`${s.productName} / 耳号 ${s.earNo ?? '-'} / 剩余 ${s.productWeight}${s.productUnit || 'kg'}`"
-                  :value="s.id"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="t('djs.warehouse.packEntry.productWeight')" prop="productWeight">
-              <el-input-number
-                v-model="shipForm.productWeight"
-                :min="0.001"
-                :precision="3"
-                :step="1"
-                controls-position="right"
-                style="width: 220px"
-              />
-              <span class="ml-2 text-gray-500">kg</span>
-            </el-form-item>
-            <el-form-item :label="t('djs.warehouse.packEntry.store')" prop="storeId">
-              <el-select
-                v-model="shipForm.storeId"
-                filterable
-                clearable
-                :loading="storeLoading"
-                :placeholder="t('djs.warehouse.packEntry.storePlaceholder')"
-                style="width: 100%"
-              >
-                <el-option v-for="s in stores" :key="String(s.id)" :label="s.storeName" :value="s.id" />
-              </el-select>
-            </el-form-item>
-            <el-form-item :label="t('djs.warehouse.packEntry.proof')">
-              <OssUpload ref="ossRef" v-model="shipProofModel" biz-type="warehouse_pack_proof" :limit="5" :file-size="10" />
-            </el-form-item>
-            <el-form-item :label="t('djs.warehouse.packEntry.remark')" prop="remark">
-              <el-input v-model="shipForm.remark" type="textarea" :rows="2" maxlength="500" />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" :loading="shipSubmitting" @click="handleWhiteBarOut">
-                {{ t('djs.warehouse.packEntry.confirmShipOut') }}
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-tab-pane>
-    </el-tabs>
+        <!-- 右：操作 panel（收银台风格） -->
+        <div class="station-right">
+          <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
+
+          <!-- 猪只耳号 chip（当前选中白条回显） -->
+          <div class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
+            <div v-if="selectedBar" class="ear-chip">
+              <el-icon><PriceTag /></el-icon>
+              <span>{{ selectedBar.earNo ?? selectedBar.barId }}</span>
+            </div>
+            <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.barRequired') }}</span>
+          </div>
+
+          <!-- 产品重量数字键盘 -->
+          <div class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
+            <WeightNumpad v-model="pickupForm.productWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
+          </div>
+
+          <!-- 出库位置：固定两按钮（分割车间 / 发货月台） -->
+          <div class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.outLocation') }}</div>
+            <DestToggle v-model="pickupForm.outDest" :options="outDestOptions" />
+          </div>
+
+          <div class="panel-actions">
+            <el-button type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit">
+              {{ t('djs.warehouse.packEntry.confirmPickup') }}
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -178,57 +83,32 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { PriceTag } from '@element-plus/icons-vue';
-import OssUpload from '@/components/OssUpload/index.vue';
+import WeightNumpad from '../components/WeightNumpad.vue';
 import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
 import { submitPickup, submitWhiteBarOut } from '@/api/djs-warehouse/packEntry';
 
 const { t } = useI18n();
 
-const {
-  locations,
-  locationLoading,
-  stores,
-  storeLoading,
-  sources,
-  sourceLoading,
-  bars,
-  barLoading,
-  loadLocations,
-  loadStores,
-  loadSources,
-  loadBars
-} = usePackEntryOptions();
+const { sources, loadSources, bars, barLoading, loadBars } = usePackEntryOptions();
 
-const activeTab = ref('cut');
+/** 出库位置枚举 → 后端两端点：cut=分割车间(submitPickup) / ship=发货月台(whiteBarOut)。 */
+type OutDest = 'cut' | 'ship';
 
-// ---- 领用到分割车间（pickup） ----
-const pickupSubmitting = ref(false);
+const submitting = ref(false);
 const pickupDefault = () => ({
   barInfoId: '' as number | string | '',
-  locationId: '' as number | string | '',
-  isHalf: 2 as number,
-  targetStoreId: '' as number | string | '',
-  remark: undefined as string | undefined
+  productWeight: undefined as number | undefined,
+  outDest: 'cut' as OutDest
 });
 const pickupForm = ref(pickupDefault());
 
 const selectedBar = computed(() => bars.value.find((b) => String(b.id) === String(pickupForm.value.barInfoId)));
 
-const isHalfOptions = computed<{ value: number; label: string }[]>(() => [
-  { value: 2, label: t('djs.warehouse.packEntry.whole') },
-  { value: 1, label: t('djs.warehouse.packEntry.half') }
+const outDestOptions = computed<{ value: OutDest; label: string }[]>(() => [
+  { value: 'cut', label: t('djs.warehouse.packEntry.outToCut') },
+  { value: 'ship', label: t('djs.warehouse.packEntry.outToShip') }
 ]);
-
-const locationOptions = computed<{ value: number | string; label: string }[]>(() =>
-  locations.value.map((l) => ({ value: l.id, label: l.locationName }))
-);
-
-// 卡片「猪只指定」回显当前选中的需求门店（未选为空）
-const assignedStoreName = computed<string>(() => {
-  if (!pickupForm.value.targetStoreId) return '';
-  return stores.value.find((s) => String(s.id) === String(pickupForm.value.targetStoreId))?.storeName ?? '';
-});
 
 /** 排酸时长：now - inTime，前端按入库时间算（无后端字段）。 */
 function agingDuration(inTime?: string): string {
@@ -243,92 +123,51 @@ function agingDuration(inTime?: string): string {
   return `${hours}${t('djs.warehouse.packEntry.agingHour')}${minutes}${t('djs.warehouse.packEntry.agingMinute')}`;
 }
 
-async function handlePickup() {
-  if (!pickupForm.value.barInfoId) {
+async function handleSubmit() {
+  const bar = selectedBar.value;
+  if (!bar) {
     ElMessage.warning(t('djs.warehouse.packEntry.barRequired'));
     return;
   }
-  if (!pickupForm.value.locationId) {
-    ElMessage.warning(t('djs.warehouse.packEntry.locationRequired'));
+  if (!pickupForm.value.outDest) {
+    ElMessage.warning(t('djs.warehouse.packEntry.outLocationRequired'));
     return;
   }
-  pickupSubmitting.value = true;
+  submitting.value = true;
   try {
-    await submitPickup({
-      barInfoId: pickupForm.value.barInfoId as number | string,
-      locationId: pickupForm.value.locationId as number | string,
-      isHalf: pickupForm.value.isHalf,
-      targetStoreId: pickupForm.value.targetStoreId || undefined,
-      remark: pickupForm.value.remark
-    });
-    ElMessage.success(t('djs.warehouse.packEntry.pickupSuccess'));
-    pickupForm.value = pickupDefault();
-    await loadBars();
-  } finally {
-    pickupSubmitting.value = false;
-  }
-}
-
-// ---- 发货领用（whiteBarOut） ----
-const shipRef = ref<any>();
-const ossRef = ref<InstanceType<typeof OssUpload>>();
-const shipSubmitting = ref(false);
-const shipDefault = () => ({
-  sourceInhouseId: '' as number | string | '',
-  productWeight: undefined as number | undefined,
-  storeId: '' as number | string | '',
-  proofOssIds: undefined as string | undefined,
-  remark: undefined as string | undefined
-});
-const shipForm = ref(shipDefault());
-
-const shipProofModel = computed<string[]>({
-  get: () => (shipForm.value.proofOssIds ? shipForm.value.proofOssIds.split(',').filter(Boolean) : []),
-  set: (val: string[]) => {
-    shipForm.value.proofOssIds = val && val.length > 0 ? val.join(',') : undefined;
-  }
-});
-
-const shipRules = computed(() => ({
-  sourceInhouseId: [{ required: true, message: t('djs.warehouse.packEntry.sourceRequired'), trigger: 'change' }],
-  productWeight: [{ required: true, message: t('djs.warehouse.packEntry.productWeightRequired'), trigger: 'blur' }]
-}));
-
-async function handleWhiteBarOut() {
-  if (!shipRef.value) return;
-  await shipRef.value.validate(async (valid: boolean) => {
-    if (!valid) return;
-    shipSubmitting.value = true;
-    try {
-      await submitWhiteBarOut({
-        sourceInhouseId: shipForm.value.sourceInhouseId as number | string,
-        productWeight: shipForm.value.productWeight as number,
-        storeId: shipForm.value.storeId || undefined,
-        proofOssIds: shipForm.value.proofOssIds,
-        remark: shipForm.value.remark
-      });
+    if (pickupForm.value.outDest === 'cut') {
+      // 分割车间：领用进分割车间（领用阶段不采集库位，service 后续 cutOut 阶段采集）
+      await submitPickup({ barInfoId: bar.id, isHalf: 2 });
+      ElMessage.success(t('djs.warehouse.packEntry.pickupSuccess'));
+    } else {
+      // 发货月台：白条/猪肉发货出库（需重量 + 来源 inhouse，按耳号匹配白条来源过程产品）
+      const weight = pickupForm.value.productWeight;
+      if (!weight || weight <= 0) {
+        ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
+        return;
+      }
+      const earNo = bar.earNo ?? bar.barId;
+      const src = sources.value.find((s) => String(s.earNo ?? '') === String(earNo));
+      if (!src) {
+        ElMessage.warning(t('djs.warehouse.packEntry.shipSourceNotFound'));
+        return;
+      }
+      await submitWhiteBarOut({ sourceInhouseId: src.id, productWeight: weight });
       ElMessage.success(t('djs.warehouse.packEntry.shipOutSuccess'));
-      shipForm.value = shipDefault();
-      ossRef.value?.setExistingFiles?.([]);
-      await loadSources('whiteBar');
-    } finally {
-      shipSubmitting.value = false;
     }
-  });
+    pickupForm.value = pickupDefault();
+    await Promise.all([loadBars(), loadSources('whiteBar')]);
+  } finally {
+    submitting.value = false;
+  }
 }
 
 onMounted(async () => {
-  await Promise.all([loadLocations(), loadStores(), loadBars(), loadSources('whiteBar')]);
+  await Promise.all([loadBars(), loadSources('whiteBar')]);
 });
 </script>
 
 <style scoped>
-.pack-card {
-  margin: 8px;
-}
-.max-w-3xl {
-  max-width: 720px;
-}
 .pack-station {
   padding: 12px;
 }

@@ -16,19 +16,8 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.cropImagePreview')" prop="cropImagePreview">
-                <OssUpload ref="ossThumbRef" v-model="thumbOssIdsModel" biz-type="plant_crop" :limit="1" :file-size="10" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
               <el-form-item :label="t('plantCrop.field.cropImageUrl')" prop="cropImageUrl">
                 <OssUpload ref="ossImgRef" v-model="imgOssIdsModel" biz-type="plant_crop" :limit="9" :file-size="10" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.imageOssId')" prop="imageOssId">
-                <OssUpload ref="ossMainRef" v-model="mainImageIdsModel" biz-type="md_image_library" :limit="1" :file-size="10" />
-                <div class="form-tip">{{ t('plantCrop.field.imageOssIdTip') }}</div>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -91,16 +80,6 @@
                 <el-input-number v-model="form.minCycle" :min="0" :precision="0" :step="1" style="width: 100%" />
               </el-form-item>
             </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.fertilizationInterval')" prop="fertilizationInterval">
-                <el-input-number v-model="form.fertilizationInterval" :min="0" :precision="0" :step="1" style="width: 100%" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.irrigationInterval')" prop="irrigationInterval">
-                <el-input-number v-model="form.irrigationInterval" :min="0" :precision="0" :step="1" style="width: 100%" />
-              </el-form-item>
-            </el-col>
           </el-row>
         </el-tab-pane>
 
@@ -161,15 +140,12 @@ const visible = ref(false);
 const submitting = ref(false);
 const activeTab = ref('basic');
 const formRef = ref<ElFormInstance>();
-const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 const ossImgRef = ref<InstanceType<typeof OssUpload>>();
-const ossMainRef = ref<InstanceType<typeof OssUpload>>();
 
 const defaultForm = (): CropInfoForm => ({
   id: undefined,
   cropCode: '',
   cropName: '',
-  cropImagePreview: undefined,
   cropImageUrl: undefined,
   varietyName: undefined,
   varietyOrigin: undefined,
@@ -179,13 +155,9 @@ const defaultForm = (): CropInfoForm => ({
   sowingPeriod: undefined,
   maxCycle: undefined,
   minCycle: undefined,
-  fertilizationInterval: undefined,
-  irrigationInterval: undefined,
   predictedPer: undefined,
   qualityDesc: undefined,
-  pickUnitPrice: undefined,
-  imageOssId: null,
-  imageSource: undefined
+  pickUnitPrice: undefined
 });
 
 const form = ref<CropInfoForm>(defaultForm());
@@ -213,10 +185,8 @@ const plantingSeasonArr = computed<string[]>({
   }
 });
 
-// OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段是单/多 ossId 字符串（useOssBridge 桥接）
-const thumbOssIdsModel = useOssBridge(form, 'cropImagePreview', 'single');
+// OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段是多 ossId 字符串（useOssBridge 桥接）
 const imgOssIdsModel = useOssBridge(form, 'cropImageUrl', 'multi');
-const mainImageIdsModel = useOssBridge(form, 'imageOssId', 'single');
 
 const rules = computed(() => ({
   cropCode: [{ required: true, message: t('plantCrop.rule.cropCode.required'), trigger: 'blur' }],
@@ -248,19 +218,6 @@ const openEdit = async (id: number | string) => {
   visible.value = true;
 
   await nextTick();
-  if (form.value.cropImagePreview) {
-    try {
-      const ossRes = await listOssByIds(form.value.cropImagePreview);
-      const items = (ossRes.data || []).map((o) => ({
-        ossId: String(o.ossId),
-        url: o.url,
-        originalName: o.originalName
-      }));
-      ossThumbRef.value?.setExistingFiles(items);
-    } catch (e) {
-      console.warn('[CropForm] thumb listOssByIds failed', e);
-    }
-  }
   if (form.value.cropImageUrl) {
     try {
       const ossRes = await listOssByIds(form.value.cropImageUrl);
@@ -272,19 +229,6 @@ const openEdit = async (id: number | string) => {
       ossImgRef.value?.setExistingFiles(items);
     } catch (e) {
       console.warn('[CropForm] img listOssByIds failed', e);
-    }
-  }
-  if (form.value.imageOssId) {
-    try {
-      const ossRes = await listOssByIds(form.value.imageOssId);
-      const items = (ossRes.data || []).map((o) => ({
-        ossId: String(o.ossId),
-        url: o.url,
-        originalName: o.originalName
-      }));
-      ossMainRef.value?.setExistingFiles(items);
-    } catch (e) {
-      console.warn('[CropForm] mainImage listOssByIds failed', e);
     }
   }
 };
@@ -301,10 +245,6 @@ const submit = () => {
     if (!valid) return;
     submitting.value = true;
     try {
-      // IMG-LIB-001：用户手选了主图 → 标记手动（imageSource=1），后端 rematch 不覆盖
-      if (form.value.imageOssId) {
-        form.value.imageSource = 1;
-      }
       if (form.value.id) {
         await updateCrop(form.value);
       } else {

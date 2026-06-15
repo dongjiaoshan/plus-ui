@@ -444,7 +444,6 @@ export default {
         required: 'Code is required',
         pattern: 'Code allows letters, digits, underscore, hyphen only',
         len2: 'Breed code must be exactly 2 digits',
-        len1: 'Strain code must be exactly 1 digit',
         len1to2: 'Strain code must be 1-2 digits'
       },
       breedStrainName: { required: 'Name is required' },
@@ -594,14 +593,18 @@ export default {
       barn: 'Barn',
       pen: 'Pen',
       motherEar: 'Maternal Ear Tag',
-      fatherEar: 'Father ear',
+      fatherEar: 'Sire ear',
       parity: 'Parity',
       matingCount: 'Mating count',
       lastMatingDate: 'Last mating date',
       enterFattenAt: 'Enter fatten at',
       statusStartedAt: 'Status since',
+      statusStartedDate: 'Status start date',
       endReason: 'End reason',
-      remark: 'Remark'
+      remark: 'Remark',
+      liveBornCount: 'Live Born',
+      weanedCount: 'Weaned Piglets',
+      avgLitterSize: 'Avg Litter Size'
     },
     perf: {
       totalBorn: 'Total born',
@@ -622,7 +625,9 @@ export default {
       earNo: 'Enter ear number',
       barnId: 'Enter barn id',
       penId: 'Enter pen id',
-      motherEar: 'Enter maternal ear tag'
+      motherEar: 'Enter maternal ear tag',
+      barnName: 'Enter barn name',
+      penName: 'Enter pen name'
     },
     event: {
       empty: 'No available events for current state',
@@ -776,7 +781,7 @@ export default {
         changeBy: 'Changed By'
       },
       placeholder: {
-        earNo: 'Exact match',
+        earNo: 'Enter ear No.',
         changeBy: 'Enter the name of the person who made the change'
       }
     },
@@ -911,6 +916,8 @@ export default {
         bigPenCount: 'Big Pens',
         limitPenCount: 'Stalls',
         bedCount: 'Farrowing Beds',
+        scatterPenCount: 'Scatter pens',
+        nurseryPenCount: 'Nursery pens',
         liveCount: 'Current Stock',
         updateTime: 'Updated At',
         updateBy: 'Updated By',
@@ -941,7 +948,9 @@ export default {
       tab: {
         big: 'Big Pen',
         stall: 'Stall',
-        farrow: 'Farrowing Bed'
+        farrow: 'Farrowing Bed',
+        scatter: 'Scatter',
+        nurseryPen: 'Nursery'
       },
       confirmDelPen: 'Delete pen "{name}"? All active pigs in this pen must be transferred first.'
     },
@@ -1341,14 +1350,24 @@ export default {
     },
     today: {
       title: "Today's Work",
-      empty: 'No farm work today'
+      empty: '(deprecated, removable)',
+      planting: 'Planting',
+      harvest: 'Harvest',
+      idleMgmt: 'Idle Land Mgmt',
+      plantMgmt: 'Crop Mgmt',
+      disaster: 'Disaster Loss',
+      pickActivity: 'Pick Activity',
+      unitPlot: 'plots'
     },
     cert: {
       title: 'Organic Certificate Overview',
-      plotMinDays: 'Land Cert Days to Expiry',
-      cropMinDays: 'Crop Cert Earliest Days to Expiry',
+      plotMinDays: '(deprecated, removable)',
+      cropMinDays: '(deprecated, removable)',
       cropNoCert: 'Crops Without Cert',
-      cropReserved: 'Reserved Cert Categories'
+      cropReserved: '(deprecated, removable)',
+      cropCertExpiryDate: 'Crop Cert Expiry Date',
+      cropCertDaysToExpiry: 'Crop Cert Days to Expiry',
+      cropCertCategoryCount: 'Crop Cert Categories'
     },
     cropStat: {
       title: 'Real-time Crop Statistics',
@@ -2235,7 +2254,14 @@ export default {
         cutStatusPendingPickup: 'Pending pickup',
         cutStatusPicked: 'Picked',
         cutStatusCutting: 'Weighing',
-        cutStatusDone: 'Done'
+        cutStatusDone: 'Done',
+        outLocation: 'Out Location',
+        outToCut: 'Cutting Workshop',
+        outToShip: 'Shipping Dock',
+        outLocationRequired: 'Please select out location',
+        packNo: 'Pack No',
+        pickupPageTitle: 'White-bar Pickup',
+        shipSourceNotFound: 'No shippable source for this white-bar (confirm singeing & in-stock done)'
       },
       shipment: {
         title: 'Shipment',
@@ -3157,7 +3183,7 @@ export default {
     },
     pork: {
       pickPig: 'Traceable Pig',
-      noPig: 'No traceable pig (slaughtered fattening pigs)',
+      noPig: 'No white-bar received today',
       pickCut: 'Select Cut',
       opPanel: 'Operation',
       pigId: 'Pig ID',
@@ -3447,7 +3473,8 @@ export default {
     column: {
       statMonth: 'Month',
       team: 'Team',
-      farmCount: 'Farm Ops',
+      teamMemberCount: 'Team Members',
+      farmCount: 'Farm Ops Total',
       pickWeight: 'Harvest Total',
       amount: 'Performance Total',
       action: 'Action'

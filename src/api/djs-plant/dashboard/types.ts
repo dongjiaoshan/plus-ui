@@ -7,14 +7,6 @@
  *  - GET /gantt    双甘特（种植段 + 采摘段）
  */
 
-/** 今日农事按类型分桶单行（farm_type code + count，label 走 djs_farm_work_type 字典）。 */
-export interface FarmWorkCountVO {
-  /** 农事类型 code（djs_farm_work_type） */
-  farmType: string;
-  /** 该类型今日条数 */
-  count: number;
-}
-
 /** 当月完成率柱状图单行（按作物分组的 实际 / 预期 产量）。 */
 export interface MonthCompletionItemVO {
   /** 作物名称 */
@@ -35,16 +27,16 @@ export interface CropPlantStatItemVO {
   expectedYield: number;
 }
 
-/** 有机证书情况一览（区块 3）。 */
+/** 有机证书一览（区块 3，果蔬证书口径）。 */
 export interface OrganicCertOverviewVO {
-  /** 土地有机证书最早到期天数（可为负=已过期，无证书 null） */
-  plotCertMinDays: number | null;
-  /** 作物有机证书最早到期天数（可为负=已过期，无证书 null） */
-  cropCertMinDays: number | null;
-  /** 作物无证书品类数 */
+  /** 果蔬有机证到期日（最新一张果蔬证书到期日 YYYY-MM-DD，无证书 null） */
+  cropCertExpiryDate: string | null;
+  /** 果蔬有机证书到期天数（DATEDIFF，可为负=已过期，无证书 null） */
+  cropCertDaysToExpiry: number | null;
+  /** 作物无证书品类数（在种作物中不在最新证书覆盖品类里的数量） */
   cropNoCertCount: number;
-  /** 已建档作物品类总数（预留证书品类数） */
-  cropReservedCount: number;
+  /** 果蔬有机证书品类数（在种作物中在最新证书覆盖品类里的数量） */
+  cropCertCategoryCount: number;
 }
 
 /** 种植看板汇总（/summary 返回结构）。 */
@@ -65,10 +57,18 @@ export interface PlantDashboardSummaryVO {
   currentPlantingArea: number;
   /** 当前预计产量（kg，前端按 kg → 万斤换算） */
   currentExpectedYield: number;
-  /** 今日农事分桶列表 */
-  todayFarmWork: FarmWorkCountVO[];
-  /** 今日农事总条数 */
-  todayFarmWorkTotal: number;
+  /** 今日工作 - 种植（今日 begin_actualdate=CURDATE 地块数） */
+  todayPlantingPlotCount: number;
+  /** 今日工作 - 采摘（今日 begin_harvestdate=CURDATE 地块数） */
+  todayHarvestPlotCount: number;
+  /** 今日工作 - 空地管理（今日农事 翻耕/整地/施肥 地块数） */
+  todayIdleMgmtPlotCount: number;
+  /** 今日工作 - 种植管理（今日农事 移栽/水肥/浇灌/除草/整枝绑蔓/病虫防治/退茬 地块数） */
+  todayPlantMgmtPlotCount: number;
+  /** 今日工作 - 灾害损失（今日农事 disaster 地块数） */
+  todayDisasterPlotCount: number;
+  /** 今日工作 - 采摘活动（今日采摘活动采摘量 kg） */
+  todayPickActivityWeight: number;
   /** 当月完成率列表 */
   monthCompletion: MonthCompletionItemVO[];
   /** 实时种植物统计列表（按作物） */
@@ -79,9 +79,9 @@ export interface PlantDashboardSummaryVO {
 
 /** 双甘特单条（种植段 plant=绿 / 采摘段 pick=黄）。 */
 export interface GanttItemVO {
-  /** 甘特条 id（明细 snowflake id + -plant / -pick，string 防丢精度） */
+  /** 甘特条 id（种植段=明细id+-plant / 采摘段=作物id+-pick，string 防丢精度） */
   id: string;
-  /** 甘特条文本（作物名-地块名） */
+  /** 甘特条文本（种植段=作物名-地块名 / 采摘段=作物名） */
   text: string;
   /** 段开始日期 */
   startDate: string;

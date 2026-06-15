@@ -66,10 +66,6 @@
           </el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.sowingPeriod')">{{ data.sowingPeriod || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.column.cycle')">{{ cycleText }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.fertilizationInterval')">{{
-            intervalText(data.fertilizationInterval)
-          }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.irrigationInterval')">{{ intervalText(data.irrigationInterval) }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.predictedPer')">{{
             data.predictedPer != null ? `${Number(data.predictedPer).toFixed(2)} kg/亩` : '-'
           }}</el-descriptions-item>
@@ -116,8 +112,6 @@ const cycleText = computed(() => {
   const { minCycle, maxCycle } = data.value;
   return minCycle != null && maxCycle != null ? `${minCycle}-${maxCycle} 天` : '-';
 });
-
-const intervalText = (v?: number) => (v != null ? `${v} 天` : '-');
 
 const open = async (id: number | string) => {
   const res = await getCrop(id);

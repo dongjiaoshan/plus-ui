@@ -74,6 +74,8 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'bedCount', label: t('farm.proto.col.bedCount'), width: 100, align: 'center' },
   { prop: 'limitPenCount', label: t('farm.proto.col.limitPenCount'), width: 110, align: 'center' },
   { prop: 'bigPenCount', label: t('farm.proto.col.bigPenCount'), width: 100, align: 'center' },
+  { prop: 'scatterPenCount', label: t('farm.proto.col.scatterPenCount'), width: 100, align: 'center' },
+  { prop: 'nurseryPenCount', label: t('farm.proto.col.nurseryPenCount'), width: 100, align: 'center' },
   { prop: 'liveCount', label: t('farm.proto.col.liveCount'), width: 150, align: 'center' },
   { prop: 'updateTime', label: t('farm.proto.col.updateTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'updateByName', label: t('farm.proto.col.updateBy'), width: 110, align: 'center' }
