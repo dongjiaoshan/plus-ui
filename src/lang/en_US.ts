@@ -3657,7 +3657,8 @@ export default {
     },
     pdf: {
       title: 'Product Trace Code',
-      serialNo: 'No.'
+      serialNo: 'No.',
+      scanHint: 'Scan to view full traceability'
     }
   },
   // Public traceability H5 landing page (TRACE-H5)

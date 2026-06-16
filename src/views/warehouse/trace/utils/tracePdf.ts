@@ -11,6 +11,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { TraceCodeDetailVO } from '@/api/warehouse/trace/types';
+import { buildTraceUrl, genQrDataUrl } from '@/views/trace/useTrace';
 
 /** 一张码样式卡片的字段（文字版，参 doc/06 TRC-WATERMARK 字段 + 原型）。 */
 interface CardField {
@@ -30,6 +31,8 @@ export interface TracePdfLabels {
   farmName: string;
   storeName: string;
   harvestDate: string;
+  /** 二维码下方提示文案（如「微信扫码查看全链路溯源」）。 */
+  scanHint: string;
   fileName: string;
 }
 
@@ -60,7 +63,7 @@ function buildFields(code: TraceCodeDetailVO, labels: TracePdfLabels): CardField
 }
 
 /** 渲染一张离屏码卡片 DOM（html2canvas 光栅化用，渲染后即移除）。 */
-function renderCardElement(code: TraceCodeDetailVO, index: number, labels: TracePdfLabels): HTMLElement {
+function renderCardElement(code: TraceCodeDetailVO, index: number, labels: TracePdfLabels, qrDataUrl: string): HTMLElement {
   const card = document.createElement('div');
   // 离屏但仍参与渲染（html2canvas 需元素可见尺寸）
   card.style.cssText = [
@@ -86,12 +89,23 @@ function renderCardElement(code: TraceCodeDetailVO, index: number, labels: Trace
     )
     .join('');
 
+  // 溯源二维码：encode /trace/<type>/<code>，客户扫码进对应 H5 追溯页。无 QR 时降级不显示。
+  const qrHtml = qrDataUrl
+    ? `<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-left:24px;">
+         <img src="${qrDataUrl}" alt="QR" style="width:160px;height:160px;display:block;" />
+         <span style="font-size:13px;color:#8a9099;margin-top:6px;">${labels.scanHint}</span>
+       </div>`
+    : '';
+
   card.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;">
       <span style="font-size:22px;font-weight:700;">${labels.title}</span>
       <span style="font-size:16px;color:#8a9099;">${labels.serialNo} ${index + 1}</span>
     </div>
-    ${rowsHtml}
+    <div style="display:flex;align-items:flex-start;">
+      <div style="flex:1;min-width:0;">${rowsHtml}</div>
+      ${qrHtml}
+    </div>
   `;
   document.body.appendChild(card);
   return card;
@@ -111,7 +125,9 @@ export async function buildTracePdf(codes: TraceCodeDetailVO[], labels: TracePdf
   const contentWidthMm = A4_WIDTH_MM - MARGIN_MM * 2;
 
   for (let i = 0; i < codes.length; i++) {
-    const el = renderCardElement(codes[i], i, labels);
+    // 每张码生成溯源二维码（encode /trace/<codeType>/<produceCode>）
+    const qrDataUrl = await genQrDataUrl(buildTraceUrl(codes[i].codeType, codes[i].produceCode), 320);
+    const el = renderCardElement(codes[i], i, labels, qrDataUrl);
     try {
       const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
       const imgData = canvas.toDataURL('image/png');

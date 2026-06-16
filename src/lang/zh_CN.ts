@@ -3660,7 +3660,8 @@ export default {
     },
     pdf: {
       title: '产品追溯码',
-      serialNo: '序号'
+      serialNo: '序号',
+      scanHint: '微信扫码查看全链路溯源'
     }
   },
   // 公开追溯 H5 落地页（C 端顾客扫码访问，TRACE-H5）

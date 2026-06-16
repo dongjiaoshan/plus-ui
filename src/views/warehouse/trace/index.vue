@@ -204,6 +204,7 @@ function pdfLabels(): TracePdfLabels {
     farmName: t('warehouseTrace.field.farmName'),
     storeName: t('warehouseTrace.field.storeName'),
     harvestDate: t('warehouseTrace.field.harvestDate'),
+    scanHint: t('warehouseTrace.pdf.scanHint'),
     fileName: `trace_print_${new Date().getTime()}.pdf`
   };
 }
