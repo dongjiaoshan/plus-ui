@@ -60,8 +60,6 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { delPlan, listPlan, getPlanStats } from '@/api/djs-plant/plan';
 import type { PlantPlanQuery, PlantPlanStatsVO, PlantPlanVO } from '@/api/djs-plant/plan/types';
-import { listCrop } from '@/api/djs-plant/crop';
-import { listUser } from '@/api/system/user';
 import { PLAN_BASE } from './route';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
@@ -90,23 +88,20 @@ const kpiCards = computed(() => [
   { key: 'cropVarietyCount', label: t('plantPlan.kpi.cropVarietyCount'), value: stats.value.cropVarietyCount ?? '-' }
 ]);
 
-// ---- 筛选下拉数据源（原型 4 项：农作物 / 编制人） ----
-const cropOptions = ref<Array<{ label: string; value: string | number }>>([]);
-const userOptions = ref<Array<{ label: string; value: string | number }>>([]);
-
 // ---- 筛选：原型 4 项（计划日期 / 种植农作物 / 计划更新时间 / 计划编制人） ----
+// 农作物 / 计划编制人改为输入框模糊查询（cropName / queryCreateByName）。
 const searchModel = reactive<Record<string, unknown>>({
   planDate: undefined,
-  cropId: undefined,
+  cropName: undefined,
   queryUpdateTime: undefined,
-  queryCreateBy: undefined
+  queryCreateByName: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'planDate', label: t('plantPlan.field.planDate'), type: 'daterange', placeholder: t('plantPlan.placeholder.planDateFilter'), width: 240 },
-  { field: 'cropId', label: t('plantPlan.field.crop'), type: 'select', options: cropOptions.value, placeholder: t('plantPlan.placeholder.crop'), width: 160 },
+  { field: 'cropName', label: t('plantPlan.field.crop'), type: 'input', placeholder: t('plantPlan.placeholder.cropNameInput'), width: 160 },
   { field: 'queryUpdateTime', label: t('plantPlan.field.updateTime'), type: 'date', placeholder: t('plantPlan.placeholder.updateTime'), width: 160 },
-  { field: 'queryCreateBy', label: t('plantPlan.field.createBy'), type: 'select', options: userOptions.value, placeholder: t('plantPlan.placeholder.createBy'), width: 160 }
+  { field: 'queryCreateByName', label: t('plantPlan.field.createBy'), type: 'input', placeholder: t('plantPlan.placeholder.createByInput'), width: 160 }
 ]);
 
 // ---- 列：原型 14 列序（去首列 planNo + plantDate 文本列；最早/最晚改取开始日期；时间列用 updateTime） ----
@@ -171,28 +166,6 @@ async function loadStats() {
   } catch (e) {
     console.warn('[PlantPlan] loadStats failed', e);
     stats.value = {};
-  }
-}
-
-async function loadCropOptions() {
-  try {
-    const res = await listCrop({ pageNum: 1, pageSize: 200 } as any);
-    const rows = (res.rows ?? res.data ?? []) as Array<{ id: number | string; cropName: string }>;
-    cropOptions.value = rows.map((c) => ({ label: c.cropName, value: c.id }));
-  } catch (e) {
-    console.warn('[PlantPlan] loadCropOptions failed', e);
-    cropOptions.value = [];
-  }
-}
-
-async function loadUserOptions() {
-  try {
-    const res = await listUser({ pageNum: 1, pageSize: 200 } as any);
-    const rows = (res.rows ?? res.data ?? []) as Array<{ userId: number | string; nickName?: string; userName?: string }>;
-    userOptions.value = rows.map((u) => ({ label: u.nickName || u.userName || String(u.userId), value: u.userId }));
-  } catch (e) {
-    console.warn('[PlantPlan] loadUserOptions failed', e);
-    userOptions.value = [];
   }
 }
 
@@ -266,8 +239,6 @@ const handleExport = () => {
 onMounted(() => {
   loadList();
   loadStats();
-  loadCropOptions();
-  loadUserOptions();
 });
 </script>
 

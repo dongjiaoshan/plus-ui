@@ -72,8 +72,8 @@
 
       <!-- 只读模式 -->
       <el-table v-if="!editMode" :data="plan?.details || []" stripe size="small" border>
-        <el-table-column :label="t('plantPlan.field.plotCode')" prop="plotCode" width="100" />
-        <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="90" show-overflow-tooltip />
+        <el-table-column :label="t('plantPlan.field.plotCode')" prop="plotCode" width="100" align="center" />
+        <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="90" align="center" show-overflow-tooltip />
         <el-table-column :label="t('plantPlan.field.plantMonth')" width="100" align="center">
           <template #default="{ row }">{{ row.plantMonth }} 月</template>
         </el-table-column>
@@ -82,13 +82,13 @@
             <dict-tag :options="djs_plant_period" :value="row.plantPeriod" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.earliestHarvestdate')" prop="earliestHarvestdate" width="120" />
-        <el-table-column :label="t('plantPlan.field.lastHarvestdate')" prop="lastHarvestdate" width="120" />
-        <el-table-column :label="t('plantPlan.field.plotArea')" prop="plotArea" width="90" align="right">
+        <el-table-column :label="t('plantPlan.field.earliestHarvestdate')" prop="earliestHarvestdate" width="120" align="center" />
+        <el-table-column :label="t('plantPlan.field.lastHarvestdate')" prop="lastHarvestdate" width="120" align="center" />
+        <el-table-column :label="t('plantPlan.field.plotArea')" prop="plotArea" width="90" align="center">
           <template #default="{ row }">{{ row.plotArea }} 亩</template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.expectedYield')" prop="expectedYield" width="120" align="right">
-          <template #default="{ row }">{{ row.expectedYield != null ? `${row.expectedYield} kg` : '-' }}</template>
+        <el-table-column :label="t('plantPlan.field.expectedYield')" prop="expectedYield" width="120" align="center">
+          <template #default="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(2)} kg` : '-' }}</template>
         </el-table-column>
         <el-table-column :label="t('plantPlan.field.plantStatus')" width="100" align="center">
           <template #default="{ row }">
@@ -100,8 +100,8 @@
             <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.plantBy')" prop="plantTeamName" width="120" />
-        <el-table-column :label="t('plantPlan.field.harvestBy')" prop="harvestTeamName" width="120" />
+        <el-table-column :label="t('plantPlan.field.plantBy')" prop="plantTeamName" width="120" align="center" />
+        <el-table-column :label="t('plantPlan.field.harvestBy')" prop="harvestTeamName" width="120" align="center" />
       </el-table>
 
       <!--
@@ -110,8 +110,8 @@
         节奏简化为"全部明细只允许改班组"，DB 已开始的明细行回写时 service 仍会强校验。
       -->
       <el-table v-else :data="editDetails" stripe size="small" border>
-        <el-table-column :label="t('plantPlan.field.plotCode')" prop="plotCode" width="100" />
-        <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="90" show-overflow-tooltip />
+        <el-table-column :label="t('plantPlan.field.plotCode')" prop="plotCode" width="100" align="center" />
+        <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="90" align="center" show-overflow-tooltip />
         <el-table-column :label="t('plantPlan.field.plantMonth')" width="100" align="center">
           <template #default="{ row }">{{ row.plantMonth }} 月</template>
         </el-table-column>
@@ -120,14 +120,14 @@
             <dict-tag :options="djs_plant_period" :value="row.plantPeriod" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.plantBy')" width="160">
+        <el-table-column :label="t('plantPlan.field.plantBy')" width="160" align="center">
           <template #default="{ row }">
             <el-select v-model="row.plantBy" size="small" clearable filterable :placeholder="t('plantPlan.placeholder.team')">
               <el-option v-for="t in teamOptions" :key="t.id" :label="t.teamName" :value="t.id" />
             </el-select>
           </template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.harvestBy')" width="160">
+        <el-table-column :label="t('plantPlan.field.harvestBy')" width="160" align="center">
           <template #default="{ row }">
             <el-select v-model="row.harvestBy" size="small" clearable filterable :placeholder="t('plantPlan.placeholder.team')">
               <el-option v-for="t in teamOptions" :key="t.id" :label="t.teamName" :value="t.id" />

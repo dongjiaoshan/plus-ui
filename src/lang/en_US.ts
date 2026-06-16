@@ -1855,8 +1855,10 @@ export default {
       team: 'Select team',
       planDateFilter: 'Select plan date range',
       crop: 'Select crop',
+      cropNameInput: 'Enter crop name',
       updateTime: 'Select updated time',
-      createBy: 'Select creator'
+      createBy: 'Select creator',
+      createByInput: 'Enter creator name'
     },
     unit: { mu: 'mu' },
     kpi: {

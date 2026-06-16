@@ -13,6 +13,8 @@ export interface PlantPlanQuery {
   planYear?: number;
   planSeason?: string;
   cropId?: number | string;
+  /** 农作物名称模糊（原型「种植农作物」筛选，对 crop_info.crop_name like）。 */
+  cropName?: string;
   plantStatus?: string;
   /** 计划日期范围-起（原型「计划日期」筛选，按计划最早开始日期 earliestBegindate 搜索）。 */
   beginPlanDate?: string;
@@ -20,8 +22,10 @@ export interface PlantPlanQuery {
   endPlanDate?: string;
   /** 计划更新时间（按天，原型「计划更新时间」筛选）。 */
   queryUpdateTime?: string;
-  /** 计划编制人 user_id（原型「计划编制人」筛选，对 create_by）。 */
+  /** 计划编制人 user_id（原型「计划编制人」筛选，对 create_by 精确，导出/兼容保留）。 */
   queryCreateBy?: number | string;
+  /** 计划编制人姓名模糊（原型「计划编制人」筛选，对 sys_user.nick_name like）。 */
+  queryCreateByName?: string;
   pageNum?: number;
   pageSize?: number;
 }

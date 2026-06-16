@@ -1858,8 +1858,10 @@ export default {
       team: '请选择班组',
       planDateFilter: '请选择计划日期范围',
       crop: '请选择农作物',
+      cropNameInput: '请输入农作物名称',
       updateTime: '请选择计划更新时间',
-      createBy: '请选择计划编制人'
+      createBy: '请选择计划编制人',
+      createByInput: '请输入计划编制人姓名'
     },
     unit: { mu: '亩' },
     kpi: {
