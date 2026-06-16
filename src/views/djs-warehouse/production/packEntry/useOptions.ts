@@ -31,11 +31,15 @@ export function usePackEntryOptions() {
   const plotMap = ref<Record<string, string>>({});
   const plotLoading = ref(false);
 
-  /** 目标打包产品 SKU。productType: 1=产品 2=商品 3=礼盒（不传=全部） */
-  async function loadProducts(productType?: number) {
+  /**
+   * 目标打包产品 SKU。
+   * @param productType 1=产品 2=商品 3=礼盒（不传=全部）
+   * @param belongType  自产归属类型过滤（如 'pork' 仅猪肉产品；不传=不限）
+   */
+  async function loadProducts(productType?: number, belongType?: string) {
     productLoading.value = true;
     try {
-      const res = await listProduct({ pageNum: 1, pageSize: 500, productType } as any);
+      const res = await listProduct({ pageNum: 1, pageSize: 500, productType, belongType } as any);
       products.value = ((res as any).rows ?? []) as ProductInfoVO[];
     } finally {
       productLoading.value = false;

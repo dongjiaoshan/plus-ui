@@ -1,13 +1,5 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="t('product.inbound.title')"
-    destroy-on-close
-    append-to-body
-    width="520px"
-    :close-on-click-modal="true"
-    @closed="handleClosed"
-  >
+  <el-dialog v-model="visible" :title="t('product.inbound.title')" destroy-on-close append-to-body width="520px" @closed="handleClosed">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-form-item :label="t('product.inbound.product')">
         <el-input :model-value="productName" disabled />
@@ -21,7 +13,7 @@
         <el-input-number v-model="form.quantity" :precision="3" :min="0.001" :step="1" style="width: 100%" />
         <span v-if="productUnit" class="ml-2 text-gray-500">{{ productUnit }}</span>
       </el-form-item>
-      <el-form-item :label="t('common.remark')">
+      <el-form-item :label="t('product.inbound.remark')">
         <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="200" />
       </el-form-item>
     </el-form>
@@ -60,8 +52,8 @@ const defaultForm = (): { locationId: string; quantity: number | undefined; rema
 const form = ref(defaultForm());
 
 const rules = computed(() => ({
-  locationId: [{ required: true, message: t('product.inbound.location.required'), trigger: 'change' }],
-  quantity: [{ required: true, message: t('product.inbound.quantity.required'), trigger: 'blur' }]
+  locationId: [{ required: true, message: t('product.inbound.locationRequired'), trigger: 'change' }],
+  quantity: [{ required: true, message: t('product.inbound.quantityRequired'), trigger: 'blur' }]
 }));
 
 const emit = defineEmits<{ (e: 'success'): void }>();

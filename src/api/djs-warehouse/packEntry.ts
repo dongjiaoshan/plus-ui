@@ -33,6 +33,8 @@ export interface BarInfoVO {
   id: number;
   barId: string;
   earNo?: string;
+  /** 出栏重量 kg（领用称重校验上界） */
+  marketingWeight?: number;
   inWeight?: number;
   inTime?: string;
   status: string;
@@ -44,7 +46,10 @@ export interface PigCutRecordVO {
   cutId: string;
   barId: string;
   earNo?: string;
+  /** 领用称重 kg（分割白条领用时现场过磅，白条重量展示用此值，非 in_weight） */
   pickupWeight?: number;
+  /** 剩余可分割重量 kg（= pickupWeight − 已入库分割产品重量合计；后端计算回填） */
+  remainingWeight?: number;
   isHalf: number;
   cutStatus: 'pending_pickup' | 'picked' | 'cutting' | 'done';
   locationName?: string;
@@ -138,6 +143,8 @@ export interface PigCutDoneBo {
 /** 白条领用到分割车间 BO（locationId 领用阶段可空，实际入冻品库位在 cutOut 阶段采集） */
 export interface PigCutPickupBo {
   barInfoId: number | string;
+  /** 领用称重 kg（现场过磅，校验 ≤ 白条出栏重量；可空则回落 in_weight 快照） */
+  pickupWeight?: number;
   locationId?: number | string;
   targetStoreId?: number | string;
   targetDemandId?: number | string;

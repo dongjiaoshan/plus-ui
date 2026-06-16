@@ -1189,7 +1189,13 @@ export default {
       baseInfo: 'Product info',
       giftComponents: 'Gift box list',
       production: 'Production Records',
-      flow: 'Transaction Flow'
+      flow: 'Transaction Flow',
+      goodsView: 'Goods detail',
+      goodsBaseInfo: 'Goods info',
+      productAdd: 'New product',
+      productEdit: 'Edit product',
+      goodsAdd: 'New goods',
+      goodsEdit: 'Edit goods'
     },
     giftEmpty: 'No components in this gift box',
     column: {
@@ -1206,7 +1212,9 @@ export default {
       productStatus: 'Status',
       createTime: 'Created',
       updateTime: 'Updated',
-      index: 'No.'
+      index: 'No.',
+      goodsType: 'Goods type',
+      goodsAttr: 'Goods attribute'
     },
     field: {
       productId: 'Product code',
@@ -1238,7 +1246,11 @@ export default {
       componentProductName: 'Component product',
       componentCount: 'Count',
       componentUnit: 'Unit',
-      componentSort: 'Sort'
+      componentSort: 'Sort',
+      goodsId: 'Goods code',
+      goodsName: 'Goods name',
+      goodsType: 'Goods type',
+      goodsAttr: 'Goods attribute'
     },
     placeholder: {
       productId: 'e.g. P0001 / SP-PORK-001 (manual)',
@@ -1265,6 +1277,17 @@ export default {
     },
     button: {
       inbound: 'Inbound'
+    },
+    inbound: {
+      title: 'Goods inbound',
+      product: 'Goods',
+      location: 'Inbound location',
+      locationPlaceholder: 'Select inbound location',
+      quantity: 'Inbound quantity',
+      confirm: 'Confirm inbound',
+      locationRequired: 'Please select inbound location',
+      quantityRequired: 'Please enter inbound quantity',
+      remark: 'Remark'
     },
     production: {
       produceDate: 'Produce Date',
@@ -1938,7 +1961,8 @@ export default {
       planSeason: 'Pick a season',
       harvestStatus: 'Pick a harvest status',
       team: 'Harvest team',
-      cropName: 'Select a crop'
+      cropName: 'Select a crop',
+      cropNameInput: 'Enter crop name'
     },
     column: {
       planNo: 'Plan No',
@@ -1959,6 +1983,8 @@ export default {
       actualEnd: 'Actual End',
       expectedYield: 'Expected Yield',
       activityPlotCount: 'Activity Plots',
+      planPlantArea: 'Planned Acreage',
+      currentPlantedArea: 'Planted (Actual)',
       action: 'Action'
     },
     action: { adjust: 'Adjust' },
@@ -2021,7 +2047,8 @@ export default {
     },
     placeholder: {
       activityDate: 'Select activity date',
-      crop: 'Select crop'
+      crop: 'Select crop',
+      cropName: 'Enter crop name'
     },
     column: {
       activityDate: 'Activity Date',
@@ -2232,6 +2259,9 @@ export default {
         inTimeLabel: 'Inbound Time',
         agingDurationLabel: 'Aging Duration',
         inWeightLabel: 'Inbound Weight',
+        marketingWeightLabel: 'Marketing Weight',
+        whiteBarWeightShort: 'Carcass wt ',
+        pickupWeightExceed: 'Pickup weight must not exceed the carcass marketing weight ({weight}kg)',
         pigAssignLabel: 'Pig Assignment',
         noBars: 'No bars available',
         agingHour: 'h',

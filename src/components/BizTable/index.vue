@@ -54,7 +54,7 @@
             :label="col.label"
             :width="col.width"
             :min-width="col.minWidth"
-            :align="col.align ?? 'left'"
+            :align="col.align ?? 'center'"
             :fixed="col.fixed"
             :sortable="col.sortable"
             :show-overflow-tooltip="col.showOverflowTooltip"

@@ -32,6 +32,10 @@
                   <span class="bar-row-value">{{ agingDuration(b.inTime) }}</span>
                 </div>
                 <div class="bar-row">
+                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.marketingWeightLabel') }}</span>
+                  <span class="bar-row-value">{{ b.marketingWeight != null ? `${b.marketingWeight}kg` : '-' }}</span>
+                </div>
+                <div class="bar-row">
                   <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inWeightLabel') }}</span>
                   <span class="bar-row-value">{{ b.inWeight != null ? `${b.inWeight}kg` : '-' }}</span>
                 </div>
@@ -133,26 +137,32 @@ async function handleSubmit() {
     ElMessage.warning(t('djs.warehouse.packEntry.outLocationRequired'));
     return;
   }
+  // 领用称重校验：必填且不应大于该白条出栏重量（marketing_weight）
+  const pickupWeight = pickupForm.value.productWeight;
+  if (!pickupWeight || pickupWeight <= 0) {
+    ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
+    return;
+  }
+  if (bar.marketingWeight != null && pickupWeight > bar.marketingWeight) {
+    ElMessage.warning(t('djs.warehouse.packEntry.pickupWeightExceed', { weight: bar.marketingWeight }));
+    return;
+  }
   submitting.value = true;
   try {
     if (pickupForm.value.outDest === 'cut') {
-      // 分割车间：领用进分割车间（领用阶段不采集库位，service 后续 cutOut 阶段采集）
-      await submitPickup({ barInfoId: bar.id, isHalf: 2 });
+      // 分割车间：领用进分割车间（领用阶段不采集库位，service 后续 cutOut 阶段采集）；
+      // 带现场领用称重，后端再校验 ≤ 出栏重量
+      await submitPickup({ barInfoId: bar.id, pickupWeight, isHalf: 2 });
       ElMessage.success(t('djs.warehouse.packEntry.pickupSuccess'));
     } else {
       // 发货月台：白条/猪肉发货出库（需重量 + 来源 inhouse，按耳号匹配白条来源过程产品）
-      const weight = pickupForm.value.productWeight;
-      if (!weight || weight <= 0) {
-        ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
-        return;
-      }
       const earNo = bar.earNo ?? bar.barId;
       const src = sources.value.find((s) => String(s.earNo ?? '') === String(earNo));
       if (!src) {
         ElMessage.warning(t('djs.warehouse.packEntry.shipSourceNotFound'));
         return;
       }
-      await submitWhiteBarOut({ sourceInhouseId: src.id, productWeight: weight });
+      await submitWhiteBarOut({ sourceInhouseId: src.id, productWeight: pickupWeight });
       ElMessage.success(t('djs.warehouse.packEntry.shipOutSuccess'));
     }
     pickupForm.value = pickupDefault();

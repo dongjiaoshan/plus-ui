@@ -92,9 +92,6 @@
           <el-button v-if="canConfirm(row)" link type="success" size="small" @click="onConfirm(row)">
             {{ t('demand.action.confirm') }}
           </el-button>
-          <el-button v-if="canAdjust(row)" link type="primary" size="small" @click="onAdjust(row)">
-            {{ t('demand.confirmPage.action.adjust') }}
-          </el-button>
           <el-button v-if="canAssignPig(row)" link type="primary" size="small" @click="onAssignPig(row)">
             {{ t('demand.action.assignPig') }}
           </el-button>
@@ -108,19 +105,6 @@
 
     <pagination v-if="total > 0" v-model:page="pageNum" v-model:limit="pageSize" :total="total" @pagination="fetchList" />
 
-    <!-- 调整弹窗：仅改需求量（对齐原型 488ff646 单一 step input）-->
-    <el-dialog v-model="adjustVisible" :title="t('demand.confirmPage.adjust.title')" width="420px" destroy-on-close append-to-body>
-      <el-form ref="adjustFormRef" :model="adjustForm" :rules="adjustRules" label-width="80px">
-        <el-form-item :label="t('demand.confirmPage.adjust.demandQuantity')" prop="demandQuantity">
-          <el-input-number v-model="adjustForm.demandQuantity" :min="1" :step="1" :precision="0" controls-position="right" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="adjustVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="adjustSubmitting" @click="submitAdjust">{{ t('common.confirm') }}</el-button>
-      </template>
-    </el-dialog>
-
     <!-- 指定猪只弹窗（沿用现成组件；面包屑不做到第 4 级，按 §6.13 用弹窗）-->
     <PigAssignDialog ref="pigDialogRef" @success="fetchList" />
   </div>
@@ -129,11 +113,10 @@
 <script setup name="DemandConfirm" lang="ts">
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import type { FormInstance, FormRules } from 'element-plus';
 import PigAssignDialog from '../components/PigAssignDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
-import { confirmDemand, getDemandSummary, listDemand, removeDemand, updateDemand } from '@/api/djs-warehouse/demand';
-import type { DemandManageForm, DemandManageQuery, DemandManageVO, DemandProductType, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
+import { confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';
+import type { DemandManageQuery, DemandManageVO, DemandProductType, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -201,12 +184,10 @@ function pigAssignedLabel(row: DemandManageVO): string {
   return row.pigAssigned ? t('demand.confirmPage.yes') : t('demand.confirmPage.no');
 }
 
-// 操作列按状态：待确认(SUBMITTED) → 确认/调整/指定猪只(仅白条猪)/删除；已确认(CONFIRMED) → 调整；其他态 无
+// 操作列按状态：待确认(SUBMITTED) → 确认/指定猪只(仅白条猪)/删除；其他态 无
+// 「调整」已下线（仓库不改门店需求量；需调整由门店端自主改，仓库线下沟通——test/d6-15 后台 #54）
 function canConfirm(row: DemandManageVO): boolean {
   return row.demandStatus === 'SUBMITTED';
-}
-function canAdjust(row: DemandManageVO): boolean {
-  return row.demandStatus === 'SUBMITTED' || row.demandStatus === 'CONFIRMED';
 }
 function canAssignPig(row: DemandManageVO): boolean {
   return row.demandStatus === 'SUBMITTED' && (productType === 'white_bar' || productType === 'pig');
@@ -215,7 +196,7 @@ function canDelete(row: DemandManageVO): boolean {
   return row.demandStatus === 'SUBMITTED';
 }
 function hasAnyAction(row: DemandManageVO): boolean {
-  return canConfirm(row) || canAdjust(row) || canAssignPig(row) || canDelete(row);
+  return canConfirm(row) || canAssignPig(row) || canDelete(row);
 }
 
 async function fetchList() {
@@ -280,55 +261,7 @@ function onAssignPig(row: DemandManageVO) {
   pigDialogRef.value?.open(row.id, row.demandNo, required);
 }
 
-// -------- 调整弹窗：仅改需求量 --------
 const pigDialogRef = ref<{ open: (demandId: string, demandNo: string, requiredCount: number) => void }>();
-const adjustVisible = ref(false);
-const adjustSubmitting = ref(false);
-const adjustFormRef = ref<FormInstance>();
-const adjustRow = ref<DemandManageVO | null>(null);
-const adjustForm = reactive<{ demandQuantity: number }>({ demandQuantity: 1 });
-const adjustRules: FormRules = {
-  demandQuantity: [{ required: true, message: t('demand.field.demandQuantity.required'), trigger: 'blur' }]
-};
-
-function onAdjust(row: DemandManageVO) {
-  adjustRow.value = row;
-  adjustForm.demandQuantity = Number(row.demandQuantity ?? 1);
-  adjustVisible.value = true;
-}
-
-async function submitAdjust() {
-  if (!adjustFormRef.value || !adjustRow.value) return;
-  await adjustFormRef.value.validate();
-  const row = adjustRow.value;
-  // edit 端点要求全字段 BO（productName/storeId/productId/productType/productUnit 必填），从原行带回，只改需求量
-  const payload: DemandManageForm = {
-    id: row.id,
-    demandDate: row.demandDate,
-    storeId: row.storeId,
-    productId: row.productId,
-    productName: row.productName,
-    productType: row.productType,
-    productSpec: row.productSpec,
-    demandQuantity: adjustForm.demandQuantity,
-    productUnit: row.productUnit,
-    rawMaterial: row.rawMaterial,
-    materialQty: row.materialQty != null ? Number(row.materialQty) : undefined,
-    demandRemark: row.demandRemark,
-    demandExplain: row.demandExplain,
-    expectedArriveDate: row.expectedArriveDate,
-    remark: row.remark
-  };
-  adjustSubmitting.value = true;
-  try {
-    await updateDemand(payload);
-    proxy?.$modal.msgSuccess(t('common.opSuccess'));
-    adjustVisible.value = false;
-    fetchList();
-  } finally {
-    adjustSubmitting.value = false;
-  }
-}
 
 onMounted(async () => {
   await loadStoreOptions();

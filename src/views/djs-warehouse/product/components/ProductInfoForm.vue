@@ -4,9 +4,9 @@
       <!-- 公共字段：产品类型 / 编码 / 名称 / 单位 / 规格 -->
       <el-row :gutter="16">
         <el-col :span="12">
-          <el-form-item :label="t('product.field.productType')" prop="productType">
+          <el-form-item :label="t(isGoods ? 'product.field.goodsType' : 'product.field.productType')" prop="productType">
             <el-select v-model="form.productType" :disabled="!!form.id || lockType" @change="onTypeChange">
-              <el-option v-for="d in djs_product_type" :key="d.value" :label="d.label" :value="Number(d.value)" />
+              <el-option v-for="d in typeOptions" :key="d.value" :label="d.label" :value="Number(d.value)" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -212,6 +212,11 @@ const visible = ref(false);
 const submitting = ref(false);
 /** 由菜单入口（产品/商品/礼盒）预置并锁定 productType：新增态也禁用类型下拉 */
 const lockType = ref(false);
+/**
+ * 入口允许的 productType 集合（产品配置 [1,3]=自产+礼盒 / 商品配置 [2]=外购）。
+ * 为空表示无入口限制（兼容旧调用），下拉给全量字典。
+ */
+const allowedTypes = ref<number[]>([]);
 const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 
@@ -253,7 +258,22 @@ const thumbOssIdsModel = computed<string[]>({
   }
 });
 
-const dialogTitle = computed(() => (form.value.id ? t('product.title.edit') : t('product.title.add')));
+/** 商品配置入口（仅外购 [2]）下文案显示「商品」；产品配置（含自产/礼盒）显示「产品」 */
+const isGoods = computed(() => allowedTypes.value.length === 1 && allowedTypes.value[0] === 2);
+
+/** 类型下拉按入口允许集合过滤（产品配置不出现外购；商品配置不出现自产/礼盒） */
+const typeOptions = computed<Array<{ value: number | string; label: string }>>(() => {
+  const all = djs_product_type.value ?? [];
+  if (allowedTypes.value.length === 0) return all;
+  return all.filter((d: { value: number | string }) => allowedTypes.value.includes(Number(d.value)));
+});
+
+const dialogTitle = computed(() => {
+  if (isGoods.value) {
+    return form.value.id ? t('product.title.goodsEdit') : t('product.title.goodsAdd');
+  }
+  return form.value.id ? t('product.title.productEdit') : t('product.title.productAdd');
+});
 
 const rules = computed(() => ({
   productType: [{ required: true, message: t('product.rule.productType.required'), trigger: 'change' }],
@@ -288,12 +308,14 @@ const rules = computed(() => ({
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
-const openCreate = async (presetType?: number) => {
+const openCreate = async (presetType?: number, types?: number[]) => {
   reset();
-  // 入口预置并锁定 productType（产品=1 / 商品=2 / 礼盒=3）
+  allowedTypes.value = types ? [...types] : [];
+  // 入口预置 productType（产品=1 / 商品=2 / 礼盒=3）
   if (presetType !== undefined) {
     form.value.productType = presetType;
-    lockType.value = true;
+    // 入口只允许单一类型（如商品配置 [2]）才锁死下拉；产品配置 [1,3] 允许自产↔礼盒切换
+    lockType.value = allowedTypes.value.length === 1;
     // 触发类型分支字段初始化（如礼盒 belongType='gift_box'）
     onTypeChange(presetType);
   }
@@ -302,8 +324,9 @@ const openCreate = async (presetType?: number) => {
   visible.value = true;
 };
 
-const openEdit = async (id: number | string) => {
+const openEdit = async (id: number | string, types?: number[]) => {
   reset();
+  allowedTypes.value = types ? [...types] : [];
   await loadSupplierOptions();
   await loadComponentCandidates();
   const res = await getProduct(id);
@@ -344,6 +367,7 @@ defineExpose({ openCreate, openEdit });
 const reset = () => {
   form.value = defaultForm();
   lockType.value = false;
+  allowedTypes.value = [];
 };
 
 const handleClosed = () => {

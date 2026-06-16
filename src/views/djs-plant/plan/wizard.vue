@@ -25,9 +25,6 @@
               <el-option v-for="d in djs_planting_season" :key="d.value" :label="d.label" :value="d.value" />
             </el-select>
           </el-form-item>
-          <el-form-item :label="t('plantPlan.field.plantDate')">
-            <el-input v-model="form.plantDate" :placeholder="t('plantPlan.placeholder.plantDate')" />
-          </el-form-item>
         </el-form>
       </div>
 
@@ -97,7 +94,6 @@ const form = reactive<PlantPlanCreateForm>({
   planYear: new Date().getFullYear(),
   planSeason: '',
   cropId: undefined,
-  plantDate: '',
   details: []
 });
 
@@ -176,7 +172,6 @@ async function submit() {
       planYear: form.planYear,
       planSeason: form.planSeason,
       cropId: form.cropId,
-      plantDate: form.plantDate,
       details: form.details
     });
     const newId = (res.data ?? res) as string;

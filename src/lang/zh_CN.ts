@@ -1191,7 +1191,13 @@ export default {
       baseInfo: '产品属性',
       giftComponents: '礼盒清单',
       production: '生产记录',
-      flow: '业务流水'
+      flow: '业务流水',
+      goodsView: '商品详情',
+      goodsBaseInfo: '商品属性',
+      productAdd: '新增产品',
+      productEdit: '编辑产品',
+      goodsAdd: '新增商品',
+      goodsEdit: '编辑商品'
     },
     giftEmpty: '该礼盒暂无组件',
     column: {
@@ -1208,7 +1214,9 @@ export default {
       productStatus: '状态',
       createTime: '创建时间',
       updateTime: '更新时间',
-      index: '序号'
+      index: '序号',
+      goodsType: '商品类型',
+      goodsAttr: '商品属性'
     },
     field: {
       productId: '产品编码',
@@ -1240,7 +1248,11 @@ export default {
       componentProductName: '组件产品',
       componentCount: '数量',
       componentUnit: '单位',
-      componentSort: '排序'
+      componentSort: '排序',
+      goodsId: '商品编码',
+      goodsName: '商品名称',
+      goodsType: '商品类型',
+      goodsAttr: '商品属性'
     },
     placeholder: {
       productId: '例 P0001 / SP-PORK-001（用户手填）',
@@ -1267,6 +1279,17 @@ export default {
     },
     button: {
       inbound: '入库'
+    },
+    inbound: {
+      title: '商品入库',
+      product: '入库商品',
+      location: '入库库位',
+      locationPlaceholder: '请选择入库库位',
+      quantity: '入库数量',
+      confirm: '确认入库',
+      locationRequired: '请选择入库库位',
+      quantityRequired: '请输入入库数量',
+      remark: '备注'
     },
     production: {
       produceDate: '生产日期',
@@ -1941,7 +1964,8 @@ export default {
       planSeason: '请选择季节',
       harvestStatus: '请选择采摘状态',
       team: '采摘班组',
-      cropName: '请选择农作物'
+      cropName: '请选择农作物',
+      cropNameInput: '请输入作物名称'
     },
     column: {
       planNo: '计划号',
@@ -1962,6 +1986,8 @@ export default {
       actualEnd: '实际结束',
       expectedYield: '预计产量',
       activityPlotCount: '采摘活动地块数',
+      planPlantArea: '计划种植亩数',
+      currentPlantedArea: '当前已种植亩数',
       action: '操作'
     },
     action: { adjust: '调整' },
@@ -2024,7 +2050,8 @@ export default {
     },
     placeholder: {
       activityDate: '请选择活动日期',
-      crop: '请选择作物'
+      crop: '请选择作物',
+      cropName: '请输入作物名称'
     },
     column: {
       activityDate: '活动日期',
@@ -2235,6 +2262,9 @@ export default {
         inTimeLabel: '入库时间',
         agingDurationLabel: '排酸时长',
         inWeightLabel: '入库重量',
+        marketingWeightLabel: '出栏重量',
+        whiteBarWeightShort: '白条重量',
+        pickupWeightExceed: '领用称重不应大于该白条出栏重量（{weight}kg）',
         pigAssignLabel: '猪只指定',
         noBars: '暂无待领用白条',
         agingHour: '小时',

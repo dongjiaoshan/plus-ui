@@ -154,6 +154,8 @@ const props = withDefaults(
     title: string;
     /** 目标产品 productType 过滤：dry/veg=1 产品；gift=3 礼盒 */
     productType: number;
+    /** 目标产品 belong_type 过滤（如 'pork' 肉品打包仅猪肉产品）；不传=不限 */
+    belongType?: string;
     /** 发送位置可选项（缺省三选）；传 [] 不显示 */
     sendDestKinds?: DeliverDest[];
     /** 是否显示「确认并打印追溯码」 */
@@ -164,6 +166,7 @@ const props = withDefaults(
     plotGroup?: boolean;
   }>(),
   {
+    belongType: undefined,
     sendDestKinds: () => ['platform', 'mail', 'gift'],
     showPrintTrace: true,
     showStock: undefined,
@@ -483,7 +486,7 @@ function printTraceCode(code: string) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadProducts(props.productType), loadStores()]);
+  await Promise.all([loadProducts(props.productType, props.belongType), loadStores()]);
   if (props.kind === 'veg') {
     await Promise.all([loadSources('veg'), props.plotGroup ? loadPlots() : Promise.resolve()]);
   } else if (props.kind === 'dry') {

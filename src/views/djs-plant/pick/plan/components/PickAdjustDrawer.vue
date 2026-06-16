@@ -31,7 +31,7 @@
       <el-table-column :label="t('pickPlan.adjust.col.cropName')" prop="cropName" width="120" show-overflow-tooltip />
       <el-table-column :label="t('pickPlan.adjust.col.plotCode')" prop="plotCode" width="120" show-overflow-tooltip />
       <el-table-column :label="t('pickPlan.adjust.col.plotName')" prop="plotName" width="140" show-overflow-tooltip />
-      <el-table-column :label="t('pickPlan.adjust.col.isPick')" width="120" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.isPick')" min-width="130" align="center">
         <template #default="{ row }">
           <el-tag :type="row.isPick === 1 ? 'warning' : 'info'" size="small">
             {{ row.isPick === 1 ? t('pickPlan.adjust.activityOptYes') : t('pickPlan.adjust.activityOptNo') }}

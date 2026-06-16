@@ -35,7 +35,6 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listPickActivity } from '@/api/djs-plant/pick';
 import type { PickActivityQuery, PickActivityVO } from '@/api/djs-plant/pick/types';
-import { listCrop } from '@/api/djs-plant/crop';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -50,13 +49,13 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
-  activityDate: undefined,
-  cropId: undefined
+  activityDateRange: undefined,
+  cropName: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'activityDate', label: t('pickActivity.field.activityDate'), type: 'date', placeholder: t('pickActivity.placeholder.activityDate') },
-  { field: 'cropId', label: t('pickActivity.field.cropName'), type: 'select', options: cropOptions.value, placeholder: t('pickActivity.placeholder.crop') }
+  { field: 'activityDateRange', label: t('pickActivity.field.activityDate'), type: 'daterange' },
+  { field: 'cropName', label: t('pickActivity.field.cropName'), type: 'input', placeholder: t('pickActivity.placeholder.cropName') }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -68,18 +67,17 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cumulativePickWeight', label: t('pickActivity.column.cumulativePickWeight'), minWidth: 150, align: 'right' }
 ]);
 
-const cropOptions = ref<Array<{ label: string; value: string }>>([]);
-
-async function loadCrops() {
-  const res = await listCrop({ pageNum: 1, pageSize: 100 });
-  const rows = ((res as { rows?: unknown[] }).rows ?? []) as Array<{ id: string; cropName: string }>;
-  cropOptions.value = rows.map((c) => ({ value: String(c.id), label: c.cropName }));
+/** daterange 字段绑成 [start, end] 数组，拆成 beginDate / endDate 传后端。 */
+function rangeOf(v: unknown): { begin?: string; end?: string } {
+  return Array.isArray(v) && v.length === 2 ? { begin: v[0] || undefined, end: v[1] || undefined } : {};
 }
 
 function buildQuery(): PickActivityQuery {
+  const { begin, end } = rangeOf(searchModel.activityDateRange);
   return {
-    activityDate: searchModel.activityDate || undefined,
-    cropId: searchModel.cropId || undefined,
+    cropName: searchModel.cropName || undefined,
+    beginDate: begin,
+    endDate: end,
     pageNum: pageNum.value,
     pageSize: pageSize.value
   };
@@ -118,15 +116,15 @@ function handlePageChange(pn: number, ps: number) {
 }
 
 function handleExport() {
+  const { begin, end } = rangeOf(searchModel.activityDateRange);
   proxy?.download(
     'djs/plant/pick/activity/export',
-    { activityDate: searchModel.activityDate || undefined, cropId: searchModel.cropId || undefined },
+    { cropName: searchModel.cropName || undefined, beginDate: begin, endDate: end },
     `${t('pickActivity.pageTitle')}_${new Date().getTime()}.xlsx`
   );
 }
 
 onMounted(() => {
-  loadCrops();
   loadList();
 });
 </script>

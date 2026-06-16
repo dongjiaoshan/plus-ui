@@ -17,7 +17,8 @@
           <span class="chip-main">{{ r.earNo ?? r.cutId }}</span>
           <span class="chip-sub">
             {{ r.isHalf === 1 ? t('djs.warehouse.packEntry.half') : t('djs.warehouse.packEntry.whole') }}
-            <template v-if="r.pickupWeight != null"> · {{ r.pickupWeight }}kg</template>
+            <template v-if="r.pickupWeight != null"> · {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}{{ r.pickupWeight }}kg</template>
+            <template v-if="r.remainingWeight != null"> · {{ t('djs.warehouse.packEntry.remainShort') }}{{ r.remainingWeight }}kg</template>
             · {{ cutStatusLabel(r.cutStatus) }}
           </span>
         </button>
@@ -51,24 +52,12 @@
           <WeightNumpad v-model="curWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
         </div>
 
-        <!-- 规格（可选） -->
-        <div class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.productSpec') }}</div>
-          <el-input v-model="curSpec" maxlength="64" :placeholder="t('djs.warehouse.packEntry.productSpecPlaceholder')" />
-        </div>
-
         <!-- 入库位置 button-toggle（冻品库/鲜品库 等冷库库位） -->
         <div class="panel-section">
           <div class="panel-label">{{ t('djs.warehouse.packEntry.inLocation') }}</div>
           <div v-loading="locationLoading">
             <DestToggle v-model="form.locationId" :options="locationOptions" :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')" />
           </div>
-        </div>
-
-        <!-- 凭证图 -->
-        <div class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.proof') }}</div>
-          <OssUpload ref="ossRef" v-model="proofModel" biz-type="warehouse_pig_cut" :limit="5" :file-size="10" />
         </div>
 
         <div class="panel-actions">
@@ -106,7 +95,6 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { PriceTag } from '@element-plus/icons-vue';
-import OssUpload from '@/components/OssUpload/index.vue';
 import ProductCardGrid from '../components/ProductCardGrid.vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
 import DestToggle from '../components/DestToggle.vue';
@@ -120,8 +108,14 @@ const { t } = useI18n();
 
 const { locations, locationLoading, loadLocations } = usePackEntryOptions();
 
+// 分割入库库位仅展示「猪肉鲜品库」「冻品库」两类（按库位名称过滤；其它库位不作为分割产出入库目标）
 const locationOptions = computed<{ value: number | string; label: string }[]>(() =>
-  locations.value.map((l) => ({ value: l.id, label: l.locationName }))
+  locations.value
+    .filter((l) => {
+      const name = l.locationName ?? '';
+      return name.includes('冻品') || name.includes('猪肉鲜品');
+    })
+    .map((l) => ({ value: l.id, label: l.locationName }))
 );
 
 const CUT_STATUS_LABEL: Record<string, string> = {
@@ -162,28 +156,18 @@ async function loadCuttable() {
   }
 }
 
-const form = ref<{ cutRecordId: number | string | ''; locationId: number | string | ''; proofOssIds: string | undefined }>({
+const form = ref<{ cutRecordId: number | string | ''; locationId: number | string | '' }>({
   cutRecordId: '',
-  locationId: '',
-  proofOssIds: undefined
+  locationId: ''
 });
 
 // 当前录入的单件分割产品（卡片选品 + numpad 录重 → 确认入库逐件提交）
 const selectedProductId = ref<number | string | ''>('');
 const curWeight = ref<number | undefined>(undefined);
-const curSpec = ref<string | undefined>(undefined);
 
 const selectedCut = computed(() => cuttable.value.find((r) => String(r.id) === String(form.value.cutRecordId)));
 
-const ossRef = ref<InstanceType<typeof OssUpload>>();
 const cutOutSubmitting = ref(false);
-
-const proofModel = computed<string[]>({
-  get: () => (form.value.proofOssIds ? form.value.proofOssIds.split(',').filter(Boolean) : []),
-  set: (val: string[]) => {
-    form.value.proofOssIds = val && val.length > 0 ? val.join(',') : undefined;
-  }
-});
 
 async function handleCutOut() {
   if (!form.value.cutRecordId) {
@@ -207,14 +191,12 @@ async function handleCutOut() {
     await submitCutOut({
       cutRecordId: form.value.cutRecordId as number | string,
       locationId: form.value.locationId as number | string,
-      partItems: [{ productId: selectedProductId.value as number | string, productWeight: curWeight.value, productSpec: curSpec.value }],
-      proofOssIds: form.value.proofOssIds
+      partItems: [{ productId: selectedProductId.value as number | string, productWeight: curWeight.value }]
     });
     ElMessage.success(t('djs.warehouse.packEntry.cutOutSuccess'));
-    // 逐件录入：清当前产品/重量/规格，保留分割单 + 库位方便连续称重
+    // 逐件录入：清当前产品/重量，保留分割单 + 库位方便连续称重
     selectedProductId.value = '';
     curWeight.value = undefined;
-    curSpec.value = undefined;
     await loadCuttable();
   } finally {
     cutOutSubmitting.value = false;
@@ -249,16 +231,13 @@ async function handleCutDone() {
       await submitCutDone({
         cutRecordId: form.value.cutRecordId as number | string,
         dripLoss: doneForm.value.dripLoss as number,
-        proofOssIds: form.value.proofOssIds,
         remark: doneForm.value.remark
       });
       ElMessage.success(t('djs.warehouse.packEntry.finishCutSuccess'));
       cutDoneVisible.value = false;
-      form.value = { cutRecordId: '', locationId: '', proofOssIds: undefined };
+      form.value = { cutRecordId: '', locationId: '' };
       selectedProductId.value = '';
       curWeight.value = undefined;
-      curSpec.value = undefined;
-      ossRef.value?.setExistingFiles?.([]);
       await loadCuttable();
     } finally {
       cutDoneSubmitting.value = false;

@@ -32,6 +32,8 @@
         <span v-else class="text-gray-400">—</span>
       </template>
       <template #cell-totalAcreage="{ row }">{{ row.totalAcreage != null ? `${row.totalAcreage} 亩` : '-' }}</template>
+      <template #cell-currentPlantedArea="{ row }">{{ row.currentPlantedArea != null ? `${row.currentPlantedArea} 亩` : '-' }}</template>
+      <template #cell-expectedYield="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(2)} kg` : '-' }}</template>
       <template #cell-actualYield="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(2)} kg` : '-' }}</template>
       <template #cell-disasterLoss="{ row }">{{ row.disasterLoss != null ? `${Number(row.disasterLoss).toFixed(2)} kg` : '-' }}</template>
       <template #cell-activityPlotCount="{ row }">
@@ -57,7 +59,6 @@ import PickAdjustDrawer from './components/PickAdjustDrawer.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listPickPlan } from '@/api/djs-plant/pick';
 import type { PickPlanGroupVO, PickPlanQuery } from '@/api/djs-plant/pick/types';
-import { listCrop } from '@/api/djs-plant/crop';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -75,51 +76,58 @@ const total = ref(0);
 const loading = ref(false);
 
 const searchModel = reactive<Record<string, any>>({
-  cropId: undefined
+  cropName: undefined,
+  earliestRange: undefined
 });
-
-// 作物名称下拉选项（原型唯一主筛选「请选择农作物」）
-const cropOptions = ref<Array<{ label: string; value: string | number }>>([]);
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   {
-    field: 'cropId',
+    field: 'cropName',
     label: t('pickPlan.field.cropName'),
-    type: 'select',
-    placeholder: t('pickPlan.placeholder.cropName'),
-    options: cropOptions.value
+    type: 'input',
+    placeholder: t('pickPlan.placeholder.cropNameInput')
+  },
+  {
+    field: 'earliestRange',
+    label: t('pickPlan.column.planEarliest'),
+    type: 'daterange'
   }
 ]);
 
-// 列序对齐原型：作物图片 / 作物名称 / 最早开始 / 最晚截止 / 当前种植亩数 /
-// 预计需求量 / 当年已采摘量 / 当年种植地块总数 / 预计灾害损失量 / 采摘活动地块数 / 操作
+// 列序：作物图片 / 作物名称 / 最早开始 / 最晚截止 / 计划种植亩数 / 当前已种植亩数 /
+// 预计产量 / 当年已采摘量 / 当年种植地块总数 / 预计灾害损失量 / 采摘活动地块数 / 操作
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropImageUrl', label: t('pickPlan.column.cropImage'), width: 80, align: 'center' },
   { prop: 'cropName', label: t('pickPlan.column.cropName'), minWidth: 120, showOverflowTooltip: true, align: 'center' },
   { prop: 'planEarliest', label: t('pickPlan.column.planEarliest'), minWidth: 120, align: 'center' },
   { prop: 'planLatest', label: t('pickPlan.column.planLatest'), minWidth: 120, align: 'center' },
-  { prop: 'totalAcreage', label: t('pickPlan.column.totalAcreage'), minWidth: 120, align: 'center' },
+  { prop: 'totalAcreage', label: t('pickPlan.column.planPlantArea'), minWidth: 130, align: 'center' },
+  { prop: 'currentPlantedArea', label: t('pickPlan.column.currentPlantedArea'), minWidth: 140, align: 'center' },
+  { prop: 'expectedYield', label: t('pickPlan.column.expectedYield'), minWidth: 120, align: 'center' },
   { prop: 'actualYield', label: t('pickPlan.column.actualYield'), minWidth: 130, align: 'center' },
   { prop: 'plotTotalCount', label: t('pickPlan.column.plotTotalCount'), minWidth: 130, align: 'center' },
   { prop: 'disasterLoss', label: t('pickPlan.column.disasterLoss'), minWidth: 130, align: 'center' },
   { prop: 'activityPlotCount', label: t('pickPlan.column.activityPlotCount'), minWidth: 120, align: 'center' }
 ]);
 
-async function loadCropOptions() {
-  try {
-    const res = await listCrop({ pageNum: 1, pageSize: 200 });
-    const rows = (res.rows ?? res.data ?? []) as Array<{ id: number | string; cropName: string }>;
-    cropOptions.value = rows.map((r) => ({ label: r.cropName, value: r.id }));
-  } catch (e) {
-    console.warn('[PickPlan] listCrop failed', e);
-    cropOptions.value = [];
-  }
+/** daterange 字段绑成 [start, end] 数组，拆成 beginEarliest / endEarliest 传后端。 */
+function rangeOf(v: unknown): { begin?: string; end?: string } {
+  return Array.isArray(v) && v.length === 2 ? { begin: v[0] || undefined, end: v[1] || undefined } : {};
+}
+
+function buildQuery(): PickPlanQuery {
+  const { begin, end } = rangeOf(searchModel.earliestRange);
+  return {
+    cropName: searchModel.cropName || undefined,
+    beginEarliest: begin,
+    endEarliest: end
+  };
 }
 
 async function loadList() {
   loading.value = true;
   try {
-    const res = await listPickPlan({ ...searchModel } as PickPlanQuery);
+    const res = await listPickPlan(buildQuery());
     // res.data 是 List<PickPlanGroupVO>（无分页）— 按作物纯聚合，rowKey = cropId
     const rows = (res.data || []) as PickPlanGroupVO[];
     list.value = rows.map((r) => ({ ...r, rowKey: String(r.cropId) }));
@@ -135,14 +143,16 @@ function handleSearch(payload?: Record<string, any>) {
 }
 
 function handleReset() {
-  searchModel.cropId = undefined;
+  searchModel.cropName = undefined;
+  searchModel.earliestRange = undefined;
   loadList();
 }
 
 function handleExport() {
+  const { begin, end } = rangeOf(searchModel.earliestRange);
   proxy?.download(
     'djs/plant/pick/plan/export',
-    { cropId: searchModel.cropId || undefined },
+    { cropName: searchModel.cropName || undefined, beginEarliest: begin, endEarliest: end },
     `pick_plan_${new Date().getTime()}.xlsx`
   );
 }
@@ -152,7 +162,6 @@ function handleAdjust(row: PlanRow) {
 }
 
 onMounted(() => {
-  loadCropOptions();
   loadList();
 });
 </script>

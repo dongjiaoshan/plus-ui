@@ -39,7 +39,14 @@
         <el-button v-hasPermi="['djs:warehouse:product:list']" link type="primary" icon="View" @click="handleView(row)">
           {{ t('common.view') }}
         </el-button>
-        <el-button v-if="isGoodsEntry" v-hasPermi="['djs:warehouse:product:edit']" link type="primary" icon="Download" @click="handleInbound(row)">
+        <el-button
+          v-if="isGoodsEntry && row.productStatus === 0"
+          v-hasPermi="['djs:warehouse:product:edit']"
+          link
+          type="primary"
+          icon="Download"
+          @click="handleInbound(row)"
+        >
           {{ t('product.button.inbound') }}
         </el-button>
         <el-button v-hasPermi="['djs:warehouse:product:edit']" link type="primary" icon="Edit" @click="handleEdit(row)">
@@ -96,9 +103,15 @@ const presetTypes: number[] | undefined = presetType === 1 ? [1, 3] : presetType
 const addLockType: number | undefined = presetType;
 /** 商品配置入口（外购）才显示「产品入库」行操作 */
 const isGoodsEntry = presetType === 2;
+/**
+ * 商品配置入口（productType=2）下，列表/搜索/详情里「产品X」文案显示为「商品X」。
+ * 产品配置入口（productType=1）仍用「产品X」。
+ */
+const isGoods = presetType === 2;
 
 const tableRef = ref<BizTableExpose>();
-const formRef = ref<{ openCreate: (presetType?: number) => void; openEdit: (id: number | string) => void }>();
+const formRef =
+  ref<{ openCreate: (presetType?: number, allowedTypes?: number[]) => void; openEdit: (id: number | string, allowedTypes?: number[]) => void }>();
 const productViewRef = ref<{ open: (id: number | string, productType?: number) => void }>();
 const inboundFormRef = ref<{ open: (row: { id: number | string; productName?: string; productUnit?: string }) => void }>();
 
@@ -128,9 +141,9 @@ const searchModel = reactive<Record<string, any>>({
 
 const searchSchema = computed<SearchFieldSchema[]>(() => {
   const schema: SearchFieldSchema[] = [
-    { field: 'productId', label: t('product.field.productId'), type: 'input' },
-    { field: 'productName', label: t('product.field.productName'), type: 'input' },
-    { field: 'productType', label: t('product.field.productType'), type: 'select', dictType: 'djs_product_type' },
+    { field: 'productId', label: t(isGoods ? 'product.field.goodsId' : 'product.field.productId'), type: 'input' },
+    { field: 'productName', label: t(isGoods ? 'product.field.goodsName' : 'product.field.productName'), type: 'input' },
+    { field: 'productType', label: t(isGoods ? 'product.field.goodsType' : 'product.field.productType'), type: 'select', dictType: 'djs_product_type' },
     { field: 'belongType', label: t('product.field.belongType'), type: 'select', dictType: 'djs_belong_type' },
     { field: 'buyClass', label: t('product.field.buyClass'), type: 'select', dictType: 'djs_buy_class' },
     // 原型新增筛选：生产车间 / 存储仓库 / 更新时间 / 更新人员
@@ -148,8 +161,8 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productThumb', label: t('product.column.productThumb'), width: 80, align: 'center' },
   { prop: 'productId', label: t('product.column.productId'), width: 140, showOverflowTooltip: true },
   { prop: 'productName', label: t('product.column.productName'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'productType', label: t('product.column.productType'), width: 90, align: 'center', dictType: 'djs_product_type' },
-  { prop: 'productAttr', label: t('product.column.productAttr'), width: 100, align: 'center', dictType: 'djs_product_attr' },
+  { prop: 'productType', label: t(isGoods ? 'product.column.goodsType' : 'product.column.productType'), width: 90, align: 'center', dictType: 'djs_product_type' },
+  { prop: 'productAttr', label: t(isGoods ? 'product.column.goodsAttr' : 'product.column.productAttr'), width: 100, align: 'center', dictType: 'djs_product_attr' },
   { prop: 'productWorkshop', label: t('product.column.productWorkshop'), width: 110, align: 'center', dictType: 'djs_product_workshop' },
   // 原型新增列：产品单位 / 规格 / 存储仓库
   { prop: 'productUnit', label: t('product.column.productUnit'), width: 90, align: 'center' },
@@ -240,10 +253,11 @@ function handlePageChange(p: number, s: number) {
   fetchList();
 }
 function handleAdd() {
-  formRef.value?.openCreate(addLockType);
+  // 入口锁定类型集合：产品配置 [自产,礼盒]，商品配置 [外购]；新增态预置首项 addLockType
+  formRef.value?.openCreate(addLockType, presetTypes);
 }
 function handleEdit(row: BizRow) {
-  formRef.value?.openEdit(row.id);
+  formRef.value?.openEdit(row.id, presetTypes);
 }
 function handleView(row: BizRow) {
   productViewRef.value?.open(row.id, row.productType);

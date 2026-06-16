@@ -13,10 +13,16 @@
 // ============================================================
 
 export interface PickPlanQuery {
-  /** 作物筛选（原型唯一主筛选「作物名称」下拉传 cropId） */
+  /** 作物筛选（保留：列表跳转回填传 cropId） */
   cropId?: number | string;
+  /** 作物名称模糊筛选 */
+  cropName?: string;
   /** 采摘状态（原型外增强项，后端仍支持；默认不传） */
   harvestStatus?: string;
+  /** 最早开始时间范围起（含） */
+  beginEarliest?: string;
+  /** 最早开始时间范围止（含） */
+  endEarliest?: string;
 }
 
 /**
@@ -31,8 +37,10 @@ export interface PickPlanGroupVO {
   plotCount: number;
   planEarliest?: string;
   planLatest?: string;
-  /** 当前种植亩数（SUM plot_area，亩）。 */
+  /** 计划种植亩数（SUM plot_area，亩）。 */
   totalAcreage?: number;
+  /** 当前已种植亩数（SUM plot_area WHERE begin_actualdate IS NOT NULL，亩）。 */
+  currentPlantedArea?: number;
   /** 预计需求量（kg；无来源时 NULL，前端 - 兜底）。 */
   demandQty?: number;
   /** 预计产量（SUM expected_yield，kg）。 */
@@ -73,10 +81,12 @@ export interface PickToggleActivityForm {
 // ============================================================
 
 export interface PickActivityQuery {
-  /** 作物 id（作物名称下拉） */
-  cropId?: number | string;
-  /** 活动日期（单日，对齐原型） */
-  activityDate?: string;
+  /** 作物名称模糊筛选 */
+  cropName?: string;
+  /** 活动日期范围起（含） */
+  beginDate?: string;
+  /** 活动日期范围止（含） */
+  endDate?: string;
   pageNum?: number;
   pageSize?: number;
 }

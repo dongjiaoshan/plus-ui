@@ -1,11 +1,11 @@
 <template>
-  <el-dialog v-model="visible" :title="t('product.title.view')" destroy-on-close append-to-body width="820px">
+  <el-dialog v-model="visible" :title="t(isGoods ? 'product.title.goodsView' : 'product.title.view')" destroy-on-close append-to-body width="820px">
     <el-tabs v-model="activeTab">
-      <el-tab-pane :label="t('product.title.baseInfo')" name="info">
+      <el-tab-pane :label="t(isGoods ? 'product.title.goodsBaseInfo' : 'product.title.baseInfo')" name="info">
         <el-descriptions :column="2" border>
-          <el-descriptions-item :label="t('product.field.productId')">{{ data.productId || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.productName')">{{ data.productName || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.productType')">
+          <el-descriptions-item :label="t(isGoods ? 'product.field.goodsId' : 'product.field.productId')">{{ data.productId || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t(isGoods ? 'product.field.goodsName' : 'product.field.productName')">{{ data.productName || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t(isGoods ? 'product.field.goodsType' : 'product.field.productType')">
             <dict-tag :options="djs_product_type" :value="data.productType" />
           </el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productUnit')">{{ data.productUnit || '-' }}</el-descriptions-item>
@@ -16,7 +16,7 @@
           <el-descriptions-item :label="t('product.field.buyClass')">
             <dict-tag :options="djs_buy_class" :value="data.buyClass" />
           </el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.productAttr')">
+          <el-descriptions-item :label="t(isGoods ? 'product.field.goodsAttr' : 'product.field.productAttr')">
             <dict-tag :options="djs_product_attr" :value="data.productAttr" />
           </el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productWorkshop')">
@@ -167,6 +167,9 @@ const visible = ref(false);
 const activeTab = ref('info');
 const data = ref<Partial<ProductInfoVO>>({});
 const thumbUrl = ref<string>('');
+
+/** 外购商品（productType=2）详情里「产品X」文案改「商品X」；自产/礼盒仍「产品X」 */
+const isGoods = computed(() => data.value.productType === 2);
 
 // 生产记录子表（自产 / 礼盒）
 const productionList = ref<ProductionRecordVO[]>([]);

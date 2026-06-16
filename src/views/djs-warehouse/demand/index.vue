@@ -237,7 +237,20 @@ function onViewDemand(row: DemandGroupVO) {
   });
 }
 
+/** keep-alive 下首帧 onMounted + onActivated 都会触发，用此标记跳过 onActivated 的首次重复拉取。 */
+let firstActivate = true;
+
 onMounted(() => {
   fetchList();
+});
+
+// 从「需求确认」子页确认/删除后返回时，列表组件被 keep-alive 缓存不会重新 mount，
+// 用 onActivated 重新拉取分组列表 + 顶部 KPI，避免状态/确认率不刷新（test/d6-15 后台 #52）。
+onActivated(() => {
+  if (firstActivate) {
+    firstActivate = false;
+    return;
+  }
+  reloadAll();
 });
 </script>
