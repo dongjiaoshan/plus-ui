@@ -2,16 +2,16 @@
   <!-- 查看详情：只读 10 列矩阵，点蒙层可关（保持 Element Plus 默认）。对齐原型「门店盘点>当日盘点只读」。 -->
   <el-drawer v-model="visible" :title="title" direction="rtl" size="80%" append-to-body destroy-on-close>
     <el-table v-loading="loading" :data="lines" border stripe>
-      <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" />
-      <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" />
-      <el-table-column prop="openingQty" :label="t('storeLedger.column.openingQty')" width="110" align="right" />
-      <el-table-column prop="inboundQty" :label="t('storeLedger.column.inboundQty')" width="110" align="right" />
-      <el-table-column prop="saleQty" :label="t('storeLedger.column.saleQty')" width="100" align="right" />
-      <el-table-column prop="giftQty" :label="t('storeLedger.column.giftQty')" width="100" align="right" />
-      <el-table-column prop="returnQty" :label="t('storeLedger.column.returnQty')" width="100" align="right" />
-      <el-table-column prop="whReturnQty" :label="t('storeLedger.column.returnedQty')" width="100" align="right" />
-      <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" width="100" align="right" />
-      <el-table-column prop="closingQty" :label="t('storeLedger.column.closingQty')" width="110" align="right" fixed="right">
+      <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
+      <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" header-align="center" />
+      <el-table-column prop="openingQty" :label="t('storeLedger.column.openingQty')" width="110" align="center" header-align="center" />
+      <el-table-column prop="inboundQty" :label="t('storeLedger.column.inboundQty')" width="110" align="center" header-align="center" />
+      <el-table-column prop="saleQty" :label="t('storeLedger.column.saleQty')" width="100" align="center" header-align="center" />
+      <el-table-column prop="giftQty" :label="t('storeLedger.column.giftQty')" width="100" align="center" header-align="center" />
+      <el-table-column prop="returnQty" :label="t('storeLedger.column.returnQty')" width="100" align="center" header-align="center" />
+      <el-table-column prop="whReturnQty" :label="t('storeLedger.column.returnedQty')" width="100" align="center" header-align="center" />
+      <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center" />
+      <el-table-column prop="closingQty" :label="t('storeLedger.column.closingQty')" width="110" align="center" header-align="center" fixed="right">
         <template #default="{ row }">
           <span class="closing">{{ row.closingQty }}</span>
         </template>

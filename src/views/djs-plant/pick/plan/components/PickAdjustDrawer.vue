@@ -28,52 +28,52 @@
     </el-form>
 
     <el-table v-loading="loading" :data="filteredRows" border stripe row-key="id" :empty-text="t('common.empty')">
-      <el-table-column :label="t('pickPlan.adjust.col.cropName')" prop="cropName" width="120" align="center" show-overflow-tooltip />
-      <el-table-column :label="t('pickPlan.adjust.col.plotCode')" prop="plotCode" width="120" align="center" show-overflow-tooltip />
-      <el-table-column :label="t('pickPlan.adjust.col.plotName')" prop="plotName" width="140" align="center" show-overflow-tooltip />
-      <el-table-column :label="t('pickPlan.adjust.col.isPick')" min-width="130" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.cropName')" prop="cropName" width="120" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column :label="t('pickPlan.adjust.col.plotCode')" prop="plotCode" width="120" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column :label="t('pickPlan.adjust.col.plotName')" prop="plotName" width="140" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column :label="t('pickPlan.adjust.col.isPick')" min-width="130" align="center" header-align="center">
         <template #default="{ row }">
           <el-tag :type="row.isPick === 1 ? 'warning' : 'info'" size="small">
             {{ row.isPick === 1 ? t('pickPlan.adjust.activityOptYes') : t('pickPlan.adjust.activityOptNo') }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.harvestStatus')" width="100" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.harvestStatus')" width="100" align="center" header-align="center">
         <template #default="{ row }">
           <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.plantDate')" prop="plantDate" width="120" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.plantDate')" prop="plantDate" width="120" align="center" header-align="center">
         <template #default="{ row }">{{ row.plantDate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.plantTeam')" prop="harvestTeamName" width="120" align="center" show-overflow-tooltip>
+      <el-table-column :label="t('pickPlan.adjust.col.plantTeam')" prop="harvestTeamName" width="120" align="center" header-align="center" show-overflow-tooltip>
         <template #default="{ row }">{{ row.harvestTeamName || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.beginHarvestdate')" prop="beginHarvestdate" width="140" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.beginHarvestdate')" prop="beginHarvestdate" width="140" align="center" header-align="center">
         <template #default="{ row }">{{ row.beginHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.endHarvestdate')" prop="endHarvestdate" width="140" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.endHarvestdate')" prop="endHarvestdate" width="140" align="center" header-align="center">
         <template #default="{ row }">{{ row.endHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.planEarliest')" prop="earliestHarvestdate" width="140" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.planEarliest')" prop="earliestHarvestdate" width="140" align="center" header-align="center">
         <template #default="{ row }">{{ row.earliestHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.planLatest')" prop="lastHarvestdate" width="140" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.planLatest')" prop="lastHarvestdate" width="140" align="center" header-align="center">
         <template #default="{ row }">{{ row.lastHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.plotArea')" prop="plotArea" width="100" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.plotArea')" prop="plotArea" width="100" align="center" header-align="center">
         <template #default="{ row }">{{ row.plotArea != null ? `${row.plotArea} 亩` : '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.standardYield')" prop="expectedYield" width="110" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.standardYield')" prop="expectedYield" width="110" align="center" header-align="center">
         <template #default="{ row }">{{ row.expectedYield != null ? `${row.expectedYield} kg` : '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.actualYield')" prop="actualYield" width="110" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.actualYield')" prop="actualYield" width="110" align="center" header-align="center">
         <template #default="{ row }">{{ `${row.actualYield ?? 0} kg` }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.lossYield')" prop="lossYield" width="110" align="center">
+      <el-table-column :label="t('pickPlan.adjust.col.lossYield')" prop="lossYield" width="110" align="center" header-align="center">
         <template #default="{ row }">{{ `${row.lossYield ?? 0} kg` }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.column.action')" width="200" fixed="right">
+      <el-table-column :label="t('pickPlan.column.action')" width="200" fixed="right" align="center" header-align="center">
         <template #default="{ row }">
           <el-button v-hasPermi="['djs:plant:pick:adjust']" link type="primary" size="small" @click="openScheduleDialog(row as AdjustRow)">
             {{ t('pickPlan.adjust.action.setSchedule') }}
@@ -125,6 +125,7 @@
 
 <script setup name="PickAdjustDrawer" lang="ts">
 import { listPickPlanDetailsByCrop, setPickSchedule, togglePickActivity } from '@/api/djs-plant/pick';
+import { getCrop } from '@/api/djs-plant/crop';
 import type { PlantDetailsVO } from '@/api/djs-plant/plan/types';
 import { useDict } from '@/utils/dict';
 import { useI18n } from 'vue-i18n';
@@ -141,6 +142,8 @@ interface AdjustRow extends PlantDetailsVO {
 const visible = ref(false);
 const cropId = ref<string>('');
 const cropName = ref<string>('');
+/** 作物生长最大周期（天）；open 时按 cropId 取 maxCycle，用于改最早采摘日时自动重算最晚采摘日。 */
+const cropCycleDays = ref(0);
 
 const rows = ref<AdjustRow[]>([]);
 const loading = ref(false);
@@ -167,6 +170,25 @@ const scheduleForm = reactive<{ earliestHarvestdate?: string; lastHarvestdate?: 
 });
 
 const togglingId = ref<string>('');
+
+/** 在 YYYY-MM-DD 日期上加 days 天，返回 YYYY-MM-DD（基于本地零点构造，避免时区漂移）。 */
+function addDays(date: string, days: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + days);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+}
+
+// 改「最早采摘」时按作物生长最大周期自动重算「最晚采摘」；无周期数据（cropCycleDays=0）则不覆盖，沿用后端原窗口派生兜底。
+watch(
+  () => scheduleForm.earliestHarvestdate,
+  (v) => {
+    if (v && cropCycleDays.value > 0) {
+      scheduleForm.lastHarvestdate = addDays(v, cropCycleDays.value);
+    }
+  }
+);
 
 async function loadRows() {
   if (!cropId.value) {
@@ -237,6 +259,16 @@ async function open(payload: { cropId: number | string; cropName?: string }) {
   visible.value = true;
   cropId.value = String(payload.cropId || '');
   cropName.value = payload.cropName || '';
+  // 取作物生长最大周期（天），供改最早采摘日时重算最晚采摘日
+  cropCycleDays.value = 0;
+  if (payload.cropId) {
+    try {
+      const c = await getCrop(payload.cropId);
+      cropCycleDays.value = c.data?.maxCycle ?? 0;
+    } catch {
+      cropCycleDays.value = 0;
+    }
+  }
   // 重置筛选，避免上次残留
   filterIsPick.value = undefined;
   filterStatus.value = undefined;

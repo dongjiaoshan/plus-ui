@@ -13,39 +13,39 @@
 
     <!-- 只读明细表（按原型列顺序）：无行操作列、无筛选条 -->
     <el-table v-loading="loading" :data="list" row-key="id" border stripe>
-      <el-table-column :label="t('plantOverview.detail.col.cropName')" prop="cropName" min-width="110" show-overflow-tooltip />
-      <el-table-column :label="t('plantOverview.detail.col.plotCode')" prop="plotCode" min-width="150" show-overflow-tooltip />
-      <el-table-column :label="t('plantOverview.detail.col.plotName')" prop="plotName" min-width="120" show-overflow-tooltip />
-      <el-table-column :label="t('plantOverview.detail.col.harvestStatus')" min-width="100" align="center">
+      <el-table-column :label="t('plantOverview.detail.col.cropName')" prop="cropName" min-width="110" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('plantOverview.detail.col.plotCode')" prop="plotCode" min-width="150" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('plantOverview.detail.col.plotName')" prop="plotName" min-width="120" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('plantOverview.detail.col.harvestStatus')" min-width="100" align="center" header-align="center">
         <template #default="{ row }">
           <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.planPlantDate')" min-width="110" align="center">
+      <el-table-column :label="t('plantOverview.detail.col.planPlantDate')" min-width="110" align="center" header-align="center">
         <template #default="{ row }">{{ row.planPlantDate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.plantDate')" min-width="120" align="center">
+      <el-table-column :label="t('plantOverview.detail.col.plantDate')" min-width="120" align="center" header-align="center">
         <template #default="{ row }">{{ row.plantDate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.beginHarvestdate')" min-width="130" align="center">
+      <el-table-column :label="t('plantOverview.detail.col.beginHarvestdate')" min-width="130" align="center" header-align="center">
         <template #default="{ row }">{{ row.beginHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.endHarvestdate')" min-width="130" align="center">
+      <el-table-column :label="t('plantOverview.detail.col.endHarvestdate')" min-width="130" align="center" header-align="center">
         <template #default="{ row }">{{ row.endHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.earliestHarvestdate')" min-width="130" align="center">
+      <el-table-column :label="t('plantOverview.detail.col.earliestHarvestdate')" min-width="130" align="center" header-align="center">
         <template #default="{ row }">{{ row.earliestHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.lastHarvestdate')" min-width="130" align="center">
+      <el-table-column :label="t('plantOverview.detail.col.lastHarvestdate')" min-width="130" align="center" header-align="center">
         <template #default="{ row }">{{ row.lastHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.plotArea')" min-width="110" align="right">
+      <el-table-column :label="t('plantOverview.detail.col.plotArea')" min-width="110" align="center" header-align="center">
         <template #default="{ row }">{{ row.plotArea ?? '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.expectedYield')" min-width="120" align="right">
+      <el-table-column :label="t('plantOverview.detail.col.expectedYield')" min-width="120" align="center" header-align="center">
         <template #default="{ row }">{{ row.expectedYield == null ? '-' : Number(row.expectedYield).toFixed(2) }}</template>
       </el-table-column>
-      <el-table-column :label="t('plantOverview.detail.col.actualYield')" min-width="120" align="right">
+      <el-table-column :label="t('plantOverview.detail.col.actualYield')" min-width="120" align="center" header-align="center">
         <template #default="{ row }">{{ row.actualYield == null ? '-' : Number(row.actualYield).toFixed(2) }}</template>
       </el-table-column>
     </el-table>

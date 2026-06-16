@@ -5,11 +5,11 @@
       <el-tag size="small" type="info">{{ t('demand.detail.storeCount', { count: rows.length }) }}</el-tag>
     </div>
     <el-table v-loading="loading" :data="rows" border :empty-text="t('demand.detail.empty')">
-      <el-table-column :label="t('demand.detail.storeName')" prop="storeName" min-width="160" show-overflow-tooltip />
-      <el-table-column :label="t('demand.detail.demandQuantity')" prop="demandQuantity" width="140" align="right">
+      <el-table-column :label="t('demand.detail.storeName')" prop="storeName" min-width="160" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column :label="t('demand.detail.demandQuantity')" prop="demandQuantity" width="140" align="center" header-align="center">
         <template #default="{ row }">{{ formatQty(row.demandQuantity) }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.detail.demandCount')" prop="demandCount" width="120" align="center" />
+      <el-table-column :label="t('demand.detail.demandCount')" prop="demandCount" width="120" align="center" header-align="center" />
     </el-table>
   </el-dialog>
 </template>

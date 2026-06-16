@@ -42,10 +42,10 @@
 
       <el-tab-pane v-if="data.productType === 3" :label="t('product.title.giftComponents')" name="gift">
         <el-table :data="data.giftComponents || []" border>
-          <el-table-column type="index" :label="t('product.column.index')" width="60" align="center" />
-          <el-table-column prop="componentProductName" :label="t('product.field.componentProductName')" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="componentCount" :label="t('product.field.componentCount')" width="120" align="right" />
-          <el-table-column prop="componentUnit" :label="t('product.field.componentUnit')" width="100" align="center" />
+          <el-table-column type="index" :label="t('product.column.index')" width="60" align="center" header-align="center" />
+          <el-table-column prop="componentProductName" :label="t('product.field.componentProductName')" min-width="180" align="center" header-align="center" show-overflow-tooltip />
+          <el-table-column prop="componentCount" :label="t('product.field.componentCount')" width="120" align="center" header-align="center" />
+          <el-table-column prop="componentUnit" :label="t('product.field.componentUnit')" width="100" align="center" header-align="center" />
           <template #empty>
             <el-empty :description="t('product.giftEmpty')" :image-size="60" />
           </template>
@@ -82,21 +82,21 @@
           </el-form-item>
         </el-form>
         <el-table v-loading="productionLoading" :data="productionList" border>
-          <el-table-column prop="produceDate" :label="t('product.production.produceDate')" width="120" align="center" />
-          <el-table-column :label="t('product.production.produceType')" width="100" align="center">
+          <el-table-column prop="produceDate" :label="t('product.production.produceDate')" width="120" align="center" header-align="center" />
+          <el-table-column :label="t('product.production.produceType')" width="100" align="center" header-align="center">
             <template #default="{ row }">
               {{ row.produceType === 'return' ? t('product.production.typeReturn') : t('product.production.typeProduce') }}
             </template>
           </el-table-column>
-          <el-table-column prop="produceNum" :label="t('product.production.produceNum')" width="110" align="right" />
-          <el-table-column prop="produceUnit" :label="t('product.production.produceUnit')" width="100" align="center" />
-          <el-table-column :label="t('product.production.standardWeight')" width="110" align="right">
+          <el-table-column prop="produceNum" :label="t('product.production.produceNum')" width="110" align="center" header-align="center" />
+          <el-table-column prop="produceUnit" :label="t('product.production.produceUnit')" width="100" align="center" header-align="center" />
+          <el-table-column :label="t('product.production.standardWeight')" width="110" align="center" header-align="center">
             <template #default="{ row }">{{ formatKg(row.standardWeight) }}</template>
           </el-table-column>
-          <el-table-column :label="t('product.production.produceWeight')" width="110" align="right">
+          <el-table-column :label="t('product.production.produceWeight')" width="110" align="center" header-align="center">
             <template #default="{ row }">{{ formatKg(row.produceWeight) }}</template>
           </el-table-column>
-          <el-table-column :label="t('product.production.diffWeight')" width="110" align="right">
+          <el-table-column :label="t('product.production.diffWeight')" width="110" align="center" header-align="center">
             <template #default="{ row }">{{ formatKg(row.diffWeight) }}</template>
           </el-table-column>
           <template #empty>
@@ -124,12 +124,12 @@
           </el-form-item>
         </el-form>
         <el-table v-loading="flowLoading" :data="flowList" border>
-          <el-table-column prop="bizDate" :label="t('product.flow.bizDate')" width="130" align="center" />
-          <el-table-column :label="t('product.flow.bizType')" width="130" align="center">
+          <el-table-column prop="bizDate" :label="t('product.flow.bizDate')" width="130" align="center" header-align="center" />
+          <el-table-column :label="t('product.flow.bizType')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ bizTypeLabel(row.bizType) }}</template>
           </el-table-column>
-          <el-table-column prop="bizNum" :label="t('product.flow.bizNum')" min-width="120" align="right" />
-          <el-table-column prop="bizUnit" :label="t('product.flow.bizUnit')" width="100" align="center" />
+          <el-table-column prop="bizNum" :label="t('product.flow.bizNum')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="bizUnit" :label="t('product.flow.bizUnit')" width="100" align="center" header-align="center" />
           <template #empty>
             <el-empty :description="t('common.noData')" :image-size="60" />
           </template>

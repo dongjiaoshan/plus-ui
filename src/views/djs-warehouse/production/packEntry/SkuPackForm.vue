@@ -56,6 +56,21 @@
           <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.sourceRequired') }}</span>
         </div>
 
+        <!-- 肉品：耳号 button-toggle（顶部，按已领用出库猪肉来源耳号去重，选耳号再过滤来源） -->
+        <template v-if="earGroup">
+          <div class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
+            <div v-loading="sourceLoading">
+              <DestToggle
+                v-model="selectedEarNo"
+                :options="earToggleOptions"
+                :empty-text="t('djs.warehouse.packEntry.noEarSource')"
+                @change="onEarChange"
+              />
+            </div>
+          </div>
+        </template>
+
         <!-- 果蔬：地块 button-toggle（顶部，选地块再过滤来源） -->
         <template v-if="plotGroup">
           <div class="panel-section">
@@ -157,6 +172,8 @@ const props = withDefaults(
     productType: number;
     /** 目标产品 belong_type 过滤（如 'pork' 肉品打包仅猪肉产品）；不传=不限 */
     belongType?: string;
+    /** 目标产品 belong_type 集合过滤（如 ['egg','dry_good','other'] 其他产品打包）；非空落 belong_type IN */
+    belongTypes?: string[];
     /** 发送位置可选项（缺省三选）；传 [] 不显示 */
     sendDestKinds?: DeliverDest[];
     /** 是否显示「确认并打印追溯码」 */
@@ -165,6 +182,8 @@ const props = withDefaults(
     showStock?: boolean;
     /** 顶部地块卡片选择（果蔬打包专用：按来源 plotId 分组，选地块再选该地块来源） */
     plotGroup?: boolean;
+    /** 顶部耳号选择条（肉品打包专用：按已领用出库猪肉来源 earNo 去重，选耳号再选该耳号来源） */
+    earGroup?: boolean;
     /** 是否显示「来源/来源产品」chip 选择区（肉品/其他产品打包按需隐藏；缺省显示） */
     showSource?: boolean;
     /** 是否显示「猪只耳号」回显 chip（其他产品打包隐藏；缺省随业态：dry 显示） */
@@ -172,10 +191,12 @@ const props = withDefaults(
   }>(),
   {
     belongType: undefined,
+    belongTypes: undefined,
     sendDestKinds: () => ['platform', 'mail', 'gift'],
     showPrintTrace: true,
     showStock: undefined,
     plotGroup: false,
+    earGroup: false,
     showSource: true,
     showEar: undefined
   }
@@ -347,9 +368,31 @@ const plotToggleOptions = computed<{ value: number | string; label: string }[]>(
   return Array.from(seen.values());
 });
 
+// 肉品耳号：按来源 earNo 去重成 button-toggle；选耳号后来源只显示该耳号来源
+const selectedEarNo = ref<number | string | ''>('');
+
+const earToggleOptions = computed<{ value: number | string; label: string }[]>(() => {
+  if (!props.earGroup) return [];
+  const seen = new Map<string, { value: number | string; label: string }>();
+  sources.value.forEach((s) => {
+    if (!s.earNo) return;
+    const key = String(s.earNo);
+    if (!seen.has(key)) {
+      seen.set(key, { value: s.earNo, label: s.earNo });
+    }
+  });
+  return Array.from(seen.values());
+});
+
 const displaySources = computed(() => {
-  if (!props.plotGroup || !selectedPlotId.value) return sources.value;
-  return sources.value.filter((s) => String(s.plotId) === String(selectedPlotId.value));
+  let list = sources.value;
+  if (props.plotGroup && selectedPlotId.value) {
+    list = list.filter((s) => String(s.plotId) === String(selectedPlotId.value));
+  }
+  if (props.earGroup && selectedEarNo.value) {
+    list = list.filter((s) => String(s.earNo) === String(selectedEarNo.value));
+  }
+  return list;
 });
 
 // 当前选中来源（右台顶部回显耳号 / 提交时取规格）
@@ -372,6 +415,14 @@ const sourceToggleOptions = computed<{ value: number | string; label: string }[]
 function onPlotChange() {
   const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
   if (src && String(src.plotId) !== String(selectedPlotId.value)) {
+    form.value.sourceInhouseId = '';
+  }
+}
+
+// 选耳号后：若已选来源不属于该耳号则清空，等用户在过滤后的来源里重选
+function onEarChange() {
+  const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
+  if (src && String(src.earNo) !== String(selectedEarNo.value)) {
     form.value.sourceInhouseId = '';
   }
 }
@@ -417,6 +468,7 @@ function handleReset() {
   form.value = defaultForm();
   storeDemands.value = [];
   selectedPlotId.value = '';
+  selectedEarNo.value = '';
 }
 
 /** printTrace=true：提交后弹出追溯码供「打印」展示（仅肉品/果蔬有此按钮）。 */
@@ -494,11 +546,12 @@ function printTraceCode(code: string) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadProducts(props.productType, props.belongType), loadStores()]);
+  await Promise.all([loadProducts(props.productType, props.belongType, props.belongTypes), loadStores()]);
   if (props.kind === 'veg') {
     await Promise.all([loadSources('veg'), props.plotGroup ? loadPlots() : Promise.resolve()]);
   } else if (props.kind === 'dry') {
-    await loadSources('dry');
+    // 肉品打包（earGroup）来源限 belong_type=pork；其他产品打包用通用 dry 来源
+    await loadSources(props.earGroup ? 'meat' : 'dry');
   }
   void loadDemandMap();
 });

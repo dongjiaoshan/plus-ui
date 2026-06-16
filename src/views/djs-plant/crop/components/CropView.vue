@@ -4,28 +4,28 @@
       <el-tab-pane :label="t('plantCrop.tab.planting')" name="planting">
         <el-table :data="plantingList" v-loading="subLoading" border size="small" max-height="520">
           <el-table-column type="index" :label="t('plantCrop.sub.index')" width="55" align="center" />
-          <el-table-column prop="plantDate" :label="t('plantCrop.planting.plantDate')" min-width="120" align="center">
+          <el-table-column prop="plantDate" :label="t('plantCrop.planting.plantDate')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.plantDate, '{y}-{m}-{d}') || '-' }}</template>
           </el-table-column>
-          <el-table-column prop="plotCode" :label="t('plantCrop.planting.plotCode')" min-width="100" show-overflow-tooltip />
-          <el-table-column prop="plotName" :label="t('plantCrop.planting.plotName')" min-width="110" show-overflow-tooltip />
-          <el-table-column prop="plantTeamName" :label="t('plantCrop.planting.plantTeamName')" min-width="100" show-overflow-tooltip />
-          <el-table-column prop="predictedPer" :label="t('plantCrop.planting.predictedPer')" min-width="120" align="right">
+          <el-table-column prop="plotCode" :label="t('plantCrop.planting.plotCode')" min-width="100" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column prop="plotName" :label="t('plantCrop.planting.plotName')" min-width="110" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column prop="plantTeamName" :label="t('plantCrop.planting.plantTeamName')" min-width="100" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column prop="predictedPer" :label="t('plantCrop.planting.predictedPer')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ row.predictedPer != null ? `${Number(row.predictedPer).toFixed(2)} kg/亩` : '-' }}</template>
           </el-table-column>
-          <el-table-column prop="actualPer" :label="t('plantCrop.planting.actualPer')" min-width="120" align="right">
+          <el-table-column prop="actualPer" :label="t('plantCrop.planting.actualPer')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ row.actualPer != null ? `${Number(row.actualPer).toFixed(2)} kg/亩` : '-' }}</template>
           </el-table-column>
-          <el-table-column prop="earliestHarvestDate" :label="t('plantCrop.planting.earliestHarvestDate')" min-width="140" align="center">
+          <el-table-column prop="earliestHarvestDate" :label="t('plantCrop.planting.earliestHarvestDate')" min-width="140" align="center" header-align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.earliestHarvestDate, '{y}-{m}-{d}') || '-' }}</template>
           </el-table-column>
-          <el-table-column prop="pickStartDate" :label="t('plantCrop.planting.pickStartDate')" min-width="120" align="center">
+          <el-table-column prop="pickStartDate" :label="t('plantCrop.planting.pickStartDate')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.pickStartDate, '{y}-{m}-{d}') || '-' }}</template>
           </el-table-column>
-          <el-table-column prop="pickEndDate" :label="t('plantCrop.planting.pickEndDate')" min-width="120" align="center">
+          <el-table-column prop="pickEndDate" :label="t('plantCrop.planting.pickEndDate')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.pickEndDate, '{y}-{m}-{d}') || '-' }}</template>
           </el-table-column>
-          <el-table-column prop="pickTeamName" :label="t('plantCrop.planting.pickTeamName')" min-width="100" show-overflow-tooltip />
+          <el-table-column prop="pickTeamName" :label="t('plantCrop.planting.pickTeamName')" min-width="100" show-overflow-tooltip align="center" header-align="center" />
           <template #empty>
             <el-empty :description="t('plantCrop.planting.empty')" :image-size="60" />
           </template>
@@ -35,17 +35,17 @@
       <el-tab-pane :label="t('plantCrop.tab.farmwork')" name="farmwork">
         <el-table :data="farmworkList" v-loading="subLoading" border size="small" max-height="520">
           <el-table-column type="index" :label="t('plantCrop.sub.index')" width="55" align="center" />
-          <el-table-column prop="farmDate" :label="t('plantCrop.farmwork.farmDate')" min-width="120" align="center">
+          <el-table-column prop="farmDate" :label="t('plantCrop.farmwork.farmDate')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.farmDate, '{y}-{m}-{d}') || '-' }}</template>
           </el-table-column>
-          <el-table-column prop="farmType" :label="t('plantCrop.farmwork.farmType')" min-width="110" align="center">
+          <el-table-column prop="farmType" :label="t('plantCrop.farmwork.farmType')" min-width="110" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="djs_farm_work_type" :value="row.farmType" />
             </template>
           </el-table-column>
-          <el-table-column prop="plotName" :label="t('plantCrop.farmwork.plotName')" min-width="110" show-overflow-tooltip />
-          <el-table-column prop="teamName" :label="t('plantCrop.farmwork.teamName')" min-width="110" show-overflow-tooltip />
-          <el-table-column prop="remark" :label="t('plantCrop.farmwork.remark')" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="plotName" :label="t('plantCrop.farmwork.plotName')" min-width="110" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column prop="teamName" :label="t('plantCrop.farmwork.teamName')" min-width="110" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column prop="remark" :label="t('plantCrop.farmwork.remark')" min-width="160" show-overflow-tooltip align="center" header-align="center" />
           <template #empty>
             <el-empty :description="t('plantCrop.farmwork.empty')" :image-size="60" />
           </template>

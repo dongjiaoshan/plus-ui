@@ -9,14 +9,14 @@
           </div>
         </template>
         <el-table v-loading="loadingMembers" :data="members" :empty-text="t('plantTeam.member.emptyMembers')" border stripe height="460" row-key="id">
-          <el-table-column :label="t('plantTeam.member.colNickName')" prop="nickName" min-width="120">
+          <el-table-column :label="t('plantTeam.member.colNickName')" prop="nickName" min-width="120" align="center" header-align="center">
             <template #default="{ row }">
               <span>{{ row.nickName || row.userName || row.userId }}</span>
               <el-tag v-if="row.isLeader === 1" type="warning" size="small" class="leader-tag">{{ t('plantTeam.member.isLeader') }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column :label="t('plantTeam.member.colPhone')" prop="phonenumber" width="130" />
-          <el-table-column :label="t('plantTeam.member.colAction')" width="200" align="center">
+          <el-table-column :label="t('plantTeam.member.colPhone')" prop="phonenumber" width="130" align="center" header-align="center" />
+          <el-table-column :label="t('plantTeam.member.colAction')" width="200" align="center" header-align="center">
             <template #default="{ row }">
               <el-button v-if="row.isLeader !== 1" v-hasPermi="['djs:plant:team:edit']" type="warning" link size="small" @click="onSetLeader(row)">
                 {{ t('plantTeam.member.setLeaderBtn') }}
@@ -57,13 +57,13 @@
           @selection-change="onSelectionChange"
         >
           <el-table-column type="selection" width="55" align="center" />
-          <el-table-column :label="t('plantTeam.member.colNickName')" prop="nickName" min-width="120">
+          <el-table-column :label="t('plantTeam.member.colNickName')" prop="nickName" min-width="120" align="center" header-align="center">
             <template #default="{ row }">
               {{ row.nickName || row.userName || row.userId }}
             </template>
           </el-table-column>
-          <el-table-column :label="t('plantTeam.member.colPhone')" prop="phonenumber" width="130" />
-          <el-table-column :label="t('plantTeam.member.colDept')" prop="deptName" width="140" />
+          <el-table-column :label="t('plantTeam.member.colPhone')" prop="phonenumber" width="130" align="center" header-align="center" />
+          <el-table-column :label="t('plantTeam.member.colDept')" prop="deptName" width="140" align="center" header-align="center" />
         </el-table>
       </el-card>
     </div>

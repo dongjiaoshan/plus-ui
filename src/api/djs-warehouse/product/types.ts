@@ -126,6 +126,8 @@ export interface ProductInfoQuery extends PageQuery {
   /** 产品类型集合（产品配置入口 {1,3}，商品配置入口 {2}）；非空时优先于 productType */
   productTypes?: number[];
   belongType?: string;
+  /** 归属类型集合（其他产品打包入口 {egg, dry_good, other}）；非空叠加 belong_type IN (...) */
+  belongTypes?: string[];
   buyClass?: string;
   /** 生产车间（djs_product_workshop） */
   productWorkshop?: number;

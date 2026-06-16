@@ -132,29 +132,29 @@
       <template v-if="form.productType === 3">
         <el-form-item :label="t('product.field.giftComponents')" prop="giftComponents">
           <el-table :data="form.giftComponents" border style="width: 100%">
-            <el-table-column :label="t('product.field.componentProduct')" min-width="220">
+            <el-table-column :label="t('product.field.componentProduct')" min-width="220" align="center" header-align="center">
               <template #default="{ row }">
                 <el-select v-model="row.componentProductId" filterable @change="(val: any) => onComponentSelect(row, val)">
                   <el-option v-for="p in componentCandidates" :key="String(p.id)" :label="`${p.productName} (${p.productUnit})`" :value="p.id" />
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column :label="t('product.field.componentCount')" width="140">
+            <el-table-column :label="t('product.field.componentCount')" width="140" align="center" header-align="center">
               <template #default="{ row }">
                 <el-input-number v-model="row.componentCount" :precision="3" :min="0" style="width: 100%" />
               </template>
             </el-table-column>
-            <el-table-column :label="t('product.field.componentUnit')" width="100">
+            <el-table-column :label="t('product.field.componentUnit')" width="100" align="center" header-align="center">
               <template #default="{ row }">
                 <el-input v-model="row.componentUnit" maxlength="16" />
               </template>
             </el-table-column>
-            <el-table-column :label="t('product.field.componentSort')" width="130">
+            <el-table-column :label="t('product.field.componentSort')" width="130" align="center" header-align="center">
               <template #default="{ row }">
                 <el-input-number v-model="row.componentSort" :min="0" controls-position="right" style="width: 100%" />
               </template>
             </el-table-column>
-            <el-table-column label="" width="80" align="center">
+            <el-table-column label="" width="80" align="center" header-align="center">
               <template #default="{ $index }">
                 <el-button link type="danger" @click="form.giftComponents?.splice($index, 1)">{{ t('common.delete') }}</el-button>
               </template>

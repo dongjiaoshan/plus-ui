@@ -1,12 +1,12 @@
 <template>
   <div>
     <el-table v-loading="loading" :data="list" border stripe size="small" :empty-text="t('supplier.deal.empty')">
-      <el-table-column :label="t('supplier.deal.dealDate')" prop="dealDate" width="140" />
-      <el-table-column :label="t('supplier.deal.dealProduct')" prop="dealProduct" min-width="180" show-overflow-tooltip />
-      <el-table-column :label="t('supplier.deal.dealQuantity')" prop="dealQuantity" width="120" align="right">
+      <el-table-column :label="t('supplier.deal.dealDate')" prop="dealDate" width="140" align="center" header-align="center" />
+      <el-table-column :label="t('supplier.deal.dealProduct')" prop="dealProduct" min-width="180" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('supplier.deal.dealQuantity')" prop="dealQuantity" width="120" align="center" header-align="center">
         <template #default="{ row }">{{ (row as SupplierDealVO).dealQuantity ?? '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('supplier.deal.dealUnit')" prop="dealUnit" width="90">
+      <el-table-column :label="t('supplier.deal.dealUnit')" prop="dealUnit" width="90" align="center" header-align="center">
         <template #default="{ row }">{{ (row as SupplierDealVO).dealUnit || '-' }}</template>
       </el-table-column>
     </el-table>

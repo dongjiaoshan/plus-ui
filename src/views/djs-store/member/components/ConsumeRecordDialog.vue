@@ -7,13 +7,13 @@
     </div>
 
     <el-table v-loading="loading" :data="records" border height="360">
-      <el-table-column :label="t('storeMember.consume.consumeDate')" prop="consumeDate" width="170" align="center" />
-      <el-table-column :label="t('storeMember.consume.sku')" prop="sku" min-width="140" show-overflow-tooltip />
-      <el-table-column :label="t('storeMember.consume.quantity')" prop="quantity" width="90" align="right" />
-      <el-table-column :label="t('storeMember.consume.amountManual')" prop="amountManual" width="100" align="right" />
-      <el-table-column :label="t('storeMember.consume.notes')" prop="notes" min-width="140" show-overflow-tooltip />
-      <el-table-column :label="t('storeMember.consume.operator')" prop="operatorName" width="100" align="center" />
-      <el-table-column :label="t('storeMember.consume.createTime')" prop="createTime" width="160" align="center" />
+      <el-table-column :label="t('storeMember.consume.consumeDate')" prop="consumeDate" width="170" align="center" header-align="center" />
+      <el-table-column :label="t('storeMember.consume.sku')" prop="sku" min-width="140" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('storeMember.consume.quantity')" prop="quantity" width="90" align="center" header-align="center" />
+      <el-table-column :label="t('storeMember.consume.amountManual')" prop="amountManual" width="100" align="center" header-align="center" />
+      <el-table-column :label="t('storeMember.consume.notes')" prop="notes" min-width="140" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('storeMember.consume.operator')" prop="operatorName" width="100" align="center" header-align="center" />
+      <el-table-column :label="t('storeMember.consume.createTime')" prop="createTime" width="160" align="center" header-align="center" />
       <template #empty>{{ t('storeMember.consume.empty') }}</template>
     </el-table>
 

@@ -20,55 +20,55 @@
           :empty-text="t('storeDemand.create.emptyProducts')"
         >
           <!-- 产品图片（所有 tab 都显示，imageUrl 由后端 listProduct 回填） -->
-          <el-table-column :label="t('storeDemand.create.productImage')" width="90" align="center">
+          <el-table-column :label="t('storeDemand.create.productImage')" width="90" align="center" header-align="center">
             <template #default="{ row }">
               <ImagePreview v-if="row.imageUrl" :width="48" :height="48" :src="row.imageUrl" :preview-src-list="[row.imageUrl]" />
               <span v-else>{{ dash }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column :label="t('storeDemand.create.productName')" min-width="160" show-overflow-tooltip>
+          <el-table-column :label="t('storeDemand.create.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center">
             <template #default="{ row }">{{ row.productName }}</template>
           </el-table-column>
 
           <!-- 白条：可出栏猪只头数 -->
-          <el-table-column v-if="activeTab === 'white_bar'" :label="t('storeDemand.create.availablePigs')" width="140" align="center">
+          <el-table-column v-if="activeTab === 'white_bar'" :label="t('storeDemand.create.availablePigs')" width="140" align="center" header-align="center">
             <template #default>{{ availablePigCount }}</template>
           </el-table-column>
 
           <!-- 规格（除白条外都有） -->
-          <el-table-column v-if="cols.spec" :label="t('storeDemand.create.spec')" width="100" align="center">
+          <el-table-column v-if="cols.spec" :label="t('storeDemand.create.spec')" width="100" align="center" header-align="center">
             <template #default="{ row }">{{ row.productSpec || dash }}</template>
           </el-table-column>
 
           <!-- 单位（果蔬无单列：原型果蔬表无「单位」列） -->
-          <el-table-column v-if="cols.unit" :label="t('storeDemand.create.unit')" width="90" align="center">
+          <el-table-column v-if="cols.unit" :label="t('storeDemand.create.unit')" width="90" align="center" header-align="center">
             <template #default="{ row }">{{ row.productUnit || dash }}</template>
           </el-table-column>
 
           <!-- 原材料库存（跨域字段，product 主数据无，占位 '—'） -->
-          <el-table-column v-if="cols.material" :label="t('storeDemand.create.materialStock')" width="120" align="center">
+          <el-table-column v-if="cols.material" :label="t('storeDemand.create.materialStock')" width="120" align="center" header-align="center">
             <template #default>{{ dash }}</template>
           </el-table-column>
 
           <!-- 果蔬专属：剩余地块 / 预计产量 / 最早可采摘 / 最晚可采摘（均跨域，占位 '—'） -->
           <template v-if="activeTab === 'vegetable'">
-            <el-table-column :label="t('storeDemand.create.remainPlot')" width="100" align="center">
+            <el-table-column :label="t('storeDemand.create.remainPlot')" width="100" align="center" header-align="center">
               <template #default>{{ dash }}</template>
             </el-table-column>
-            <el-table-column :label="t('storeDemand.create.expectYield')" width="110" align="center">
+            <el-table-column :label="t('storeDemand.create.expectYield')" width="110" align="center" header-align="center">
               <template #default>{{ dash }}</template>
             </el-table-column>
-            <el-table-column :label="t('storeDemand.create.earliestPick')" width="130" align="center">
+            <el-table-column :label="t('storeDemand.create.earliestPick')" width="130" align="center" header-align="center">
               <template #default>{{ dash }}</template>
             </el-table-column>
-            <el-table-column :label="t('storeDemand.create.latestPick')" width="130" align="center">
+            <el-table-column :label="t('storeDemand.create.latestPick')" width="130" align="center" header-align="center">
               <template #default>{{ dash }}</template>
             </el-table-column>
           </template>
 
           <!-- 需求量 stepper -->
-          <el-table-column :label="t('storeDemand.create.demandQuantity')" width="180" align="center" fixed="right">
+          <el-table-column :label="t('storeDemand.create.demandQuantity')" width="180" align="center" header-align="center" fixed="right">
             <template #default="{ row }">
               <el-input-number
                 :model-value="quantityOf(row)"

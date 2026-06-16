@@ -1763,7 +1763,7 @@ export default {
       sowingPeriod: '例：3 月上旬 - 4 月下旬',
       qualityDesc: '品质描述'
     },
-    rule: { cropCode: { required: '作物编码不能为空' }, cropName: { required: '作物名称不能为空' } },
+    rule: { cropCode: { required: '作物编码不能为空' }, cropName: { required: '作物名称不能为空' }, maxCycle: { gtMin: '生长最大周期必须大于生长最小周期' } },
     confirm: { del: '是否确认删除选中的 {count} 个作物？' }
   },
   // 种植 - 班组（PLT-MD-002）
@@ -2291,6 +2291,7 @@ export default {
         marketingWeightLabel: '出栏重量',
         whiteBarWeightShort: '白条重量',
         remainWeightLabel: '剩余重量',
+        noEarSource: '当前无可打包的猪肉来源耳号',
         pickupWeightExceed: '领用称重不应大于该白条出栏重量（{weight}kg）',
         pigAssignLabel: '猪只指定',
         noBars: '暂无待领用白条',

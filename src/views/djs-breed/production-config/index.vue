@@ -33,22 +33,22 @@
           </div>
           <el-table v-loading="fattenLoading" :data="fattenList" border row-key="rowKey">
             <el-table-column type="index" :label="t('productionConfig.fatten.index')" width="70" align="center" />
-            <el-table-column :label="t('productionConfig.fatten.startAge')" min-width="160">
+            <el-table-column :label="t('productionConfig.fatten.startAge')" min-width="160" align="center" header-align="center">
               <template #default="{ row }">
                 <el-input-number v-model="row.startAge" :min="0" :max="9999" :step="1" :precision="0" controls-position="right" />
               </template>
             </el-table-column>
-            <el-table-column :label="t('productionConfig.fatten.endAge')" min-width="160">
+            <el-table-column :label="t('productionConfig.fatten.endAge')" min-width="160" align="center" header-align="center">
               <template #default="{ row }">
                 <el-input-number v-model="row.endAge" :min="0" :max="9999" :step="1" :precision="0" controls-position="right" />
               </template>
             </el-table-column>
-            <el-table-column :label="t('productionConfig.fatten.recordGrowth')" width="160" align="center">
+            <el-table-column :label="t('productionConfig.fatten.recordGrowth')" width="160" align="center" header-align="center">
               <template #default="{ row }">
                 <el-switch v-model="row.recordGrowth" :active-value="1" :inactive-value="0" />
               </template>
             </el-table-column>
-            <el-table-column :label="t('common.operate')" width="100" align="center">
+            <el-table-column :label="t('common.operate')" width="100" align="center" header-align="center">
               <template #default="{ $index }">
                 <el-button v-hasPermi="['djs:breed:production-cycle:edit']" type="danger" link icon="Delete" @click="onRemoveStage($index)">
                   {{ t('common.delete') }}

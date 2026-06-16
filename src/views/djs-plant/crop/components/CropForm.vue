@@ -71,13 +71,20 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.maxCycle')" prop="maxCycle">
-                <el-input-number v-model="form.maxCycle" :min="0" :precision="0" :step="1" style="width: 100%" />
+              <el-form-item :label="t('plantCrop.field.minCycle')" prop="minCycle">
+                <el-input-number
+                  v-model="form.minCycle"
+                  :min="0"
+                  :precision="0"
+                  :step="1"
+                  style="width: 100%"
+                  @change="formRef?.validateField('maxCycle')"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.minCycle')" prop="minCycle">
-                <el-input-number v-model="form.minCycle" :min="0" :precision="0" :step="1" style="width: 100%" />
+              <el-form-item :label="t('plantCrop.field.maxCycle')" prop="maxCycle">
+                <el-input-number v-model="form.maxCycle" :min="0" :precision="0" :step="1" style="width: 100%" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -190,7 +197,19 @@ const imgOssIdsModel = useOssBridge(form, 'cropImageUrl', 'multi');
 
 const rules = computed(() => ({
   cropCode: [{ required: true, message: t('plantCrop.rule.cropCode.required'), trigger: 'blur' }],
-  cropName: [{ required: true, message: t('plantCrop.rule.cropName.required'), trigger: 'blur' }]
+  cropName: [{ required: true, message: t('plantCrop.rule.cropName.required'), trigger: 'blur' }],
+  maxCycle: [
+    {
+      trigger: 'change',
+      validator: (_rule: unknown, value: number | undefined, callback: (err?: Error) => void) => {
+        if (value != null && form.value.minCycle != null && value <= form.value.minCycle) {
+          callback(new Error(t('plantCrop.rule.maxCycle.gtMin')));
+        } else {
+          callback();
+        }
+      }
+    }
+  ]
 }));
 
 const dialogTitle = computed(() => (form.value.id ? t('plantCrop.title.edit') : t('plantCrop.title.add')));

@@ -23,8 +23,8 @@
 
     <!-- 猪肉产品：产品名称 / 退回产品重量(KG) -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
-      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="200" show-overflow-tooltip />
-      <el-table-column :label="t('storeReturn.operation.returnWeight')" width="320" align="center">
+      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="200" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('storeReturn.operation.returnWeight')" width="320" align="center" header-align="center">
         <template #default="{ row }">
           <el-input-number
             v-model="row.returnWeight"
@@ -41,8 +41,8 @@
 
     <!-- 果蔬产品：产品名称 / 退回量 / 单位 / 退回产品重量(KG) -->
     <el-table v-else v-loading="loading" :data="vegRows" border class="op-table">
-      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip />
-      <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center">
+      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
         <template #default="{ row }">
           <el-input-number
             v-model="row.returnQuantity"
@@ -55,10 +55,10 @@
           />
         </template>
       </el-table-column>
-      <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center">
+      <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
         <template #default="{ row }">{{ row.productUnit || '—' }}</template>
       </el-table-column>
-      <el-table-column :label="t('storeReturn.operation.returnWeight')" width="280" align="center">
+      <el-table-column :label="t('storeReturn.operation.returnWeight')" width="280" align="center" header-align="center">
         <template #default="{ row }">
           <el-input-number
             v-model="row.returnWeight"

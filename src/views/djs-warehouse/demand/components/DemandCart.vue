@@ -16,12 +16,12 @@
           ></template>
         </el-input>
         <el-table :data="filteredProducts" height="100%" border class="cart-product-table" :empty-text="t('demand.cart.emptyProducts')">
-          <el-table-column :label="t('demand.column.productName')" min-width="160" show-overflow-tooltip>
+          <el-table-column :label="t('demand.column.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center">
             <template #default="{ row }">{{ row.productName }}</template>
           </el-table-column>
-          <el-table-column :label="t('demand.field.productSpec')" prop="productSpec" width="120" show-overflow-tooltip />
-          <el-table-column :label="t('demand.field.productUnit')" prop="productUnit" width="80" align="center" />
-          <el-table-column :label="t('demand.cart.qtyToAdd')" width="180" align="center">
+          <el-table-column :label="t('demand.field.productSpec')" prop="productSpec" width="120" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column :label="t('demand.field.productUnit')" prop="productUnit" width="80" align="center" header-align="center" />
+          <el-table-column :label="t('demand.cart.qtyToAdd')" width="180" align="center" header-align="center">
             <template #default="{ row }">
               <el-input-number
                 v-model="rowQty[String(row.id)]"
@@ -34,7 +34,7 @@
               />
             </template>
           </el-table-column>
-          <el-table-column :label="t('demand.cart.opAdd')" width="100" align="center">
+          <el-table-column :label="t('demand.cart.opAdd')" width="100" align="center" header-align="center">
             <template #default="{ row }">
               <el-button link type="primary" size="small" @click="addToCart(row)">{{ t('demand.cart.add') }}</el-button>
             </template>

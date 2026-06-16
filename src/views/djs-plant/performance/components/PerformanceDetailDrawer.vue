@@ -4,14 +4,14 @@
       <!-- tab1 产量绩效：按作物分行（采摘量 × 单价快照 = 该作物绩效额） -->
       <el-tab-pane :label="t('plantPerformance.detail.tabYield')" name="yield">
         <el-table v-loading="loading" :data="cropRows" border size="small" show-summary :summary-method="yieldSummary">
-          <el-table-column prop="cropName" :label="t('plantPerformance.detail.cropName')" min-width="120" show-overflow-tooltip />
-          <el-table-column :label="t('plantPerformance.detail.cropPickWeight')" width="130" align="right">
+          <el-table-column prop="cropName" :label="t('plantPerformance.detail.cropName')" min-width="120" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column :label="t('plantPerformance.detail.cropPickWeight')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(2)} 斤` : '-' }}</template>
           </el-table-column>
-          <el-table-column :label="t('plantPerformance.detail.cropUnitPrice')" width="130" align="right">
+          <el-table-column :label="t('plantPerformance.detail.cropUnitPrice')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ row.unitPriceSnapshot != null ? `${row.unitPriceSnapshot} 元/斤` : '-' }}</template>
           </el-table-column>
-          <el-table-column :label="t('plantPerformance.detail.cropAmount')" width="130" align="right">
+          <el-table-column :label="t('plantPerformance.detail.cropAmount')" width="130" align="center" header-align="center">
             <template #default="{ row }">
               <span class="font-bold text-red-500">{{ row.performanceAmount != null ? `¥${row.performanceAmount}` : '-' }}</span>
             </template>
@@ -22,14 +22,14 @@
       <!-- tab2 农事记录（按班组 + 月份过滤，复用 PLT-WORK-002 接口） -->
       <el-tab-pane :label="t('plantPerformance.detail.tabFarm')" name="farm">
         <el-table v-loading="farmLoading" :data="farmList" border size="small" height="480">
-          <el-table-column prop="recordNo" :label="t('plantPerformance.detail.recordNo')" min-width="150" show-overflow-tooltip />
-          <el-table-column prop="farmType" :label="t('plantPerformance.detail.farmType')" width="110" align="center">
+          <el-table-column prop="recordNo" :label="t('plantPerformance.detail.recordNo')" min-width="150" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column prop="farmType" :label="t('plantPerformance.detail.farmType')" width="110" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="farmWorkTypeDict" :value="row.farmType" />
             </template>
           </el-table-column>
-          <el-table-column prop="plotName" :label="t('plantPerformance.detail.plot')" min-width="120" show-overflow-tooltip />
-          <el-table-column prop="farmDate" :label="t('plantPerformance.detail.farmDate')" width="120" align="center" />
+          <el-table-column prop="plotName" :label="t('plantPerformance.detail.plot')" min-width="120" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column prop="farmDate" :label="t('plantPerformance.detail.farmDate')" width="120" align="center" header-align="center" />
         </el-table>
         <div class="mt-2 text-xs text-gray-400">{{ t('plantPerformance.detail.farmCount', { count: farmList.length }) }}</div>
       </el-tab-pane>

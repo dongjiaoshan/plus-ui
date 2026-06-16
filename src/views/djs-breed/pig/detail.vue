@@ -69,13 +69,13 @@
         <div v-if="perfLoading" v-loading="perfLoading" class="loading-box" />
         <el-empty v-else-if="!performance.length" :description="t('pig.detail.performanceEmpty')" />
         <el-table v-else :data="performance" border size="small">
-          <el-table-column prop="parity" :label="t('pig.column.parity')" width="80" align="center" />
-          <el-table-column prop="totalBorn" :label="t('pig.perf.totalBorn')" width="100" align="center" />
-          <el-table-column prop="totalLiveBorn" :label="t('pig.perf.totalLiveBorn')" width="100" align="center" />
-          <el-table-column prop="totalWeaned" :label="t('pig.perf.totalWeaned')" width="100" align="center" />
-          <el-table-column prop="avgBornWeight" :label="t('pig.perf.avgBornWeight')" width="120" align="center" />
-          <el-table-column prop="avgWeanedWeight" :label="t('pig.perf.avgWeanedWeight')" width="120" align="center" />
-          <el-table-column prop="lastUpdateDate" :label="t('pig.perf.lastUpdateDate')" width="120" align="center" />
+          <el-table-column prop="parity" :label="t('pig.column.parity')" width="80" align="center" header-align="center" />
+          <el-table-column prop="totalBorn" :label="t('pig.perf.totalBorn')" width="100" align="center" header-align="center" />
+          <el-table-column prop="totalLiveBorn" :label="t('pig.perf.totalLiveBorn')" width="100" align="center" header-align="center" />
+          <el-table-column prop="totalWeaned" :label="t('pig.perf.totalWeaned')" width="100" align="center" header-align="center" />
+          <el-table-column prop="avgBornWeight" :label="t('pig.perf.avgBornWeight')" width="120" align="center" header-align="center" />
+          <el-table-column prop="avgWeanedWeight" :label="t('pig.perf.avgWeanedWeight')" width="120" align="center" header-align="center" />
+          <el-table-column prop="lastUpdateDate" :label="t('pig.perf.lastUpdateDate')" width="120" align="center" header-align="center" />
         </el-table>
         <div class="hint mt-2">
           {{ t('pig.detail.performanceDataHint') }}
@@ -83,17 +83,17 @@
       </el-tab-pane>
 
       <!-- tab 3 养殖记录（状态变更历史，表格形式） -->
-      <el-tab-pane :label="t('pig.detail.tab.history')" name="history" lazy>
+      <el-tab-pane v-if="detail.pigType === 'sow'" :label="t('pig.detail.tab.history')" name="history" lazy>
         <div v-if="historyLoading" v-loading="historyLoading" class="loading-box" />
         <el-empty v-else-if="!history.length" :description="t('pig.detail.historyEmpty')" />
         <el-table v-else :data="history" border size="small">
-          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" />
-          <el-table-column :label="t('pig.detail.breedingCol.eventType')" width="110" align="center">
+          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" header-align="center" />
+          <el-table-column :label="t('pig.detail.breedingCol.eventType')" width="110" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="eventDict" :value="row.eventType" />
             </template>
           </el-table-column>
-          <el-table-column :label="t('pig.detail.breedingCol.transition')" min-width="220" align="center">
+          <el-table-column :label="t('pig.detail.breedingCol.transition')" min-width="220" align="center" header-align="center">
             <template #default="{ row }">
               <span class="transition-cell">
                 <template v-if="row.oldStatus"><dict-tag :options="lifecycleDict" :value="row.oldStatus" /> → </template>
@@ -102,7 +102,7 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column :label="t('pig.detail.historyCol.durationDays')" width="110" align="center">
+          <el-table-column :label="t('pig.detail.historyCol.durationDays')" width="110" align="center" header-align="center">
             <template #default="{ row }">
               <span v-if="row.durationDays != null">{{ t('pig.detail.duration', { days: row.durationDays }) }}</span>
               <span v-else>—</span>
@@ -116,13 +116,13 @@
         <div v-if="historyLoading" v-loading="historyLoading" class="loading-box" />
         <el-empty v-else-if="!breedingRows.length" :description="t('pig.detail.breedingEmpty')" />
         <el-table v-else :data="breedingRows" border size="small">
-          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" />
-          <el-table-column :label="t('pig.detail.breedingCol.eventType')" width="110" align="center">
+          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" header-align="center" />
+          <el-table-column :label="t('pig.detail.breedingCol.eventType')" width="110" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="eventDict" :value="row.eventType" />
             </template>
           </el-table-column>
-          <el-table-column :label="t('pig.detail.breedingCol.transition')" min-width="220" align="center">
+          <el-table-column :label="t('pig.detail.breedingCol.transition')" min-width="220" align="center" header-align="center">
             <template #default="{ row }">
               <span class="transition-cell">
                 <template v-if="row.oldStatus"><dict-tag :options="lifecycleDict" :value="row.oldStatus" /> → </template>
@@ -130,7 +130,7 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="createByName" :label="t('pig.detail.breedingCol.recorder')" width="120" align="center">
+          <el-table-column prop="createByName" :label="t('pig.detail.breedingCol.recorder')" width="120" align="center" header-align="center">
             <template #default="{ row }">{{ row.createByName || '—' }}</template>
           </el-table-column>
         </el-table>
@@ -141,25 +141,25 @@
         <div v-if="medLoading" v-loading="medLoading" class="loading-box" />
         <el-empty v-else-if="!medRows.length" :description="t('pig.detail.medEmpty')" />
         <el-table v-else :data="medRows" border size="small">
-          <el-table-column prop="useDate" :label="t('pig.detail.medCol.useDate')" width="120" align="center" />
-          <el-table-column prop="medicineName" :label="t('pig.detail.medCol.medicineName')" min-width="120" />
-          <el-table-column :label="t('pig.detail.medCol.medicineType')" width="100" align="center">
+          <el-table-column prop="useDate" :label="t('pig.detail.medCol.useDate')" width="120" align="center" header-align="center" />
+          <el-table-column prop="medicineName" :label="t('pig.detail.medCol.medicineName')" min-width="120" align="center" header-align="center" />
+          <el-table-column :label="t('pig.detail.medCol.medicineType')" width="100" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="medUseTypeDict" :value="row.medicineType" />
             </template>
           </el-table-column>
-          <el-table-column prop="medicineDosage" :label="t('pig.detail.medCol.medicineDosage')" width="90" align="right" />
-          <el-table-column :label="t('pig.detail.medCol.medicineWay')" width="100" align="center">
+          <el-table-column prop="medicineDosage" :label="t('pig.detail.medCol.medicineDosage')" width="90" align="center" header-align="center" />
+          <el-table-column :label="t('pig.detail.medCol.medicineWay')" width="100" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="medWayDict" :value="row.medicineWay" />
             </template>
           </el-table-column>
-          <el-table-column :label="t('pig.detail.medCol.medicineReason')" width="110" align="center">
+          <el-table-column :label="t('pig.detail.medCol.medicineReason')" width="110" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="medReasonDict" :value="row.medicineReason" />
             </template>
           </el-table-column>
-          <el-table-column prop="operatorName" :label="t('pig.detail.medCol.operatorName')" width="110" align="center" />
+          <el-table-column prop="operatorName" :label="t('pig.detail.medCol.operatorName')" width="110" align="center" header-align="center" />
         </el-table>
       </el-tab-pane>
 

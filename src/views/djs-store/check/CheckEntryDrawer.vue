@@ -23,44 +23,44 @@
       </div>
 
       <el-table v-loading="loading" :data="rows" border stripe class="entry-table">
-        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" />
-        <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" />
-        <el-table-column :label="t('storeLedger.column.openingQty')" width="130" align="center">
+        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
+        <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" header-align="center" />
+        <el-table-column :label="t('storeLedger.column.openingQty')" width="130" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.openingQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.inboundQty')" width="130" align="center">
+        <el-table-column :label="t('storeLedger.column.inboundQty')" width="130" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.inboundQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.saleQty')" width="130" align="center">
+        <el-table-column :label="t('storeLedger.column.saleQty')" width="130" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.saleQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.giftQty')" width="130" align="center">
+        <el-table-column :label="t('storeLedger.column.giftQty')" width="130" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.giftQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.returnQty')" width="130" align="center">
+        <el-table-column :label="t('storeLedger.column.returnQty')" width="130" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.returnQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.returnedQty')" width="100" align="right">
+        <el-table-column :label="t('storeLedger.column.returnedQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <span class="text-muted">{{ row.whReturnQty }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.lossQty')" width="100" align="right">
+        <el-table-column :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <span class="text-muted">{{ row.lossQty }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.closingQty')" width="110" align="right" fixed="right">
+        <el-table-column :label="t('storeLedger.column.closingQty')" width="110" align="center" header-align="center" fixed="right">
           <template #default="{ row }">
             <span class="closing">{{ row.closingQty }}</span>
           </template>

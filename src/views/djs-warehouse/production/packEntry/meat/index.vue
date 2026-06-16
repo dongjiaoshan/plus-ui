@@ -1,12 +1,13 @@
 <template>
   <div class="p-2">
-    <!-- 肉品打包：仅猪肉产品（belong_type=pork），发送位置仅「发货月台」（去掉邮寄/礼盒）；去掉来源产品 chip 展示（row105） -->
+    <!-- 肉品打包：仅猪肉产品（belong_type=pork），发送位置仅「发货月台」（去掉邮寄/礼盒）；
+         顶部按已领用出库猪肉来源耳号去重列出耳号选择条（row107），选耳号再选该耳号来源 -->
     <SkuPackForm
       kind="dry"
       :product-type="1"
       belong-type="pork"
       :send-dest-kinds="['platform']"
-      :show-source="false"
+      ear-group
       :title="t('djs.warehouse.packEntry.meatTitle')"
     />
   </div>

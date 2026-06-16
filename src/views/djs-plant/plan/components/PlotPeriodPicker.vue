@@ -20,12 +20,12 @@
               <el-checkbox :model-value="isSelected(row.plotId)" @update:model-value="(v) => togglePlot(row, v)" />
             </template>
           </el-table-column>
-          <el-table-column :label="t('plantPlan.wizard.col.plotCode')" prop="plotCode" width="100" />
-          <el-table-column :label="t('plantPlan.wizard.col.plotName')" prop="plotName" min-width="120" show-overflow-tooltip />
-          <el-table-column :label="t('plantPlan.wizard.col.plotArea')" prop="plotArea" width="90" align="right">
+          <el-table-column :label="t('plantPlan.wizard.col.plotCode')" prop="plotCode" width="100" align="center" header-align="center" />
+          <el-table-column :label="t('plantPlan.wizard.col.plotName')" prop="plotName" min-width="120" show-overflow-tooltip align="center" header-align="center" />
+          <el-table-column :label="t('plantPlan.wizard.col.plotArea')" prop="plotArea" width="90" align="center" header-align="center">
             <template #default="{ row }">{{ row.plotArea }} 亩</template>
           </el-table-column>
-          <el-table-column :label="t('plantPlan.wizard.col.month')" width="120" align="center">
+          <el-table-column :label="t('plantPlan.wizard.col.month')" width="120" align="center" header-align="center">
             <template #default="{ row }">
               <el-select
                 :model-value="rowOf(row.plotId)?.plantMonth"
@@ -38,7 +38,7 @@
               </el-select>
             </template>
           </el-table-column>
-          <el-table-column :label="t('plantPlan.wizard.col.period')" width="120" align="center">
+          <el-table-column :label="t('plantPlan.wizard.col.period')" width="120" align="center" header-align="center">
             <template #default="{ row }">
               <el-select
                 :model-value="rowOf(row.plotId)?.plantPeriod"
@@ -57,7 +57,7 @@
               </el-select>
             </template>
           </el-table-column>
-          <el-table-column :label="t('plantPlan.wizard.col.plantBy')" width="160" align="center">
+          <el-table-column :label="t('plantPlan.wizard.col.plantBy')" width="160" align="center" header-align="center">
             <template #default="{ row }">
               <el-select
                 :model-value="rowOf(row.plotId)?.plantBy"
@@ -71,7 +71,7 @@
               </el-select>
             </template>
           </el-table-column>
-          <el-table-column :label="t('plantPlan.wizard.col.harvestBy')" width="160" align="center">
+          <el-table-column :label="t('plantPlan.wizard.col.harvestBy')" width="160" align="center" header-align="center">
             <template #default="{ row }">
               <el-select
                 :model-value="rowOf(row.plotId)?.harvestBy"

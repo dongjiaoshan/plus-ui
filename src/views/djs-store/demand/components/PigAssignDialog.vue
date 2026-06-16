@@ -7,23 +7,23 @@
 
     <el-table ref="tableRef" v-loading="loading" :data="available" row-key="earNo" border height="360" @selection-change="onSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column prop="earNo" :label="t('storeDemand.assignPig.column.earNo')" min-width="140" />
-      <el-table-column prop="pigSex" :label="t('storeDemand.assignPig.column.pigSex')" width="80" align="center">
+      <el-table-column prop="earNo" :label="t('storeDemand.assignPig.column.earNo')" min-width="140" align="center" header-align="center" />
+      <el-table-column prop="pigSex" :label="t('storeDemand.assignPig.column.pigSex')" width="80" align="center" header-align="center">
         <template #default="{ row }">
           <dict-tag :options="djs_pig_sex" :value="row.pigSex" />
         </template>
       </el-table-column>
-      <el-table-column prop="pigBreedLabel" :label="t('storeDemand.assignPig.column.pigBreed')" min-width="140" show-overflow-tooltip>
+      <el-table-column prop="pigBreedLabel" :label="t('storeDemand.assignPig.column.pigBreed')" min-width="140" show-overflow-tooltip align="center" header-align="center">
         <template #default="{ row }">
           <span>{{ row.pigBreedLabel || '—' }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="ageDays" :label="t('storeDemand.assignPig.column.ageDays')" width="100" align="right">
+      <el-table-column prop="ageDays" :label="t('storeDemand.assignPig.column.ageDays')" width="100" align="center" header-align="center">
         <template #default="{ row }">
           <span>{{ row.ageDays == null ? '—' : row.ageDays }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="lastBackfat" :label="t('storeDemand.assignPig.column.lastBackfat')" width="120" align="right">
+      <el-table-column prop="lastBackfat" :label="t('storeDemand.assignPig.column.lastBackfat')" width="120" align="center" header-align="center">
         <template #default="{ row }">
           <span>{{ formatBackfat(row.lastBackfat) }}</span>
         </template>

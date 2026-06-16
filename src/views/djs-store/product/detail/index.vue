@@ -29,15 +29,15 @@
     </div>
 
     <el-table v-loading="loading" :data="history" border stripe>
-      <el-table-column prop="ledgerDate" :label="t('storeLedger.column.ledgerDate')" width="130" align="center" />
-      <el-table-column prop="storeName" :label="t('storeLedger.column.storeName')" min-width="120" show-overflow-tooltip />
-      <el-table-column prop="openingQty" :label="t('storeLedger.column.openingQty')" width="100" align="right" />
-      <el-table-column prop="inboundQty" :label="t('storeLedger.column.inboundQty')" width="100" align="right" />
-      <el-table-column prop="saleQty" :label="t('storeLedger.column.saleQty')" width="90" align="right" />
-      <el-table-column prop="giftQty" :label="t('storeLedger.column.giftQty')" width="90" align="right" />
-      <el-table-column prop="returnQty" :label="t('storeLedger.column.returnQty')" width="90" align="right" />
-      <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" width="90" align="right" />
-      <el-table-column prop="closingQty" :label="t('storeLedger.column.closingQty')" width="110" align="right" />
+      <el-table-column prop="ledgerDate" :label="t('storeLedger.column.ledgerDate')" width="130" align="center" header-align="center" />
+      <el-table-column prop="storeName" :label="t('storeLedger.column.storeName')" min-width="120" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column prop="openingQty" :label="t('storeLedger.column.openingQty')" width="100" align="center" header-align="center" />
+      <el-table-column prop="inboundQty" :label="t('storeLedger.column.inboundQty')" width="100" align="center" header-align="center" />
+      <el-table-column prop="saleQty" :label="t('storeLedger.column.saleQty')" width="90" align="center" header-align="center" />
+      <el-table-column prop="giftQty" :label="t('storeLedger.column.giftQty')" width="90" align="center" header-align="center" />
+      <el-table-column prop="returnQty" :label="t('storeLedger.column.returnQty')" width="90" align="center" header-align="center" />
+      <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" width="90" align="center" header-align="center" />
+      <el-table-column prop="closingQty" :label="t('storeLedger.column.closingQty')" width="110" align="center" header-align="center" />
     </el-table>
     <el-empty v-if="!loading && !history.length" :description="t('storeProduct.detail.noHistory')" />
   </el-drawer>

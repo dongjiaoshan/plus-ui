@@ -11,52 +11,52 @@
       <!-- 入库记录 -->
       <el-tab-pane :label="t('stock.action.flowIn')" name="in">
         <el-table v-loading="inLoading" :data="inList" border max-height="460">
-          <el-table-column prop="flowDate" :label="t('djs.warehouse.flowIn.flowDate')" min-width="160" align="center">
+          <el-table-column prop="flowDate" :label="t('djs.warehouse.flowIn.flowDate')" min-width="160" align="center" header-align="center">
             <template #default="{ row }">{{ formatDateTime(row.flowDate) }}</template>
           </el-table-column>
-          <el-table-column prop="flowNo" :label="t('djs.warehouse.flowIn.flowNo')" min-width="160" align="center" />
-          <el-table-column prop="flowType" :label="t('djs.warehouse.flowIn.inMode')" min-width="110" align="center">
+          <el-table-column prop="flowNo" :label="t('djs.warehouse.flowIn.flowNo')" min-width="160" align="center" header-align="center" />
+          <el-table-column prop="flowType" :label="t('djs.warehouse.flowIn.inMode')" min-width="110" align="center" header-align="center">
             <template #default="{ row }"><dict-tag :options="djs_flow_type" :value="row.flowType" /></template>
           </el-table-column>
-          <el-table-column prop="locationName" :label="t('djs.warehouse.flowIn.location')" min-width="120" align="center" />
-          <el-table-column prop="changeQuantity" :label="t('djs.warehouse.flowIn.changeQuantity')" min-width="110" align="center" />
-          <el-table-column prop="productUnit" :label="t('djs.warehouse.flowIn.productUnit')" min-width="80" align="center" />
-          <el-table-column prop="operatorName" :label="t('djs.warehouse.flowIn.operator')" min-width="100" align="center" />
+          <el-table-column prop="locationName" :label="t('djs.warehouse.flowIn.location')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="changeQuantity" :label="t('djs.warehouse.flowIn.changeQuantity')" min-width="110" align="center" header-align="center" />
+          <el-table-column prop="productUnit" :label="t('djs.warehouse.flowIn.productUnit')" min-width="80" align="center" header-align="center" />
+          <el-table-column prop="operatorName" :label="t('djs.warehouse.flowIn.operator')" min-width="100" align="center" header-align="center" />
         </el-table>
       </el-tab-pane>
 
       <!-- 出库记录 -->
       <el-tab-pane :label="t('stock.action.flowOut')" name="out">
         <el-table v-loading="outLoading" :data="outList" border max-height="460">
-          <el-table-column prop="flowDate" :label="t('djs.warehouse.flowIn.flowDate')" min-width="160" align="center">
+          <el-table-column prop="flowDate" :label="t('djs.warehouse.flowIn.flowDate')" min-width="160" align="center" header-align="center">
             <template #default="{ row }">{{ formatDateTime(row.flowDate) }}</template>
           </el-table-column>
-          <el-table-column prop="flowNo" :label="t('djs.warehouse.flowIn.flowNo')" min-width="160" align="center" />
-          <el-table-column prop="flowType" :label="t('djs.warehouse.flowIn.inMode')" min-width="110" align="center">
+          <el-table-column prop="flowNo" :label="t('djs.warehouse.flowIn.flowNo')" min-width="160" align="center" header-align="center" />
+          <el-table-column prop="flowType" :label="t('djs.warehouse.flowIn.inMode')" min-width="110" align="center" header-align="center">
             <template #default="{ row }"><dict-tag :options="djs_flow_type" :value="row.flowType" /></template>
           </el-table-column>
-          <el-table-column prop="locationName" :label="t('djs.warehouse.flowIn.location')" min-width="120" align="center" />
-          <el-table-column prop="changeQuantity" :label="t('djs.warehouse.flowIn.changeQuantity')" min-width="110" align="center" />
-          <el-table-column prop="productUnit" :label="t('djs.warehouse.flowIn.productUnit')" min-width="80" align="center" />
-          <el-table-column prop="operatorName" :label="t('djs.warehouse.flowIn.operator')" min-width="100" align="center" />
+          <el-table-column prop="locationName" :label="t('djs.warehouse.flowIn.location')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="changeQuantity" :label="t('djs.warehouse.flowIn.changeQuantity')" min-width="110" align="center" header-align="center" />
+          <el-table-column prop="productUnit" :label="t('djs.warehouse.flowIn.productUnit')" min-width="80" align="center" header-align="center" />
+          <el-table-column prop="operatorName" :label="t('djs.warehouse.flowIn.operator')" min-width="100" align="center" header-align="center" />
         </el-table>
       </el-tab-pane>
 
       <!-- 盘点记录（按库位拉明细 → 前端按本产品 productId 过滤，只看本产品的盘点行） -->
       <el-tab-pane :label="t('stock.action.checkRecord')" name="check">
         <el-table v-loading="checkLoading" :data="checkList" border max-height="460">
-          <el-table-column prop="checkDate" :label="t('stock.column.latestCheckTime')" min-width="160" align="center">
+          <el-table-column prop="checkDate" :label="t('stock.column.latestCheckTime')" min-width="160" align="center" header-align="center">
             <template #default="{ row }">{{ formatDateTime(row.checkDate) }}</template>
           </el-table-column>
-          <el-table-column prop="checkId" :label="t('stock.recordDialog.checkId')" min-width="160" align="center" />
-          <el-table-column prop="locationName" :label="t('stock.column.locationName')" min-width="120" align="center" />
-          <el-table-column prop="sysStock" :label="t('stock.recordDialog.sysStock')" min-width="110" align="center" />
-          <el-table-column prop="checkStock" :label="t('stock.recordDialog.checkStock')" min-width="110" align="center" />
-          <el-table-column prop="diffStock" :label="t('stock.recordDialog.diffStock')" min-width="100" align="center" />
-          <el-table-column prop="checkResultType" :label="t('stock.column.checkResult')" min-width="100" align="center">
+          <el-table-column prop="checkId" :label="t('stock.recordDialog.checkId')" min-width="160" align="center" header-align="center" />
+          <el-table-column prop="locationName" :label="t('stock.column.locationName')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="sysStock" :label="t('stock.recordDialog.sysStock')" min-width="110" align="center" header-align="center" />
+          <el-table-column prop="checkStock" :label="t('stock.recordDialog.checkStock')" min-width="110" align="center" header-align="center" />
+          <el-table-column prop="diffStock" :label="t('stock.recordDialog.diffStock')" min-width="100" align="center" header-align="center" />
+          <el-table-column prop="checkResultType" :label="t('stock.column.checkResult')" min-width="100" align="center" header-align="center">
             <template #default="{ row }"><dict-tag :options="djs_check_result" :value="row.checkResultType" /></template>
           </el-table-column>
-          <el-table-column prop="checkByName" :label="t('stock.recordDialog.checkBy')" min-width="100" align="center" />
+          <el-table-column prop="checkByName" :label="t('stock.recordDialog.checkBy')" min-width="100" align="center" header-align="center" />
         </el-table>
       </el-tab-pane>
     </el-tabs>

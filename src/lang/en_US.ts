@@ -1760,7 +1760,7 @@ export default {
       sowingPeriod: 'e.g. early Mar - late Apr',
       qualityDesc: 'Quality description'
     },
-    rule: { cropCode: { required: 'Crop code is required' }, cropName: { required: 'Crop name is required' } },
+    rule: { cropCode: { required: 'Crop code is required' }, cropName: { required: 'Crop name is required' }, maxCycle: { gtMin: 'Max growth cycle must be greater than min growth cycle' } },
     confirm: { del: 'Delete {count} crops?' }
   },
   // Plant - Work team (PLT-MD-002)
@@ -2288,6 +2288,7 @@ export default {
         marketingWeightLabel: 'Marketing Weight',
         whiteBarWeightShort: 'Carcass wt ',
         remainWeightLabel: 'Remaining Weight',
+        noEarSource: 'No pork source ear No. available for packing',
         pickupWeightExceed: 'Pickup weight must not exceed the carcass marketing weight ({weight}kg)',
         pigAssignLabel: 'Pig Assignment',
         noBars: 'No bars available',

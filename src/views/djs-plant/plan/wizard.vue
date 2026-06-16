@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 wizard-page">
+  <div class="p-4 wizard-page wizard-page--fixed-footer">
     <el-card shadow="never">
       <template #header>
         <div class="flex items-center justify-between">
@@ -192,14 +192,19 @@ function goList() {
 </script>
 
 <style scoped>
-/* 底部操作栏：提到 el-card 外层作为滚动容器(.app-main)的直接子节点，
-   sticky bottom 才能真正生效——滚动时常驻视口底部，无需拉到最底才能操作。
-   负 margin 抵消页面 .p-4 内边距，使操作栏边到边贴底。 */
+/* 底部操作栏固定常驻视口底部：地块列表很长滚动时按钮栏始终可见，
+   无需拉到页面最底才能点"上一步/下一步/创建计划"。
+   用 position: fixed 贴视口底，并给页面底部留出按钮栏高度的 padding，避免遮挡最后内容。 */
+.wizard-page--fixed-footer {
+  padding-bottom: 72px;
+}
+
 .wizard-footer {
-  position: sticky;
+  position: fixed;
+  right: 0;
   bottom: 0;
-  z-index: 10;
-  margin: 0 -16px -16px;
+  left: 0;
+  z-index: 1000;
   padding: 12px 0;
   background-color: var(--el-bg-color);
   border-top: 1px solid var(--el-border-color-lighter);

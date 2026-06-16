@@ -63,31 +63,31 @@
     </div>
 
     <el-table v-loading="loading" :data="list" border :empty-text="t('demand.confirmPage.empty')">
-      <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="120" align="center" show-overflow-tooltip />
-      <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" min-width="120" align="center" show-overflow-tooltip />
-      <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="120" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" min-width="120" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center" header-align="center">
         <template #default="{ row }">{{ formatQty(row.demandQuantity) }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.productUnit')" prop="productUnit" width="70" align="center" />
-      <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="120" align="center" show-overflow-tooltip>
+      <el-table-column :label="t('demand.confirmPage.column.productUnit')" prop="productUnit" width="70" align="center" header-align="center" />
+      <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
         <template #default="{ row }">{{ storeNameOf(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="120" align="center" show-overflow-tooltip />
-      <el-table-column :label="t('demand.confirmPage.column.demandStatus')" min-width="120" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="120" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column :label="t('demand.confirmPage.column.demandStatus')" min-width="120" align="center" header-align="center">
         <template #default="{ row }">
           <dict-tag :options="djs_demand_status" :value="row.demandStatus" />
         </template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.confirmerTime')" prop="confirmerTime" min-width="120" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.confirmerTime')" prop="confirmerTime" min-width="120" align="center" header-align="center">
         <template #default="{ row }">{{ row.confirmerTime ? proxy?.parseTime?.(row.confirmerTime) : '—' }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.demandConfirmer')" min-width="120" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.demandConfirmer')" min-width="120" align="center" header-align="center">
         <template #default="{ row }">{{ row.demandConfirmerName || '—' }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.pigAssigned')" min-width="120" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.pigAssigned')" min-width="120" align="center" header-align="center">
         <template #default="{ row }">{{ pigAssignedLabel(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('demand.confirmPage.column.actions')" width="240" fixed="right" align="center">
+      <el-table-column :label="t('demand.confirmPage.column.actions')" width="240" fixed="right" align="center" header-align="center">
         <template #default="{ row }">
           <el-button v-if="canConfirm(row)" link type="success" size="small" @click="onConfirm(row)">
             {{ t('demand.action.confirm') }}

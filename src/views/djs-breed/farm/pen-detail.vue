@@ -15,11 +15,11 @@
         <!-- 大栏：序号 + 头数 -->
         <el-tab-pane name="big" :label="`${t('farm.proto.tab.big')}(${counts.big})`">
           <el-table v-loading="loading" :data="rows.big" border>
-            <el-table-column :label="t('farm.proto.col.bigSeq')" prop="penName" align="center" />
-            <el-table-column :label="t('farm.proto.col.headCount')" align="center">
+            <el-table-column :label="t('farm.proto.col.bigSeq')" prop="penName" align="center" header-align="center" />
+            <el-table-column :label="t('farm.proto.col.headCount')" align="center" header-align="center">
               <template #default="{ row }">{{ row.headCount ?? 0 }}</template>
             </el-table-column>
-            <el-table-column :label="t('biz.table.column.action')" width="120" align="center">
+            <el-table-column :label="t('biz.table.column.action')" width="120" align="center" header-align="center">
               <template #default="{ row }">
                 <el-button v-hasPermi="['djs:breed:pen:remove']" link type="danger" @click="onDel(row, 'big')">
                   {{ t('common.delete') }}
@@ -33,14 +33,14 @@
         <!-- 限位栏：栏号 + 单头耳号 -->
         <el-tab-pane name="stall" :label="`${t('farm.proto.tab.stall')}(${counts.stall})`">
           <el-table v-loading="loading" :data="rows.stall" border>
-            <el-table-column :label="t('farm.proto.col.stallNo')" prop="penName" align="center" />
-            <el-table-column :label="t('farm.proto.col.earNo')" align="center">
+            <el-table-column :label="t('farm.proto.col.stallNo')" prop="penName" align="center" header-align="center" />
+            <el-table-column :label="t('farm.proto.col.earNo')" align="center" header-align="center">
               <template #default="{ row }">
                 <el-button v-if="row.earNo && row.pigId" link type="primary" @click="goPig(row.pigId)">{{ row.earNo }}</el-button>
                 <span v-else>—</span>
               </template>
             </el-table-column>
-            <el-table-column :label="t('biz.table.column.action')" width="120" align="center">
+            <el-table-column :label="t('biz.table.column.action')" width="120" align="center" header-align="center">
               <template #default="{ row }">
                 <el-button v-hasPermi="['djs:breed:pen:remove']" link type="danger" @click="onDel(row, 'stall')">
                   {{ t('common.delete') }}
@@ -54,17 +54,17 @@
         <!-- 产床：床号 + 母猪耳号 + 仔猪数 -->
         <el-tab-pane name="farrow" :label="`${t('farm.proto.tab.farrow')}(${counts.farrow})`">
           <el-table v-loading="loading" :data="rows.farrow" border>
-            <el-table-column :label="t('farm.proto.col.bedNo')" prop="penName" align="center" />
-            <el-table-column :label="t('farm.proto.col.earNo')" align="center">
+            <el-table-column :label="t('farm.proto.col.bedNo')" prop="penName" align="center" header-align="center" />
+            <el-table-column :label="t('farm.proto.col.earNo')" align="center" header-align="center">
               <template #default="{ row }">
                 <el-button v-if="row.earNo && row.pigId" link type="primary" @click="goPig(row.pigId)">{{ row.earNo }}</el-button>
                 <span v-else>—</span>
               </template>
             </el-table-column>
-            <el-table-column :label="t('farm.proto.col.pigletCount')" align="center">
+            <el-table-column :label="t('farm.proto.col.pigletCount')" align="center" header-align="center">
               <template #default="{ row }">{{ row.pigletCount ?? '—' }}</template>
             </el-table-column>
-            <el-table-column :label="t('biz.table.column.action')" width="120" align="center">
+            <el-table-column :label="t('biz.table.column.action')" width="120" align="center" header-align="center">
               <template #default="{ row }">
                 <el-button v-hasPermi="['djs:breed:pen:remove']" link type="danger" @click="onDel(row, 'farrow')">
                   {{ t('common.delete') }}
@@ -78,11 +78,11 @@
         <!-- 散栏：序号 + 头数（多头栏，克隆大栏） -->
         <el-tab-pane name="scatter" :label="`${t('farm.proto.tab.scatter')}(${counts.scatter})`">
           <el-table v-loading="loading" :data="rows.scatter" border>
-            <el-table-column :label="t('farm.proto.col.bigSeq')" prop="penName" align="center" />
-            <el-table-column :label="t('farm.proto.col.headCount')" align="center">
+            <el-table-column :label="t('farm.proto.col.bigSeq')" prop="penName" align="center" header-align="center" />
+            <el-table-column :label="t('farm.proto.col.headCount')" align="center" header-align="center">
               <template #default="{ row }">{{ row.headCount ?? 0 }}</template>
             </el-table-column>
-            <el-table-column :label="t('biz.table.column.action')" width="120" align="center">
+            <el-table-column :label="t('biz.table.column.action')" width="120" align="center" header-align="center">
               <template #default="{ row }">
                 <el-button v-hasPermi="['djs:breed:pen:remove']" link type="danger" @click="onDel(row, 'scatter')">
                   {{ t('common.delete') }}
@@ -96,11 +96,11 @@
         <!-- 保育栏：序号 + 头数（多头栏，克隆大栏） -->
         <el-tab-pane name="nursery_pen" :label="`${t('farm.proto.tab.nurseryPen')}(${counts.nursery_pen})`">
           <el-table v-loading="loading" :data="rows.nursery_pen" border>
-            <el-table-column :label="t('farm.proto.col.bigSeq')" prop="penName" align="center" />
-            <el-table-column :label="t('farm.proto.col.headCount')" align="center">
+            <el-table-column :label="t('farm.proto.col.bigSeq')" prop="penName" align="center" header-align="center" />
+            <el-table-column :label="t('farm.proto.col.headCount')" align="center" header-align="center">
               <template #default="{ row }">{{ row.headCount ?? 0 }}</template>
             </el-table-column>
-            <el-table-column :label="t('biz.table.column.action')" width="120" align="center">
+            <el-table-column :label="t('biz.table.column.action')" width="120" align="center" header-align="center">
               <template #default="{ row }">
                 <el-button v-hasPermi="['djs:breed:pen:remove']" link type="danger" @click="onDel(row, 'nursery_pen')">
                   {{ t('common.delete') }}

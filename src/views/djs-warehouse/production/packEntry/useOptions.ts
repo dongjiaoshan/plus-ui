@@ -7,7 +7,7 @@ import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { listPlot } from '@/api/djs-plant/plot';
 import type { PlotInfoVO } from '@/api/djs-plant/plot/types';
-import { listAvailableBars, listSourceDry, listSourceVeg, listSourceWhiteBar } from '@/api/djs-warehouse/packEntry';
+import { listAvailableBars, listSourceDry, listSourceMeat, listSourceVeg, listSourceWhiteBar } from '@/api/djs-warehouse/packEntry';
 import type { BarInfoVO, PackSourceVO } from '@/api/djs-warehouse/packEntry';
 
 /**
@@ -33,13 +33,14 @@ export function usePackEntryOptions() {
 
   /**
    * 目标打包产品 SKU。
-   * @param productType 1=产品 2=商品 3=礼盒（不传=全部）
-   * @param belongType  自产归属类型过滤（如 'pork' 仅猪肉产品；不传=不限）
+   * @param productType  1=产品 2=商品 3=礼盒（不传=全部）
+   * @param belongType   自产归属类型过滤（如 'pork' 仅猪肉产品；不传=不限）
+   * @param belongTypes  自产归属类型集合（如 ['egg','dry_good','other'] 其他产品打包；非空落 belong_type IN）
    */
-  async function loadProducts(productType?: number, belongType?: string) {
+  async function loadProducts(productType?: number, belongType?: string, belongTypes?: string[]) {
     productLoading.value = true;
     try {
-      const res = await listProduct({ pageNum: 1, pageSize: 500, productType, belongType } as any);
+      const res = await listProduct({ pageNum: 1, pageSize: 500, productType, belongType, belongTypes } as any);
       products.value = ((res as any).rows ?? []) as ProductInfoVO[];
     } finally {
       productLoading.value = false;
@@ -68,11 +69,12 @@ export function usePackEntryOptions() {
     }
   }
 
-  /** kind: 'dry'=肉品/其他打包来源 'veg'=果蔬来源 'whiteBar'=白条/猪肉发货来源 */
-  async function loadSources(kind: 'dry' | 'veg' | 'whiteBar') {
+  /** kind: 'dry'=其他打包来源 'meat'=肉品来源(belong_type=pork) 'veg'=果蔬来源 'whiteBar'=白条/猪肉发货来源 */
+  async function loadSources(kind: 'dry' | 'meat' | 'veg' | 'whiteBar') {
     sourceLoading.value = true;
     try {
-      const fn = kind === 'veg' ? listSourceVeg : kind === 'whiteBar' ? listSourceWhiteBar : listSourceDry;
+      const fn =
+        kind === 'veg' ? listSourceVeg : kind === 'whiteBar' ? listSourceWhiteBar : kind === 'meat' ? listSourceMeat : listSourceDry;
       const res = await fn();
       sources.value = ((res as any).data ?? []) as PackSourceVO[];
     } finally {

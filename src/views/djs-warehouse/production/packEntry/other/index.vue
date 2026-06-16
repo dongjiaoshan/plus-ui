@@ -6,6 +6,7 @@
     <SkuPackForm
       kind="dry"
       :product-type="1"
+      :belong-types="['egg', 'dry_good', 'other']"
       :title="t('djs.warehouse.packEntry.otherTitle')"
       :send-dest-kinds="['platform']"
       :show-print-trace="false"

@@ -219,6 +219,11 @@ export const listSourceVeg = (): AxiosPromise<PackSourceVO[]> => {
   return request({ url: '/djs/warehouse/packEntry/sourceVeg', method: 'get' });
 };
 
+/** 肉品打包可选来源列表（belong_type='pork'，ear_no = 来源猪只耳号，肉品打包耳号去重条用） */
+export const listSourceMeat = (): AxiosPromise<PackSourceVO[]> => {
+  return request({ url: '/djs/warehouse/packEntry/sourceMeat', method: 'get' });
+};
+
 /** 白条/猪肉发货可选来源列表（belong_type ∈ white_bar/pork） */
 export const listSourceWhiteBar = (): AxiosPromise<PackSourceVO[]> => {
   return request({ url: '/djs/warehouse/packEntry/sourceWhiteBar', method: 'get' });

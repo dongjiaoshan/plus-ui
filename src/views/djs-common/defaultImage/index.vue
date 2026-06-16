@@ -6,13 +6,13 @@
         <span class="hint">{{ t('defaultImage.hint') }}</span>
       </template>
       <el-table v-loading="loading" :data="rows" border>
-        <el-table-column :label="t('defaultImage.column.category')" width="220">
+        <el-table-column :label="t('defaultImage.column.category')" width="220" align="center" header-align="center">
           <template #default="{ row }">
             <span>{{ categoryLabel(row.categoryKey) }}</span>
             <el-tag v-if="row.isGlobal === 1" type="info" size="small" class="ml">{{ t('defaultImage.global') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column :label="t('defaultImage.column.image')">
+        <el-table-column :label="t('defaultImage.column.image')" align="center" header-align="center">
           <template #default="{ row }">
             <DefaultImageCell :row="row" @saved="fetchList" />
           </template>
