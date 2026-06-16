@@ -5,9 +5,16 @@
         <el-input :model-value="productName" disabled />
       </el-form-item>
       <el-form-item :label="t('product.inbound.location')" prop="locationId">
-        <el-select v-model="form.locationId" filterable :placeholder="t('product.inbound.locationPlaceholder')" style="width: 100%">
+        <el-select
+          v-model="form.locationId"
+          filterable
+          :disabled="locationLocked"
+          :placeholder="t('product.inbound.locationPlaceholder')"
+          style="width: 100%"
+        >
           <el-option v-for="l in locationOptions" :key="String(l.value)" :label="l.label" :value="l.value" />
         </el-select>
+        <span v-if="locationLocked" class="ml-2 text-gray-500">{{ t('product.inbound.locationLocked') }}</span>
       </el-form-item>
       <el-form-item :label="t('product.inbound.quantity')" prop="quantity">
         <el-input-number v-model="form.quantity" :precision="3" :min="0.001" :step="1" style="width: 100%" />
@@ -43,6 +50,8 @@ const productId = ref<number | string>('');
 const productName = ref('');
 const productUnit = ref('');
 const locationOptions = ref<Array<{ label: string; value: string }>>([]);
+// row118/119：产品配置了存储库位 → 入库锁定到该库位，下拉禁用不可改
+const locationLocked = ref(false);
 
 const defaultForm = (): { locationId: string; quantity: number | undefined; remark: string } => ({
   locationId: '',
@@ -70,11 +79,18 @@ async function loadLocationOptions() {
   }
 }
 
-const open = async (row: { id: number | string; productName?: string; productUnit?: string }) => {
+const open = async (row: { id: number | string; productName?: string; productUnit?: string; storeLocationId?: number | string }) => {
   form.value = defaultForm();
   productId.value = row.id;
   productName.value = row.productName ?? '';
   productUnit.value = row.productUnit ?? '';
+  // 配置了存储库位 → 预填并锁定，入库只能入该库位
+  if (row.storeLocationId !== undefined && row.storeLocationId !== null && String(row.storeLocationId) !== '') {
+    form.value.locationId = String(row.storeLocationId);
+    locationLocked.value = true;
+  } else {
+    locationLocked.value = false;
+  }
   visible.value = true;
   await loadLocationOptions();
 };
@@ -83,6 +99,7 @@ defineExpose({ open });
 const handleClosed = () => {
   formRef.value?.resetFields();
   form.value = defaultForm();
+  locationLocked.value = false;
 };
 
 const submit = () => {

@@ -2,7 +2,7 @@
   <transition :enter-active-class="proxy?.animate?.searchAnimate?.enter" :leave-active-class="proxy?.animate?.searchAnimate?.leave">
     <div v-show="visible" class="mb-[10px]">
       <el-card shadow="hover">
-        <el-form ref="formRef" :model="innerModel" :inline="true" label-width="auto" @submit.prevent>
+        <el-form ref="formRef" class="biz-search-form" :model="innerModel" :inline="true" label-width="auto" @submit.prevent>
           <el-form-item v-for="field in schema" :key="field.field" :label="field.label" :prop="field.field">
             <!-- input -->
             <el-input
@@ -10,7 +10,7 @@
               v-model="innerModel[field.field]"
               :placeholder="field.placeholder ?? `${t('biz.table.search.inputPrefix')}${field.label}`"
               :clearable="field.clearable ?? true"
-              :style="resolveWidth(field.width)"
+              :style="resolveWidth(field.width ?? 200)"
               @keyup.enter="handleSearch"
             />
 
@@ -19,7 +19,7 @@
               v-else-if="field.type === 'number'"
               v-model="innerModel[field.field]"
               controls-position="right"
-              :style="resolveWidth(field.width)"
+              :style="resolveWidth(field.width ?? 200)"
             />
 
             <!-- select（dictType / options 二选一） -->
@@ -40,7 +40,7 @@
               type="date"
               :placeholder="field.placeholder ?? `${t('biz.table.search.selectPrefix')}${field.label}`"
               value-format="YYYY-MM-DD"
-              :style="resolveWidth(field.width)"
+              :style="resolveWidth(field.width ?? 200)"
             />
 
             <!-- month（回写 'YYYY-MM'） -->
@@ -51,7 +51,7 @@
               :placeholder="field.placeholder ?? `${t('biz.table.search.selectPrefix')}${field.label}`"
               value-format="YYYY-MM"
               :clearable="field.clearable ?? true"
-              :style="resolveWidth(field.width)"
+              :style="resolveWidth(field.width ?? 200)"
             />
 
             <!-- daterange -->
@@ -62,11 +62,11 @@
               :start-placeholder="t('biz.table.search.startDate')"
               :end-placeholder="t('biz.table.search.endDate')"
               value-format="YYYY-MM-DD"
-              :style="resolveWidth(field.width)"
+              :style="resolveWidth(field.width ?? 240)"
             />
           </el-form-item>
 
-          <el-form-item>
+          <el-form-item class="biz-search-btns">
             <el-button type="primary" icon="Search" @click="handleSearch">
               {{ t('biz.table.search.submit') }}
             </el-button>
@@ -158,3 +158,22 @@ defineExpose({
   reset: handleReset
 });
 </script>
+
+<style scoped lang="scss">
+// inline 模式下用 flex-wrap 让字段自然换行，按钮组靠右下角
+.biz-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+
+  :deep(.el-form-item) {
+    margin-right: 16px;
+  }
+
+  // 搜索/重置按钮推到搜索区右下角
+  .biz-search-btns {
+    margin-right: 0;
+    margin-left: auto;
+  }
+}
+</style>

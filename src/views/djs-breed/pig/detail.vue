@@ -82,42 +82,37 @@
         </div>
       </el-tab-pane>
 
-      <!-- tab 3 养殖记录（状态变更历史） -->
+      <!-- tab 3 养殖记录（状态变更历史，表格形式） -->
       <el-tab-pane :label="t('pig.detail.tab.history')" name="history" lazy>
         <div v-if="historyLoading" v-loading="historyLoading" class="loading-box" />
         <el-empty v-else-if="!history.length" :description="t('pig.detail.historyEmpty')" />
-        <el-timeline v-else>
-          <el-timeline-item
-            v-for="(rec, idx) in history"
-            :key="rec.id"
-            :timestamp="rec.changeTime"
-            :type="timelineColor(rec.eventType)"
-            :hollow="idx !== 0"
-            placement="top"
-          >
-            <span class="event-badge">
-              <dict-tag :options="eventDict" :value="rec.eventType" />
-            </span>
-            <span class="ml-2">
-              <span v-if="rec.oldStatus">
-                <dict-tag :options="lifecycleDict" :value="rec.oldStatus" />
-                →
+        <el-table v-else :data="history" border size="small">
+          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" />
+          <el-table-column :label="t('pig.detail.breedingCol.eventType')" width="110" align="center">
+            <template #default="{ row }">
+              <dict-tag :options="eventDict" :value="row.eventType" />
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('pig.detail.breedingCol.transition')" min-width="220" align="center">
+            <template #default="{ row }">
+              <span class="transition-cell">
+                <template v-if="row.oldStatus"><dict-tag :options="lifecycleDict" :value="row.oldStatus" /> → </template>
+                <template v-else>{{ t('pig.detail.historyInit') }} → </template>
+                <dict-tag :options="lifecycleDict" :value="row.newStatus" />
               </span>
-              <span v-else>{{ t('pig.detail.historyInit') }} →</span>
-              <dict-tag :options="lifecycleDict" :value="rec.newStatus" />
-            </span>
-            <div v-if="rec.durationDays != null" class="meta">
-              {{ t('pig.detail.duration', { days: rec.durationDays }) }}
-            </div>
-            <div v-if="rec.relatedEventId" class="meta">
-              {{ t('pig.detail.relatedEvent', { id: rec.relatedEventId }) }}
-            </div>
-          </el-timeline-item>
-        </el-timeline>
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('pig.detail.historyCol.durationDays')" width="110" align="center">
+            <template #default="{ row }">
+              <span v-if="row.durationDays != null">{{ t('pig.detail.duration', { days: row.durationDays }) }}</span>
+              <span v-else>—</span>
+            </template>
+          </el-table-column>
+        </el-table>
       </el-tab-pane>
 
-      <!-- tab 配种 / 分娩明细（从状态流水筛繁殖类事件，结构化呈现） -->
-      <el-tab-pane :label="t('pig.detail.tab.breeding')" name="breeding" lazy>
+      <!-- tab 配种 / 分娩明细（从状态流水筛繁殖类事件，结构化呈现；仅母猪显示） -->
+      <el-tab-pane v-if="detail.pigType === 'sow'" :label="t('pig.detail.tab.breeding')" name="breeding" lazy>
         <div v-if="historyLoading" v-loading="historyLoading" class="loading-box" />
         <el-empty v-else-if="!breedingRows.length" :description="t('pig.detail.breedingEmpty')" />
         <el-table v-else :data="breedingRows" border size="small">
@@ -127,13 +122,17 @@
               <dict-tag :options="eventDict" :value="row.eventType" />
             </template>
           </el-table-column>
-          <el-table-column :label="t('pig.detail.breedingCol.transition')" min-width="160" align="center">
+          <el-table-column :label="t('pig.detail.breedingCol.transition')" min-width="220" align="center">
             <template #default="{ row }">
-              <span v-if="row.oldStatus"><dict-tag :options="lifecycleDict" :value="row.oldStatus" /> → </span>
-              <dict-tag :options="lifecycleDict" :value="row.newStatus" />
+              <span class="transition-cell">
+                <template v-if="row.oldStatus"><dict-tag :options="lifecycleDict" :value="row.oldStatus" /> → </template>
+                <dict-tag :options="lifecycleDict" :value="row.newStatus" />
+              </span>
             </template>
           </el-table-column>
-          <el-table-column prop="relatedEventId" :label="t('pig.detail.breedingCol.relatedEventId')" width="180" align="center" />
+          <el-table-column prop="createByName" :label="t('pig.detail.breedingCol.recorder')" width="120" align="center">
+            <template #default="{ row }">{{ row.createByName || '—' }}</template>
+          </el-table-column>
         </el-table>
       </el-tab-pane>
 
@@ -164,22 +163,6 @@
         </el-table>
       </el-tab-pane>
 
-      <!-- tab 生长曲线 -->
-      <el-tab-pane :label="t('pig.detail.tab.growth')" name="growth" lazy>
-        <div v-if="growthLoading" v-loading="growthLoading" class="loading-box" />
-        <el-empty v-else-if="!growthRows.length" :description="t('pig.detail.growthEmpty')" />
-        <div v-else>
-          <div ref="chartEl" class="growth-chart" />
-          <el-table :data="growthRows" border size="small" class="mt-4">
-            <el-table-column prop="measureDate" :label="t('pig.growth.measureDate')" width="120" align="center" />
-            <el-table-column prop="weight" :label="t('pig.growth.weight')" width="100" align="center" />
-            <el-table-column prop="backfatThickness" :label="t('pig.growth.backfatThickness')" width="100" align="center" />
-            <el-table-column prop="backHeight" :label="t('pig.growth.backHeight')" width="100" align="center" />
-            <el-table-column prop="operatorName" :label="t('pig.growth.operatorName')" width="120" align="center" />
-            <el-table-column prop="remark" :label="t('pig.column.remark')" min-width="120" />
-          </el-table>
-        </div>
-      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -192,10 +175,9 @@
  * tab：
  *  1. 基础信息       — 所有 pig_type 都展示
  *  2. 生产指标       — 仅 sow（母猪）；source: t_farm_sow_performance（由 BRD-DASH-001 写）
- *  3. 养殖记录       — 状态变更时间线（全量 history 最多 200 条）
- *  4. 配种 / 分娩明细 — 从状态流水筛繁殖类事件（BREED/FARROW/WEAN/OESTRUS/NULL_RETURN）结构化呈现
+ *  3. 养殖记录       — 状态变更明细表格（全量 history 最多 200 条）
+ *  4. 配种 / 分娩明细 — 仅 sow（母猪）；从状态流水筛繁殖类事件（BREED/FARROW/WEAN/OESTRUS/NULL_RETURN）结构化呈现
  *  5. 用药 / 治疗     — 拉 med/record by pigId（替代原 health 空占位）
- *  6. 生长曲线       — ECharts 折线图（体重 / 背膘 / 背高 by measureDate）+ 明细表格
  */
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -203,12 +185,10 @@ import { Back } from '@element-plus/icons-vue';
 import { useDict } from '@/utils/dict';
 import { getPig, listPig, listPigHistory } from '@/api/djs-breed/pig';
 import { listSowPerformance } from '@/api/djs-breed/sow-performance';
-import { listGrowth, type PigGrowthVO } from '@/api/djs-breed/event/growth';
 import { listMedRecord } from '@/api/djs-breed/med';
 import type { MedRecordVO } from '@/api/djs-breed/med/types';
 import type { PigDetailVO, PigStatusEventCode, PigStatusRecordVO } from '@/api/djs-breed/pig/types';
 import { ElMessage } from 'element-plus';
-import * as echarts from 'echarts';
 import type { SowPerformanceVO } from '@/api/djs-breed/sow-performance';
 
 const { t } = useI18n();
@@ -245,11 +225,6 @@ const historyLoading = ref(false);
 const performance = ref<SowPerformanceVO[]>([]);
 const perfLoading = ref(false);
 
-const growthRows = ref<PigGrowthVO[]>([]);
-const growthLoading = ref(false);
-const chartEl = ref<HTMLDivElement>();
-let chart: echarts.ECharts | null = null;
-
 const medRows = ref<MedRecordVO[]>([]);
 const medLoading = ref(false);
 
@@ -265,28 +240,6 @@ const statusTagType = computed<'success' | 'warning' | 'info' | 'primary' | 'dan
   if (s === 'LC' || s === 'FQ' || s === 'KH') return 'warning';
   return 'primary';
 });
-
-function timelineColor(ev: PigStatusEventCode): 'primary' | 'success' | 'warning' | 'danger' | 'info' {
-  switch (ev) {
-    case 'INTRO':
-      return 'success';
-    case 'BREED':
-    case 'OESTRUS':
-    case 'FARROW':
-    case 'WEAN':
-    case 'TRANSFER':
-      return 'primary';
-    case 'NULL_RETURN':
-      return 'warning';
-    case 'DIE':
-    case 'ELIMINATE':
-    case 'CASTRATE':
-    case 'SLAUGHTER':
-      return 'danger';
-    default:
-      return 'info';
-  }
-}
 
 async function loadDetail() {
   if (!pigId.value) return;
@@ -328,45 +281,6 @@ async function loadPerformance() {
   }
 }
 
-async function loadGrowth() {
-  growthLoading.value = true;
-  try {
-    const res = (await listGrowth({ pigId: pigId.value, pageNum: 1, pageSize: 100 })) as any;
-    // 后端按 measureDate DESC 返回；图表需按 ASC 显示 → 反转
-    const rows = ((res.rows ?? []) as PigGrowthVO[]).slice();
-    growthRows.value = rows;
-    nextTick(() => renderChart(rows.slice().reverse()));
-  } finally {
-    growthLoading.value = false;
-  }
-}
-
-function renderChart(rowsAsc: PigGrowthVO[]) {
-  if (!chartEl.value || rowsAsc.length === 0) return;
-  if (!chart) {
-    chart = echarts.init(chartEl.value);
-  }
-  const dates = rowsAsc.map((r) => r.measureDate);
-  const weights = rowsAsc.map((r) => Number(r.weight));
-  const backfats = rowsAsc.map((r) => (r.backfatThickness == null ? null : Number(r.backfatThickness)));
-  const heights = rowsAsc.map((r) => (r.backHeight == null ? null : Number(r.backHeight)));
-  chart.setOption({
-    tooltip: { trigger: 'axis' },
-    legend: { data: [t('pig.growth.weight'), t('pig.growth.backfatThickness'), t('pig.growth.backHeight')] },
-    grid: { left: 50, right: 50, top: 40, bottom: 40 },
-    xAxis: { type: 'category', data: dates },
-    yAxis: [
-      { type: 'value', name: 'kg', position: 'left' },
-      { type: 'value', name: 'mm/cm', position: 'right' }
-    ],
-    series: [
-      { name: t('pig.growth.weight'), type: 'line', smooth: true, yAxisIndex: 0, data: weights, connectNulls: true },
-      { name: t('pig.growth.backfatThickness'), type: 'line', smooth: true, yAxisIndex: 1, data: backfats, connectNulls: true },
-      { name: t('pig.growth.backHeight'), type: 'line', smooth: true, yAxisIndex: 1, data: heights, connectNulls: true }
-    ]
-  });
-}
-
 async function loadMed() {
   if (!pigId.value) return;
   medLoading.value = true;
@@ -385,8 +299,6 @@ watch(activeTab, async (tab) => {
     await loadPerformance();
   } else if (tab === 'med') {
     await loadMed();
-  } else if (tab === 'growth') {
-    await loadGrowth();
   }
 });
 
@@ -429,26 +341,17 @@ onMounted(() => {
 .mt-2 {
   margin-top: 12px;
 }
-.mt-4 {
-  margin-top: 16px;
-}
 .loading-box {
   min-height: 120px;
-}
-.event-badge {
-  font-weight: 500;
-}
-.meta {
-  color: #909399;
-  font-size: 12px;
-  margin-top: 4px;
 }
 .hint {
   color: #909399;
   font-size: 12px;
 }
-.growth-chart {
-  width: 100%;
-  height: 360px;
+.transition-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 </style>

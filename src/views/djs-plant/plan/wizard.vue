@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4">
+  <div class="p-4 wizard-page">
     <el-card shadow="never">
       <template #header>
         <div class="flex items-center justify-between">
@@ -54,15 +54,16 @@
         </el-alert>
         <PlotPeriodPicker v-model="form.details" :plan-year="form.planYear" />
       </template>
-
-      <div class="mt-6 flex justify-center gap-3 wizard-footer">
-        <el-button v-if="currentStep > 0" @click="prevStep">{{ t('common.prev') }}</el-button>
-        <el-button v-if="currentStep < 2" type="primary" @click="nextStep">{{ t('common.next') }}</el-button>
-        <el-button v-if="currentStep === 2" type="primary" :loading="submitting" @click="submit">
-          {{ t('plantPlan.wizard.submit') }}
-        </el-button>
-      </div>
     </el-card>
+
+    <!-- 底部操作栏：固定常驻视口底部，长列表滚动时无需拉到最底即可操作 -->
+    <div class="flex justify-center gap-3 wizard-footer">
+      <el-button v-if="currentStep > 0" @click="prevStep">{{ t('common.prev') }}</el-button>
+      <el-button v-if="currentStep < 2" type="primary" @click="nextStep">{{ t('common.next') }}</el-button>
+      <el-button v-if="currentStep === 2" type="primary" :loading="submitting" @click="submit">
+        {{ t('plantPlan.wizard.submit') }}
+      </el-button>
+    </div>
   </div>
 </template>
 
@@ -191,13 +192,17 @@ function goList() {
 </script>
 
 <style scoped>
-/* 底部操作栏：滚动时常驻底部 */
+/* 底部操作栏：提到 el-card 外层作为滚动容器(.app-main)的直接子节点，
+   sticky bottom 才能真正生效——滚动时常驻视口底部，无需拉到最底才能操作。
+   负 margin 抵消页面 .p-4 内边距，使操作栏边到边贴底。 */
 .wizard-footer {
   position: sticky;
   bottom: 0;
   z-index: 10;
+  margin: 0 -16px -16px;
   padding: 12px 0;
   background-color: var(--el-bg-color);
   border-top: 1px solid var(--el-border-color-lighter);
+  box-shadow: 0 -2px 8px rgb(0 0 0 / 6%);
 }
 </style>

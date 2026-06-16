@@ -266,45 +266,64 @@ onMounted(async () => {
   line-height: 40px;
 }
 .station-right {
-  flex: 0 0 320px;
-  width: 320px;
+  flex: 0 0 440px;
+  width: 440px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 16px;
+  padding: 24px;
   background: var(--el-bg-color);
 }
 .panel-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
   color: var(--el-text-color-secondary);
 }
 .panel-section {
-  margin-bottom: 16px;
+  margin-bottom: 22px;
 }
 .panel-label {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--el-text-color-regular);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .ear-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 6px;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
   background: var(--el-color-warning-light-9);
   color: var(--el-color-warning-dark-2);
   border: 1px solid var(--el-color-warning-light-5);
   font-weight: 600;
+  font-size: 16px;
 }
 .panel-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 24px;
 }
 .action-btn {
   width: 100%;
+  height: 56px;
+  font-size: 18px;
+}
+/* 触屏放大：数字键盘 / 出库位置按钮（组件内默认偏小，本台面页面级放大） */
+.station-right :deep(.numpad-display) {
+  height: 56px;
+}
+.station-right :deep(.numpad-input) {
+  font-size: 22px;
+}
+.station-right :deep(.numpad-key) {
+  height: 56px;
+  font-size: 22px;
+}
+.station-right :deep(.dest-btn) {
+  min-width: 96px;
+  height: 52px;
+  font-size: 16px;
 }
 </style>

@@ -82,6 +82,8 @@ export interface PlotPlantingRecordVO {
   expectedYield?: number | string;
   /** 预计最早采摘日期 */
   earliestHarvestdate?: string;
+  /** 预计最晚采摘日期 */
+  lastHarvestdate?: string;
   /** 实际亩产（kg/亩） */
   actualYield?: number | string;
   /** 采摘开始日期 */

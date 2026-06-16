@@ -17,11 +17,12 @@
           />
         </div>
 
-        <!-- 底部固定需求门店 tags：选目标产品后展示各门店未发货需求份数（整数、0 不显示） -->
-        <div v-if="form.productId" class="demand-bar">
+        <!-- 底部固定需求门店 tags（固定项常驻）：未选产品显示占位提示，选目标产品后展示各门店未发货需求份数（整数、0 不显示） -->
+        <div class="demand-bar">
           <span class="demand-label">{{ t('djs.warehouse.packEntry.demandStores') }}</span>
           <div v-loading="demandLoading" class="demand-tags">
-            <template v-if="visibleStoreDemands.length > 0">
+            <span v-if="!form.productId" class="text-gray-400">{{ t('djs.warehouse.packEntry.selectProductFirst') }}</span>
+            <template v-else-if="visibleStoreDemands.length > 0">
               <el-tag
                 v-for="sd in visibleStoreDemands"
                 :key="String(sd.storeId)"
@@ -70,8 +71,8 @@
           </div>
         </template>
 
-        <!-- 来源过程产品（肉品/果蔬=来源 chip 选择；礼盒无） -->
-        <div v-if="kind !== 'gift'" class="panel-section">
+        <!-- 来源过程产品（肉品/果蔬=来源 chip 选择；礼盒无；可按 showSource 隐藏） -->
+        <div v-if="kind !== 'gift' && showSource" class="panel-section">
           <div class="panel-label">{{ kind === 'veg' ? t('djs.warehouse.packEntry.sourceVeg') : t('djs.warehouse.packEntry.source') }}</div>
           <div v-loading="sourceLoading">
             <DestToggle
@@ -109,11 +110,11 @@
         </div>
 
         <div class="panel-actions">
-          <el-button type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit(false)">
-            {{ t('common.confirm') }}
-          </el-button>
           <el-button v-if="showPrintTrace" type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit(true)">
             {{ t('djs.warehouse.packEntry.confirmPrintTrace') }}
+          </el-button>
+          <el-button type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit(false)">
+            {{ t('common.confirm') }}
           </el-button>
         </div>
       </div>
@@ -164,13 +165,19 @@ const props = withDefaults(
     showStock?: boolean;
     /** 顶部地块卡片选择（果蔬打包专用：按来源 plotId 分组，选地块再选该地块来源） */
     plotGroup?: boolean;
+    /** 是否显示「来源/来源产品」chip 选择区（肉品/其他产品打包按需隐藏；缺省显示） */
+    showSource?: boolean;
+    /** 是否显示「猪只耳号」回显 chip（其他产品打包隐藏；缺省随业态：dry 显示） */
+    showEar?: boolean;
   }>(),
   {
     belongType: undefined,
     sendDestKinds: () => ['platform', 'mail', 'gift'],
     showPrintTrace: true,
     showStock: undefined,
-    plotGroup: false
+    plotGroup: false,
+    showSource: true,
+    showEar: undefined
   }
 );
 
@@ -208,8 +215,8 @@ const submitting = ref(false);
 /** 打包序号 NO.x：会话内递增（每次成功提交 +1），对齐原型右台「打包序号 NO.2」展示。 */
 const packNo = ref(1);
 
-/** 肉品打包右台顶部回显猪只耳号 chip：dry 业态且来源带耳号时显示。 */
-const showEarChip = computed(() => props.kind === 'dry');
+/** 肉品打包右台顶部回显猪只耳号 chip：dry 业态且来源带耳号时显示（其他产品打包可关闭）。 */
+const showEarChip = computed(() => props.kind === 'dry' && (props.showEar == null ? true : props.showEar));
 
 interface PackFormShape {
   sourceInhouseId: number | string | '';
@@ -392,7 +399,8 @@ function validate(): boolean {
       return false;
     }
   } else {
-    if (!form.value.sourceInhouseId) {
+    // 来源区隐藏时（showSource=false）不再前端强制选来源，提交链路待后端按目标产品/耳号自动匹配
+    if (props.showSource && !form.value.sourceInhouseId) {
       ElMessage.warning(t('djs.warehouse.packEntry.sourceRequired'));
       return false;
     }
@@ -532,16 +540,24 @@ onMounted(async () => {
   padding-right: 4px;
 }
 .station-right {
-  flex: 0 0 320px;
-  width: 320px;
+  flex: 0 0 420px;
+  width: 420px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 16px;
+  padding: 20px;
   background: var(--el-bg-color);
   align-self: stretch;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+/* 触屏放大：右台控件、标签、按钮整体加大方便手指操作 */
+.station-right .panel-label {
+  font-size: 15px;
+}
+.station-right .action-btn {
+  height: 52px;
+  font-size: 17px;
 }
 .panel-head {
   display: flex;

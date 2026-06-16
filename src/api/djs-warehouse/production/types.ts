@@ -55,14 +55,19 @@ export interface ProductProductionGroupVO {
   productType?: number;
   produceQty: number;
   itemCount: number;
+  /** 需求门店数：该产品当前有未发货需求的门店家数（后端聚合返回，row114-3 待后端补 SQL） */
+  storeDemandCount?: number;
 }
 
 export interface ProductProductionQuery {
   produceNo?: string;
+  /** 产品名称模糊搜索（row114-2 待后端 selectProductionGroupList 加 LIKE） */
+  productName?: string;
   productId?: number | string;
   productType?: number;
   belongType?: string;
-  productSort?: number;
+  /** 产品序号：row115-1 改文本模糊搜索后透传字符串关键字（后端 product_sort LIKE） */
+  productSort?: number | string;
   packStatus?: string;
   earNo?: string;
   plotId?: number | string;

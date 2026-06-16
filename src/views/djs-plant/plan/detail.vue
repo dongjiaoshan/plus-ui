@@ -74,21 +74,28 @@
       <el-table v-if="!editMode" :data="plan?.details || []" stripe size="small" border>
         <el-table-column :label="t('plantPlan.field.plotCode')" prop="plotCode" width="100" align="center" />
         <el-table-column :label="t('plantPlan.field.plotName')" prop="plotName" min-width="90" align="center" show-overflow-tooltip />
-        <el-table-column :label="t('plantPlan.field.plantMonth')" width="100" align="center">
-          <template #default="{ row }">{{ row.plantMonth }} 月</template>
+        <el-table-column :label="t('plantPlan.field.plantTime')" width="120" align="center">
+          <template #default="{ row }">{{ formatPlantTime(row) }}</template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.plantPeriod')" width="80" align="center">
-          <template #default="{ row }">
-            <dict-tag :options="djs_plant_period" :value="row.plantPeriod" />
-          </template>
+        <el-table-column :label="t('plantPlan.field.plantActualDate')" prop="beginActualdate" width="120" align="center">
+          <template #default="{ row }">{{ row.beginActualdate || '-' }}</template>
         </el-table-column>
         <el-table-column :label="t('plantPlan.field.earliestHarvestdate')" prop="earliestHarvestdate" width="120" align="center" />
         <el-table-column :label="t('plantPlan.field.lastHarvestdate')" prop="lastHarvestdate" width="120" align="center" />
+        <el-table-column :label="t('plantPlan.field.beginHarvestdate')" prop="beginHarvestdate" width="120" align="center">
+          <template #default="{ row }">{{ row.beginHarvestdate || '-' }}</template>
+        </el-table-column>
+        <el-table-column :label="t('plantPlan.field.endHarvestdate')" prop="endHarvestdate" width="120" align="center">
+          <template #default="{ row }">{{ row.endHarvestdate || '-' }}</template>
+        </el-table-column>
         <el-table-column :label="t('plantPlan.field.plotArea')" prop="plotArea" width="90" align="center">
           <template #default="{ row }">{{ row.plotArea }} 亩</template>
         </el-table-column>
         <el-table-column :label="t('plantPlan.field.expectedYield')" prop="expectedYield" width="120" align="center">
           <template #default="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(2)} kg` : '-' }}</template>
+        </el-table-column>
+        <el-table-column :label="t('plantPlan.column.actualYield')" prop="actualYield" width="120" align="center">
+          <template #default="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(2)} kg` : '-' }}</template>
         </el-table-column>
         <el-table-column :label="t('plantPlan.field.plantStatus')" width="100" align="center">
           <template #default="{ row }">
@@ -347,6 +354,14 @@ async function onSave() {
   } finally {
     saving.value = false;
   }
+}
+
+/** 合并「种植月份 + 上中下旬」为「计划种植时间」展示，如 6月中旬 */
+function formatPlantTime(row: PlantDetailsVO): string {
+  if (row.plantMonth == null) return '-';
+  const opt = djs_plant_period.value?.find((d: any) => String(d.value) === String(row.plantPeriod));
+  const periodLabel = opt?.label || '';
+  return `${row.plantMonth}月${periodLabel}`;
 }
 
 function planBarStyle(row: PlantPlanGanttRow) {

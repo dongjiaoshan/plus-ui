@@ -3,7 +3,7 @@
   <el-dialog
     v-model="visible"
     :title="t('djs.warehouse.production.title.itemList')"
-    width="980px"
+    width="1200px"
     destroy-on-close
     append-to-body
     :close-on-click-modal="true"
@@ -78,7 +78,7 @@ const searchModel = reactive<Record<string, any>>({
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'productSort', label: t('djs.warehouse.production.column.productSort'), type: 'number' },
+  { field: 'productSort', label: t('djs.warehouse.production.column.productSort'), type: 'input' },
   { field: 'storeName', label: t('djs.warehouse.production.column.storeName'), type: 'input' }
 ]);
 
@@ -145,7 +145,8 @@ async function loadList() {
     const params: ProductProductionQuery = {
       productId: batch.value.productId,
       produceDate: batch.value.produceDate,
-      productSort: searchModel.productSort === undefined || searchModel.productSort === '' ? undefined : Number(searchModel.productSort),
+      // 产品序号改文本模糊搜索：原样透传字符串关键字，由后端 product_sort LIKE 匹配（row115-1 待后端）
+      productSort: searchModel.productSort === undefined || searchModel.productSort === '' ? undefined : String(searchModel.productSort).trim(),
       // storeName 是前端搜索字段，后端按 storeId 过滤；本子页未提供 store 选择器，
       // storeName 模糊匹配交由前端在已加载行内不另发请求（仅按序号服务端筛）。
       pageNum: pageNum.value,

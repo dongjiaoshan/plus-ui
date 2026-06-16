@@ -683,7 +683,11 @@ export default {
         changeTime: '发生时间',
         eventType: '事件',
         transition: '状态变化',
-        relatedEventId: '关联业务 ID'
+        relatedEventId: '关联业务 ID',
+        recorder: '业务人'
+      },
+      historyCol: {
+        durationDays: '停留天数'
       },
       medCol: {
         useDate: '用药日期',
@@ -1260,7 +1264,8 @@ export default {
       productSpec: '例 500g/包',
       productMaterial: '关联原材料产品 ID',
       buyClass: '请选择外购类（如字典空请到字典管理添加）',
-      supplierId: '请选择供应商'
+      supplierId: '请选择供应商',
+      storeLocation: '请选择存储库位'
     },
     rule: {
       productType: { required: '请选择产品类型' },
@@ -1288,6 +1293,7 @@ export default {
       quantity: '入库数量',
       confirm: '确认入库',
       locationRequired: '请选择入库库位',
+      locationLocked: '已锁定为配置库位',
       quantityRequired: '请输入入库数量',
       remark: '备注'
     },
@@ -1324,7 +1330,8 @@ export default {
       productName: '产品名称',
       earNo: '耳号',
       blockNo: '地块编号',
-      locationName: '库位'
+      locationName: '库位',
+      belongType: '归属类型'
     },
     column: {
       locationName: '库位',
@@ -1345,6 +1352,7 @@ export default {
     },
     outDialog: {
       title: '产品出库',
+      currentStock: '当前库存',
       outDate: '出库日期',
       outDatePlaceholder: '请选择出库日期',
       quantity: '出库量',
@@ -1357,6 +1365,14 @@ export default {
         quantity: '请输入出库量',
         stockOutDest: '请选择出库去向'
       }
+    },
+    recordDialog: {
+      title: '出入库/盘点记录',
+      checkId: '盘点单号',
+      sysStock: '系统库存',
+      checkStock: '实盘库存',
+      diffStock: '差异',
+      checkBy: '盘点人'
     }
   },
   // 种植看板（PLT-DASH-001 富图看板）
@@ -1400,7 +1416,7 @@ export default {
     },
     gantt: {
       plantTitle: '种植计划',
-      pickTitle: '采摘周期',
+      pickTitle: '采摘计划',
       progress: '进度'
     }
   },
@@ -1449,7 +1465,7 @@ export default {
         earliestHarvestdate: '最早起始采摘时间',
         lastHarvestdate: '最晚截止采摘时间',
         plotArea: '地块面积(亩)',
-        expectedYield: '标准产量(kg)',
+        expectedYield: '预计产量(kg)',
         actualYield: '实际采收量(kg)'
       }
     }
@@ -1485,6 +1501,7 @@ export default {
       plantByName: '种植班组',
       expectedYield: '预计亩产',
       earliestHarvestdate: '预计最早采摘日期',
+      lastHarvestdate: '预计最晚采摘日期',
       actualYield: '实际亩产',
       beginHarvestdate: '采摘开始日期',
       endHarvestdate: '采摘结束日期',
@@ -1768,7 +1785,7 @@ export default {
       remark: '备注'
     },
     placeholder: {
-      teamName: '请输入班组名称（如 果蔬班 / 薯类班）',
+      teamName: '请输入班组名称',
       remark: '备注'
     },
     rule: {
@@ -1811,10 +1828,14 @@ export default {
       cropId: '作物',
       totalArea: '总面积',
       totalPlot: '地块数',
-      earliestHarvestdate: '最早采摘',
-      lastHarvestdate: '最晚采摘',
-      plantStatus: '计划状态',
+      earliestHarvestdate: '最早采摘日期',
+      lastHarvestdate: '最晚采摘日期',
+      plantStatus: '种植计划状态',
       harvestStatus: '采摘状态',
+      plantTime: '计划种植时间',
+      plantActualDate: '种植日期',
+      beginHarvestdate: '开始采摘日期',
+      endHarvestdate: '结束采摘日期',
       plantDate: '计划种植时间',
       plotCode: '地块编码',
       plotName: '地块名称',
@@ -1846,7 +1867,7 @@ export default {
       actualYield: '实际产量(kg)',
       finishedPlot: '已完成种植地块数量',
       completionRate: '计划完成率(%)',
-      plantStatus: '计划状态',
+      plantStatus: '种植计划状态',
       updateTime: '计划更新时间',
       createBy: '计划编制人',
       createByName: '计划编制人',
@@ -1854,6 +1875,7 @@ export default {
     },
     placeholder: {
       planSeason: '请选择种植季节',
+      planYear: '请选择计划年份',
       plantDate: '例：4 月上旬（可选填）',
       team: '请选择班组',
       planDateFilter: '请选择计划日期范围',
@@ -2013,8 +2035,8 @@ export default {
         harvestStatus: '采摘状态',
         plantDate: '种植日期',
         plantTeam: '种植班组',
-        planEarliest: '最早起始采摘时间',
-        planLatest: '最晚截止采摘时间',
+        planEarliest: '最早采摘日期',
+        planLatest: '最晚采摘日期',
         beginHarvestdate: '实际开始采摘日期',
         endHarvestdate: '实际结束采摘日期',
         harvestBy: '采摘班组',
@@ -2186,7 +2208,7 @@ export default {
       },
       packEntry: {
         meatTitle: '肉品打包',
-        otherTitle: '其他产品打包',
+        otherTitle: '产品打包',
         vegTitle: '果蔬打包',
         giftTitle: '礼盒打包',
         cutTitle: '白条分割管理',
@@ -2222,6 +2244,7 @@ export default {
         sendDestMail: '邮寄',
         sendDestGift: '礼盒',
         demandStores: '门店需求',
+        selectProductFirst: '请先选择产品加载门店需求',
         copiesUnit: '份',
         noDemand: '该产品当前无未发货门店需求',
         confirmPrintTrace: '确认并打印追溯码',
@@ -2246,6 +2269,7 @@ export default {
         confirmCutOut: '确认入库',
         cutOutSuccess: '分割出库入库成功',
         finishCut: '白条完成分割',
+        finishCutShort: '分割完成',
         dripLoss: '滴水损失',
         dripLossRequired: '请填写滴水损失（无填 0）',
         finishCutSuccess: '白条已完成分割',
@@ -2266,6 +2290,7 @@ export default {
         inWeightLabel: '入库重量',
         marketingWeightLabel: '出栏重量',
         whiteBarWeightShort: '白条重量',
+        remainWeightLabel: '剩余重量',
         pickupWeightExceed: '领用称重不应大于该白条出栏重量（{weight}kg）',
         pigAssignLabel: '猪只指定',
         noBars: '暂无待领用白条',
@@ -2612,6 +2637,7 @@ export default {
       expectedArriveDate: '期望到货日',
       beginDate: '开始日期',
       endDate: '结束日期',
+      demandDateRange: '需求日期',
       productionDestination: '排产去向'
     },
     productionDestination: {
@@ -3420,7 +3446,8 @@ export default {
     field: {
       recordNo: '灾害记录号',
       dateRange: '发生日期',
-      plot: '地块',
+      plot: '地块名称',
+      plotCode: '地块编号',
       disasterType: '灾害类型',
       isWarning: '是否预警',
       crop: '作物',
@@ -3473,7 +3500,8 @@ export default {
       dateRange: '农事日期',
       farmType: '农事类型',
       crop: '作物',
-      plot: '地块',
+      plot: '地块名称',
+      plotCode: '地块编号',
       team: '处理班组'
     },
     action: {

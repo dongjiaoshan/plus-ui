@@ -90,6 +90,7 @@ const searchModel = reactive<Record<string, any>>({
   farmType: undefined,
   farmDate: undefined,
   cropName: undefined,
+  plotCode: undefined,
   plotName: undefined,
   farmBy: undefined
 });
@@ -98,6 +99,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'farmType', label: t('plantWork.field.farmType'), type: 'select', options: farmTypeOptions.value },
   { field: 'farmDate', label: t('plantWork.field.dateRange'), type: 'daterange' },
   { field: 'cropName', label: t('plantWork.field.crop'), type: 'input' },
+  { field: 'plotCode', label: t('plantWork.field.plotCode'), type: 'input' },
   { field: 'plotName', label: t('plantWork.field.plot'), type: 'input' },
   { field: 'farmBy', label: t('plantWork.field.team'), type: 'select', options: teamOptions.value }
 ]);
@@ -127,6 +129,7 @@ function buildQuery(): FarmRecordQuery {
     pageSize: pageSize.value,
     farmWorkTypes: resolveWorkTypes(),
     cropName: searchModel.cropName || undefined,
+    plotCode: searchModel.plotCode || undefined,
     plotName: searchModel.plotName || undefined,
     farmBy: searchModel.farmBy || undefined,
     farmDateBegin: Array.isArray(range) && range[0] ? range[0] : undefined,
@@ -182,6 +185,7 @@ function handleExport() {
     {
       farmWorkTypes: resolveWorkTypes(),
       cropName: searchModel.cropName || undefined,
+      plotCode: searchModel.plotCode || undefined,
       plotName: searchModel.plotName || undefined,
       farmBy: searchModel.farmBy || undefined,
       farmDateBegin: Array.isArray(range) && range[0] ? range[0] : undefined,

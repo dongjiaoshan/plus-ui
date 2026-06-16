@@ -247,6 +247,7 @@ function renderGantt(type: 'plant' | 'pick') {
     else pickGanttChart = chart;
   }
   const segs = gantt.value.filter((g) => g.type === type);
+  const currentYear = new Date().getFullYear();
   // y 轴类目 = 去重的甘特条文本
   const categories = Array.from(new Set(segs.map((s) => s.text)));
   const catIndex = new Map(categories.map((c, i) => [c, i]));
@@ -274,8 +275,13 @@ function renderGantt(type: 'plant' | 'pick') {
     },
     grid: { left: 110, right: 20, top: 16, bottom: 40 },
     xAxis: {
+      // 固定按当年 1-12 月份呈现刻度（默认展示当年 12 个月）
       type: 'time',
-      axisLabel: { formatter: '{yyyy}-{MM}' }
+      min: `${currentYear}-01-01`,
+      max: `${currentYear}-12-31`,
+      minInterval: 30 * 24 * 3600 * 1000,
+      maxInterval: 31 * 24 * 3600 * 1000,
+      axisLabel: { formatter: '{MM}月' }
     },
     yAxis: {
       type: 'category',

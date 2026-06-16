@@ -13,14 +13,16 @@
           :class="{ active: String(form.cutRecordId) === String(r.id) }"
           @click="form.cutRecordId = r.id"
         >
-          <el-icon><PriceTag /></el-icon>
-          <span class="chip-main">{{ r.earNo ?? r.cutId }}</span>
-          <span class="chip-sub">
-            {{ r.isHalf === 1 ? t('djs.warehouse.packEntry.half') : t('djs.warehouse.packEntry.whole') }}
-            <template v-if="r.pickupWeight != null"> · {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}{{ r.pickupWeight }}kg</template>
-            <template v-if="r.remainingWeight != null"> · {{ t('djs.warehouse.packEntry.remainShort') }}{{ r.remainingWeight }}kg</template>
-            · {{ cutStatusLabel(r.cutStatus) }}
-          </span>
+          <div class="chip-line chip-line-ear">
+            <el-icon><PriceTag /></el-icon>
+            <span class="chip-main">{{ r.earNo ?? r.cutId }}</span>
+          </div>
+          <div v-if="r.pickupWeight != null" class="chip-line">
+            {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}：{{ Number(r.pickupWeight).toFixed(2) }}kg
+          </div>
+          <div v-if="r.remainingWeight != null" class="chip-line">
+            {{ t('djs.warehouse.packEntry.remainWeightLabel') }}：{{ Number(r.remainingWeight).toFixed(2) }}kg
+          </div>
         </button>
       </template>
       <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.noCuttable') }}</span>
@@ -36,14 +38,19 @@
       <div class="station-right">
         <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
 
-        <!-- 猪只耳号 chip（当前选中分割单回显） -->
+        <!-- 猪只耳号 chip（当前选中分割单回显）+ 行尾「分割完成」按钮 -->
         <div class="panel-section">
           <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
-          <div v-if="selectedCut" class="ear-chip">
-            <el-icon><PriceTag /></el-icon>
-            <span>{{ selectedCut.earNo ?? selectedCut.cutId }}</span>
+          <div class="ear-row">
+            <div v-if="selectedCut" class="ear-chip">
+              <el-icon><PriceTag /></el-icon>
+              <span>{{ selectedCut.earNo ?? selectedCut.cutId }}</span>
+            </div>
+            <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.cutRecordRequired') }}</span>
+            <el-button type="warning" plain :loading="cutDoneSubmitting" class="finish-cut-btn" @click="openCutDone">
+              {{ t('djs.warehouse.packEntry.finishCutShort') }}
+            </el-button>
           </div>
-          <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.cutRecordRequired') }}</span>
         </div>
 
         <!-- 产品重量 numpad -->
@@ -63,9 +70,6 @@
         <div class="panel-actions">
           <el-button type="primary" size="large" class="action-btn" :loading="cutOutSubmitting" @click="handleCutOut">
             {{ t('djs.warehouse.packEntry.confirmCutOut') }}
-          </el-button>
-          <el-button type="primary" size="large" class="action-btn" :loading="cutDoneSubmitting" @click="openCutDone">
-            {{ t('djs.warehouse.packEntry.finishCut') }}
           </el-button>
         </div>
       </div>
@@ -117,17 +121,6 @@ const locationOptions = computed<{ value: number | string; label: string }[]>(()
     })
     .map((l) => ({ value: l.id, label: l.locationName }))
 );
-
-const CUT_STATUS_LABEL: Record<string, string> = {
-  pending_pickup: 'djs.warehouse.packEntry.cutStatusPendingPickup',
-  picked: 'djs.warehouse.packEntry.cutStatusPicked',
-  cutting: 'djs.warehouse.packEntry.cutStatusCutting',
-  done: 'djs.warehouse.packEntry.cutStatusDone'
-};
-function cutStatusLabel(s: string): string {
-  const key = CUT_STATUS_LABEL[s];
-  return key ? t(key) : s;
-}
 
 // 可选分割产品（按具体产品对齐原型）：产品主数据 belong_type=pork 的猪肉分割成品
 const porkProducts = ref<ProductInfoVO[]>([]);
@@ -270,8 +263,9 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
-  padding: 8px 16px;
+  gap: 4px;
+  width: 200px;
+  padding: 10px 14px;
   border: 1px solid var(--el-color-warning);
   border-radius: 8px;
   background: var(--el-color-warning-light-9);
@@ -282,13 +276,19 @@ onMounted(async () => {
 .cut-chip.active {
   box-shadow: 0 0 0 1px var(--el-color-warning);
 }
+.chip-line {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+.chip-line-ear {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .chip-main {
   font-weight: 600;
   font-size: 14px;
-}
-.chip-sub {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
+  color: var(--el-color-warning-dark-2);
 }
 .station-body {
   display: flex;
@@ -300,45 +300,73 @@ onMounted(async () => {
   min-width: 0;
 }
 .station-right {
-  flex: 0 0 320px;
-  width: 320px;
+  flex: 0 0 440px;
+  width: 440px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 16px;
+  padding: 24px;
   background: var(--el-bg-color);
 }
 .panel-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
   color: var(--el-text-color-secondary);
 }
 .panel-section {
-  margin-bottom: 16px;
+  margin-bottom: 22px;
 }
 .panel-label {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--el-text-color-regular);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+}
+.ear-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.finish-cut-btn {
+  flex: 0 0 auto;
 }
 .ear-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 6px;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
   background: var(--el-color-warning-light-9);
   color: var(--el-color-warning-dark-2);
   border: 1px solid var(--el-color-warning-light-5);
   font-weight: 600;
+  font-size: 16px;
 }
 .panel-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 24px;
 }
 .action-btn {
   width: 100%;
+  height: 56px;
+  font-size: 18px;
+}
+/* 触屏放大：数字键盘 / 入库位置按钮 */
+.station-right :deep(.numpad-display) {
+  height: 56px;
+}
+.station-right :deep(.numpad-input) {
+  font-size: 22px;
+}
+.station-right :deep(.numpad-key) {
+  height: 56px;
+  font-size: 22px;
+}
+.station-right :deep(.dest-btn) {
+  min-width: 96px;
+  height: 52px;
+  font-size: 16px;
 }
 </style>

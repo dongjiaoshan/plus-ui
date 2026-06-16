@@ -264,7 +264,7 @@ function handleView(row: BizRow) {
 }
 /** 产品入库（仅商品配置入口出现）：打开录入弹窗 */
 function handleInbound(row: BizRow) {
-  inboundFormRef.value?.open({ id: row.id, productName: row.productName, productUnit: row.productUnit });
+  inboundFormRef.value?.open({ id: row.id, productName: row.productName, productUnit: row.productUnit, storeLocationId: row.storeLocationId });
 }
 async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];

@@ -3,39 +3,29 @@
     <!-- 标题 -->
     <div class="page-title">{{ t('plantOverview.title') }}</div>
 
-    <!-- 一行 5 个 KPI 统计卡（产量类，单位吨；决策#7，单位已含在 label 文案中） -->
-    <el-row :gutter="12" class="kpi-row">
-      <el-col :xs="12" :sm="8" :md="8" :lg="4" :xl="4">
-        <div class="kpi-card">
-          <div class="kpi-label">{{ t('plantOverview.kpi.idlePlotCount') }}</div>
-          <div class="kpi-value">{{ summary?.idlePlotCount ?? 0 }}</div>
-        </div>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="8" :lg="4" :xl="4">
-        <div class="kpi-card">
-          <div class="kpi-label">{{ t('plantOverview.kpi.plantedPlotCount') }}</div>
-          <div class="kpi-value">{{ summary?.plantedPlotCount ?? 0 }}</div>
-        </div>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="8" :lg="4" :xl="4">
-        <div class="kpi-card">
-          <div class="kpi-label">{{ t('plantOverview.kpi.harvestedTotalTon') }}</div>
-          <div class="kpi-value">{{ summary?.harvestedTotalTon ?? 0 }}</div>
-        </div>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="8" :lg="4" :xl="4">
-        <div class="kpi-card">
-          <div class="kpi-label">{{ t('plantOverview.kpi.expectedTotalTon') }}</div>
-          <div class="kpi-value">{{ summary?.expectedTotalTon ?? 0 }}</div>
-        </div>
-      </el-col>
-      <el-col :xs="12" :sm="8" :md="8" :lg="4" :xl="4">
-        <div class="kpi-card">
-          <div class="kpi-label">{{ t('plantOverview.kpi.remainingExpectedTon') }}</div>
-          <div class="kpi-value">{{ summary?.remainingExpectedTon ?? 0 }}</div>
-        </div>
-      </el-col>
-    </el-row>
+    <!-- 一行 5 个 KPI 统计卡（产量类，单位吨；决策#7，单位已含在 label 文案中）；flex 等宽铺满整行，窄到放不下才换行 -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">{{ t('plantOverview.kpi.idlePlotCount') }}</div>
+        <div class="kpi-value">{{ summary?.idlePlotCount ?? 0 }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">{{ t('plantOverview.kpi.plantedPlotCount') }}</div>
+        <div class="kpi-value">{{ summary?.plantedPlotCount ?? 0 }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">{{ t('plantOverview.kpi.harvestedTotalTon') }}</div>
+        <div class="kpi-value">{{ summary?.harvestedTotalTon ?? 0 }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">{{ t('plantOverview.kpi.expectedTotalTon') }}</div>
+        <div class="kpi-value">{{ summary?.expectedTotalTon ?? 0 }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">{{ t('plantOverview.kpi.remainingExpectedTon') }}</div>
+        <div class="kpi-value">{{ summary?.remainingExpectedTon ?? 0 }}</div>
+      </div>
+    </div>
 
     <!-- 分隔线 -->
     <el-divider />
@@ -161,14 +151,20 @@ onMounted(loadSummary);
   }
 
   .kpi-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+
     .kpi-card {
+      /* 一行 5 个等宽铺满：弹性增长 + min-width 触发换行（窄到 5 个放不下才换） */
+      flex: 1 1 0;
+      min-width: 150px;
       background: var(--el-bg-color-overlay, #fff);
       border: 1px solid var(--el-border-color-lighter);
       border-radius: 8px;
       padding: 16px;
-      margin-bottom: 12px;
       text-align: center;
-      height: 100%;
       box-sizing: border-box;
 
       .kpi-label {
@@ -274,7 +270,7 @@ onMounted(loadSummary);
       .metric-group {
         flex: 1;
         min-width: 0;
-        text-align: center;
+        text-align: right;
         .metric-group-title {
           font-size: 13px;
           font-weight: 600;

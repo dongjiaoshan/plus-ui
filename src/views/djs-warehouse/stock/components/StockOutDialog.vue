@@ -10,6 +10,9 @@
     @closed="handleClosed"
   >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
+      <el-form-item :label="t('stock.outDialog.currentStock')">
+        <el-input :model-value="currentStockText" disabled />
+      </el-form-item>
       <el-form-item :label="t('stock.outDialog.outDate')" prop="outDate">
         <el-date-picker
           v-model="form.outDate"
@@ -58,6 +61,17 @@ const visible = ref(false);
 const submitting = ref(false);
 const formRef = ref<ElFormInstance>();
 const unit = ref('');
+/** 当前库存（出库弹窗只读展示，来自被点击的库存行 productStock） */
+const currentStock = ref<number | string | null>(null);
+
+/** 当前库存展示：保留两位小数 + 单位（productStock 后端 BigDecimal 可能是 string） */
+const currentStockText = computed(() => {
+  const v = currentStock.value;
+  if (v === undefined || v === null || v === '') return '-';
+  const n = typeof v === 'number' ? v : Number(v);
+  const text = Number.isNaN(n) ? String(v) : n.toFixed(2);
+  return unit.value ? `${text}${unit.value}` : text;
+});
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -83,6 +97,7 @@ const open = (row: LocationStockVO) => {
   form.value = defaultForm();
   form.value.id = String(row.id);
   unit.value = row.productUnit ?? '';
+  currentStock.value = row.productStock ?? null;
   visible.value = true;
 };
 defineExpose({ open });
@@ -91,6 +106,7 @@ const handleClosed = () => {
   formRef.value?.resetFields();
   form.value = defaultForm();
   unit.value = '';
+  currentStock.value = null;
 };
 
 const submit = () => {

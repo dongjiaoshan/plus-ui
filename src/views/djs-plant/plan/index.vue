@@ -48,7 +48,6 @@
         <el-button v-hasPermi="['djs:plant:plan:list']" link type="primary" size="small" @click="handleDetail(row)">
           {{ t('plantPlan.action.detail') }}
         </el-button>
-        <el-button v-hasPermi="['djs:plant:plan:edit']" link type="primary" size="small" icon="Edit" @click="handleEdit(row)" />
         <el-button v-hasPermi="['djs:plant:plan:remove']" link type="danger" size="small" icon="Delete" @click="handleDelOne(row)" />
       </template>
     </BizTable>
@@ -91,13 +90,25 @@ const kpiCards = computed(() => [
 // ---- 筛选：原型 4 项（计划日期 / 种植农作物 / 计划更新时间 / 计划编制人） ----
 // 农作物 / 计划编制人改为输入框模糊查询（cropName / queryCreateByName）。
 const searchModel = reactive<Record<string, unknown>>({
+  planYear: undefined,
   planDate: undefined,
   cropName: undefined,
   queryUpdateTime: undefined,
   queryCreateByName: undefined
 });
 
+// 计划年份下拉：当前年向前 5 年 + 向后 1 年
+const planYearOptions = computed(() => {
+  const now = new Date().getFullYear();
+  const years: Array<{ label: string; value: number }> = [];
+  for (let y = now + 1; y >= now - 5; y--) {
+    years.push({ label: String(y), value: y });
+  }
+  return years;
+});
+
 const searchSchema = computed<SearchFieldSchema[]>(() => [
+  { field: 'planYear', label: t('plantPlan.column.planYear'), type: 'select', placeholder: t('plantPlan.placeholder.planYear'), options: planYearOptions.value, width: 160 },
   { field: 'planDate', label: t('plantPlan.field.planDate'), type: 'daterange', placeholder: t('plantPlan.placeholder.planDateFilter'), width: 240 },
   { field: 'cropName', label: t('plantPlan.field.crop'), type: 'input', placeholder: t('plantPlan.placeholder.cropNameInput'), width: 160 },
   { field: 'queryUpdateTime', label: t('plantPlan.field.updateTime'), type: 'date', placeholder: t('plantPlan.placeholder.updateTime'), width: 160 },

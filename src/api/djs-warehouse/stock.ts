@@ -27,6 +27,19 @@ export const getStock = (id: number | string): AxiosPromise<LocationStockVO> => 
 };
 
 /**
+ * 查询当前库存中实际存在的猪只耳号（去重，供库存查询页耳号下拉用，row152-2）。
+ *
+ * @param locationId 库位 ID（可空，不传则取全部库存）
+ */
+export const listStockEarNos = (locationId?: number | string): AxiosPromise<string[]> => {
+  return request({
+    url: '/djs/warehouse/stock/earNos',
+    method: 'get',
+    params: { locationId }
+  });
+};
+
+/**
  * 库存查询行「产品出库」（DJS-FIX-WMS-RALN-B）。
  *
  * 后端按库存行 id 取 locationId + productId，同事务写出库流水 + 扣减库存。

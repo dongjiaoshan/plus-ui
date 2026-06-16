@@ -33,6 +33,8 @@ export interface LocationStockQuery extends PageQuery {
   locationId?: number | string;
   productId?: number | string;
   productName?: string;
+  /** 归属类型（djs_belong_type）：row152-1 后端需关联 product 表按 belong_type 过滤 */
+  belongType?: string;
   earNo?: string;
   plotId?: number | string;
   blockNo?: string;

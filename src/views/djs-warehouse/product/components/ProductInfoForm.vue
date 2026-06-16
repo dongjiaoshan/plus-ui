@@ -42,6 +42,20 @@
               </el-select>
             </el-form-item>
           </el-col>
+          <!-- row119：归属类型右侧选存储库位（单选），入库时锁定到此库位 -->
+          <el-col :span="12">
+            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId">
+              <el-select
+                v-model="form.storeLocationId"
+                filterable
+                clearable
+                :placeholder="t('product.placeholder.storeLocation')"
+                style="width: 100%"
+              >
+                <el-option v-for="l in locationOptions" :key="String(l.id)" :label="l.locationName" :value="String(l.id)" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="12">
             <el-form-item :label="t('product.field.productAttr')" prop="productAttr">
               <el-select v-model="form.productAttr" clearable>
@@ -94,6 +108,20 @@
             <el-form-item :label="t('product.field.belongType')" prop="belongType">
               <el-select v-model="form.belongType" clearable>
                 <el-option v-for="d in djs_belong_type" :key="d.value" :label="d.label" :value="d.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <!-- row118：归属类型右侧选存储库位（单选），入库时锁定到此库位 -->
+          <el-col :span="12">
+            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId">
+              <el-select
+                v-model="form.storeLocationId"
+                filterable
+                clearable
+                :placeholder="t('product.placeholder.storeLocation')"
+                style="width: 100%"
+              >
+                <el-option v-for="l in locationOptions" :key="String(l.id)" :label="l.locationName" :value="String(l.id)" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -190,6 +218,7 @@
 import { addProduct, getProduct, listProduct, updateProduct } from '@/api/djs-warehouse/product';
 import type { GiftBoxForm, ProductInfoForm, ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { listSupplier } from '@/api/djs-common/supplier';
+import { listLocation } from '@/api/djs-warehouse/location';
 import OssUpload from '@/components/OssUpload/index.vue';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
@@ -222,6 +251,8 @@ const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 
 const supplierOptions = ref<Array<{ id: number | string; supplierName: string }>>([]);
 const componentCandidates = ref<ProductInfoVO[]>([]);
+/** 存储库位下拉（row118/119：归属类型右侧选存储库位，入库时锁定到此库位） */
+const locationOptions = ref<Array<{ id: number | string; locationName: string }>>([]);
 
 const defaultForm = (): ProductInfoForm => ({
   id: undefined,
@@ -321,6 +352,7 @@ const openCreate = async (presetType?: number, types?: number[]) => {
   }
   await loadSupplierOptions();
   await loadComponentCandidates();
+  await loadLocationOptions();
   visible.value = true;
 };
 
@@ -329,6 +361,7 @@ const openEdit = async (id: number | string, types?: number[]) => {
   allowedTypes.value = types ? [...types] : [];
   await loadSupplierOptions();
   await loadComponentCandidates();
+  await loadLocationOptions();
   const res = await getProduct(id);
   const data = res.data;
   form.value = {
@@ -428,6 +461,18 @@ const loadSupplierOptions = async () => {
   } catch (e) {
     console.warn('[ProductInfoForm] loadSupplierOptions failed', e);
     supplierOptions.value = [];
+  }
+};
+
+const loadLocationOptions = async () => {
+  if (locationOptions.value.length > 0) return;
+  try {
+    const res = await listLocation({ pageNum: 1, pageSize: 500 } as any);
+    const rows = (res.rows ?? res.data ?? []) as Array<{ id: number | string; locationName: string }>;
+    locationOptions.value = rows.map((r) => ({ id: r.id, locationName: r.locationName }));
+  } catch (e) {
+    console.warn('[ProductInfoForm] loadLocationOptions failed', e);
+    locationOptions.value = [];
   }
 };
 

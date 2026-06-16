@@ -31,7 +31,7 @@
         <span>{{ row.lossRate != null ? `${row.lossRate}%` : '-' }}</span>
       </template>
       <template #cell-lossYield="{ row }">
-        <span>{{ row.lossYield != null ? `${row.lossYield} kg` : '-' }}</span>
+        <span>{{ row.lossYield != null ? `${Number(row.lossYield).toFixed(2)} kg` : '-' }}</span>
       </template>
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:plant:farm:disaster:list']" link type="primary" @click="handleViewDetail(row)">
@@ -52,7 +52,6 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import DisasterDetailDrawer from './components/DisasterDetailDrawer.vue';
 import { listDisaster } from '@/api/djs-plant/farm-records';
-import { listPlot } from '@/api/djs-plant/plot';
 import { listAllTeam } from '@/api/djs-plant/team';
 import type { DisasterRecordQuery, DisasterRecordVO } from '@/api/djs-plant/farm-records/types';
 import { useI18n } from 'vue-i18n';
@@ -70,12 +69,12 @@ const pageSize = ref(10);
 const detailVisible = ref(false);
 const currentId = ref<string>('');
 
-const plotOptions = ref<Array<{ label: string; value: string }>>([]);
 const teamOptions = ref<Array<{ label: string; value: string }>>([]);
 
 const searchModel = reactive<Record<string, any>>({
   farmDate: undefined,
-  plotId: undefined,
+  plotCode: undefined,
+  plotName: undefined,
   disasterType: undefined,
   cropName: undefined,
   farmBy: undefined
@@ -83,7 +82,9 @@ const searchModel = reactive<Record<string, any>>({
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'farmDate', label: t('plantDisaster.field.dateRange'), type: 'daterange' },
-  { field: 'plotId', label: t('plantDisaster.field.plot'), type: 'select', options: plotOptions.value },
+  // 地块编号 / 地块名称：均改文本输入框模糊搜索（后端经 plot_info 反查 plotId IN 过滤）
+  { field: 'plotCode', label: t('plantDisaster.field.plotCode'), type: 'input' },
+  { field: 'plotName', label: t('plantDisaster.field.plot'), type: 'input' },
   { field: 'cropName', label: t('plantDisaster.field.crop'), type: 'input', placeholder: t('plantDisaster.placeholder.crop') },
   { field: 'disasterType', label: t('plantDisaster.field.disasterType'), type: 'select', dictType: 'djs_disaster_type' },
   // 记录班组：复用 listAllTeam（参照 records 页 farmBy）；后端 FarmRecordsQuery.farmBy 已支持 eq 过滤
@@ -110,7 +111,8 @@ function buildQuery(): DisasterRecordQuery {
   return {
     pageNum: pageNum.value,
     pageSize: pageSize.value,
-    plotId: searchModel.plotId || undefined,
+    plotCode: searchModel.plotCode || undefined,
+    plotName: searchModel.plotName || undefined,
     disasterType: searchModel.disasterType || undefined,
     // cropName 文本筛选：后端 FarmRecordsQuery 目前仅支持 cropId(eq)，缺 crop_name like —— 见 _open-issues 后端依赖项，
     // 后端补 crop_name like 过滤前此参数不生效（已传不影响其余筛选）。
@@ -129,17 +131,6 @@ async function fetchList() {
     total.value = res.total ?? 0;
   } finally {
     loading.value = false;
-  }
-}
-
-async function loadPlotOptions() {
-  try {
-    const res = await listPlot({ pageNum: 1, pageSize: 999 });
-    const rows = (res.rows ?? res.data ?? []) as Array<{ id: string | number; plotName: string }>;
-    plotOptions.value = rows.map((p) => ({ label: p.plotName, value: String(p.id) }));
-  } catch (e) {
-    console.warn('[Disaster] listPlot failed', e);
-    plotOptions.value = [];
   }
 }
 
@@ -178,7 +169,8 @@ function handleExport() {
   proxy?.download(
     'djs/plant/farm/disaster/export',
     {
-      plotId: searchModel.plotId || undefined,
+      plotCode: searchModel.plotCode || undefined,
+      plotName: searchModel.plotName || undefined,
       disasterType: searchModel.disasterType || undefined,
       cropName: searchModel.cropName || undefined,
       farmBy: searchModel.farmBy ? Number(searchModel.farmBy) : undefined,
@@ -190,7 +182,6 @@ function handleExport() {
 }
 
 onMounted(() => {
-  loadPlotOptions();
   loadTeamOptions();
   fetchList();
 });

@@ -1,5 +1,5 @@
 <template>
-  <el-drawer v-model="visible" size="80%" destroy-on-close>
+  <el-drawer v-model="visible" size="90%" destroy-on-close>
     <template #header>
       <div class="flex items-center justify-between w-full pr-4">
         <span class="text-base font-medium">
@@ -28,9 +28,9 @@
     </el-form>
 
     <el-table v-loading="loading" :data="filteredRows" border stripe row-key="id" :empty-text="t('common.empty')">
-      <el-table-column :label="t('pickPlan.adjust.col.cropName')" prop="cropName" width="120" show-overflow-tooltip />
-      <el-table-column :label="t('pickPlan.adjust.col.plotCode')" prop="plotCode" width="120" show-overflow-tooltip />
-      <el-table-column :label="t('pickPlan.adjust.col.plotName')" prop="plotName" width="140" show-overflow-tooltip />
+      <el-table-column :label="t('pickPlan.adjust.col.cropName')" prop="cropName" width="120" align="center" show-overflow-tooltip />
+      <el-table-column :label="t('pickPlan.adjust.col.plotCode')" prop="plotCode" width="120" align="center" show-overflow-tooltip />
+      <el-table-column :label="t('pickPlan.adjust.col.plotName')" prop="plotName" width="140" align="center" show-overflow-tooltip />
       <el-table-column :label="t('pickPlan.adjust.col.isPick')" min-width="130" align="center">
         <template #default="{ row }">
           <el-tag :type="row.isPick === 1 ? 'warning' : 'info'" size="small">
@@ -46,7 +46,7 @@
       <el-table-column :label="t('pickPlan.adjust.col.plantDate')" prop="plantDate" width="120" align="center">
         <template #default="{ row }">{{ row.plantDate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.plantTeam')" prop="harvestTeamName" width="120" show-overflow-tooltip>
+      <el-table-column :label="t('pickPlan.adjust.col.plantTeam')" prop="harvestTeamName" width="120" align="center" show-overflow-tooltip>
         <template #default="{ row }">{{ row.harvestTeamName || '-' }}</template>
       </el-table-column>
       <el-table-column :label="t('pickPlan.adjust.col.beginHarvestdate')" prop="beginHarvestdate" width="140" align="center">
@@ -61,16 +61,16 @@
       <el-table-column :label="t('pickPlan.adjust.col.planLatest')" prop="lastHarvestdate" width="140" align="center">
         <template #default="{ row }">{{ row.lastHarvestdate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.plotArea')" prop="plotArea" width="100" align="right">
+      <el-table-column :label="t('pickPlan.adjust.col.plotArea')" prop="plotArea" width="100" align="center">
         <template #default="{ row }">{{ row.plotArea != null ? `${row.plotArea} 亩` : '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.standardYield')" prop="expectedYield" width="110" align="right">
+      <el-table-column :label="t('pickPlan.adjust.col.standardYield')" prop="expectedYield" width="110" align="center">
         <template #default="{ row }">{{ row.expectedYield != null ? `${row.expectedYield} kg` : '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.actualYield')" prop="actualYield" width="110" align="right">
+      <el-table-column :label="t('pickPlan.adjust.col.actualYield')" prop="actualYield" width="110" align="center">
         <template #default="{ row }">{{ `${row.actualYield ?? 0} kg` }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.lossYield')" prop="lossYield" width="110" align="right">
+      <el-table-column :label="t('pickPlan.adjust.col.lossYield')" prop="lossYield" width="110" align="center">
         <template #default="{ row }">{{ `${row.lossYield ?? 0} kg` }}</template>
       </el-table-column>
       <el-table-column :label="t('pickPlan.column.action')" width="200" fixed="right">

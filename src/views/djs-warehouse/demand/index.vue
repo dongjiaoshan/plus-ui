@@ -78,8 +78,7 @@ const searchModel = reactive<Record<string, any>>({
   productName: undefined,
   productType: undefined,
   demandStatus: undefined,
-  beginDate: undefined,
-  endDate: undefined
+  demandDateRange: undefined
 });
 
 /**
@@ -100,8 +99,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
       { label: t('demand.groupStatus.PARTIAL'), value: 'PARTIAL' }
     ]
   },
-  { field: 'beginDate', label: t('demand.field.beginDate'), type: 'date' },
-  { field: 'endDate', label: t('demand.field.endDate'), type: 'date' }
+  { field: 'demandDateRange', label: t('demand.field.demandDateRange'), type: 'daterange' }
 ]);
 
 /** 汇总列（对齐原型 bc5e5339：11 数据列 + 1 操作列）。统一居中 + 统一 minWidth。 */
@@ -182,14 +180,15 @@ function rowKeyOf(row: DemandGroupVO): string {
 async function fetchList() {
   loading.value = true;
   try {
+    const range = searchModel.demandDateRange as [string, string] | undefined;
     const query: DemandManageQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       productName: searchModel.productName,
       productType: searchModel.productType,
       demandStatus: searchModel.demandStatus,
-      beginDate: searchModel.beginDate,
-      endDate: searchModel.endDate
+      beginDate: range && range[0] ? range[0] : undefined,
+      endDate: range && range[1] ? range[1] : undefined
     };
     const res: any = await listDemandGroup(query);
     const rows = (res.rows ?? res.data ?? []) as DemandGroupVO[];

@@ -52,14 +52,14 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
-  produceNo: undefined,
+  productName: undefined,
   belongType: undefined,
   produceDateFrom: undefined,
   produceDateTo: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'produceNo', label: '生产编号', type: 'input' },
+  { field: 'productName', label: '产品名称', type: 'input' },
   { field: 'belongType', label: '产品品类', type: 'select', dictType: 'djs_belong_type' }
 ]);
 
@@ -79,7 +79,9 @@ const columns = computed<BizTableColumn[]>(() => [
       return String(Math.round(Number(r.produceQty)));
     }
   },
-  { prop: 'itemCount', label: '件数', minWidth: 90, align: 'center' }
+  { prop: 'itemCount', label: '件数', minWidth: 90, align: 'center' },
+  // 需求门店数：该产品当前有未发货需求的门店家数（后端 ProductProductionGroupVo.storeDemandCount）
+  { prop: 'storeDemandCount', label: '需求门店数', minWidth: 110, align: 'center' }
 ]);
 
 async function loadList() {

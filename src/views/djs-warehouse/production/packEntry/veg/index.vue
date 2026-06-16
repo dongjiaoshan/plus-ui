@@ -1,6 +1,7 @@
 <template>
   <div class="p-2">
-    <SkuPackForm kind="veg" :product-type="1" :title="t('djs.warehouse.packEntry.vegTitle')" plot-group />
+    <!-- 果蔬打包：发送位置仅「发货月台」（去掉邮寄/礼盒，row110）；plot-group 顶部地块来源选择 -->
+    <SkuPackForm kind="veg" :product-type="1" :send-dest-kinds="['platform']" :title="t('djs.warehouse.packEntry.vegTitle')" plot-group />
   </div>
 </template>
 

@@ -683,7 +683,11 @@ export default {
         changeTime: 'Time',
         eventType: 'Event',
         transition: 'State change',
-        relatedEventId: 'Related ID'
+        relatedEventId: 'Related ID',
+        recorder: 'Recorder'
+      },
+      historyCol: {
+        durationDays: 'Duration days'
       },
       medCol: {
         useDate: 'Use date',
@@ -1258,7 +1262,8 @@ export default {
       productSpec: 'e.g. 500g/pack',
       productMaterial: 'Related raw material product ID',
       buyClass: 'Choose purchase class (add via dict manager if empty)',
-      supplierId: 'Choose supplier'
+      supplierId: 'Choose supplier',
+      storeLocation: 'Select storage location'
     },
     rule: {
       productType: { required: 'Please select product type' },
@@ -1286,6 +1291,7 @@ export default {
       quantity: 'Inbound quantity',
       confirm: 'Confirm inbound',
       locationRequired: 'Please select inbound location',
+      locationLocked: 'Locked to configured location',
       quantityRequired: 'Please enter inbound quantity',
       remark: 'Remark'
     },
@@ -1322,7 +1328,8 @@ export default {
       productName: 'Product',
       earNo: 'Ear No.',
       blockNo: 'Plot No.',
-      locationName: 'Location'
+      locationName: 'Location',
+      belongType: 'Belong Type'
     },
     column: {
       locationName: 'Location',
@@ -1343,6 +1350,7 @@ export default {
     },
     outDialog: {
       title: 'Product Stock Out',
+      currentStock: 'Current Stock',
       outDate: 'Out Date',
       outDatePlaceholder: 'Select out date',
       quantity: 'Out Qty',
@@ -1355,6 +1363,14 @@ export default {
         quantity: 'Please enter out qty',
         stockOutDest: 'Please select destination'
       }
+    },
+    recordDialog: {
+      title: 'Stock Records',
+      checkId: 'Check No.',
+      sysStock: 'System Stock',
+      checkStock: 'Counted Stock',
+      diffStock: 'Difference',
+      checkBy: 'Checked By'
     }
   },
   // Planting - Zone (PLT-MD-001)
@@ -1399,7 +1415,7 @@ export default {
     },
     gantt: {
       plantTitle: 'Planting Plan',
-      pickTitle: 'Harvest Cycle',
+      pickTitle: 'Harvest Plan',
       progress: 'Progress'
     }
   },
@@ -1446,7 +1462,7 @@ export default {
         earliestHarvestdate: 'Earliest Harvest',
         lastHarvestdate: 'Latest Harvest',
         plotArea: 'Plot Area (mu)',
-        expectedYield: 'Standard Yield (kg)',
+        expectedYield: 'Expected Yield (kg)',
         actualYield: 'Actual Yield (kg)'
       }
     }
@@ -1482,6 +1498,7 @@ export default {
       plantByName: 'Planting Team',
       expectedYield: 'Est. Yield/mu',
       earliestHarvestdate: 'Est. Earliest Harvest',
+      lastHarvestdate: 'Est. Latest Harvest',
       actualYield: 'Actual Yield/mu',
       beginHarvestdate: 'Harvest Start',
       endHarvestdate: 'Harvest End',
@@ -1765,7 +1782,7 @@ export default {
       remark: 'Remark'
     },
     placeholder: {
-      teamName: 'e.g. Fruit & Veg Team / Tuber Team',
+      teamName: 'Enter team name',
       remark: 'Remark'
     },
     rule: {
@@ -1808,10 +1825,14 @@ export default {
       cropId: 'Crop',
       totalArea: 'Total Area',
       totalPlot: 'Plot Count',
-      earliestHarvestdate: 'Earliest Harvest',
-      lastHarvestdate: 'Last Harvest',
-      plantStatus: 'Plan Status',
+      earliestHarvestdate: 'Earliest Harvest Date',
+      lastHarvestdate: 'Last Harvest Date',
+      plantStatus: 'Planting Plan Status',
       harvestStatus: 'Harvest Status',
+      plantTime: 'Plant Time',
+      plantActualDate: 'Plant Date',
+      beginHarvestdate: 'Harvest Start Date',
+      endHarvestdate: 'Harvest End Date',
       plantDate: 'Planned Plant Date',
       plotCode: 'Plot Code',
       plotName: 'Plot Name',
@@ -1843,7 +1864,7 @@ export default {
       actualYield: 'Actual Yield (kg)',
       finishedPlot: 'Finished Plots',
       completionRate: 'Completion Rate (%)',
-      plantStatus: 'Plan Status',
+      plantStatus: 'Planting Plan Status',
       updateTime: 'Updated Time',
       createBy: 'Created By',
       createByName: 'Created By',
@@ -1851,6 +1872,7 @@ export default {
     },
     placeholder: {
       planSeason: 'Select planting season',
+      planYear: 'Select Plan Year',
       plantDate: 'e.g. early April (optional)',
       team: 'Select team',
       planDateFilter: 'Select plan date range',
@@ -2010,8 +2032,8 @@ export default {
         harvestStatus: 'Status',
         plantDate: 'Planting Date',
         plantTeam: 'Planting Team',
-        planEarliest: 'Earliest Start',
-        planLatest: 'Latest Deadline',
+        planEarliest: 'Earliest Harvest Date',
+        planLatest: 'Latest Harvest Date',
         beginHarvestdate: 'Actual Start',
         endHarvestdate: 'Actual End',
         harvestBy: 'Harvest Team',
@@ -2183,7 +2205,7 @@ export default {
       },
       packEntry: {
         meatTitle: 'Meat Packing',
-        otherTitle: 'Other Product Packing',
+        otherTitle: 'Product Packing',
         vegTitle: 'Vegetable Packing',
         giftTitle: 'Gift Box Packing',
         cutTitle: 'White Bar Cutting',
@@ -2219,6 +2241,7 @@ export default {
         sendDestMail: 'Mail',
         sendDestGift: 'Gift Box',
         demandStores: 'Store Demand',
+        selectProductFirst: 'Select a product to load store demand',
         copiesUnit: '',
         noDemand: 'No pending store demand for this product',
         confirmPrintTrace: 'Confirm & Print Trace Code',
@@ -2243,6 +2266,7 @@ export default {
         confirmCutOut: 'Confirm Inbound',
         cutOutSuccess: 'Cut output stored',
         finishCut: 'Finish Cut',
+        finishCutShort: 'Finish Cut',
         dripLoss: 'Drip Loss',
         dripLossRequired: 'Enter drip loss (0 if none)',
         finishCutSuccess: 'White bar cut finished',
@@ -2263,6 +2287,7 @@ export default {
         inWeightLabel: 'Inbound Weight',
         marketingWeightLabel: 'Marketing Weight',
         whiteBarWeightShort: 'Carcass wt ',
+        remainWeightLabel: 'Remaining Weight',
         pickupWeightExceed: 'Pickup weight must not exceed the carcass marketing weight ({weight}kg)',
         pigAssignLabel: 'Pig Assignment',
         noBars: 'No bars available',
@@ -2609,6 +2634,7 @@ export default {
       expectedArriveDate: 'Expected Arrive',
       beginDate: 'Begin Date',
       endDate: 'End Date',
+      demandDateRange: 'Demand Date',
       productionDestination: 'Production Destination'
     },
     productionDestination: {
@@ -3417,7 +3443,8 @@ export default {
     field: {
       recordNo: 'Record No.',
       dateRange: 'Date Range',
-      plot: 'Plot',
+      plot: 'Plot Name',
+      plotCode: 'Plot Code',
       disasterType: 'Disaster Type',
       isWarning: 'Warning',
       crop: 'Crop',
@@ -3470,7 +3497,8 @@ export default {
       dateRange: 'Farm Date',
       farmType: 'Farm Type',
       crop: 'Crop',
-      plot: 'Plot',
+      plot: 'Plot Name',
+      plotCode: 'Plot Code',
       team: 'Work Team'
     },
     action: {

@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_check_result']"
+      :dict-types="['djs_check_result', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       :action-width="320"
@@ -40,6 +40,7 @@
     </BizTable>
 
     <StockOutDialog ref="outDialogRef" @success="fetchList" />
+    <StockRecordDialog ref="recordDialogRef" />
   </div>
 </template>
 
@@ -47,18 +48,18 @@
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import StockOutDialog from './components/StockOutDialog.vue';
+import StockRecordDialog from './components/StockRecordDialog.vue';
 import { listStock } from '@/api/djs-warehouse/stock';
 import type { LocationStockQuery, LocationStockVO } from '@/api/djs-warehouse/stock/types';
 import { listLocation } from '@/api/djs-warehouse/location';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const router = useRouter();
 
 const tableRef = ref<BizTableExpose>();
 const outDialogRef = ref<{ open: (row: LocationStockVO) => void }>();
+const recordDialogRef = ref<{ open: (row: LocationStockVO, kind: 'in' | 'out' | 'check') => void }>();
 
 const list = ref<LocationStockVO[]>([]);
 const total = ref(0);
@@ -68,6 +69,7 @@ const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
+  belongType: undefined,
   earNo: undefined,
   blockNo: undefined,
   locationId: undefined
@@ -78,6 +80,8 @@ const locationOptions = ref<Array<{ label: string; value: string | number }>>([]
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('stock.field.productName'), type: 'input' },
+  // 归属类型搜索（row152-1，后端 LocationStockQuery 需关联 product 表按 belong_type 过滤）
+  { field: 'belongType', label: t('stock.field.belongType'), type: 'select', dictType: 'djs_belong_type', clearable: true },
   { field: 'earNo', label: t('stock.field.earNo'), type: 'input' },
   { field: 'blockNo', label: t('stock.field.blockNo'), type: 'input' },
   { field: 'locationId', label: t('stock.field.locationName'), type: 'select', options: locationOptions.value, clearable: true }
@@ -87,7 +91,13 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productCode', label: t('stock.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'locationName', label: t('stock.column.locationName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'productName', label: t('stock.column.productName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-  { prop: 'productStock', label: t('stock.column.productStock'), minWidth: 120, align: 'center', formatter: (row: BizRow) => formatStock(row.productStock) },
+  {
+    prop: 'productStock',
+    label: t('stock.column.productStock'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (row: BizRow) => formatStock(row.productStock)
+  },
   { prop: 'productUnit', label: t('stock.column.productUnit'), minWidth: 120, align: 'center' },
   { prop: 'earNo', label: t('stock.column.earNo'), minWidth: 120, align: 'center' },
   { prop: 'blockNo', label: t('stock.column.blockNo'), minWidth: 120, align: 'center' },
@@ -109,6 +119,7 @@ async function fetchList() {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       productName: searchModel.productName || undefined,
+      belongType: searchModel.belongType || undefined,
       earNo: searchModel.earNo || undefined,
       blockNo: searchModel.blockNo || undefined,
       locationId: searchModel.locationId || undefined
@@ -127,21 +138,11 @@ function handleProductOut(row: LocationStockVO) {
 }
 
 /**
- * 行级钻取：入库 → 入库记录页（9240 `flow/in`）/ 出库 → 出库记录页（9241 `flow/out`），
- * 带 productId 预过滤；盘点 → 盘点记录页（9250 `check`），带 locationId 预过滤（盘点单为库位级）。
- *
- * 路由 path 按 plus-ui 动态路由：父 path 前缀拼子 path。IA 重构（ADMIN-MENU-IA-001）后
- * 9240/9241/9250 改挂 9302(`wh-stock-mgmt`)，真实路由前缀为 `djs-warehouse/wh-stock-mgmt`。
+ * 行级钻取：入库 / 出库 / 盘点记录就地弹窗（只看本产品/本库位的记录），不再跳转到对应菜单页。
+ * 入/出库按 productId 过滤（复用 listFlowIn/listFlowOut），盘点按库位拉明细后前端过滤本产品。
  */
 function drillTo(kind: 'in' | 'out' | 'check', row: LocationStockVO) {
-  if (kind === 'check') {
-    router.push({ path: '/djs-warehouse/wh-stock-mgmt/check', query: { locationId: row.locationId } });
-  } else {
-    router.push({
-      path: kind === 'in' ? '/djs-warehouse/wh-stock-mgmt/flow/in' : '/djs-warehouse/wh-stock-mgmt/flow/out',
-      query: { productId: row.productId }
-    });
-  }
+  recordDialogRef.value?.open(row, kind);
 }
 
 function handleSearch(payload: Record<string, any>) {
@@ -164,6 +165,7 @@ function handleExport() {
     'djs/warehouse/stock/export',
     {
       productName: searchModel.productName || undefined,
+      belongType: searchModel.belongType || undefined,
       earNo: searchModel.earNo || undefined,
       blockNo: searchModel.blockNo || undefined,
       locationId: searchModel.locationId || undefined

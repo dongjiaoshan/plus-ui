@@ -45,6 +45,13 @@ export interface DisasterRecordVO {
 export interface DisasterRecordQuery extends PageQuery {
   recordNo?: string;
   plotId?: number | string;
+  /** 地块名称模糊搜索（后端经 plot_info 反查 plotId 列表后 IN 过滤；FarmRecordsQuery.plotName 已支持）。 */
+  plotName?: string;
+  /**
+   * 地块编号模糊搜索（后端经 plot_info.plot_code like 反查 plotId 列表后 IN 过滤）。
+   * 后端依赖：FarmRecordsQuery 需新增 plotCode 字段 + buildWrapper 反查，否则此参数不生效。
+   */
+  plotCode?: string;
   disasterType?: string;
   /**
    * 作物名 like 筛选（原型「请输入作物信息」）。
@@ -122,6 +129,11 @@ export interface FarmRecordQuery extends PageQuery {
   /** 5 Tab 分组对应的 farm_work_type 字典值多选（service IN 过滤） */
   farmWorkTypes?: string[];
   plotId?: number | string;
+  /**
+   * 地块编号模糊搜索（后端经 plot_info.plot_code like 反查 plotId 列表后 IN 过滤）。
+   * 后端依赖：FarmRecordsQuery 需新增 plotCode 字段 + buildWrapper 反查，否则此参数不生效。
+   */
+  plotCode?: string;
   /** 地块名称模糊搜索（后端经 plot_info 反查 plotId 列表后 IN 过滤） */
   plotName?: string;
   /** 作物名称模糊搜索（后端 crop_name 已落主表，直接 like） */

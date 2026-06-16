@@ -1,30 +1,24 @@
 <template>
   <div class="p-2">
-    <el-tabs v-model="activeTab" class="px-2">
-      <el-tab-pane :label="t('djs.warehouse.packEntry.otherProductTab')" name="product">
-        <!-- 其他产品打包：发送方式二选(发货月台/邮寄)，无礼盒；只有「确认」无追溯码打印；卡片无原材料库存行 -->
-        <SkuPackForm
-          kind="dry"
-          :product-type="1"
-          :title="t('djs.warehouse.packEntry.otherTitle')"
-          :send-dest-kinds="['platform', 'mail']"
-          :show-print-trace="false"
-          :show-stock="false"
-        />
-      </el-tab-pane>
-      <el-tab-pane :label="t('djs.warehouse.packEntry.otherGiftTab')" name="gift">
-        <!-- 礼盒打包：原型无发送位置 + 无追溯码打印 -->
-        <SkuPackForm kind="gift" :product-type="3" :title="t('djs.warehouse.packEntry.giftTitle')" :send-dest-kinds="[]" :show-print-trace="false" />
-      </el-tab-pane>
-    </el-tabs>
+    <!-- 产品打包：去掉普通产品/礼盒 tab 切换（row113），直接产品打包台；
+         发送位置仅「发货月台」（去掉邮寄，row111）；去掉来源产品 chip + 猪只耳号 chip（row111）；
+         只有「确认」无追溯码打印；卡片无原材料库存行 -->
+    <SkuPackForm
+      kind="dry"
+      :product-type="1"
+      :title="t('djs.warehouse.packEntry.otherTitle')"
+      :send-dest-kinds="['platform']"
+      :show-print-trace="false"
+      :show-stock="false"
+      :show-source="false"
+      :show-ear="false"
+    />
   </div>
 </template>
 
 <script setup name="PackEntryOther" lang="ts">
-import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SkuPackForm from '../SkuPackForm.vue';
 
 const { t } = useI18n();
-const activeTab = ref('product');
 </script>

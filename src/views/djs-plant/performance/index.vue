@@ -102,14 +102,14 @@ const columns = computed<BizTableColumn[]>(() => [
     prop: 'totalPickWeight',
     label: t('plantPerformance.column.pickWeight'),
     minWidth: 140,
-    align: 'right',
+    align: 'center',
     formatter: (r: BizRow) => (r.totalPickWeight != null ? `${Number(r.totalPickWeight).toFixed(2)} 斤` : '-')
   },
   {
     prop: 'teamMonthAmount',
     label: t('plantPerformance.column.amount'),
     minWidth: 140,
-    align: 'right',
+    align: 'center',
     formatter: (r: BizRow) => (r.teamMonthAmount != null ? `¥${r.teamMonthAmount}` : '-')
   },
   { prop: 'farmCount', label: t('plantPerformance.column.farmCount'), minWidth: 130, align: 'center' }

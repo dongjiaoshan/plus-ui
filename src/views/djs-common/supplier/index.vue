@@ -68,10 +68,7 @@ const searchModel = reactive<Record<string, any>>({
   supplierCode: undefined,
   supplierType: undefined,
   liaisonName: undefined,
-  settleType: undefined,
-  businessStatus: undefined,
-  updateTimeRange: undefined,
-  updateBy: undefined
+  businessStatus: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -79,10 +76,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'supplierCode', label: t('supplier.field.supplierCode'), type: 'input' },
   { field: 'supplierType', label: t('supplier.field.supplierType'), type: 'select', dictType: 'djs_supplier_type' },
   { field: 'liaisonName', label: t('supplier.field.liaisonName'), type: 'input' },
-  { field: 'settleType', label: t('supplier.field.settleType'), type: 'select', dictType: 'djs_settle_type' },
-  { field: 'businessStatus', label: t('supplier.field.businessStatus'), type: 'select', dictType: 'djs_supplier_status' },
-  { field: 'updateTimeRange', label: t('supplier.field.updateTimeRange'), type: 'daterange' },
-  { field: 'updateBy', label: t('supplier.field.updateBy'), type: 'input' }
+  { field: 'businessStatus', label: t('supplier.field.businessStatus'), type: 'select', dictType: 'djs_supplier_status' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -100,9 +94,6 @@ const columns = computed<BizTableColumn[]>(() => [
 ]);
 
 function buildQuery(): SupplierQuery {
-  const range = searchModel.updateTimeRange as [string, string] | undefined;
-  const updateByRaw = searchModel.updateBy as string | number | undefined;
-  const updateBy = updateByRaw === undefined || updateByRaw === '' ? undefined : Number(updateByRaw);
   return {
     pageNum: pageNum.value,
     pageSize: pageSize.value,
@@ -110,11 +101,7 @@ function buildQuery(): SupplierQuery {
     supplierCode: searchModel.supplierCode || undefined,
     supplierType: searchModel.supplierType || undefined,
     liaisonName: searchModel.liaisonName || undefined,
-    settleType: searchModel.settleType || undefined,
-    businessStatus: searchModel.businessStatus || undefined,
-    updateTimeBegin: range && range[0] ? `${range[0]} 00:00:00` : undefined,
-    updateTimeEnd: range && range[1] ? `${range[1]} 23:59:59` : undefined,
-    updateBy: Number.isFinite(updateBy) ? (updateBy as number) : undefined
+    businessStatus: searchModel.businessStatus || undefined
   };
 }
 

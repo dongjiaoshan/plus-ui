@@ -272,6 +272,9 @@ onMounted(async () => {
 <style scoped>
 .demand-confirm {
   background: var(--el-bg-color);
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
 }
 .page-title {
   font-size: 18px;
@@ -280,6 +283,10 @@ onMounted(async () => {
 }
 .search-bar {
   margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 8px;
 }
 .search-bar :deep(.el-form-item__label) {
   white-space: nowrap;
