@@ -194,7 +194,7 @@ onMounted(loadSummary);
     background: var(--el-bg-color-overlay, #fff);
     border: 1px solid var(--el-border-color-lighter);
     border-radius: 8px;
-    padding: 16px;
+    padding: 12px;
     height: 100%;
     box-sizing: border-box;
     cursor: pointer;
@@ -214,7 +214,7 @@ onMounted(loadSummary);
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
 
       .crop-rate {
         position: absolute;
@@ -270,17 +270,18 @@ onMounted(loadSummary);
       .metric-group {
         flex: 1;
         min-width: 0;
-        text-align: right;
+        text-align: left;
         .metric-group-title {
           font-size: 13px;
           font-weight: 600;
           color: var(--el-text-color-primary);
           margin-bottom: 6px;
+          text-align: center;
         }
         .metric-line {
           font-size: 12px;
           color: var(--el-text-color-regular);
-          line-height: 1.8;
+          line-height: 1.6;
         }
       }
       .metric-divider {

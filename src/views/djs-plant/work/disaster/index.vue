@@ -23,10 +23,6 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-isWarning="{ row }">
-        <el-tag v-if="row.isWarning === 1" type="danger" effect="dark">{{ t('plantDisaster.tag.warning') }}</el-tag>
-        <el-tag v-else type="info">{{ t('plantDisaster.tag.normal') }}</el-tag>
-      </template>
       <template #cell-lossRate="{ row }">
         <span>{{ row.lossRate != null ? `${row.lossRate}%` : '-' }}</span>
       </template>
@@ -101,7 +97,6 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'disasterType', label: t('plantDisaster.column.disasterType'), width: 100, align: 'center', dictType: 'djs_disaster_type' },
   { prop: 'lossRate', label: t('plantDisaster.column.lossRate'), width: 100, align: 'right' },
   { prop: 'lossYield', label: t('plantDisaster.column.lossYield'), width: 120, align: 'right' },
-  { prop: 'isWarning', label: t('plantDisaster.column.isWarning'), width: 90, align: 'center' },
   { prop: 'teamName', label: t('plantDisaster.column.teamName'), width: 120, showOverflowTooltip: true },
   { prop: 'createTime', label: t('plantDisaster.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);

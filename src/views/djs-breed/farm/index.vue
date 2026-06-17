@@ -21,6 +21,11 @@
       @add="onAdd"
       @page-change="onPageChange"
     >
+      <template #cell-barnStatus="{ row }">
+        <el-tag :type="row.barnStatus === 1 ? 'success' : 'info'">
+          {{ row.barnStatus === 1 ? t('farm.tag.enabled') : t('farm.tag.disabled') }}
+        </el-tag>
+      </template>
       <template #action="{ row }">
         <el-button link type="primary" @click="onPenDetail(row)">{{ t('farm.proto.penDetail') }}</el-button>
         <el-button v-hasPermi="['djs:breed:barn:edit']" link type="primary" @click="onEdit(row)">{{ t('common.edit') }}</el-button>
@@ -71,6 +76,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'barnName', label: t('farm.field.barnName'), minWidth: 140 },
   { prop: 'barnType', label: t('farm.field.barnType'), width: 130, align: 'center', dictType: 'djs_barn_type' },
+  { prop: 'barnStatus', label: t('farm.field.barnStatus'), width: 100, align: 'center' },
   { prop: 'bedCount', label: t('farm.proto.col.bedCount'), width: 100, align: 'center' },
   { prop: 'limitPenCount', label: t('farm.proto.col.limitPenCount'), width: 110, align: 'center' },
   { prop: 'bigPenCount', label: t('farm.proto.col.bigPenCount'), width: 100, align: 'center' },

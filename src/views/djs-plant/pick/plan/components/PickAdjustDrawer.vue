@@ -171,6 +171,9 @@ const scheduleForm = reactive<{ earliestHarvestdate?: string; lastHarvestdate?: 
 
 const togglingId = ref<string>('');
 
+// 打开「设置计划」时抑制 earliestHarvestdate watch 的初始重算，避免 clobber 该行原始 lastHarvestdate（最晚采摘日期）
+const suppressRecalc = ref(false);
+
 /** 在 YYYY-MM-DD 日期上加 days 天，返回 YYYY-MM-DD（基于本地零点构造，避免时区漂移）。 */
 function addDays(date: string, days: number): string {
   const [y, m, d] = date.split('-').map(Number);
@@ -184,6 +187,7 @@ function addDays(date: string, days: number): string {
 watch(
   () => scheduleForm.earliestHarvestdate,
   (v) => {
+    if (suppressRecalc.value) return;
     if (v && cropCycleDays.value > 0) {
       scheduleForm.lastHarvestdate = addDays(v, cropCycleDays.value);
     }
@@ -204,10 +208,14 @@ async function loadRows() {
   }
 }
 
-function openScheduleDialog(row: AdjustRow) {
+async function openScheduleDialog(row: AdjustRow) {
   currentRow.value = row;
+  // 先抑制 watch 重算，确保结束采摘日期默认 = 该行最晚采摘日期（而非 最早+作物生长周期）
+  suppressRecalc.value = true;
   scheduleForm.earliestHarvestdate = row.earliestHarvestdate || undefined;
   scheduleForm.lastHarvestdate = row.lastHarvestdate || undefined;
+  await nextTick();
+  suppressRecalc.value = false;
   dialogVisible.value = true;
 }
 

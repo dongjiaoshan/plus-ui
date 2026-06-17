@@ -5,7 +5,7 @@
       <el-descriptions :column="1" border>
         <el-descriptions-item :label="t('plantWork.column.recordNo')">{{ detail.recordNo }}</el-descriptions-item>
         <el-descriptions-item :label="t('plantWork.column.farmType')">
-          <dict-tag :options="djs_farm_work_type" :value="detail.farmType" />
+          <dict-tag :options="dict.djs_farm_work_type" :value="detail.farmType" />
         </el-descriptions-item>
         <el-descriptions-item :label="t('plantWork.column.farmDate')">{{ detail.farmDate ?? '-' }}</el-descriptions-item>
         <el-descriptions-item :label="t('plantWork.column.plotName')">{{ detail.plotName ?? '-' }}</el-descriptions-item>
@@ -15,10 +15,10 @@
 
         <!-- 整地类专属 -->
         <el-descriptions-item v-if="detail.tillageType" :label="t('plantWork.detail.tillageType')">
-          <dict-tag :options="djs_tillage_type" :value="detail.tillageType" />
+          <dict-tag :options="dict.djs_tillage_type" :value="detail.tillageType" />
         </el-descriptions-item>
         <el-descriptions-item v-if="detail.tillageMethod" :label="t('plantWork.detail.tillageMethod')">
-          <dict-tag :options="djs_tillage_way" :value="detail.tillageMethod" />
+          <dict-tag :options="dict.djs_tillage_way" :value="detail.tillageMethod" />
         </el-descriptions-item>
 
         <!-- 移栽类专属 -->
@@ -31,7 +31,7 @@
 
         <!-- 灾害类专属 -->
         <el-descriptions-item v-if="detail.disasterType" :label="t('plantWork.column.disasterType')">
-          <dict-tag :options="djs_disaster_type" :value="detail.disasterType" />
+          <dict-tag :options="dict.djs_disaster_type" :value="detail.disasterType" />
         </el-descriptions-item>
         <el-descriptions-item v-if="detail.lossRate != null" :label="t('plantWork.column.lossRate')"> {{ detail.lossRate }}% </el-descriptions-item>
         <el-descriptions-item v-if="detail.lossYield != null" :label="t('plantWork.column.lossYield')">
@@ -66,12 +66,7 @@ import { useDict } from '@/utils/dict';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_farm_work_type, djs_disaster_type, djs_tillage_type, djs_tillage_way } = useDict(
-  'djs_farm_work_type',
-  'djs_disaster_type',
-  'djs_tillage_type',
-  'djs_tillage_way'
-);
+const dict = useDict('djs_farm_work_type', 'djs_disaster_type', 'djs_tillage_type', 'djs_tillage_way');
 
 const props = defineProps<{
   visible: boolean;

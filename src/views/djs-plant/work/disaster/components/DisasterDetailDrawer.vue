@@ -8,10 +8,6 @@
         <el-descriptions-item :label="t('plantDisaster.column.disasterType')">
           <dict-tag :options="djs_disaster_type" :value="detail.disasterType" />
         </el-descriptions-item>
-        <el-descriptions-item :label="t('plantDisaster.column.isWarning')">
-          <el-tag v-if="detail.isWarning === 1" type="danger" effect="dark">{{ t('plantDisaster.tag.warning') }}</el-tag>
-          <el-tag v-else type="info">{{ t('plantDisaster.tag.normal') }}</el-tag>
-        </el-descriptions-item>
         <el-descriptions-item :label="t('plantDisaster.column.plotName')">{{ detail.plotName ?? '-' }}</el-descriptions-item>
         <el-descriptions-item :label="t('plantDisaster.column.plotCode')">{{ detail.plotCode ?? '-' }}</el-descriptions-item>
         <el-descriptions-item :label="t('plantDisaster.column.cropName')">{{ detail.cropName ?? '-' }}</el-descriptions-item>

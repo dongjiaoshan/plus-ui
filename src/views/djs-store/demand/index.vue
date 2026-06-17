@@ -104,7 +104,15 @@ const pageSize = ref(10);
 const currentStoreId = ref<string>('');
 const storeOptions = ref<StoreVO[]>([]);
 
-const searchModel = reactive<Record<string, unknown>>({});
+// 默认查询「今天」的需求（格式 YYYY-MM-DD），不引新依赖
+const today = (() => {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+})();
+
+// 进页面默认：当前门店 + 需求日期=今天（beginDate=endDate=today）+ 状态≠已删除（后端 @TableLogic 过滤）
+const searchModel = reactive<Record<string, unknown>>({ beginDate: today, endDate: today });
 
 // 原型筛选：需求日期 + 产品名称
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -188,6 +196,9 @@ function handleSearch(payload: Record<string, unknown>) {
 }
 function handleReset() {
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
+  // 重置 = 回到「今天」，而非清空（保持默认查今天的需求）
+  searchModel.beginDate = today;
+  searchModel.endDate = today;
   pageNum.value = 1;
   fetchList();
 }

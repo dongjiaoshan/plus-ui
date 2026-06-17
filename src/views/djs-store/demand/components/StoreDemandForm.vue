@@ -241,6 +241,10 @@ async function handleSubmit() {
     proxy?.$modal.msgSuccess(t('common.opSuccess'));
     visible.value = false;
     emit('success');
+  } catch {
+    // 后端拒绝（如状态不可修改需求量）：错误提示由全局 request 拦截器弹出，这里关闭弹窗并刷新列表
+    visible.value = false;
+    emit('success');
   } finally {
     submitting.value = false;
   }
