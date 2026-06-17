@@ -174,6 +174,8 @@ const props = withDefaults(
     belongType?: string;
     /** 目标产品 belong_type 集合过滤（如 ['egg','dry_good','other'] 其他产品打包）；非空落 belong_type IN */
     belongTypes?: string[];
+    /** 目标产品 djs_product_workshop 过滤（如 3=门店打包间，肉品打包目标）；不传=不限，向后兼容 */
+    productWorkshop?: number;
     /** 发送位置可选项（缺省三选）；传 [] 不显示 */
     sendDestKinds?: DeliverDest[];
     /** 是否显示「确认并打印追溯码」 */
@@ -192,6 +194,7 @@ const props = withDefaults(
   {
     belongType: undefined,
     belongTypes: undefined,
+    productWorkshop: undefined,
     sendDestKinds: () => ['platform', 'mail', 'gift'],
     showPrintTrace: true,
     showStock: undefined,
@@ -201,6 +204,12 @@ const props = withDefaults(
     showEar: undefined
   }
 );
+
+/**
+ * submitted：单次打包提交成功后触发（携带新建 production.id），
+ * 供父页（如果蔬打包）刷新「当日损耗」等派生统计。不监听则无副作用（向后兼容）。
+ */
+const emit = defineEmits<{ submitted: [id: number | string | undefined] }>();
 
 const { t } = useI18n();
 
@@ -513,6 +522,7 @@ async function handleSubmit(printTrace: boolean) {
     }
     packNo.value += 1;
     ElMessage.success(t('djs.warehouse.packEntry.submitSuccess'));
+    emit('submitted', res?.data?.id);
     const traceCode: string | undefined = res?.data?.traceCode;
     if (printTrace) {
       if (traceCode) {
@@ -546,7 +556,7 @@ function printTraceCode(code: string) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadProducts(props.productType, props.belongType, props.belongTypes), loadStores()]);
+  await Promise.all([loadProducts(props.productType, props.belongType, props.belongTypes, props.productWorkshop), loadStores()]);
   if (props.kind === 'veg') {
     await Promise.all([loadSources('veg'), props.plotGroup ? loadPlots() : Promise.resolve()]);
   } else if (props.kind === 'dry') {

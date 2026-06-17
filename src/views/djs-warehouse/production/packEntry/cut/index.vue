@@ -95,7 +95,7 @@
 </template>
 
 <script setup name="PackEntryCut" lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { PriceTag } from '@element-plus/icons-vue';
@@ -129,7 +129,8 @@ const porkProductLoading = ref(false);
 async function loadPorkProducts() {
   porkProductLoading.value = true;
   try {
-    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork' } as any);
+    // P3：仅加载分割车间（productWorkshop=2）的猪肉分割成品
+    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork', productWorkshop: 2 } as any);
     porkProducts.value = ((res as any).rows ?? []) as ProductInfoVO[];
   } finally {
     porkProductLoading.value = false;
@@ -157,6 +158,32 @@ const form = ref<{ cutRecordId: number | string | ''; locationId: number | strin
 // 当前录入的单件分割产品（卡片选品 + numpad 录重 → 确认入库逐件提交）
 const selectedProductId = ref<number | string | ''>('');
 const curWeight = ref<number | undefined>(undefined);
+
+// P4：选产品后按所选产品配置的入库库位（store_location_id CSV 首个有效项）自动填表单库位。
+// 仅当解析出的库位在可选库位范围（冻品/猪肉鲜品库）内、且用户尚未选库位时自动填，不覆盖用户手选。
+function resolvePresetLocationId(product: ProductInfoVO | undefined): number | string | '' {
+  if (!product?.storeLocationId) return '';
+  for (const token of String(product.storeLocationId).split(',')) {
+    const trimmed = token.trim();
+    if (!trimmed) continue;
+    const candidate = Number(trimmed);
+    if (Number.isNaN(candidate)) continue;
+    if (locationOptions.value.some((o) => String(o.value) === String(candidate))) {
+      return candidate;
+    }
+  }
+  return '';
+}
+
+watch(selectedProductId, (pid) => {
+  if (!pid) return;
+  if (form.value.locationId) return; // 用户已选库位，不覆盖
+  const product = porkProducts.value.find((p) => String(p.id) === String(pid));
+  const preset = resolvePresetLocationId(product);
+  if (preset !== '') {
+    form.value.locationId = preset;
+  }
+});
 
 const selectedCut = computed(() => cuttable.value.find((r) => String(r.id) === String(form.value.cutRecordId)));
 

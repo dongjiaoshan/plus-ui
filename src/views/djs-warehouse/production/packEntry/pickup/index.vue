@@ -71,6 +71,24 @@
             <DestToggle v-model="pickupForm.outDest" :options="outDestOptions" />
           </div>
 
+          <!-- 发货月台：关联发货门店（ship 分支必填） -->
+          <div v-if="pickupForm.outDest === 'ship'" class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.shipStore') }}</div>
+            <el-select
+              v-model="pickupForm.storeId"
+              :placeholder="t('djs.warehouse.packEntry.shipStorePlaceholder')"
+              filterable
+              class="ship-store-select"
+            >
+              <el-option
+                v-for="s in stores"
+                :key="String(s.id)"
+                :label="s.storeName"
+                :value="s.id"
+              />
+            </el-select>
+          </div>
+
           <div class="panel-actions">
             <el-button type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit">
               {{ t('djs.warehouse.packEntry.confirmPickup') }}
@@ -94,7 +112,7 @@ import { submitPickup, submitWhiteBarOut } from '@/api/djs-warehouse/packEntry';
 
 const { t } = useI18n();
 
-const { sources, loadSources, bars, barLoading, loadBars } = usePackEntryOptions();
+const { sources, loadSources, bars, barLoading, loadBars, stores, loadStores } = usePackEntryOptions();
 
 /** 出库位置枚举 → 后端两端点：cut=分割车间(submitPickup) / ship=发货月台(whiteBarOut)。 */
 type OutDest = 'cut' | 'ship';
@@ -103,7 +121,9 @@ const submitting = ref(false);
 const pickupDefault = () => ({
   barInfoId: '' as number | string | '',
   productWeight: undefined as number | undefined,
-  outDest: 'cut' as OutDest
+  outDest: 'cut' as OutDest,
+  // 发货月台关联门店（ship 分支必填，后端 WhiteBarOutBo.storeId @NotNull）
+  storeId: '' as number | string | ''
 });
 const pickupForm = ref(pickupDefault());
 
@@ -155,14 +175,18 @@ async function handleSubmit() {
       await submitPickup({ barInfoId: bar.id, pickupWeight, isHalf: 2 });
       ElMessage.success(t('djs.warehouse.packEntry.pickupSuccess'));
     } else {
-      // 发货月台：白条/猪肉发货出库（需重量 + 来源 inhouse，按耳号匹配白条来源过程产品）
+      // 发货月台：白条/猪肉发货出库（需重量 + 来源 inhouse，按耳号匹配白条来源过程产品 + 关联发货门店）
+      if (!pickupForm.value.storeId) {
+        ElMessage.warning(t('djs.warehouse.packEntry.shipStoreRequired'));
+        return;
+      }
       const earNo = bar.earNo ?? bar.barId;
       const src = sources.value.find((s) => String(s.earNo ?? '') === String(earNo));
       if (!src) {
         ElMessage.warning(t('djs.warehouse.packEntry.shipSourceNotFound'));
         return;
       }
-      await submitWhiteBarOut({ sourceInhouseId: src.id, productWeight: pickupWeight });
+      await submitWhiteBarOut({ sourceInhouseId: src.id, productWeight: pickupWeight, storeId: pickupForm.value.storeId });
       ElMessage.success(t('djs.warehouse.packEntry.shipOutSuccess'));
     }
     pickupForm.value = pickupDefault();
@@ -173,7 +197,7 @@ async function handleSubmit() {
 }
 
 onMounted(async () => {
-  await Promise.all([loadBars(), loadSources('whiteBar')]);
+  await Promise.all([loadBars(), loadSources('whiteBar'), loadStores()]);
 });
 </script>
 
@@ -325,5 +349,11 @@ onMounted(async () => {
   min-width: 96px;
   height: 52px;
   font-size: 16px;
+}
+.ship-store-select {
+  width: 100%;
+}
+.station-right :deep(.ship-store-select .el-select__wrapper) {
+  min-height: 52px;
 }
 </style>

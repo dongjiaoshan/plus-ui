@@ -58,7 +58,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item :label="t('product.field.productAttr')" prop="productAttr">
-              <el-select v-model="form.productAttr" clearable>
+              <el-select v-model="form.productAttr" clearable @change="onProductAttrChange">
                 <el-option v-for="d in djs_product_attr" :key="d.value" :label="d.label" :value="Number(d.value)" />
               </el-select>
             </el-form-item>
@@ -70,16 +70,35 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('product.field.productMaterial')" prop="productMaterial">
-              <el-input v-model="form.productMaterial" :placeholder="t('product.placeholder.productMaterial')" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item :label="t('product.field.materialNum')" prop="materialNum">
-              <el-input-number v-model="form.materialNum" :precision="3" :min="0" style="width: 100%" />
-            </el-form-item>
-          </el-col>
+          <!-- 生产产品(product_attr=1)可关联一个原材料产品（FK→product.id）：成品→原材料映射，供毛菜/打包链路降级消费 -->
+          <template v-if="form.productAttr === 1">
+            <el-col :span="12">
+              <el-form-item :label="t('product.field.productMaterial')" prop="productMaterial">
+                <el-select
+                  v-model="form.productMaterial"
+                  filterable
+                  clearable
+                  style="width: 100%"
+                  :placeholder="t('product.placeholder.productMaterialSelect')"
+                >
+                  <el-option
+                    v-for="m in materialCandidates"
+                    :key="String(m.id)"
+                    :label="`${m.productName} (${m.productUnit})`"
+                    :value="m.id"
+                  />
+                </el-select>
+                <el-text v-if="materialCandidates.length === 0" size="small" type="info">
+                  {{ t('product.tip.materialEmpty') }}
+                </el-text>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item :label="t('product.field.materialNum')" prop="materialNum">
+                <el-input-number v-model="form.materialNum" :precision="3" :min="0" style="width: 100%" />
+              </el-form-item>
+            </el-col>
+          </template>
         </el-row>
       </template>
 
@@ -251,6 +270,8 @@ const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 
 const supplierOptions = ref<Array<{ id: number | string; supplierName: string }>>([]);
 const componentCandidates = ref<ProductInfoVO[]>([]);
+/** 原材料候选（product_attr=2 原材料）：生产产品关联原材料下拉，FK→product.id */
+const materialCandidates = ref<ProductInfoVO[]>([]);
 /** 存储库位下拉（row118/119：归属类型右侧选存储库位，入库时锁定到此库位） */
 const locationOptions = ref<Array<{ id: number | string; locationName: string }>>([]);
 
@@ -352,6 +373,7 @@ const openCreate = async (presetType?: number, types?: number[]) => {
   }
   await loadSupplierOptions();
   await loadComponentCandidates();
+  await loadMaterialCandidates();
   await loadLocationOptions();
   visible.value = true;
 };
@@ -361,6 +383,7 @@ const openEdit = async (id: number | string, types?: number[]) => {
   allowedTypes.value = types ? [...types] : [];
   await loadSupplierOptions();
   await loadComponentCandidates();
+  await loadMaterialCandidates(id);
   await loadLocationOptions();
   const res = await getProduct(id);
   const data = res.data;
@@ -434,6 +457,14 @@ const onTypeChange = (newType: number) => {
   }
 };
 
+/** 产品属性切换：离开「生产产品」(1) 时清空原材料关联，避免遗留孤儿映射 */
+const onProductAttrChange = (attr?: number) => {
+  if (attr !== 1) {
+    form.value.productMaterial = undefined;
+    form.value.materialNum = undefined;
+  }
+};
+
 const addComponent = () => {
   if (!form.value.giftComponents) {
     form.value.giftComponents = [];
@@ -485,6 +516,21 @@ const loadComponentCandidates = async () => {
   } catch (e) {
     console.warn('[ProductInfoForm] loadComponentCandidates failed', e);
     componentCandidates.value = [];
+  }
+};
+
+/**
+ * 原材料候选：product_attr=2（原材料）的产品；编辑态排除自身（产品不能关联自己当原材料）。
+ * 后端 list 不按 product_attr 过滤，故全量拉取后前端筛。
+ */
+const loadMaterialCandidates = async (excludeId?: number | string) => {
+  try {
+    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
+    const rows = (res.rows ?? res.data ?? []) as ProductInfoVO[];
+    materialCandidates.value = rows.filter((r) => r.productAttr === 2 && (excludeId == null || String(r.id) !== String(excludeId)));
+  } catch (e) {
+    console.warn('[ProductInfoForm] loadMaterialCandidates failed', e);
+    materialCandidates.value = [];
   }
 };
 

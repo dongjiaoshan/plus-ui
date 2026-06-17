@@ -1261,6 +1261,7 @@ export default {
       productUnit: 'e.g. kg / pcs / box',
       productSpec: 'e.g. 500g/pack',
       productMaterial: 'Related raw material product ID',
+      productMaterialSelect: 'Select the related raw material product',
       buyClass: 'Choose purchase class (add via dict manager if empty)',
       supplierId: 'Choose supplier',
       storeLocation: 'Select storage location'
@@ -1275,7 +1276,8 @@ export default {
       giftComponents: { required: 'Gift box requires at least one component' }
     },
     tip: {
-      buyClassEmpty: 'No purchase class yet — add via System → Dict → djs_buy_class'
+      buyClassEmpty: 'No purchase class yet — add via System → Dict → djs_buy_class',
+      materialEmpty: 'No raw material product yet — first add a product with attribute = Raw material'
     },
     action: {
       addComponent: 'Add component'
@@ -2130,7 +2132,16 @@ export default {
         operator: 'Operator',
         location: 'Frozen Location',
         isHalf: 'Half Bar?',
-        remark: 'Remark'
+        remark: 'Remark',
+        outsourceBar: 'Outsourced Bar',
+        supplierName: 'Supplier',
+        headSkinYieldRate: 'Head-Skin Yield',
+        whiteBarYieldRate: 'White-Bar Yield',
+        precoolLossWeight: 'Pre-cool Loss (kg)',
+        precoolLossRate: 'Pre-cool Loss Rate',
+        coldStorageMinutes: 'Cold Storage (min)',
+        cutProductTotalWeight: 'Cut Total (kg)',
+        cutLossWeight: 'Cut Loss (kg)'
       },
       vegHandle: {
         title: 'Vegetable Handle',
@@ -2319,7 +2330,18 @@ export default {
         outLocationRequired: 'Please select out location',
         packNo: 'Pack No',
         pickupPageTitle: 'White-bar Pickup',
-        shipSourceNotFound: 'No shippable source for this white-bar (confirm singeing & in-stock done)'
+        shipSourceNotFound: 'No shippable source for this white-bar (confirm singeing & in-stock done)',
+        shipStore: 'Ship Store',
+        shipStorePlaceholder: 'Select ship store',
+        shipStoreRequired: 'Please select ship store',
+        vegDailyLoss: 'Daily Loss',
+        vegLossPicked: 'Issued In',
+        vegLossPacked: 'Packed',
+        vegLossReturned: 'Returned',
+        vegLossFeed: 'Feed',
+        vegLossValue: 'Loss',
+        vegLossUnit: 'kg',
+        vegLossHint: 'Loss = Issued In − Packed − Returned − Feed (by calendar day)'
       },
       shipment: {
         title: 'Shipment',
@@ -3382,7 +3404,13 @@ export default {
       returnedQty: 'Returned',
       whReturnQty: 'Return to WH',
       lossQty: 'Loss',
-      closingQty: 'Closing'
+      closingQty: 'Closing',
+      category: 'Category'
+    },
+    category: {
+      pork: 'Pork',
+      inbound: 'New Arrival',
+      stock: 'Yesterday Stock'
     },
     action: {
       newEntry: 'New Daily Check',

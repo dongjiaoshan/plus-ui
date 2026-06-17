@@ -6,6 +6,7 @@
       kind="dry"
       :product-type="1"
       belong-type="pork"
+      :product-workshop="3"
       :send-dest-kinds="['platform']"
       ear-group
       :title="t('djs.warehouse.packEntry.meatTitle')"

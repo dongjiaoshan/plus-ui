@@ -169,13 +169,13 @@ const defaultForm = (): CropInfoForm => ({
 
 const form = ref<CropInfoForm>(defaultForm());
 
-// 关联产品选项（productType=1 自产产品；relatedProduct 存产品主键 id BIGINT FK）
+// 关联产品选项：belong_type=vegetable 果蔬成品（作物↔成品映射，毛菜处理产出取此 product）；relatedProduct 存产品主键 id BIGINT FK
 const productOptions = ref<ProductInfoVO[]>([]);
 let productsLoaded = false;
 const loadProductOptions = async () => {
   if (productsLoaded) return;
   try {
-    const query: ProductInfoQuery = { pageNum: 1, pageSize: 1000, productType: 1 };
+    const query: ProductInfoQuery = { pageNum: 1, pageSize: 1000, belongType: 'vegetable' };
     const res = await listProduct(query);
     productOptions.value = (res.rows ?? (res as any).data ?? []) as ProductInfoVO[];
     productsLoaded = true;

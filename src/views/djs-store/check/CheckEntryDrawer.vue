@@ -1,6 +1,6 @@
 <template>
   <!-- 新增当日盘点：宽抽屉整表录入，点蒙层可关（保持 Element Plus 默认）。对齐原型「门店盘点>新增当日盘点」矩阵。 -->
-  <el-drawer v-model="visible" :title="t('storeLedger.entry.title')" direction="rtl" size="80%" append-to-body destroy-on-close>
+  <el-drawer v-model="visible" :title="t('storeLedger.entry.title')" direction="rtl" size="85%" append-to-body destroy-on-close>
     <div class="ledger-entry">
       <div class="entry-tools">
         <el-select
@@ -24,45 +24,67 @@
 
       <el-table v-loading="loading" :data="rows" border stripe class="entry-table">
         <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
-        <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" header-align="center" />
-        <el-table-column :label="t('storeLedger.column.openingQty')" width="130" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.category')" width="100" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.openingQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-tag :type="categoryTagType(row.category)" disable-transitions>{{ categoryLabel(row.category) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.inboundQty')" width="130" align="center" header-align="center">
+        <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="80" align="center" header-align="center" />
+        <!-- 期初：只读（库存表结存） -->
+        <el-table-column :label="t('storeLedger.column.openingQty')" width="110" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.inboundQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
+            <span class="text-muted">{{ row.openingQty }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.saleQty')" width="130" align="center" header-align="center">
+        <!-- 新到货：新到货行只读（发货量）；猪肉行可编辑 -->
+        <el-table-column :label="t('storeLedger.column.inboundQty')" width="140" align="center" header-align="center">
+          <template #default="{ row }">
+            <el-input-number
+              v-if="!row.inboundReadonly"
+              v-model="row.inboundQty"
+              :min="0"
+              :precision="2"
+              :controls="false"
+              class="cell-num"
+              @change="recalc(row)"
+            />
+            <span v-else class="text-muted">{{ row.inboundQty }}</span>
+          </template>
+        </el-table-column>
+        <!-- 销售：手动 -->
+        <el-table-column :label="t('storeLedger.column.saleQty')" width="120" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.saleQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.giftQty')" width="130" align="center" header-align="center">
+        <!-- 赠送：手动 -->
+        <el-table-column :label="t('storeLedger.column.giftQty')" width="120" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.giftQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.returnQty')" width="130" align="center" header-align="center">
+        <!-- 退货（顾客退货）：手动 -->
+        <el-table-column :label="t('storeLedger.column.returnQty')" width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.returnQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number v-model="row.returnSaleQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
+        <!-- 退回（门店退回仓库）：只读 -->
         <el-table-column :label="t('storeLedger.column.returnedQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
-            <span class="text-muted">{{ row.whReturnQty }}</span>
+            <span class="text-muted">{{ row.returnWhQty }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center">
+        <!-- 期末：手动实盘录入 -->
+        <el-table-column :label="t('storeLedger.column.closingQty')" width="130" align="center" header-align="center">
           <template #default="{ row }">
-            <span class="text-muted">{{ row.lossQty }}</span>
+            <el-input-number v-model="row.closingQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('storeLedger.column.closingQty')" width="110" align="center" header-align="center" fixed="right">
+        <!-- 损耗：只读（后端公式计算，前端同步展示） -->
+        <el-table-column :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center" fixed="right">
           <template #default="{ row }">
-            <span class="closing">{{ row.closingQty }}</span>
+            <span class="loss" :class="{ 'loss-negative': row.lossQty < 0 }">{{ row.lossQty }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -81,7 +103,7 @@
 
 <script setup name="StoreCheckEntryDrawer" lang="ts">
 import { listStoreLedgerCandidates, batchSaveStoreLedger } from '@/api/djs-store/ledger';
-import type { StoreLedgerBatchItem, StoreLedgerCandidateVO } from '@/api/djs-store/ledger/types';
+import type { StoreLedgerBatchItem, StoreLedgerCandidateVO, StoreLedgerCategory } from '@/api/djs-store/ledger/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
@@ -95,16 +117,25 @@ interface EntryRow {
   productId: string;
   productName: string;
   productUnit: string;
+  category: StoreLedgerCategory;
+  /** 期初库存（只读） */
   openingQty: number;
+  /** 当日入库量（新到货只读 / 猪肉手动） */
   inboundQty: number;
+  /** 入库是否只读 */
+  inboundReadonly: boolean;
+  /** 销售量（手动） */
   saleQty: number;
+  /** 赠送量（手动） */
   giftQty: number;
-  returnQty: number;
-  /** 退回量（门店退回仓库，原型只读，后端预填） */
-  whReturnQty: number;
-  /** 损耗量（原型只读，V1 默认 0） */
-  lossQty: number;
+  /** 退货量（顾客退货，手动） */
+  returnSaleQty: number;
+  /** 退回量（门店退回仓库，只读） */
+  returnWhQty: number;
+  /** 期末库存（手动实盘录入） */
   closingQty: number;
+  /** 损耗（前端按公式同步展示，后端最终计算） */
+  lossQty: number;
 }
 
 function todayStr(): string {
@@ -127,16 +158,27 @@ function nz(v: number | string | undefined): number {
   return Number.isNaN(n) ? 0 : n;
 }
 
+function categoryLabel(c: StoreLedgerCategory): string {
+  return t(`storeLedger.category.${c}`);
+}
+
+function categoryTagType(c: StoreLedgerCategory): 'success' | 'warning' | 'info' {
+  if (c === 'pork') return 'success';
+  if (c === 'inbound') return 'warning';
+  return 'info';
+}
+
+/** 损耗 = 期初 + 入库 − 销售 − 赠送 + 退货 − 退回 − 期末（与后端公式一致）。 */
 function recalc(row: EntryRow) {
-  row.closingQty = Number(
+  row.lossQty = Number(
     (
       nz(row.openingQty) +
       nz(row.inboundQty) -
       nz(row.saleQty) -
-      nz(row.giftQty) -
-      nz(row.returnQty) -
-      nz(row.whReturnQty) -
-      nz(row.lossQty)
+      nz(row.giftQty) +
+      nz(row.returnSaleQty) -
+      nz(row.returnWhQty) -
+      nz(row.closingQty)
     ).toFixed(2)
   );
 }
@@ -161,18 +203,22 @@ async function loadCandidates() {
     const res = await listStoreLedgerCandidates(storeId.value, ledgerDate.value);
     const candidates = (res.data ?? []) as StoreLedgerCandidateVO[];
     rows.value = candidates.map((c) => {
+      // 入库只读：后端 inboundReadonly 为准；猪肉行（category=pork）可手动编辑。
+      const inboundReadonly = c.inboundReadonly !== false && c.category !== 'pork';
       const r: EntryRow = {
         productId: String(c.productId),
         productName: c.productName ?? '',
         productUnit: c.productUnit ?? '',
-        openingQty: 0,
+        category: c.category,
+        openingQty: nz(c.openingQty),
         inboundQty: nz(c.inboundQty),
+        inboundReadonly,
         saleQty: nz(c.saleQty),
         giftQty: 0,
-        returnQty: nz(c.returnQty),
-        whReturnQty: nz(c.whReturnQty),
-        lossQty: 0,
-        closingQty: 0
+        returnSaleQty: nz(c.returnSaleQty),
+        returnWhQty: nz(c.returnWhQty),
+        closingQty: 0,
+        lossQty: 0
       };
       recalc(r);
       return r;
@@ -193,9 +239,9 @@ async function handleSubmit() {
     inboundQty: r.inboundQty,
     saleQty: r.saleQty,
     giftQty: r.giftQty,
-    returnQty: r.returnQty,
-    whReturnQty: r.whReturnQty,
-    lossQty: r.lossQty
+    returnSaleQty: r.returnSaleQty,
+    returnWhQty: r.returnWhQty,
+    closingQty: r.closingQty
   }));
   submitLoading.value = true;
   try {
@@ -238,9 +284,13 @@ defineExpose({ open });
     }
   }
 
-  .closing {
+  .loss {
     font-weight: 600;
     color: var(--el-color-primary);
+
+    &.loss-negative {
+      color: var(--el-color-danger);
+    }
   }
 
   .text-muted {

@@ -21,6 +21,14 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
+      <!-- P5 外购标注：外购行显「普通白条」+ 供应商名，自养行显耳号 -->
+      <template #cell-earNo="{ row }">
+        <template v-if="row.isOutsource">
+          <el-tag type="warning" size="small" disable-transitions>{{ t('djs.warehouse.pigCut.outsourceBar') }}</el-tag>
+          <span v-if="row.supplierName" class="supplier-name">{{ row.supplierName }}</span>
+        </template>
+        <span v-else>{{ row.earNo ?? '—' }}</span>
+      </template>
       <!-- 分割记录只读，无 edit / del 入口（写入走 mp） -->
       <template #action><span /></template>
     </BizTable>
@@ -61,14 +69,46 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), type: 'select', dictType: 'djs_pig_cut_status' }
 ]);
 
+/** 比率 → 百分比文本；分母缺失（后端返 null/undefined）显「—」 */
+function fmtRate(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '—';
+  const n = Number(v);
+  if (Number.isNaN(n)) return '—';
+  return `${(n * 100).toFixed(1)}%`;
+}
+
+/** 重量 → kg 文本（2 位小数）；缺失显「—」 */
+function fmtKg(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '—';
+  const n = Number(v);
+  if (Number.isNaN(n)) return '—';
+  return n.toFixed(2);
+}
+
+/** 分钟 → 文本；缺失显「—」 */
+function fmtMinutes(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '—';
+  const n = Number(v);
+  if (Number.isNaN(n)) return '—';
+  return String(n);
+}
+
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cutId', label: t('djs.warehouse.pigCut.cutId'), minWidth: 140 },
   { prop: 'barId', label: t('djs.warehouse.pigCut.barId'), minWidth: 140 },
-  { prop: 'earNo', label: t('djs.warehouse.pigCut.earNo'), minWidth: 120 },
+  { prop: 'earNo', label: t('djs.warehouse.pigCut.earNo'), minWidth: 140 },
+  { prop: 'supplierName', label: t('djs.warehouse.pigCut.supplierName'), minWidth: 120, formatter: (row) => row.supplierName ?? '—' },
   { prop: 'pickupTime', label: t('djs.warehouse.pigCut.pickupTime'), minWidth: 160 },
   { prop: 'cutStartTime', label: t('djs.warehouse.pigCut.cutStartTime'), minWidth: 160 },
   { prop: 'cutDoneTime', label: t('djs.warehouse.pigCut.cutDoneTime'), minWidth: 160 },
   { prop: 'pickupWeight', label: t('djs.warehouse.pigCut.pickupWeight'), minWidth: 100 },
+  { prop: 'headSkinYieldRate', label: t('djs.warehouse.pigCut.headSkinYieldRate'), minWidth: 110, formatter: (row) => fmtRate(row.headSkinYieldRate) },
+  { prop: 'whiteBarYieldRate', label: t('djs.warehouse.pigCut.whiteBarYieldRate'), minWidth: 110, formatter: (row) => fmtRate(row.whiteBarYieldRate) },
+  { prop: 'precoolLossWeight', label: t('djs.warehouse.pigCut.precoolLossWeight'), minWidth: 110, formatter: (row) => fmtKg(row.precoolLossWeight) },
+  { prop: 'precoolLossRate', label: t('djs.warehouse.pigCut.precoolLossRate'), minWidth: 110, formatter: (row) => fmtRate(row.precoolLossRate) },
+  { prop: 'coldStorageMinutes', label: t('djs.warehouse.pigCut.coldStorageMinutes'), minWidth: 110, formatter: (row) => fmtMinutes(row.coldStorageMinutes) },
+  { prop: 'cutProductTotalWeight', label: t('djs.warehouse.pigCut.cutProductTotalWeight'), minWidth: 110, formatter: (row) => fmtKg(row.cutProductTotalWeight) },
+  { prop: 'cutLossWeight', label: t('djs.warehouse.pigCut.cutLossWeight'), minWidth: 100, formatter: (row) => fmtKg(row.cutLossWeight) },
   { prop: 'dripLoss', label: t('djs.warehouse.pigCut.dripLoss'), minWidth: 100 },
   { prop: 'acidRemoveMinutes', label: t('djs.warehouse.pigCut.acidRemoveMinutes'), minWidth: 100 },
   { prop: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), minWidth: 100, dictType: 'djs_pig_cut_status' },
@@ -120,3 +160,10 @@ onMounted(() => {
   loadList();
 });
 </script>
+
+<style scoped>
+.supplier-name {
+  margin-left: 6px;
+  color: var(--el-text-color-regular);
+}
+</style>

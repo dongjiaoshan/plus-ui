@@ -1263,6 +1263,7 @@ export default {
       productUnit: '例 kg / 个 / 盒',
       productSpec: '例 500g/包',
       productMaterial: '关联原材料产品 ID',
+      productMaterialSelect: '请选择关联的原材料产品',
       buyClass: '请选择外购类（如字典空请到字典管理添加）',
       supplierId: '请选择供应商',
       storeLocation: '请选择存储库位'
@@ -1277,7 +1278,8 @@ export default {
       giftComponents: { required: '礼盒至少需要 1 个组件' }
     },
     tip: {
-      buyClassEmpty: '暂无外购类字典，请到「系统管理 → 字典管理 → djs_buy_class」添加'
+      buyClassEmpty: '暂无外购类字典，请到「系统管理 → 字典管理 → djs_buy_class」添加',
+      materialEmpty: '暂无原材料产品，请先新增「产品属性=原材料」的产品'
     },
     action: {
       addComponent: '添加组件'
@@ -2133,7 +2135,16 @@ export default {
         operator: '操作人',
         location: '入冻品库位',
         isHalf: '是否半扇',
-        remark: '备注'
+        remark: '备注',
+        outsourceBar: '普通白条',
+        supplierName: '供应商',
+        headSkinYieldRate: '头皮肉出品率',
+        whiteBarYieldRate: '白条出品率',
+        precoolLossWeight: '预冷损耗量 (kg)',
+        precoolLossRate: '预冷损耗率',
+        coldStorageMinutes: '冷库停留 (分钟)',
+        cutProductTotalWeight: '分割品总重 (kg)',
+        cutLossWeight: '分割损耗 (kg)'
       },
       vegHandle: {
         title: '毛菜处理',
@@ -2322,7 +2333,18 @@ export default {
         outLocationRequired: '请选择出库位置',
         packNo: '打包序号',
         pickupPageTitle: '白条领用',
-        shipSourceNotFound: '该白条暂无可发货来源（请确认已完成燎毛入库）'
+        shipSourceNotFound: '该白条暂无可发货来源（请确认已完成燎毛入库）',
+        shipStore: '发货门店',
+        shipStorePlaceholder: '请选择发货门店',
+        shipStoreRequired: '请选择发货门店',
+        vegDailyLoss: '当日损耗',
+        vegLossPicked: '领用入库',
+        vegLossPacked: '打包消耗',
+        vegLossReturned: '退回',
+        vegLossFeed: '饲喂',
+        vegLossValue: '损耗',
+        vegLossUnit: 'kg',
+        vegLossHint: '损耗 = 领用入库 − 打包消耗 − 退回 − 饲喂（按自然日统计）'
       },
       shipment: {
         title: '发货流水',
@@ -3385,7 +3407,13 @@ export default {
       returnedQty: '退回量',
       whReturnQty: '退回量',
       lossQty: '损耗量',
-      closingQty: '期末库存'
+      closingQty: '期末库存',
+      category: '类别'
+    },
+    category: {
+      pork: '猪肉',
+      inbound: '新到货',
+      stock: '昨日库存'
     },
     action: {
       newEntry: '新增当日盘点',

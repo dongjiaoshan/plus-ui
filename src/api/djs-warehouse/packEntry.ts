@@ -111,6 +111,22 @@ export interface StoreDemandCopiesVO {
   copies: number;
 }
 
+/** 果蔬日损耗（V4：日损耗 = 领用入库 − 打包消耗 − 退回 − 饲喂，按自然日 compute-on-read） */
+export interface VegDailyLossVO {
+  /** 统计自然日 yyyy-MM-dd */
+  statDate: string;
+  /** 领用入库总重 kg */
+  pickedWeight: number;
+  /** 打包消耗总重 kg */
+  packedWeight: number;
+  /** 退回总重 kg */
+  returnedWeight: number;
+  /** 饲喂总重 kg */
+  feedWeight: number;
+  /** 日损耗 kg（负值归零） */
+  lossWeight: number;
+}
+
 /**
  * 分割部位明细。
  *
@@ -181,6 +197,11 @@ export const submitVegPack = (data: VegPackBo): AxiosPromise<PackSubmitResultVO>
 /** 某产品各门店未发货需求份数（底部「门店(N份)」标签条） */
 export const listStoreDemand = (productId: number | string): AxiosPromise<StoreDemandCopiesVO[]> => {
   return request({ url: '/djs/warehouse/packEntry/storeDemand', method: 'get', params: { productId } });
+};
+
+/** 果蔬日损耗（V4，compute-on-read；statDate 缺省=当天 yyyy-MM-dd） */
+export const getVegDailyLoss = (statDate?: string): AxiosPromise<VegDailyLossVO> => {
+  return request({ url: '/djs/warehouse/packEntry/vegDailyLoss', method: 'get', params: { statDate } });
 };
 
 // ==================== 白条分割 ====================

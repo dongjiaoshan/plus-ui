@@ -33,14 +33,15 @@ export function usePackEntryOptions() {
 
   /**
    * 目标打包产品 SKU。
-   * @param productType  1=产品 2=商品 3=礼盒（不传=全部）
-   * @param belongType   自产归属类型过滤（如 'pork' 仅猪肉产品；不传=不限）
-   * @param belongTypes  自产归属类型集合（如 ['egg','dry_good','other'] 其他产品打包；非空落 belong_type IN）
+   * @param productType     1=产品 2=商品 3=礼盒（不传=全部）
+   * @param belongType      自产归属类型过滤（如 'pork' 仅猪肉产品；不传=不限）
+   * @param belongTypes     自产归属类型集合（如 ['egg','dry_good','other'] 其他产品打包；非空落 belong_type IN）
+   * @param productWorkshop 字典 djs_product_workshop（如 3=门店打包间，肉品打包目标）；不传=不限
    */
-  async function loadProducts(productType?: number, belongType?: string, belongTypes?: string[]) {
+  async function loadProducts(productType?: number, belongType?: string, belongTypes?: string[], productWorkshop?: number) {
     productLoading.value = true;
     try {
-      const res = await listProduct({ pageNum: 1, pageSize: 500, productType, belongType, belongTypes } as any);
+      const res = await listProduct({ pageNum: 1, pageSize: 500, productType, belongType, belongTypes, productWorkshop } as any);
       products.value = ((res as any).rows ?? []) as ProductInfoVO[];
     } finally {
       productLoading.value = false;
