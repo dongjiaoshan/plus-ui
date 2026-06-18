@@ -9,7 +9,7 @@
  *    - POST /event            通用事件入口（运维 / 调试用；业务侧用 BRD-EVENT-* 各自端点）
  *
  * 字典依赖：
- *  - djs_pig_lifecycle      10 状态 HB/PZ/PH/FM/DN/LC/KH/FQ/END/BOAR_ACTIVE（current_status）
+ *  - djs_pig_lifecycle      8 状态 HB/PZ/FM/DN/LC/KH/FQ/END（current_status；仅种母猪走繁殖态，非种母猪空 ''）
  *  - djs_pig_status_event   11 UI 事件 INTRO/BREED/FARROW/WEAN/OESTRUS/NULL_RETURN/DIE/ELIMINATE/CASTRATE/TRANSFER/SLAUGHTER
  *  - djs_pig_type           sow / boar / piglet / fattening
  *  - djs_pig_breed / djs_pig_strain  品种 / 品系
@@ -21,8 +21,8 @@
 /** 性别（DB 列值；F=母 / M=公） */
 export type PigSex = 'F' | 'M';
 
-/** 10 lifecycle 状态码（字典 djs_pig_lifecycle） */
-export type PigLifecycle = 'HB' | 'PZ' | 'PH' | 'FM' | 'DN' | 'LC' | 'KH' | 'FQ' | 'END' | 'BOAR_ACTIVE';
+/** 8 lifecycle 状态码（种母猪繁殖状态机，字典 djs_pig_lifecycle；非种母猪 current_status 为空 ''） */
+export type PigLifecycle = 'HB' | 'PZ' | 'FM' | 'DN' | 'LC' | 'KH' | 'FQ' | 'END';
 
 /** 11 UI 事件码（字典 djs_pig_status_event） */
 export type PigStatusEventCode =

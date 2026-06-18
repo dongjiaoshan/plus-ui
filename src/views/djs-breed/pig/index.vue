@@ -117,9 +117,9 @@ function endReasonLabel(code?: string): string {
   return d?.label ?? code;
 }
 function statusTagType(code?: string): 'primary' | 'success' | 'warning' | 'danger' | 'info' {
-  // 业务态色彩：配种类（PZ/PH）primary 蓝 / 分娩(FM) success 绿 / 异常(LC/FQ) warning 橙 / 终止 info 灰 / 其余 default
+  // 业务态色彩：配种(PZ) primary 蓝 / 分娩(FM)+断奶(DN) success 绿 / 异常(LC/FQ) warning 橙 / 空状态+终止 info 灰
   if (!code) return 'info';
-  if (['PZ', 'PH', 'BOAR_ACTIVE'].includes(code)) return 'primary';
+  if (code === 'PZ') return 'primary';
   if (['FM', 'DN'].includes(code)) return 'success';
   if (['LC', 'FQ'].includes(code)) return 'warning';
   return 'info';

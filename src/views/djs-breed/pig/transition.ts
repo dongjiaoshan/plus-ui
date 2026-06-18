@@ -5,16 +5,16 @@
  * 真实 transition 校验由后端 PigStateMachine 兜底（前端漏判 / 越权 / 跨界都会被
  * `pig.event.invalid_transition` 拒绝）。
  *
- * 11 UI 事件 × 10 状态 × 2 性别（F/M）— 对齐 BRD-CORE-001-be 报告 §"11×10 transition 矩阵"。
+ * 11 UI 事件 × 8 状态 × 2 性别（F/M）— 对齐 BRD-CORE-001-be 报告 + ADR-0016 状态轴解耦。
+ * 仅种母猪(sow)走繁殖状态机；非种母猪（公猪/育肥/仔猪）current_status 为空 ''。
  *
  *   from\event | INTRO | BREED | FARROW | WEAN | OESTRUS | NULL_RETURN | DIE | ELIMINATE | SLAUGHTER | CASTRATE | TRANSFER
  *   ---------- |-------|-------|--------|------|---------|-------------|-----|-----------|-----------|----------|----------
- *   HB(F)      |   -   |   ✓   |   -    |  -   |    -    |      -      |  ✓  |     ✓     |     ✓     |    -     |    ✓
- *   PZ(F)      |   -   |   -   |   -    |  -   |    ✓    |      ✓      |  ✓  |     ✓     |     ✓     |    -     |    ✓
- *   PH(F)      |   -   |   -   |   ✓    |  -   |    -    |      ✓      |  ✓  |     ✓     |     ✓     |    -     |    ✓
- *   FM(F)      |   -   |   -   |   -    |  ✓   |    -    |      -      |  ✓  |     ✓     |     ✓     |    -     |    ✓
+ *   HB(F,sow)  |   -   |   ✓   |   -    |  -   |    -    |      -      |  ✓  |     ✓     |     ✓     |    -     |    ✓
+ *   PZ(F,sow)  |   -   |   -   |   ✓    |  -   |    ✓    |      ✓      |  ✓  |     ✓     |     ✓     |    -     |    ✓
+ *   FM(F,sow)  |   -   |   -   |   -    |  ✓   |    -    |      -      |  ✓  |     ✓     |     ✓     |    -     |    ✓
  *   DN/LC/KH/FQ|   -   |   ✓   |   -    |  -   |    -    |      -      |  ✓  |     ✓     |     ✓     |    -     |    ✓
- *   BOAR(M)    |   -   |   -   |   -    |  -   |    -    |      -      |  ✓  |     ✓     |     ✓     |    ✓     |    ✓
+ *   空(公/育肥)|   -   |   -   |   -    |  -   |    -    |      -      |  ✓  |     ✓     |     ✓     |   M ✓    |    ✓
  *   END        |   -   |   -   |   -    |  -   |    -    |      -      |  -  |     -     |     -     |    -     |    -
  *
  * INTRO 不走 fireEvent，由 BRD-EVENT-001 引种端点调 createPig（INTRO 本身不出现在 dropdown）。
@@ -37,7 +37,7 @@ export const PIG_DROPDOWN_EVENTS: PigStatusEventCode[] = [
 ];
 
 /** 终态（END） — 拒绝所有事件 */
-function isTerminal(currentStatus: PigLifecycle): boolean {
+function isTerminal(currentStatus: PigLifecycle | ''): boolean {
   return currentStatus === 'END';
 }
 
@@ -50,7 +50,7 @@ function isTerminal(currentStatus: PigLifecycle): boolean {
  * @param pigType     猪只类型（piglet/fattening 不参与 BREED/OESTRUS 等繁育流；
  *                    见 -be 报告 §"piglet/fattening 不参与状态机"）
  */
-export function isEventAllowed(event: PigStatusEventCode, currentStatus: PigLifecycle, pigSex: PigSex, pigType?: PigType): boolean {
+export function isEventAllowed(event: PigStatusEventCode, currentStatus: PigLifecycle | '', pigSex: PigSex, pigType?: PigType): boolean {
   // INTRO 不走 fireEvent 路径
   if (event === 'INTRO') return false;
   // 终态 END 拒绝所有事件
@@ -65,22 +65,22 @@ export function isEventAllowed(event: PigStatusEventCode, currentStatus: PigLife
       return ['HB', 'DN', 'LC', 'KH', 'FQ'].includes(currentStatus);
 
     case 'OESTRUS':
-      // 母猪 PZ 查情：→ PH（确认妊娠）或 → PZ（未确认，继续观察）
+      // 母猪 PZ 查情：保持 PZ（确认妊娠仅落记录，不切态；无配怀 PH 中间态）
       if (pigSex !== 'F') return false;
       if (pigType === 'piglet' || pigType === 'fattening') return false;
       return currentStatus === 'PZ';
 
     case 'NULL_RETURN':
-      // 母猪 PZ/PH 返空：abort/return → LC/FQ / idle → KH
+      // 母猪 PZ 返空：abort → LC / return → FQ / idle → KH
       if (pigSex !== 'F') return false;
       if (pigType === 'piglet' || pigType === 'fattening') return false;
-      return currentStatus === 'PZ' || currentStatus === 'PH';
+      return currentStatus === 'PZ';
 
     case 'FARROW':
-      // 母猪 PH → FM
+      // 母猪 PZ → FM（配种→分娩直达，无配怀 PH 中间态）
       if (pigSex !== 'F') return false;
       if (pigType === 'piglet' || pigType === 'fattening') return false;
-      return currentStatus === 'PH';
+      return currentStatus === 'PZ';
 
     case 'WEAN':
       // 母猪 FM → DN
@@ -89,8 +89,8 @@ export function isEventAllowed(event: PigStatusEventCode, currentStatus: PigLife
       return currentStatus === 'FM';
 
     case 'CASTRATE':
-      // 仅公猪 BOAR_ACTIVE 阉割（无状态变更，停留 BOAR_ACTIVE）
-      return pigSex === 'M' && currentStatus === 'BOAR_ACTIVE';
+      // 公猪阉割（空状态，无状态变更）；与选猪 sex='M' 口径一致
+      return pigSex === 'M' && !isTerminal(currentStatus);
 
     case 'DIE':
     case 'ELIMINATE':
@@ -108,6 +108,6 @@ export function isEventAllowed(event: PigStatusEventCode, currentStatus: PigLife
 }
 
 /** 取当前 pig 可用的事件清单（顺序固定，符合业务直觉：常用繁育事件在前，终态事件在后） */
-export function getAllowedEvents(currentStatus: PigLifecycle, pigSex: PigSex, pigType?: PigType): PigStatusEventCode[] {
+export function getAllowedEvents(currentStatus: PigLifecycle | '', pigSex: PigSex, pigType?: PigType): PigStatusEventCode[] {
   return PIG_DROPDOWN_EVENTS.filter((ev) => isEventAllowed(ev, currentStatus, pigSex, pigType));
 }

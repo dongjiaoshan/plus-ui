@@ -235,8 +235,8 @@ const breedingRows = computed(() => history.value.filter((r) => BREEDING_EVENTS.
 const statusTagType = computed<'success' | 'warning' | 'info' | 'primary' | 'danger'>(() => {
   if (!detail.value) return 'info';
   const s = detail.value.currentStatus;
-  if (s === 'END') return 'info';
-  if (s === 'PZ' || s === 'PH' || s === 'FM') return 'success';
+  if (!s || s === 'END') return 'info';
+  if (s === 'PZ' || s === 'FM') return 'success';
   if (s === 'LC' || s === 'FQ' || s === 'KH') return 'warning';
   return 'primary';
 });

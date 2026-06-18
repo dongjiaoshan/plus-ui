@@ -214,10 +214,10 @@ function renderInventoryPie() {
 function renderLifecycleBar() {
   if (!lifecycleBarEl.value) return;
   if (!lifecycleBar) lifecycleBar = echarts.init(lifecycleBarEl.value);
-  const lifecycleOrder = ['PZ', 'PH', 'FM', 'DN', 'KH', 'HB', 'FQ', 'LC'];
+  const lifecycleOrder = ['PZ', 'FM', 'DN', 'KH', 'HB', 'FQ', 'LC'];
   const codes = lifecycleOrder.filter((c) => (inventory.value?.sowByLifecycle?.[c] ?? 0) > 0);
   // 如果全为 0，仍展示主线 5 项以保证轴可见
-  const xCodes = codes.length > 0 ? codes : ['PZ', 'PH', 'FM', 'DN', 'KH'];
+  const xCodes = codes.length > 0 ? codes : ['PZ', 'FM', 'DN', 'KH'];
   lifecycleBar.setOption({
     tooltip: { trigger: 'axis' },
     grid: { left: 40, right: 20, top: 30, bottom: 40 },
