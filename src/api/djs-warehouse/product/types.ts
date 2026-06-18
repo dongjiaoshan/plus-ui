@@ -131,6 +131,10 @@ export interface ProductInfoQuery extends PageQuery {
   buyClass?: string;
   /** 生产车间（djs_product_workshop） */
   productWorkshop?: number;
+  /** 产品属性 djs_product_attr：1=生产产品（打包目标成品）/ 2=原材料（取数逻辑 doc#13） */
+  productAttr?: number;
+  /** 关联原材料（自引用 FK → product_info.id 雪花 id，超 JS Number 精度故用 string 精确匹配） */
+  productMaterial?: string;
   /** 存储仓库（location_info.id 精确匹配） */
   storeLocationId?: string;
   productStatus?: number;

@@ -5,6 +5,11 @@
     <div class="station-body">
       <!-- 左：产品卡片网格（可滚动）+ 底部固定需求门店 tags -->
       <div class="station-left">
+        <!-- 果蔬打包：未匹配到领用原料对应成品时回退展示全部果蔬成品，给一行轻提示（doc#12） -->
+        <div v-if="kind === 'veg' && vegMaterialFallback" class="veg-fallback-tip">
+          <el-icon><InfoFilled /></el-icon>
+          <span>{{ t('djs.warehouse.packEntry.vegMaterialFallback') }}</span>
+        </div>
         <div class="card-scroll">
           <ProductCardGrid
             v-model="form.productId"
@@ -141,12 +146,12 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { PriceTag } from '@element-plus/icons-vue';
+import { InfoFilled, PriceTag } from '@element-plus/icons-vue';
 import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
 import DestToggle from './components/DestToggle.vue';
 import { usePackEntryOptions } from './useOptions';
-import { listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
+import { listMaterialStock, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
 import type { DeliverDest, DryPackBo, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
@@ -176,6 +181,8 @@ const props = withDefaults(
     belongTypes?: string[];
     /** 目标产品 djs_product_workshop 过滤（如 3=门店打包间，肉品打包目标）；不传=不限，向后兼容 */
     productWorkshop?: number;
+    /** 目标产品 djs_product_attr 过滤（1=生产产品/打包目标成品，取数逻辑 doc#13）；不传=不限 */
+    productAttr?: number;
     /** 发送位置可选项（缺省三选）；传 [] 不显示 */
     sendDestKinds?: DeliverDest[];
     /** 是否显示「确认并打印追溯码」 */
@@ -195,6 +202,7 @@ const props = withDefaults(
     belongType: undefined,
     belongTypes: undefined,
     productWorkshop: undefined,
+    productAttr: undefined,
     sendDestKinds: () => ['platform', 'mail', 'gift'],
     showPrintTrace: true,
     showStock: undefined,
@@ -235,6 +243,7 @@ const {
   plotMap,
   plotLoading,
   loadProducts,
+  loadVegProductsByMaterial,
   loadStores,
   loadSources,
   loadPlots
@@ -345,15 +354,62 @@ async function loadDemandMap() {
   demandMap.value = map;
 }
 
-// 卡片网格「原材料库存」聚合：来源过程产品按 productId 汇总剩余重量（snowflake productId → 总量）
-const stockMap = computed<Record<string, number>>(() => {
-  const map: Record<string, number> = {};
-  sources.value.forEach((s) => {
-    const key = String(s.productId);
-    map[key] = (map[key] || 0) + (Number(s.productWeight) || 0);
+/**
+ * 卡片网格「原材料库存」（库存口径统一，取数逻辑 doc#13）：
+ * key = 成品雪花 id 字符串，value = 该成品 product_material 指向的原材料 location_stock 合计（number）
+ * 或 null（成品未配 product_material，前端展示 '—'，不参与校验）。
+ *
+ * 与打包校验/扣减口径完全一致（后端 listMaterialStock → sumProductStock），
+ * 修复原先「卡片取来源 inhouse 汇总 ≠ 后端按 product_material 扣减」的口径分裂。
+ */
+const stockMap = ref<Record<string, number | null>>({});
+
+async function loadMaterialStock() {
+  if (!showStock.value) return;
+  const ids = products.value.map((p) => p.id);
+  if (ids.length === 0) {
+    stockMap.value = {};
+    return;
+  }
+  const res = await listMaterialStock(ids);
+  const remote = ((res as any).data ?? {}) as Record<string, string>;
+  const map: Record<string, number | null> = {};
+  // 后端只返「已配 product_material」成品的库存；未在返回里的成品置 null → 卡片展示 '—'
+  products.value.forEach((p) => {
+    const key = String(p.id);
+    map[key] = key in remote ? Number(remote[key]) : null;
   });
-  return map;
-});
+  stockMap.value = map;
+}
+
+/**
+ * 果蔬打包成品「按领用原料 product_material 匹配」回退提示（doc#12）：
+ * 推导原料 id 为空 或 命中成品为空 → 回退展示全部果蔬自产成品并提示，避免静默空白。
+ */
+const vegMaterialFallback = ref(false);
+
+/**
+ * 果蔬打包成品加载（doc#12）：从已加载的 veg 来源推导本次领用原料 id（去重、跳过空 productId），
+ * 调按 product_material 反查的端点；推导为空或命中为空 → 回退全部果蔬成品 + 顶部轻提示。
+ * 依赖 sources 已 loadSources('veg') 完成。
+ */
+async function loadVegProducts() {
+  const materialIds = Array.from(
+    new Set(sources.value.map((s) => s.productId).filter((id): id is number => id != null).map((id) => String(id)))
+  );
+  const count = await loadVegProductsByMaterial(materialIds);
+  // 推导原料为空（领用来源无 productId）或命中为空 → 回退提示。
+  // 注意：materialIds 非空但命中 0（现网 product_material 多未配的常见场景）后端返【空】而非全部，
+  // 此时必须再拉一次全部果蔬成品，否则卡片空白与「已展示全部」提示自相矛盾。
+  if (materialIds.length === 0 || count === 0) {
+    vegMaterialFallback.value = true;
+    if (materialIds.length > 0 && count === 0) {
+      await loadVegProductsByMaterial([]);
+    }
+  } else {
+    vegMaterialFallback.value = false;
+  }
+}
 
 function onProductChange(item: ProductInfoVO) {
   // 选卡片回填默认单位/规格，方便录入
@@ -364,18 +420,41 @@ function onProductChange(item: ProductInfoVO) {
 // 果蔬地块：按来源 plotId 分组成 button-toggle；选地块后来源下拉只显示该地块来源
 const selectedPlotId = ref<number | string | ''>('');
 
+/** 外购无地块来源（plotId==null）的「无地块信息」选项哨兵 value（doc#13）；选中时提交不带 plotId。 */
+const NO_PLOT_SENTINEL = '__no_plot__';
+
 const plotToggleOptions = computed<{ value: number | string; label: string }[]>(() => {
   if (!props.plotGroup) return [];
   const seen = new Map<string, { value: number | string; label: string }>();
+  let hasNoPlot = false;
   sources.value.forEach((s) => {
-    if (s.plotId == null) return;
+    if (s.plotId == null) {
+      // 外购无地块来源聚合成单个「无地块信息」可选项（doc#13），不再过滤丢弃
+      hasNoPlot = true;
+      return;
+    }
     const key = String(s.plotId);
     if (!seen.has(key)) {
       seen.set(key, { value: s.plotId, label: plotMap.value[key] || `${t('djs.warehouse.packEntry.plot')} ${key}` });
     }
   });
-  return Array.from(seen.values());
+  const opts = Array.from(seen.values());
+  if (hasNoPlot) {
+    opts.push({ value: NO_PLOT_SENTINEL, label: t('djs.warehouse.packEntry.noPlotInfo') });
+  }
+  return opts;
 });
+
+// 单地块自动选（doc#13）：plotToggleOptions 仅 1 项且尚未选时自动选中（含「无地块信息」单独成项的情况）
+watch(
+  plotToggleOptions,
+  (opts) => {
+    if (props.plotGroup && opts.length === 1 && !selectedPlotId.value) {
+      selectedPlotId.value = opts[0].value;
+    }
+  },
+  { immediate: true }
+);
 
 // 肉品耳号：按来源 earNo 去重成 button-toggle；选耳号后来源只显示该耳号来源
 const selectedEarNo = ref<number | string | ''>('');
@@ -396,7 +475,12 @@ const earToggleOptions = computed<{ value: number | string; label: string }[]>((
 const displaySources = computed(() => {
   let list = sources.value;
   if (props.plotGroup && selectedPlotId.value) {
-    list = list.filter((s) => String(s.plotId) === String(selectedPlotId.value));
+    if (selectedPlotId.value === NO_PLOT_SENTINEL) {
+      // 「无地块信息」：仅外购无地块来源（doc#13）
+      list = list.filter((s) => s.plotId == null);
+    } else {
+      list = list.filter((s) => String(s.plotId) === String(selectedPlotId.value));
+    }
   }
   if (props.earGroup && selectedEarNo.value) {
     list = list.filter((s) => String(s.earNo) === String(selectedEarNo.value));
@@ -423,7 +507,11 @@ const sourceToggleOptions = computed<{ value: number | string; label: string }[]
 
 function onPlotChange() {
   const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
-  if (src && String(src.plotId) !== String(selectedPlotId.value)) {
+  if (!src) return;
+  // 「无地块信息」哨兵：已选来源须是无地块来源，否则清空等重选
+  const mismatch =
+    selectedPlotId.value === NO_PLOT_SENTINEL ? src.plotId != null : String(src.plotId) !== String(selectedPlotId.value);
+  if (mismatch) {
     form.value.sourceInhouseId = '';
   }
 }
@@ -536,6 +624,8 @@ async function handleSubmit(printTrace: boolean) {
     }
     handleReset();
     void loadDemandMap();
+    // 打包消耗原材料后刷新卡片库存（保持与扣减后真实库存一致）
+    void loadMaterialStock();
   } finally {
     submitting.value = false;
   }
@@ -556,14 +646,22 @@ function printTraceCode(code: string) {
 }
 
 onMounted(async () => {
-  await Promise.all([loadProducts(props.productType, props.belongType, props.belongTypes, props.productWorkshop), loadStores()]);
+  await loadStores();
   if (props.kind === 'veg') {
+    // 果蔬打包：先拉来源（推导本次领用原料 id），再按 product_material 命中加载成品（doc#12）
     await Promise.all([loadSources('veg'), props.plotGroup ? loadPlots() : Promise.resolve()]);
-  } else if (props.kind === 'dry') {
-    // 肉品打包（earGroup）来源限 belong_type=pork；其他产品打包用通用 dry 来源
-    await loadSources(props.earGroup ? 'meat' : 'dry');
+    await loadVegProducts();
+  } else {
+    // dry/gift：全量加载目标成品（保留 productAttr 等过滤）
+    await loadProducts(props.productType, props.belongType, props.belongTypes, props.productWorkshop, props.productAttr);
+    if (props.kind === 'dry') {
+      // 肉品打包（earGroup）来源限 belong_type=pork；其他产品打包用通用 dry 来源
+      await loadSources(props.earGroup ? 'meat' : 'dry');
+    }
   }
   void loadDemandMap();
+  // 卡片库存口径统一：成品 product_material 指向的原材料实时库存（与后端校验/扣减一致）
+  void loadMaterialStock();
 });
 </script>
 
@@ -594,6 +692,19 @@ onMounted(async () => {
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+/* 果蔬成品按领用原料匹配为空时的回退轻提示 */
+.veg-fallback-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--el-color-info-light-9);
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+  flex: 0 0 auto;
 }
 /* 中部：仅产品卡片区可滑动 */
 .card-scroll {

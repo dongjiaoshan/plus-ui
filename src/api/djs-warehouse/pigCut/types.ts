@@ -40,3 +40,47 @@ export interface PigCutRecordQuery {
   pageNum?: number;
   pageSize?: number;
 }
+
+/** 待领用白条（applet GET /availableBars，与后端 BarInfoVo 对齐） */
+export interface AvailableBarVO {
+  id: number;
+  barId: string;
+  earNo?: string;
+  marketingWeight?: number;
+  inWeight?: number;
+  inTime?: string;
+  status: string;
+}
+
+/** 阶段 1 白条领用表单（与后端 PigCutPickupBo 对齐） */
+export interface PigCutPickupForm {
+  barInfoId?: number;
+  locationId?: number;
+  pickupWeight?: number;
+  isHalf?: number;
+  remark?: string;
+}
+
+/** 分割出库单部位明细（与后端 PigCutOutBo.PartItem 对齐） */
+export interface PigCutPartItem {
+  productId?: number;
+  cutPart?: string;
+  productWeight?: number;
+  productSpec?: string;
+}
+
+/** 阶段 2 分割出库表单（与后端 PigCutOutBo 对齐） */
+export interface PigCutOutForm {
+  cutRecordId?: number;
+  locationId?: number;
+  partItems: PigCutPartItem[];
+  proofOssIds?: string;
+}
+
+/** 阶段 3 分割完成表单（与后端 PigCutDoneBo 对齐） */
+export interface PigCutDoneForm {
+  cutRecordId?: number;
+  dripLoss?: number;
+  proofOssIds?: string;
+  remark?: string;
+}

@@ -21,6 +21,12 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
+      <!-- 顶部白条领用入口 -->
+      <template #toolbar-extra>
+        <el-button v-hasPermi="['djs:applet:warehouse:pigCut:in']" type="primary" plain @click="openPickup">
+          {{ t('djs.warehouse.pigCut.pickupAction') }}
+        </el-button>
+      </template>
       <!-- P5 外购标注：外购行显「普通白条」+ 供应商名，自养行显耳号 -->
       <template #cell-earNo="{ row }">
         <template v-if="row.isOutsource">
@@ -29,17 +35,155 @@
         </template>
         <span v-else>{{ row.earNo ?? '—' }}</span>
       </template>
-      <!-- 分割记录只读，无 edit / del 入口（写入走 mp） -->
-      <template #action><span /></template>
+      <!-- 按行 cutStatus 渲染分割出库 / 分割完成入口 -->
+      <template #action="{ row }">
+        <el-button
+          v-if="['picked', 'cutting'].includes(row.cutStatus)"
+          v-hasPermi="['djs:applet:warehouse:pigCut:out']"
+          link
+          type="primary"
+          @click="openCutOut(row)"
+        >
+          {{ t('djs.warehouse.pigCut.cutOutAction') }}
+        </el-button>
+        <el-button
+          v-if="row.cutStatus === 'cutting'"
+          v-hasPermi="['djs:applet:warehouse:pigCut:done']"
+          link
+          type="success"
+          @click="openCutDone(row)"
+        >
+          {{ t('djs.warehouse.pigCut.cutDoneAction') }}
+        </el-button>
+        <span v-if="!['picked', 'cutting'].includes(row.cutStatus)">—</span>
+      </template>
     </BizTable>
+
+    <!-- 白条领用弹窗 -->
+    <el-dialog v-model="pickupVisible" :title="t('djs.warehouse.pigCut.pickupAction')" width="560px" destroy-on-close append-to-body>
+      <el-form ref="pickupFormRef" :model="pickupForm" :rules="pickupRules" label-width="120px">
+        <el-form-item :label="t('djs.warehouse.pigCut.selectBar')" prop="barInfoId">
+          <el-select
+            v-model="pickupForm.barInfoId"
+            :placeholder="t('djs.warehouse.pigCut.selectBarPlaceholder')"
+            filterable
+            style="width: 100%"
+            @change="onBarChange"
+          >
+            <el-option v-for="b in availableBars" :key="b.id" :label="barLabel(b)" :value="b.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item :label="t('djs.warehouse.pigCut.location')" prop="locationId">
+          <el-select v-model="pickupForm.locationId" :placeholder="t('djs.warehouse.pigCut.selectLocation')" filterable clearable style="width: 100%">
+            <el-option v-for="loc in frozenLocations" :key="loc.id" :label="loc.locationName" :value="loc.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item :label="t('djs.warehouse.pigCut.pickupWeight')" prop="pickupWeight">
+          <el-input-number v-model="pickupForm.pickupWeight" :min="0" :precision="2" :step="0.5" controls-position="right" style="width: 100%" />
+        </el-form-item>
+        <el-form-item :label="t('djs.warehouse.pigCut.remark')">
+          <el-input v-model="pickupForm.remark" type="textarea" :rows="2" maxlength="500" show-word-limit />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="pickupVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitPickup">{{ t('common.confirm') }}</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 分割出库弹窗 -->
+    <el-dialog v-model="cutOutVisible" :title="t('djs.warehouse.pigCut.cutOutAction')" width="820px" destroy-on-close append-to-body>
+      <el-form ref="cutOutFormRef" :model="cutOutForm" :rules="cutOutRules" label-width="120px">
+        <el-form-item :label="t('djs.warehouse.pigCut.location')" prop="locationId">
+          <el-select v-model="cutOutForm.locationId" :placeholder="t('djs.warehouse.pigCut.selectLocation')" filterable style="width: 100%">
+            <el-option v-for="loc in frozenLocations" :key="loc.id" :label="loc.locationName" :value="loc.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item :label="t('djs.warehouse.pigCut.partItems')" prop="partItems">
+          <el-table :data="cutOutForm.partItems" border size="small" style="width: 100%">
+            <el-table-column :label="t('djs.warehouse.pigCut.selectProduct')" min-width="200">
+              <template #default="{ row }">
+                <el-select v-model="row.productId" :placeholder="t('djs.warehouse.pigCut.selectProduct')" filterable style="width: 100%">
+                  <el-option v-for="p in porkProducts" :key="p.id" :label="p.productName" :value="p.id" />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('djs.warehouse.pigCut.partWeight')" width="160">
+              <template #default="{ row }">
+                <el-input-number v-model="row.productWeight" :min="0.001" :precision="3" :step="0.5" controls-position="right" style="width: 100%" />
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('djs.warehouse.pigCut.partSpec')" width="150">
+              <template #default="{ row }">
+                <el-input v-model="row.productSpec" maxlength="64" />
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('common.operate')" width="70" align="center">
+              <template #default="{ $index }">
+                <el-button link type="danger" :disabled="cutOutForm.partItems.length <= 1" @click="removePart($index)">
+                  {{ t('common.delete') }}
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-button link type="primary" class="mt-2" @click="addPart">{{ t('djs.warehouse.pigCut.addPart') }}</el-button>
+        </el-form-item>
+        <el-form-item :label="t('djs.warehouse.pigCut.proof')">
+          <OssUpload v-model="cutOutProofModel" biz-type="pig_cut_proof" :limit="6" :file-size="10" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="cutOutVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitCutOut">{{ t('common.confirm') }}</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 分割完成弹窗 -->
+    <el-dialog v-model="cutDoneVisible" :title="t('djs.warehouse.pigCut.cutDoneAction')" width="560px" destroy-on-close append-to-body>
+      <el-form ref="cutDoneFormRef" :model="cutDoneForm" :rules="cutDoneRules" label-width="120px">
+        <el-form-item :label="t('djs.warehouse.pigCut.dripLoss')" prop="dripLoss">
+          <el-input-number v-model="cutDoneForm.dripLoss" :min="0" :precision="3" :step="0.1" controls-position="right" style="width: 100%" />
+        </el-form-item>
+        <el-form-item :label="t('djs.warehouse.pigCut.proof')">
+          <OssUpload v-model="cutDoneProofModel" biz-type="pig_cut_proof" :limit="6" :file-size="10" />
+        </el-form-item>
+        <el-form-item :label="t('djs.warehouse.pigCut.remark')">
+          <el-input v-model="cutDoneForm.remark" type="textarea" :rows="2" maxlength="500" show-word-limit />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="cutDoneVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitCutDone">{{ t('common.confirm') }}</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="PigCut" lang="ts">
+import type { FormInstance, FormRules } from 'element-plus';
 import BizTable from '@/components/BizTable/index.vue';
+import OssUpload from '@/components/OssUpload/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listPigCut } from '@/api/djs-warehouse/pigCut';
-import type { PigCutRecordQuery, PigCutRecordVO } from '@/api/djs-warehouse/pigCut/types';
+import {
+  listPigCut,
+  listAvailableBars,
+  pickupPigCut,
+  cutOutPigCut,
+  cutDonePigCut
+} from '@/api/djs-warehouse/pigCut';
+import type {
+  PigCutRecordQuery,
+  PigCutRecordVO,
+  AvailableBarVO,
+  PigCutPickupForm,
+  PigCutOutForm,
+  PigCutDoneForm,
+  PigCutPartItem
+} from '@/api/djs-warehouse/pigCut/types';
+import { listProduct } from '@/api/djs-warehouse/product';
+import { listLocation } from '@/api/djs-warehouse/location';
+import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import type { LocationInfoVO } from '@/api/djs-warehouse/location/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -154,6 +298,177 @@ function handlePageChange(p: { pageNum: number; pageSize: number }) {
 
 function handleExport() {
   proxy?.download('/djs/warehouse/pigCut/export', { ...searchModel }, `分割记录_${new Date().getTime()}.xlsx`);
+}
+
+// ============ 写动作共享数据源 ============
+
+const submitting = ref(false);
+/** 冻品库库位（locationType='frozen'） */
+const frozenLocations = ref<LocationInfoVO[]>([]);
+/** 分割成品产品（productType=1 自产 / productWorkshop=2 分割车间 / belongType=pork） */
+const porkProducts = ref<ProductInfoVO[]>([]);
+
+async function ensureFrozenLocations() {
+  if (frozenLocations.value.length) return;
+  const res = await listLocation({ locationType: 'frozen', pageNum: 1, pageSize: 200 });
+  frozenLocations.value = (res as any).rows ?? [];
+}
+
+async function ensurePorkProducts() {
+  if (porkProducts.value.length) return;
+  const res = await listProduct({ productType: 1, productWorkshop: 2, belongType: 'pork', pageNum: 1, pageSize: 200 });
+  porkProducts.value = (res as any).rows ?? [];
+}
+
+// ============ 阶段 1：白条领用 ============
+
+const pickupVisible = ref(false);
+const pickupFormRef = ref<FormInstance>();
+const availableBars = ref<AvailableBarVO[]>([]);
+const pickupForm = reactive<PigCutPickupForm>({
+  barInfoId: undefined,
+  locationId: undefined,
+  pickupWeight: undefined,
+  remark: undefined
+});
+
+const pickupRules: FormRules = {
+  barInfoId: [{ required: true, message: t('djs.warehouse.pigCut.selectBarPlaceholder'), trigger: 'change' }]
+};
+
+function barLabel(b: AvailableBarVO): string {
+  const wt = b.marketingWeight ?? b.inWeight;
+  return `${b.barId}${b.earNo ? ' / ' + b.earNo : ''}${wt != null ? ' (' + Number(wt).toFixed(2) + 'kg)' : ''}`;
+}
+
+/** 选白条后默认带出出栏重量到领用称重 */
+function onBarChange(id: number) {
+  const bar = availableBars.value.find((b) => b.id === id);
+  if (bar) {
+    pickupForm.pickupWeight = bar.marketingWeight ?? bar.inWeight ?? undefined;
+  }
+}
+
+async function openPickup() {
+  Object.assign(pickupForm, { barInfoId: undefined, locationId: undefined, pickupWeight: undefined, remark: undefined });
+  pickupVisible.value = true;
+  const [barRes] = await Promise.all([listAvailableBars(), ensureFrozenLocations()]);
+  availableBars.value = (barRes as any).data ?? [];
+}
+
+async function submitPickup() {
+  await pickupFormRef.value?.validate();
+  submitting.value = true;
+  try {
+    await pickupPigCut({ ...pickupForm });
+    proxy?.$modal.msgSuccess(t('djs.warehouse.pigCut.pickupSuccess'));
+    pickupVisible.value = false;
+    loadList();
+  } finally {
+    submitting.value = false;
+  }
+}
+
+// ============ 阶段 2：分割出库 ============
+
+const cutOutVisible = ref(false);
+const cutOutFormRef = ref<FormInstance>();
+const cutOutProofModel = ref<string[]>([]);
+const cutOutForm = reactive<PigCutOutForm>({
+  cutRecordId: undefined,
+  locationId: undefined,
+  partItems: []
+});
+
+const cutOutRules: FormRules = {
+  locationId: [{ required: true, message: t('djs.warehouse.pigCut.selectLocation'), trigger: 'change' }]
+};
+
+function newPart(): PigCutPartItem {
+  return { productId: undefined, productWeight: undefined, productSpec: undefined };
+}
+
+function addPart() {
+  cutOutForm.partItems.push(newPart());
+}
+
+function removePart(idx: number) {
+  cutOutForm.partItems.splice(idx, 1);
+}
+
+async function openCutOut(row: PigCutRecordVO) {
+  cutOutForm.cutRecordId = row.id;
+  cutOutForm.locationId = row.locationId ?? undefined;
+  cutOutForm.partItems = [newPart()];
+  cutOutProofModel.value = [];
+  cutOutVisible.value = true;
+  await Promise.all([ensureFrozenLocations(), ensurePorkProducts()]);
+}
+
+async function submitCutOut() {
+  await cutOutFormRef.value?.validate();
+  const valid = cutOutForm.partItems.filter((p) => p.productId && p.productWeight && Number(p.productWeight) > 0);
+  if (!valid.length) {
+    proxy?.$modal.msgWarning(t('djs.warehouse.pigCut.partItemsRequired'));
+    return;
+  }
+  submitting.value = true;
+  try {
+    const payload: PigCutOutForm = {
+      cutRecordId: cutOutForm.cutRecordId,
+      locationId: cutOutForm.locationId,
+      partItems: valid,
+      proofOssIds: cutOutProofModel.value.join(',') || undefined
+    };
+    await cutOutPigCut(payload);
+    proxy?.$modal.msgSuccess(t('djs.warehouse.pigCut.cutOutSuccess'));
+    cutOutVisible.value = false;
+    loadList();
+  } finally {
+    submitting.value = false;
+  }
+}
+
+// ============ 阶段 3：分割完成 ============
+
+const cutDoneVisible = ref(false);
+const cutDoneFormRef = ref<FormInstance>();
+const cutDoneProofModel = ref<string[]>([]);
+const cutDoneForm = reactive<PigCutDoneForm>({
+  cutRecordId: undefined,
+  dripLoss: undefined,
+  remark: undefined
+});
+
+const cutDoneRules: FormRules = {
+  dripLoss: [{ required: true, message: t('djs.warehouse.pigCut.dripLossRequired'), trigger: 'blur' }]
+};
+
+function openCutDone(row: PigCutRecordVO) {
+  cutDoneForm.cutRecordId = row.id;
+  cutDoneForm.dripLoss = undefined;
+  cutDoneForm.remark = undefined;
+  cutDoneProofModel.value = [];
+  cutDoneVisible.value = true;
+}
+
+async function submitCutDone() {
+  await cutDoneFormRef.value?.validate();
+  submitting.value = true;
+  try {
+    const payload: PigCutDoneForm = {
+      cutRecordId: cutDoneForm.cutRecordId,
+      dripLoss: cutDoneForm.dripLoss,
+      remark: cutDoneForm.remark,
+      proofOssIds: cutDoneProofModel.value.join(',') || undefined
+    };
+    await cutDonePigCut(payload);
+    proxy?.$modal.msgSuccess(t('djs.warehouse.pigCut.cutDoneSuccess'));
+    cutDoneVisible.value = false;
+    loadList();
+  } finally {
+    submitting.value = false;
+  }
 }
 
 onMounted(() => {

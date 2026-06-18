@@ -61,7 +61,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'burnId', label: t('djs.warehouse.pigBurn.burnId'), minWidth: 140 },
-  { prop: 'earNo', label: t('djs.warehouse.pigBurn.earNo'), minWidth: 140 },
+  { prop: 'earNo', label: t('djs.warehouse.pigBurn.earNo'), minWidth: 140, formatter: (row) => row.earNo ?? '—' },
   { prop: 'burnTime', label: t('djs.warehouse.pigBurn.burnTime'), minWidth: 160 },
   { prop: 'arriveWeight', label: t('djs.warehouse.pigBurn.arriveWeight'), minWidth: 120 },
   { prop: 'burnWeight', label: t('djs.warehouse.pigBurn.burnWeight'), minWidth: 120 },

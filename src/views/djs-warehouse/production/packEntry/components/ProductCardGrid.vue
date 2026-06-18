@@ -20,8 +20,8 @@
           <div class="prod-name">{{ item.productName }}</div>
           <div v-if="item.productSpec" class="prod-row">{{ t('djs.warehouse.packEntry.specLabel') }}：{{ item.productSpec }}</div>
           <div v-if="demandOf(item) != null" class="prod-row">{{ t('djs.warehouse.packEntry.demandLabel') }}：{{ demandOf(item) }}</div>
-          <div v-if="showStock && stockOf(item) != null" class="prod-row">
-            {{ t('djs.warehouse.packEntry.materialStockLabel') }}：{{ stockOf(item) }}
+          <div v-if="showStock && hasStockEntry(item)" class="prod-row">
+            {{ t('djs.warehouse.packEntry.materialStockLabel') }}：{{ stockDisplay(item) }}
           </div>
         </div>
       </div>
@@ -47,8 +47,11 @@ const props = withDefaults(
     loading?: boolean;
     /** productId → 需求份数（聚合各门店未发货需求） */
     demandMap?: Record<string, number>;
-    /** productId → 原材料库存（来源过程产品剩余量聚合） */
-    stockMap?: Record<string, number>;
+    /**
+     * 成品雪花 id 字符串 → 原材料实时库存（成品 product_material 指向的原材料 location_stock 合计，口径同后端校验/扣减）。
+     * value=null 表示成品未配 product_material（展示 '—'，不参与校验）；key 不在 map 中=不显示库存行。
+     */
+    stockMap?: Record<string, number | null>;
     /** 是否显示「原材料库存」行（其他产品打包原型无此行） */
     showStock?: boolean;
   }>(),
@@ -74,9 +77,15 @@ function demandOf(item: ProductInfoVO): number | undefined {
   return v == null ? undefined : v;
 }
 
-function stockOf(item: ProductInfoVO): number | undefined {
+/** 该成品是否有库存条目（含未配料的 null 占位）：在 stockMap 里就显示库存行。 */
+function hasStockEntry(item: ProductInfoVO): boolean {
+  return String(item.id) in props.stockMap;
+}
+
+/** 库存展示文案：已配 product_material 显数值；未配（null 占位）显 '—'。 */
+function stockDisplay(item: ProductInfoVO): string {
   const v = props.stockMap[String(item.id)];
-  return v == null ? undefined : v;
+  return v == null ? '—' : String(v);
 }
 
 function select(id: number | string) {

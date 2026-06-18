@@ -1,5 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
+import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
 /**
  * 仓库生产管理 - 打包/分割录入 admin 端 API（A5）。
@@ -228,6 +229,23 @@ export const submitWhiteBarOut = (data: WhiteBarOutBo): AxiosPromise<number> => 
   return request({ url: '/djs/warehouse/packEntry/whiteBarOut', method: 'post', data });
 };
 
+/**
+ * 果蔬打包成品列表（按本次领用原料反查 product_material 命中成品，doc#12）。
+ *
+ * 后端已按 belong_type='vegetable' + product_type=1 过滤；materialIds 非空再叠加 product_material IN。
+ * materialIds 为空 → 返全部果蔬自产成品（向后兼容）。
+ *
+ * @param materialIds 本次领用原料的 product_info.id（雪花，逗号串透传）；空数组 → 不带 materialIds 参数
+ */
+export const listVegProductsByMaterial = (materialIds: (number | string)[]): AxiosPromise<ProductInfoVO[]> => {
+  const ids = materialIds.filter((v) => v != null && v !== '');
+  return request({
+    url: '/djs/warehouse/packEntry/vegProductsByMaterial',
+    method: 'get',
+    params: ids.length > 0 ? { materialIds: ids.join(',') } : {}
+  });
+};
+
 // ==================== 来源/白条列表 ====================
 
 /** 打包来源过程产品列表（肉品/其他打包用） */
@@ -258,4 +276,14 @@ export const listAvailableBars = (): AxiosPromise<BarInfoVO[]> => {
 /** 待称重/称重中分割记录列表（cut_status ∈ picked/cutting） */
 export const listCuttable = (): AxiosPromise<PigCutRecordVO[]> => {
   return request({ url: '/djs/warehouse/packEntry/cuttableList', method: 'get' });
+};
+
+/**
+ * 批量查目标成品的「原材料实时库存」（卡片库存口径统一，取数逻辑 doc#13）。
+ *
+ * 后端对每个成品取 product_material 指向的原材料 location_stock 合计，与打包校验/扣减口径一致。
+ * 返回 Map：key = 成品雪花 id 字符串（精度安全），value = 库存合计字符串；未配 product_material 的成品不在 Map 中。
+ */
+export const listMaterialStock = (productIds: (number | string)[]): AxiosPromise<Record<string, string>> => {
+  return request({ url: '/djs/warehouse/packEntry/materialStock', method: 'get', params: { productIds: productIds.join(',') } });
 };

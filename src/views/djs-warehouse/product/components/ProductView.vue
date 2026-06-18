@@ -25,9 +25,6 @@
           <el-descriptions-item :label="t('product.field.productStatus')">
             <dict-tag :options="sys_normal_disable" :value="data.productStatus" />
           </el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.isDelivery')">
-            <dict-tag :options="djs_yes_no" :value="data.isDelivery" />
-          </el-descriptions-item>
           <el-descriptions-item :label="t('product.field.isBuyOutSupport')">
             <dict-tag :options="djs_yes_no" :value="data.isBuyOut" />
           </el-descriptions-item>

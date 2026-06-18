@@ -183,7 +183,7 @@
         </el-form-item>
       </template>
 
-      <!-- 共有：图片 / 是否支持外购 / 状态 / 是否发货 / 描述 / 备注 -->
+      <!-- 共有：图片 / 是否支持外购 / 状态 / 描述 / 备注 -->
       <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item :label="t('product.field.productThumb')" prop="productThumb">
@@ -193,13 +193,6 @@
         <el-col :span="12">
           <el-form-item :label="t('product.field.isBuyOutSupport')">
             <el-radio-group v-model="form.isBuyOut">
-              <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :label="t('product.field.isDelivery')">
-            <el-radio-group v-model="form.isDelivery">
               <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
             </el-radio-group>
           </el-form-item>

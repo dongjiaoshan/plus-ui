@@ -7,7 +7,14 @@ import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { listPlot } from '@/api/djs-plant/plot';
 import type { PlotInfoVO } from '@/api/djs-plant/plot/types';
-import { listAvailableBars, listSourceDry, listSourceMeat, listSourceVeg, listSourceWhiteBar } from '@/api/djs-warehouse/packEntry';
+import {
+  listAvailableBars,
+  listSourceDry,
+  listSourceMeat,
+  listSourceVeg,
+  listSourceWhiteBar,
+  listVegProductsByMaterial
+} from '@/api/djs-warehouse/packEntry';
 import type { BarInfoVO, PackSourceVO } from '@/api/djs-warehouse/packEntry';
 
 /**
@@ -37,12 +44,32 @@ export function usePackEntryOptions() {
    * @param belongType      自产归属类型过滤（如 'pork' 仅猪肉产品；不传=不限）
    * @param belongTypes     自产归属类型集合（如 ['egg','dry_good','other'] 其他产品打包；非空落 belong_type IN）
    * @param productWorkshop 字典 djs_product_workshop（如 3=门店打包间，肉品打包目标）；不传=不限
+   * @param productAttr     产品属性 djs_product_attr（1=生产产品/打包目标成品 2=原材料，取数逻辑 doc#13）；不传=不限。
+   *                        ⚠️ 形参追加在末尾，勿插中间——SkuPackForm 按位调用，错位会破坏 veg/dry/gift/other 入口
    */
-  async function loadProducts(productType?: number, belongType?: string, belongTypes?: string[], productWorkshop?: number) {
+  async function loadProducts(productType?: number, belongType?: string, belongTypes?: string[], productWorkshop?: number, productAttr?: number) {
     productLoading.value = true;
     try {
-      const res = await listProduct({ pageNum: 1, pageSize: 500, productType, belongType, belongTypes, productWorkshop } as any);
+      const res = await listProduct({ pageNum: 1, pageSize: 500, productType, belongType, belongTypes, productWorkshop, productAttr } as any);
       products.value = ((res as any).rows ?? []) as ProductInfoVO[];
+    } finally {
+      productLoading.value = false;
+    }
+  }
+
+  /**
+   * 果蔬打包成品（按本次领用原料反查 product_material 命中成品，doc#12）。
+   * 复用 products ref → 卡片网格 / demandMap / stockMap 等下游逻辑不变。
+   *
+   * @param materialIds 本次领用原料 product_info.id（雪花）；空 → 后端返全部果蔬自产成品（向后兼容）
+   * @returns 命中条数（供调用方判断是否触发"全部成品"回退提示）
+   */
+  async function loadVegProductsByMaterial(materialIds: (number | string)[]): Promise<number> {
+    productLoading.value = true;
+    try {
+      const res = await listVegProductsByMaterial(materialIds);
+      products.value = ((res as any).data ?? []) as ProductInfoVO[];
+      return products.value.length;
     } finally {
       productLoading.value = false;
     }
@@ -124,6 +151,7 @@ export function usePackEntryOptions() {
     plotMap,
     plotLoading,
     loadProducts,
+    loadVegProductsByMaterial,
     loadLocations,
     loadStores,
     loadSources,
