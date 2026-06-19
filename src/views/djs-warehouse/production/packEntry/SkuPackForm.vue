@@ -516,12 +516,11 @@ function onPlotChange() {
   }
 }
 
-// 选耳号后：若已选来源不属于该耳号则清空，等用户在过滤后的来源里重选
+// 肉品打包来源区已隐藏（showSource=false）：只按猪只耳号溯源（门店做溯源码）。
+// 选耳号后自动取该耳号下首条来源 inhouse 作打包来源（扣减 + 追溯链路绑定该耳号）；无来源则清空。
 function onEarChange() {
-  const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
-  if (src && String(src.earNo) !== String(selectedEarNo.value)) {
-    form.value.sourceInhouseId = '';
-  }
+  const earSrc = sources.value.find((x) => String(x.earNo) === String(selectedEarNo.value));
+  form.value.sourceInhouseId = earSrc ? earSrc.id : '';
 }
 
 const selectedUnit = computed<string>(() => {
