@@ -1,11 +1,11 @@
 <template>
-  <div v-loading="loading" class="card-grid">
+  <div v-loading="loading" class="card-grid" :class="{ 'card-grid--large': large }">
     <template v-if="items.length > 0">
       <div
         v-for="item in items"
         :key="String(item.id)"
         class="prod-card"
-        :class="{ active: String(modelValue) === String(item.id) }"
+        :class="{ active: String(modelValue) === String(item.id), 'prod-card--large': large }"
         @click="select(item.id)"
       >
         <div class="prod-thumb">
@@ -19,7 +19,7 @@
         <div class="prod-meta">
           <div class="prod-name">{{ item.productName }}</div>
           <div v-if="item.productSpec" class="prod-row">{{ t('djs.warehouse.packEntry.specLabel') }}：{{ item.productSpec }}</div>
-          <div v-if="demandOf(item) != null" class="prod-row">{{ t('djs.warehouse.packEntry.demandLabel') }}：{{ demandOf(item) }}</div>
+          <div v-if="demandOf(item) != null" class="prod-row">{{ t('djs.warehouse.packEntry.demandLabel') }}：{{ demandOf(item) }} {{ t('djs.warehouse.packEntry.copiesUnit') }}</div>
           <div v-if="showStock && hasStockEntry(item)" class="prod-row">
             {{ t('djs.warehouse.packEntry.materialStockLabel') }}：{{ stockDisplay(item) }}
           </div>
@@ -54,12 +54,15 @@ const props = withDefaults(
     stockMap?: Record<string, number | null>;
     /** 是否显示「原材料库存」行（其他产品打包原型无此行） */
     showStock?: boolean;
+    /** 大卡片版（肉品打包：卡片+缩略图放大，填充空白）；缺省紧凑版 */
+    large?: boolean;
   }>(),
   {
     loading: false,
     demandMap: () => ({}),
     stockMap: () => ({}),
-    showStock: true
+    showStock: true,
+    large: false
   }
 );
 
@@ -82,10 +85,11 @@ function hasStockEntry(item: ProductInfoVO): boolean {
   return String(item.id) in props.stockMap;
 }
 
-/** 库存展示文案：已配 product_material 显数值；未配（null 占位）显 '—'。 */
+/** 库存展示文案：已配显「数值 + 单位（产品单位，缺省 kg）」；未配（null 占位）显 '—'。 */
 function stockDisplay(item: ProductInfoVO): string {
   const v = props.stockMap[String(item.id)];
-  return v == null ? '—' : String(v);
+  if (v == null) return '—';
+  return `${v} ${item.productUnit || 'kg'}`;
 }
 
 function select(id: number | string) {
@@ -101,6 +105,11 @@ function select(id: number | string) {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 12px;
   min-height: 120px;
+}
+/* 大卡片版（肉品打包）：一排约 2 个 + 卡更大，填充空白 */
+.card-grid--large {
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 16px;
 }
 .prod-card {
   display: flex;
@@ -157,5 +166,29 @@ function select(id: number | string) {
   font-size: 12px;
   color: var(--el-text-color-secondary);
   line-height: 1.6;
+}
+
+/* ===== 大卡片版（肉品打包，large）：缩略图 + 内边距 + 文字放大 ===== */
+.prod-card--large {
+  gap: 18px;
+  padding: 18px 20px;
+}
+.prod-card--large .prod-thumb,
+.prod-card--large .thumb-img,
+.prod-card--large .thumb-fallback {
+  flex-basis: 120px;
+  width: 120px;
+  height: 120px;
+}
+.prod-card--large .thumb-fallback {
+  font-size: 40px;
+}
+.prod-card--large .prod-name {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.prod-card--large .prod-row {
+  font-size: 14px;
+  line-height: 1.9;
 }
 </style>

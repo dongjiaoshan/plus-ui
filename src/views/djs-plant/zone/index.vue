@@ -22,6 +22,7 @@
       @search="handleSearch"
       @reset="handleReset"
       @add="handleAdd"
+      @del="handleDel"
       @export="handleExport"
       @page-change="handlePageChange"
     >
@@ -146,10 +147,12 @@ function handleAdd() {
 function handleEdit(row: BizRow) {
   zoneFormRef.value?.openEdit(row.id);
 }
-async function handleDel(row: BizRow) {
+// 单行(#action slot 传 row) + 批量(BizTable @del 传选中行数组) 共用
+async function handleDel(rowOrRows: BizRow | BizRow[]) {
+  const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];
   try {
-    await proxy?.$modal.confirm(t('plantZone.confirm.del', { count: 1 }));
-    await delZone([row.id]);
+    await proxy?.$modal.confirm(t('plantZone.confirm.del', { count: ids.length }));
+    await delZone(ids);
     proxy?.$modal.msgSuccess(t('common.opSuccess'));
     fetchList();
   } catch (err: any) {

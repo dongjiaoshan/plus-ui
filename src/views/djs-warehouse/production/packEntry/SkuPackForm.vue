@@ -13,11 +13,12 @@
         <div class="card-scroll">
           <ProductCardGrid
             v-model="form.productId"
-            :items="products"
-            :loading="productLoading"
+            :items="displayProducts"
+            :loading="productLoading || (earGroup && sourceLoading)"
             :demand-map="demandMap"
-            :stock-map="stockMap"
+            :stock-map="earGroup ? meatStockMap : stockMap"
             :show-stock="showStock"
+            :large="wide"
             @change="onProductChange"
           />
         </div>
@@ -45,7 +46,7 @@
       </div>
 
       <!-- 右：操作 panel -->
-      <div class="station-right">
+      <div class="station-right" :class="{ 'station-right--wide': wide }">
         <div class="panel-head">
           <span class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</span>
           <span class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
@@ -197,6 +198,8 @@ const props = withDefaults(
     showSource?: boolean;
     /** 是否显示「猪只耳号」回显 chip（其他产品打包隐藏；缺省随业态：dry 显示） */
     showEar?: boolean;
+    /** 宽版布局（肉品打包：产品卡片放大 + 右操作台加宽，填充空白）；缺省紧凑版，其他打包页零影响 */
+    wide?: boolean;
   }>(),
   {
     belongType: undefined,
@@ -209,7 +212,8 @@ const props = withDefaults(
     plotGroup: false,
     earGroup: false,
     showSource: true,
-    showEar: undefined
+    showEar: undefined,
+    wide: false
   }
 );
 
@@ -248,6 +252,34 @@ const {
   loadSources,
   loadPlots
 } = usePackEntryOptions();
+
+// 当天领用过滤（Kevin 2026-06-19）：肉品 / 果蔬打包只显「近 1-2 天（今天+昨天）领用」的来源原材料。
+// produceDate = inhouse 领用/产生当天那天；干货 / 礼盒 / 白条打包不按日期过滤。
+// 用 yyyy-MM-dd 字符串比对（避开时区误差）；produceDate 可能为 "yyyy-MM-dd[ HH:mm:ss]" 或 epoch 毫秒。
+function ymdLocal(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function isRecentRequisition(produceDate?: string | number): boolean {
+  if (produceDate === undefined || produceDate === null || produceDate === '') return false;
+  let ymd: string;
+  if (typeof produceDate === 'number') {
+    ymd = ymdLocal(new Date(produceDate));
+  } else {
+    const s = String(produceDate);
+    ymd = /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : ymdLocal(new Date(s));
+  }
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return ymd === ymdLocal(today) || ymd === ymdLocal(yesterday);
+}
+/** 肉品(earGroup) / 果蔬(veg) 来源按「近 1-2 天领用」过滤；其它业态原样。 */
+const effectiveSources = computed<PackSourceVO[]>(() =>
+  props.earGroup || props.kind === 'veg'
+    ? sources.value.filter((s) => isRecentRequisition(s.produceDate))
+    : sources.value
+);
 
 const submitting = ref(false);
 
@@ -394,18 +426,22 @@ const vegMaterialFallback = ref(false);
  * 依赖 sources 已 loadSources('veg') 完成。
  */
 async function loadVegProducts() {
+  // 当天领用过滤（Kevin 2026-06-19）：只从近 1-2 天领用的 veg 来源推导本次领用原料 id
   const materialIds = Array.from(
-    new Set(sources.value.map((s) => s.productId).filter((id): id is number => id != null).map((id) => String(id)))
+    new Set(effectiveSources.value.map((s) => s.productId).filter((id): id is number => id != null).map((id) => String(id)))
   );
+  // 没有当天领用 → 直接空（Kevin 2026-06-19：不回退显示全部）
+  if (materialIds.length === 0) {
+    products.value = [];
+    vegMaterialFallback.value = false;
+    return;
+  }
   const count = await loadVegProductsByMaterial(materialIds);
-  // 推导原料为空（领用来源无 productId）或命中为空 → 回退提示。
-  // 注意：materialIds 非空但命中 0（现网 product_material 多未配的常见场景）后端返【空】而非全部，
-  // 此时必须再拉一次全部果蔬成品，否则卡片空白与「已展示全部」提示自相矛盾。
-  if (materialIds.length === 0 || count === 0) {
+  // 有当天领用但 product_material 未配（命中 0）→ 仍回退显全部 + 提示（doc#12 安全兜底：
+  // 可打包却因未配料空白会卡住工人；此时显全部 + 顶部提示，与「无领用直接空」区分）。
+  if (count === 0) {
     vegMaterialFallback.value = true;
-    if (materialIds.length > 0 && count === 0) {
-      await loadVegProductsByMaterial([]);
-    }
+    await loadVegProductsByMaterial([]);
   } else {
     vegMaterialFallback.value = false;
   }
@@ -415,6 +451,11 @@ function onProductChange(item: ProductInfoVO) {
   // 选卡片回填默认单位/规格，方便录入
   if (item.productUnit) form.value.productUnit = item.productUnit;
   if (item.productSpec && !form.value.productSpec) form.value.productSpec = item.productSpec;
+  // 肉品打包：换产品 → 清耳号 + 来源（耳号按产品过滤，残留旧产品耳号会导致来源歧义）
+  if (props.earGroup) {
+    selectedEarNo.value = '';
+    form.value.sourceInhouseId = '';
+  }
 }
 
 // 果蔬地块：按来源 plotId 分组成 button-toggle；选地块后来源下拉只显示该地块来源
@@ -427,7 +468,7 @@ const plotToggleOptions = computed<{ value: number | string; label: string }[]>(
   if (!props.plotGroup) return [];
   const seen = new Map<string, { value: number | string; label: string }>();
   let hasNoPlot = false;
-  sources.value.forEach((s) => {
+  effectiveSources.value.forEach((s) => {
     if (s.plotId == null) {
       // 外购无地块来源聚合成单个「无地块信息」可选项（doc#13），不再过滤丢弃
       hasNoPlot = true;
@@ -456,14 +497,46 @@ watch(
   { immediate: true }
 );
 
-// 肉品耳号：按来源 earNo 去重成 button-toggle；选耳号后来源只显示该耳号来源
+// 肉品打包左侧卡片：只显「有领用原材料」的产品 —— 即出现在 sources（已领用 pork inhouse, product_weight>0）
+// 里的 productId 集合。其它业态（veg/dry/gift）不过滤，原样展示。
+const requisitionedProductIds = computed<Set<string>>(() => {
+  const set = new Set<string>();
+  if (!props.earGroup) return set;
+  effectiveSources.value.forEach((s) => {
+    if (s.productId != null) set.add(String(s.productId));
+  });
+  return set;
+});
+
+const displayProducts = computed<ProductInfoVO[]>(() =>
+  props.earGroup ? products.value.filter((p) => requisitionedProductIds.value.has(String(p.id))) : products.value
+);
+
+// 肉品打包「原材料库存」：成品即原材料，库存 = 该产品已领用 inhouse(sources) 的 productWeight 之和（kg）。
+// pork 产品 product_material 全空，product_material 口径的 stockMap 显「—」，故 earGroup 用 sources 自算覆盖。
+const meatStockMap = computed<Record<string, number | null>>(() => {
+  const m: Record<string, number> = {};
+  if (!props.earGroup) return m;
+  effectiveSources.value.forEach((s) => {
+    if (s.productId == null) return;
+    const k = String(s.productId);
+    m[k] = (m[k] ?? 0) + (Number(s.productWeight) || 0);
+  });
+  Object.keys(m).forEach((k) => { m[k] = Math.round(m[k] * 100) / 100; });
+  return m;
+});
+
+// 肉品耳号：按来源 earNo 去重成 button-toggle；同一耳号可能跨多产品（如 DEMO0015 同属骨类/演示精瘦肉），
+// 故选中目标产品后只列该产品的耳号，保证「选耳号 → 唯一确定来源 inhouse」。
 const selectedEarNo = ref<number | string | ''>('');
 
 const earToggleOptions = computed<{ value: number | string; label: string }[]>(() => {
   if (!props.earGroup) return [];
   const seen = new Map<string, { value: number | string; label: string }>();
-  sources.value.forEach((s) => {
+  effectiveSources.value.forEach((s) => {
     if (!s.earNo) return;
+    // 已选目标产品时，耳号只列该产品的来源（避免跨产品同名耳号导致来源歧义）
+    if (form.value.productId && String(s.productId) !== String(form.value.productId)) return;
     const key = String(s.earNo);
     if (!seen.has(key)) {
       seen.set(key, { value: s.earNo, label: s.earNo });
@@ -473,7 +546,7 @@ const earToggleOptions = computed<{ value: number | string; label: string }[]>((
 });
 
 const displaySources = computed(() => {
-  let list = sources.value;
+  let list = effectiveSources.value;
   if (props.plotGroup && selectedPlotId.value) {
     if (selectedPlotId.value === NO_PLOT_SENTINEL) {
       // 「无地块信息」：仅外购无地块来源（doc#13）
@@ -490,7 +563,7 @@ const displaySources = computed(() => {
 
 // 当前选中来源（右台顶部回显耳号 / 提交时取规格）
 const selectedSource = computed<PackSourceVO | undefined>(() =>
-  sources.value.find((s) => String(s.id) === String(form.value.sourceInhouseId))
+  effectiveSources.value.find((s) => String(s.id) === String(form.value.sourceInhouseId))
 );
 
 function sourceChipLabel(s: PackSourceVO): string {
@@ -517,9 +590,14 @@ function onPlotChange() {
 }
 
 // 肉品打包来源区已隐藏（showSource=false）：只按猪只耳号溯源（门店做溯源码）。
-// 选耳号后自动取该耳号下首条来源 inhouse 作打包来源（扣减 + 追溯链路绑定该耳号）；无来源则清空。
+// 选耳号后按「目标产品 + 耳号」唯一确定来源 inhouse（扣减 + 追溯链路绑定该耳号）；
+// 同一耳号可能跨多产品，必须配 productId 才不歧义；无匹配则清空。
 function onEarChange() {
-  const earSrc = sources.value.find((x) => String(x.earNo) === String(selectedEarNo.value));
+  const earSrc = effectiveSources.value.find(
+    (x) =>
+      String(x.earNo) === String(selectedEarNo.value) &&
+      (!form.value.productId || String(x.productId) === String(form.value.productId))
+  );
   form.value.sourceInhouseId = earSrc ? earSrc.id : '';
 }
 
@@ -723,6 +801,11 @@ onMounted(async () => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+/* 宽版（肉品打包）：右操作台加宽，填充空白；其他打包页保持 420px */
+.station-right--wide {
+  flex: 0 0 520px;
+  width: 520px;
 }
 /* 触屏放大：右台控件、标签、按钮整体加大方便手指操作 */
 .station-right .panel-label {

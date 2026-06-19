@@ -29,7 +29,7 @@
       </div>
 
       <!-- step2：作物（卡片单选） -->
-      <CropPicker v-if="currentStep === 1" v-model="form.cropId" @select-crop="onSelectCrop" />
+      <CropPicker v-if="currentStep === 1" v-model="form.cropId" :plan-season="form.planSeason" @select-crop="onSelectCrop" />
 
       <!-- step3：地块（按片区分组 + 每地块设月份+上中下旬+班组） -->
       <template v-if="currentStep === 2">

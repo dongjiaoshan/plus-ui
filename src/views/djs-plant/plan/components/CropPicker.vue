@@ -45,7 +45,7 @@ import { Check } from '@element-plus/icons-vue';
 import { listCrop } from '@/api/djs-plant/crop';
 import type { CropInfoVO } from '@/api/djs-plant/crop/types';
 
-const props = defineProps<{ modelValue?: string | number }>();
+const props = defineProps<{ modelValue?: string | number; planSeason?: string }>();
 const emit = defineEmits<{
   (e: 'update:modelValue', val: string | number): void;
   (e: 'select-crop', crop: CropInfoVO): void;
@@ -58,15 +58,33 @@ const keyword = ref('');
 
 const selectedId = computed(() => (props.modelValue == null ? '' : String(props.modelValue)));
 
+// 计划季节 → 作物 plantingSeason 命中：作物季节字段历史混存多种写法
+// （字典值 spring / 中文短名 春 / 字典 label 春季），逐 token 包含匹配兼容
+const SEASON_TOKENS: Record<string, string[]> = {
+  spring: ['spring', '春季', '春'],
+  summer: ['summer', '夏季', '夏'],
+  autumn: ['autumn', '秋季', '秋'],
+  winter: ['winter', '冬季', '冬']
+};
+
+function matchSeason(c: CropInfoVO): boolean {
+  if (!props.planSeason) return true;
+  const tokens = SEASON_TOKENS[props.planSeason] ?? [props.planSeason];
+  const ps = c.plantingSeason || '';
+  return tokens.some((tk) => ps.includes(tk));
+}
+
 const filteredCrops = computed(() => {
-  if (!keyword.value) return crops.value;
   const kw = keyword.value.trim().toLowerCase();
-  return crops.value.filter(
-    (c) =>
+  return crops.value.filter((c) => {
+    if (!matchSeason(c)) return false;
+    if (!kw) return true;
+    return (
       (c.cropName && c.cropName.toLowerCase().includes(kw)) ||
       (c.cropCode && c.cropCode.toLowerCase().includes(kw)) ||
       (c.varietyName && c.varietyName.toLowerCase().includes(kw))
-  );
+    );
+  });
 });
 
 onMounted(async () => {
