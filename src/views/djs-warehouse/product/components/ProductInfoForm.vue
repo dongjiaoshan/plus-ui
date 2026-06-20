@@ -183,7 +183,7 @@
         </el-form-item>
       </template>
 
-      <!-- 共有：图片 / 是否支持外购 / 状态 / 描述 / 备注 -->
+      <!-- 共有：图片 / 是否支持外购 / 状态 / 描述（备注字段保留入库，表单不再展示） -->
       <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item :label="t('product.field.productThumb')" prop="productThumb">
@@ -207,11 +207,6 @@
         <el-col :span="24">
           <el-form-item :label="t('product.field.productDesc')" prop="productDesc">
             <el-input v-model="form.productDesc" type="textarea" :rows="2" maxlength="500" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item :label="t('product.field.remark')" prop="remark">
-            <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
           </el-form-item>
         </el-col>
       </el-row>

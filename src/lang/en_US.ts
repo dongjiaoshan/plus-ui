@@ -2346,6 +2346,7 @@ export default {
         specLabel: 'Spec',
         demandLabel: 'Demand',
         materialStockLabel: 'Material stock',
+        packDone: 'Packed',
         noProduct: 'No products',
         operation: 'Operation',
         weightPlaceholder: 'Product weight KG',

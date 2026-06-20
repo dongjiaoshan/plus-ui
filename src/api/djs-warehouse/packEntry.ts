@@ -287,3 +287,11 @@ export const listCuttable = (): AxiosPromise<PigCutRecordVO[]> => {
 export const listMaterialStock = (productIds: (number | string)[]): AxiosPromise<Record<string, string>> => {
   return request({ url: '/djs/warehouse/packEntry/materialStock', method: 'get', params: { productIds: productIds.join(',') } });
 };
+
+/**
+ * 批量查目标成品「今天已打包份数」（每条 product_production = 一份）。
+ * 卡片用：份数 ≥ 门店需求 → 标「打包完成」、禁选。返回 Map：成品雪花 id 字符串 → 今天已打包份数（无记录的成品不在 Map）。
+ */
+export const listPackedCount = (productIds: (number | string)[]): AxiosPromise<Record<string, number>> => {
+  return request({ url: '/djs/warehouse/packEntry/packedCount', method: 'get', params: { productIds: productIds.join(',') } });
+};

@@ -5,9 +5,14 @@
         v-for="item in items"
         :key="String(item.id)"
         class="prod-card"
-        :class="{ active: String(modelValue) === String(item.id), 'prod-card--large': large }"
+        :class="{
+          active: String(modelValue) === String(item.id),
+          'prod-card--large': large,
+          'prod-card--done': isDone(item)
+        }"
         @click="select(item.id)"
       >
+        <div v-if="isDone(item)" class="done-badge">{{ t('djs.warehouse.packEntry.packDone') }}</div>
         <div class="prod-thumb">
           <el-image v-if="imageOf(item)" :src="imageOf(item)" fit="cover" class="thumb-img">
             <template #error>
@@ -56,13 +61,16 @@ const props = withDefaults(
     showStock?: boolean;
     /** 大卡片版（肉品打包：卡片+缩略图放大，填充空白）；缺省紧凑版 */
     large?: boolean;
+    /** 「打包完成」成品 id 集合（今天已打包份数 ≥ 门店需求）：卡片标完成 + 禁选 */
+    doneSet?: Set<string>;
   }>(),
   {
     loading: false,
     demandMap: () => ({}),
     stockMap: () => ({}),
     showStock: true,
-    large: false
+    large: false,
+    doneSet: () => new Set<string>()
   }
 );
 
@@ -92,9 +100,16 @@ function stockDisplay(item: ProductInfoVO): string {
   return `${v} ${item.productUnit || 'kg'}`;
 }
 
+/** 该成品是否已打包完成（今天已打包份数 ≥ 门店需求）→ 卡片置灰、禁选。 */
+function isDone(item: ProductInfoVO): boolean {
+  return props.doneSet.has(String(item.id));
+}
+
 function select(id: number | string) {
-  emit('update:modelValue', id);
+  // 打包完成的成品不可再选（避免超量打包）
   const item = props.items.find((p) => String(p.id) === String(id));
+  if (item && isDone(item)) return;
+  emit('update:modelValue', id);
   if (item) emit('change', item);
 }
 </script>
@@ -112,6 +127,7 @@ function select(id: number | string) {
   gap: 16px;
 }
 .prod-card {
+  position: relative;
   display: flex;
   gap: 10px;
   padding: 10px;
@@ -120,6 +136,28 @@ function select(id: number | string) {
   cursor: pointer;
   transition: all 0.15s ease;
   background: var(--el-bg-color);
+}
+/* 打包完成：置灰 + 禁选 + 右上角角标 */
+.prod-card--done {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background: var(--el-fill-color-light);
+}
+.prod-card--done:hover {
+  border-color: var(--el-border-color);
+  box-shadow: none;
+}
+.done-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--el-color-success);
+  border-radius: 10px;
 }
 .prod-card:hover {
   border-color: var(--el-color-primary-light-5);

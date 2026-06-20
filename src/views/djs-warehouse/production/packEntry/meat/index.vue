@@ -12,6 +12,7 @@
       :send-dest-kinds="['platform']"
       ear-group
       :show-source="false"
+      :show-ear="false"
       wide
       :title="t('djs.warehouse.packEntry.meatTitle')"
     />

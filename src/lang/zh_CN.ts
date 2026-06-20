@@ -2349,6 +2349,7 @@ export default {
         specLabel: '规格',
         demandLabel: '需求量',
         materialStockLabel: '原材料库存',
+        packDone: '打包完成',
         noProduct: '暂无产品',
         operation: '操作',
         weightPlaceholder: '产品重量KG',

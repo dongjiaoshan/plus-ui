@@ -24,6 +24,8 @@
       :send-dest-kinds="['platform']"
       :title="t('djs.warehouse.packEntry.vegTitle')"
       plot-group
+      :show-source="false"
+      wide
       @submitted="loadLoss"
     />
   </div>

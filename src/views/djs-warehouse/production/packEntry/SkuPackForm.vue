@@ -17,6 +17,7 @@
             :loading="productLoading || (earGroup && sourceLoading)"
             :demand-map="demandMap"
             :stock-map="earGroup ? meatStockMap : (kind === 'veg' ? vegStockMap : stockMap)"
+            :done-set="doneSet"
             :show-stock="showStock"
             :large="wide"
             @change="onProductChange"
@@ -153,7 +154,7 @@ import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
 import DestToggle from './components/DestToggle.vue';
 import { usePackEntryOptions } from './useOptions';
-import { listMaterialStock, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
+import { listMaterialStock, listPackedCount, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
 import type { DeliverDest, DryPackBo, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
@@ -290,7 +291,9 @@ const defaultForm = (): PackFormShape => ({
   productSpec: undefined,
   locationId: '',
   storeId: '',
-  deliverDest: undefined,
+  // 发送位置默认「发货月台」(platform)：肉品/果蔬/其他打包首选发货月台（最常用），每次提交 reset 后仍保持默认。
+  // 礼盒(gift)不展示发送位置、sendDestKinds 不含 platform → 保持 undefined。
+  deliverDest: (props.sendDestKinds ?? []).includes('platform') ? 'platform' : undefined,
   proofOssIds: undefined,
   remark: undefined
 });
@@ -362,6 +365,39 @@ async function loadDemandMap() {
     map[k] = v;
   });
   demandMap.value = map;
+}
+
+// 卡片网格「今天已打包份数」（每条 product_production = 一份）：productId → 今天已打包份数。
+const packedMap = ref<Record<string, number>>({});
+
+async function loadPackedCount() {
+  const ids = products.value.map((p) => p.id);
+  if (ids.length === 0) {
+    packedMap.value = {};
+    return;
+  }
+  try {
+    const res = await listPackedCount(ids);
+    packedMap.value = ((res as any).data ?? {}) as Record<string, number>;
+  } catch {
+    packedMap.value = {};
+  }
+}
+
+// 「打包完成」集合：门店需求 > 0 且 今天已打包份数 ≥ 需求份数 → 卡片标完成、禁选（避免超量打包）。
+const doneSet = computed<Set<string>>(() => {
+  const s = new Set<string>();
+  products.value.forEach((p) => {
+    const key = String(p.id);
+    const demand = demandMap.value[key] ?? 0;
+    const packed = packedMap.value[key] ?? 0;
+    if (demand > 0 && packed >= demand) s.add(key);
+  });
+  return s;
+});
+
+function isProductDone(id: number | string): boolean {
+  return doneSet.value.has(String(id));
 }
 
 /**
@@ -606,16 +642,27 @@ const sourceToggleOptions = computed<{ value: number | string; label: string }[]
   displaySources.value.map((s) => ({ value: s.id, label: sourceChipLabel(s) }))
 );
 
+// 果蔬打包来源区已隐藏（showSource=false）：选地块 = 选来源（对齐肉品「选耳号」）。
+// 按「目标成品的有效原材料 + 地块」唯一确定来源 inhouse；成品→原材料(N:1) 或成品即原材料按有效原材料 id 匹配；
+// 「无地块信息」哨兵匹配无地块来源；无匹配则清空。
 function onPlotChange() {
-  const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
-  if (!src) return;
-  // 「无地块信息」哨兵：已选来源须是无地块来源，否则清空等重选
-  const mismatch =
-    selectedPlotId.value === NO_PLOT_SENTINEL ? src.plotId != null : String(src.plotId) !== String(selectedPlotId.value);
-  if (mismatch) {
-    form.value.sourceInhouseId = '';
-  }
+  const matId = materialIdOf(form.value.productId);
+  const src = effectiveSources.value.find((x) => {
+    const matchMat = !matId || String(x.productId) === matId;
+    const matchPlot =
+      selectedPlotId.value === NO_PLOT_SENTINEL ? x.plotId == null : String(x.plotId) === String(selectedPlotId.value);
+    return matchMat && matchPlot;
+  });
+  form.value.sourceInhouseId = src ? src.id : '';
 }
+
+// 地块/目标产品变化 → 重解析来源（覆盖单地块自动选中 watch 不触发 @change、以及换产品换原材料）。
+watch(
+  [selectedPlotId, () => form.value.productId],
+  () => {
+    if (props.plotGroup) onPlotChange();
+  }
+);
 
 // 肉品打包来源区已隐藏（showSource=false）：只按猪只耳号溯源（门店做溯源码）。
 // 选耳号后按「目标成品的有效原材料 + 耳号」唯一确定来源 inhouse（扣减 + 追溯绑该耳号）；
@@ -653,8 +700,9 @@ function validate(): boolean {
       return false;
     }
   } else {
-    // 来源区隐藏时（showSource=false）不再前端强制选来源，提交链路待后端按目标产品/耳号自动匹配
-    if (props.showSource && !form.value.sourceInhouseId) {
+    // 来源区隐藏时（showSource=false）不再前端强制选来源，提交链路待后端按目标产品/耳号自动匹配；
+    // 果蔬（plotGroup）来源由「选地块」自动解析，须有解析结果（否则该地块无可打包原料）。
+    if ((props.showSource || props.plotGroup) && !form.value.sourceInhouseId) {
       ElMessage.warning(t('djs.warehouse.packEntry.sourceRequired'));
       return false;
     }
@@ -728,12 +776,42 @@ async function handleSubmit(printTrace: boolean) {
         ElMessage.warning(t('djs.warehouse.packEntry.noTraceCode'));
       }
     }
-    handleReset();
-    void loadDemandMap();
-    // 打包消耗原材料后刷新卡片库存（保持与扣减后真实库存一致）
-    void loadMaterialStock();
+    await refreshAfterPack();
   } finally {
     submitting.value = false;
+  }
+}
+
+/**
+ * 打包提交成功后刷新（不整页 reset）：
+ * - 保持当前产品选中（req2：一个产品可连续打包多份，不每次清空重选）；
+ * - 重新拉来源 → 用完的地块/耳号从 toggle 消失（req4）；
+ * - 刷新需求 / 库存 / 已打包份数 → 该产品需求份数打完则卡片标「打包完成」并自动取消选中（req3）。
+ */
+async function refreshAfterPack() {
+  const keepProductId = String(form.value.productId || '');
+  // 只清本次录入量 + 来源/地块/耳号选择，保留产品
+  form.value.productWeight = undefined;
+  form.value.packBoxCount = undefined;
+  form.value.sourceInhouseId = '';
+  selectedPlotId.value = '';
+  selectedEarNo.value = '';
+  // 重新拉来源（耳号/地块库存用完后从 toggle 消失）+ 成品卡片
+  if (props.kind === 'veg') {
+    await loadSources('veg');
+    await loadVegProducts();
+  } else if (props.kind === 'dry') {
+    await loadSources(props.earGroup ? 'meat' : 'dry');
+  }
+  await Promise.all([loadDemandMap(), loadMaterialStock(), loadPackedCount()]);
+  // 恢复产品选中：仍在卡片列表 且 未打包完成 → 保持；否则清空（打包完成或料已不在）
+  const stillThere = products.value.some((p) => String(p.id) === keepProductId);
+  if (keepProductId && stillThere && !isProductDone(keepProductId)) {
+    form.value.productId = keepProductId;
+    // 单地块/单耳号由各自 watch 自动选中并解析来源；多选等工人重选
+  } else {
+    form.value.productId = '';
+    storeDemands.value = [];
   }
 }
 
@@ -768,6 +846,8 @@ onMounted(async () => {
   void loadDemandMap();
   // 卡片库存口径统一：成品 product_material 指向的原材料实时库存（与后端校验/扣减一致）
   void loadMaterialStock();
+  // 各成品今天已打包份数（≥ 需求 → 卡片标「打包完成」、禁选）
+  void loadPackedCount();
 });
 </script>
 
