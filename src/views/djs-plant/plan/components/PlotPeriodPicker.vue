@@ -16,7 +16,7 @@
       <template #default="{ data }">
         <!-- 大区节点 -->
         <span v-if="data.type === 'region'" class="flex items-center">
-          <span class="font-medium">{{ data.label }}</span>
+          <span class="font-medium">{{ belongLabel(data.label) }}</span>
           <el-tag size="small" type="info" class="ml-2">{{ countSelectedInRegion(data) }}/{{ totalInRegion(data) }}</el-tag>
         </span>
 
@@ -99,7 +99,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, getCurrentInstance } from 'vue';
+import type { ComponentInternalInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { listAvailablePlots } from '@/api/djs-plant/plan';
 import { listAllZone } from '@/api/djs-plant/zone';
@@ -132,6 +133,9 @@ const props = defineProps<{ modelValue: PlantDetailInput[]; planYear?: number }>
 const emit = defineEmits<{ (e: 'update:modelValue', val: PlantDetailInput[]): void }>();
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// 大区字典：树上把片区 zoneBelong 值（A/B）显示成字典 label（一期基地/二期基地）
+const { djs_zone_belong } = toRefs<any>(proxy?.useDict('djs_zone_belong'));
 const zones = ref<PlotByZoneVO[]>([]);
 const teams = ref<PlantWorkTeamVO[]>([]);
 const zoneBelongMap = ref<Map<string, string>>(new Map());
@@ -263,6 +267,13 @@ function countSelectedInRegion(node: RegionNode) {
 
 function totalInRegion(node: RegionNode) {
   return node.zones.reduce((s, z) => s + z.plots.length, 0);
+}
+
+// 大区值 → 字典 label；未配字典的孤儿值（如 C区）原样显示
+function belongLabel(value: string): string {
+  if (value === ORPHAN_BELONG) return value;
+  const opt = djs_zone_belong.value?.find((d: any) => String(d.value) === String(value));
+  return opt?.label || value;
 }
 
 onMounted(async () => {

@@ -72,6 +72,10 @@ export interface CropInfoQuery extends PageQuery {
   varietyOrigin?: string;
   cropFamily?: string;
   plantingSeason?: string;
+  /** 有机证书（1=有 / 2=无） */
+  hasOrganic?: number;
+  /** 证书是否预警（1=预警 / 2=正常） */
+  organicWarning?: number;
   updateBy?: number | string;
   /** 更新时间范围，RuoYi BaseEntity 约定 params[beginTime]/params[endTime] */
   params?: Record<string, any>;

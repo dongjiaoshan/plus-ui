@@ -8,7 +8,7 @@
       :columns="plotColumns"
       :search-schema="plotSearchSchema"
       :search-model="plotSearchModel"
-      :dict-types="['djs_plot_type', 'djs_plot_status', 'djs_plot_lease', 'djs_soil_type', 'djs_soil_fertility']"
+      :dict-types="['djs_plot_type', 'djs_plot_status', 'djs_plot_lease', 'djs_soil_type', 'djs_soil_fertility', 'djs_zone_belong']"
       :page-num="plotPageNum"
       :page-size="plotPageSize"
       row-key="id"
@@ -116,6 +116,7 @@ const plotSearchSchema = computed<SearchFieldSchema[]>(() => [
 const plotColumns = computed<BizTableColumn[]>(() => [
   { prop: 'plotCode', label: t('plantPlot.column.plotCode'), width: 180, showOverflowTooltip: true },
   { prop: 'plotName', label: t('plantPlot.column.plotName'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'zoneBelong', label: t('plantPlot.column.zoneBelong'), width: 110, align: 'center', dictType: 'djs_zone_belong' },
   { prop: 'zoneName', label: t('plantPlot.column.zoneName'), width: 130, showOverflowTooltip: true },
   { prop: 'plotType', label: t('plantPlot.column.plotType'), width: 90, align: 'center', dictType: 'djs_plot_type' },
   { prop: 'soilType', label: t('plantPlot.column.soilType'), width: 100, align: 'center', dictType: 'djs_soil_type' },
@@ -128,6 +129,35 @@ const plotColumns = computed<BizTableColumn[]>(() => [
     width: 100,
     align: 'right',
     formatter: (r: BizRow) => (r.plotArea != null ? `${r.plotArea} 亩` : '-')
+  },
+  {
+    prop: 'historyPlantCount',
+    label: t('plantPlot.column.historyPlantCount'),
+    width: 110,
+    align: 'center',
+    formatter: (r: BizRow) => (r.historyPlantCount != null ? `${r.historyPlantCount} 次` : '0 次')
+  },
+  {
+    prop: 'maxYieldCropName',
+    label: t('plantPlot.column.maxYieldCrop'),
+    width: 120,
+    align: 'center',
+    showOverflowTooltip: true,
+    formatter: (r: BizRow) => r.maxYieldCropName || '—'
+  },
+  {
+    prop: 'maxYieldPerMu',
+    label: t('plantPlot.column.maxYieldPerMu'),
+    width: 130,
+    align: 'right',
+    formatter: (r: BizRow) => (r.maxYieldPerMu != null ? `${Number(r.maxYieldPerMu).toFixed(2)} kg/亩` : '—')
+  },
+  {
+    prop: 'plotRemark',
+    label: t('plantPlot.column.plotRemark'),
+    minWidth: 140,
+    showOverflowTooltip: true,
+    formatter: (r: BizRow) => r.plotRemark || '—'
   },
   { prop: 'createTime', label: t('plantPlot.column.createTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'updateTime', label: t('plantPlot.column.updateTime'), width: 160, align: 'center', formatter: 'datetime' },

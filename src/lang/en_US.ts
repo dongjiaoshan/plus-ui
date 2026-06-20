@@ -1273,6 +1273,7 @@ export default {
       productUnit: { required: 'Product unit is required' },
       belongType: { required: 'Self-produce belong type is required' },
       supplierId: { required: 'Supplier is required for purchased products' },
+      productSpec: { required: 'Spec is required for production products' },
       giftComponents: { required: 'Gift box requires at least one component' }
     },
     tip: {
@@ -1473,7 +1474,7 @@ export default {
     title: { add: 'Add Zone', edit: 'Edit Zone' },
     column: { zoneCode: 'Code', zoneName: 'Name', zoneDesc: 'Description', zoneBelong: 'Belong', zoneStatus: 'Status', createTime: 'Created', plotCount: 'Managed Plots', updateTime: 'Update Time', updateByName: 'Updated By' },
     field: { zoneCode: 'Zone Code', zoneName: 'Zone Name', zoneDesc: 'Description', zoneBelong: 'Belong Region', zoneStatus: 'Status' },
-    filter: { zoneName: 'Zone Name', updateTime: 'Update Time', updateBy: 'Updated By' },
+    filter: { zoneBelong: 'Region', zoneName: 'Zone Name', updateTime: 'Update Time', updateBy: 'Updated By' },
     placeholder: {
       zoneCode: 'Enter zone code (e.g. Z001 / EAST-01)',
       zoneName: 'Enter zone name',
@@ -1484,7 +1485,7 @@ export default {
     },
     action: { edit: 'Edit', disable: 'Disable', enable: 'Enable', del: 'Delete' },
     rule: { zoneCode: { required: 'Zone code is required' }, zoneName: { required: 'Zone name is required' } },
-    confirm: { del: 'Are you sure to delete {count} zones? Ensure no associated plots exist.' },
+    confirm: { del: 'Delete {count} zones? Only zones without planting/harvesting plots can be deleted; their idle plots will be removed together.' },
     empty: 'No zones yet. Create one to get started.'
   },
   // Planting - Plot (PLT-MD-001)
@@ -1522,6 +1523,7 @@ export default {
     column: {
       plotCode: 'Code',
       plotName: 'Name',
+      zoneBelong: 'Region',
       zoneName: 'Zone',
       plotType: 'Type',
       soilType: 'Soil',
@@ -1530,6 +1532,10 @@ export default {
       plotArea: 'Area',
       isLease: 'Lease',
       plotImage: 'Image',
+      historyPlantCount: 'Planting Count',
+      maxYieldCrop: 'Top-Yield Crop',
+      maxYieldPerMu: 'Top Yield/mu',
+      plotRemark: 'Remark',
       createTime: 'Created',
       updateTime: 'Updated'
     },
@@ -1694,8 +1700,16 @@ export default {
     },
     search: {
       varietyOrigin: 'Variety Source',
+      hasOrganic: 'Organic Cert',
+      organicWarning: 'Warning',
       updateTime: 'Update Time',
       updateBy: 'Updated By'
+    },
+    option: {
+      yes: 'Yes',
+      no: 'No',
+      warningYes: 'Warning',
+      warningNo: 'Normal'
     },
     planting: {
       plantDate: 'Plant Date',
@@ -1760,7 +1774,10 @@ export default {
       relatedProduct: 'Select related product',
       plantingSeason: 'Select seasons',
       sowingPeriod: 'e.g. early Mar - late Apr',
-      qualityDesc: 'Quality description'
+      qualityDesc: 'Quality description',
+      hasOrganic: 'Select organic cert status',
+      organicWarning: 'Select cert warning status',
+      updateBy: 'Enter updater ID'
     },
     rule: { cropCode: { required: 'Crop code is required' }, cropName: { required: 'Crop name is required' }, maxCycle: { gtMin: 'Max growth cycle must be greater than min growth cycle' } },
     confirm: { del: 'Delete {count} crops?' }

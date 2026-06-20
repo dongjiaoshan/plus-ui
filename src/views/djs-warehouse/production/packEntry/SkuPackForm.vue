@@ -16,7 +16,7 @@
             :items="displayProducts"
             :loading="productLoading || (earGroup && sourceLoading)"
             :demand-map="demandMap"
-            :stock-map="earGroup ? meatStockMap : stockMap"
+            :stock-map="earGroup ? meatStockMap : (kind === 'veg' ? vegStockMap : stockMap)"
             :show-stock="showStock"
             :large="wide"
             @change="onProductChange"
@@ -32,7 +32,8 @@
               <el-tag
                 v-for="sd in visibleStoreDemands"
                 :key="String(sd.storeId)"
-                class="mr-2 mb-1 cursor-pointer"
+                size="large"
+                class="demand-tag mr-2 mb-1 cursor-pointer"
                 :type="String(form.storeId) === String(sd.storeId) ? 'primary' : 'info'"
                 :effect="String(form.storeId) === String(sd.storeId) ? 'dark' : 'plain'"
                 @click="pickDemandStore(sd.storeId)"
@@ -253,33 +254,10 @@ const {
   loadPlots
 } = usePackEntryOptions();
 
-// 当天领用过滤（Kevin 2026-06-19）：肉品 / 果蔬打包只显「近 1-2 天（今天+昨天）领用」的来源原材料。
-// produceDate = inhouse 领用/产生当天那天；干货 / 礼盒 / 白条打包不按日期过滤。
-// 用 yyyy-MM-dd 字符串比对（避开时区误差）；produceDate 可能为 "yyyy-MM-dd[ HH:mm:ss]" 或 epoch 毫秒。
-function ymdLocal(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-function isRecentRequisition(produceDate?: string | number): boolean {
-  if (produceDate === undefined || produceDate === null || produceDate === '') return false;
-  let ymd: string;
-  if (typeof produceDate === 'number') {
-    ymd = ymdLocal(new Date(produceDate));
-  } else {
-    const s = String(produceDate);
-    ymd = /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : ymdLocal(new Date(s));
-  }
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return ymd === ymdLocal(today) || ymd === ymdLocal(yesterday);
-}
-/** 肉品(earGroup) / 果蔬(veg) 来源按「近 1-2 天领用」过滤；其它业态原样。 */
-const effectiveSources = computed<PackSourceVO[]>(() =>
-  props.earGroup || props.kind === 'veg'
-    ? sources.value.filter((s) => isRecentRequisition(s.produceDate))
-    : sources.value
-);
+// doc/14 §1：打包来源 = 全部「活动（未打包）」inhouse WIP。不再按「近 1-2 天」过滤——
+// 统一 WIP 模型下，未打包的领用库存持续可见直到被打包消耗（consumeInhouse 按实重扣减），
+// 旧日期的未打包 WIP 仍属「待打包」，按日期藏掉会让原料库存口径错（漏计旧 WIP）。
+const effectiveSources = computed<PackSourceVO[]>(() => sources.value);
 
 const submitting = ref(false);
 
@@ -426,11 +404,12 @@ const vegMaterialFallback = ref(false);
  * 依赖 sources 已 loadSources('veg') 完成。
  */
 async function loadVegProducts() {
-  // 当天领用过滤（Kevin 2026-06-19）：只从近 1-2 天领用的 veg 来源推导本次领用原料 id
+  // 今天领用过滤（doc/14 §5）：后端 listSourceForVeg 已按 DATE(produce_date)=今天 过滤，
+  // 这里只从「今天领用」的 veg 来源推导本次领用原料 id。
   const materialIds = Array.from(
     new Set(effectiveSources.value.map((s) => s.productId).filter((id): id is number => id != null).map((id) => String(id)))
   );
-  // 没有当天领用 → 直接空（Kevin 2026-06-19：不回退显示全部）
+  // 今天没领用 → 直接空（须先 mp 领用才有料；不回退显示全部）
   if (materialIds.length === 0) {
     products.value = [];
     vegMaterialFallback.value = false;
@@ -497,8 +476,23 @@ watch(
   { immediate: true }
 );
 
-// 肉品打包左侧卡片：只显「有领用原材料」的产品 —— 即出现在 sources（已领用 pork inhouse, product_weight>0）
-// 里的 productId 集合。其它业态（veg/dry/gift）不过滤，原样展示。
+/**
+ * 成品的「有效原材料 id」（doc/14 §5）：配了 product_material → 原材料 id（领用原料 → 打包成该成品）；
+ * 否则成品即原材料（product_material 空）→ 成品自身 id。**领用只领原料(attr=2)，inhouse 永远落在原料上**，
+ * 故按原材料维度单向反查即可（猪皮原料 → 猪皮200/500 多成品共享同一原料池）。
+ */
+function effectiveMaterialId(p: ProductInfoVO): string {
+  return p.productMaterial != null ? String(p.productMaterial) : String(p.id);
+}
+/** 由成品 productId 反查其有效原材料 id（来源 inhouse 按原材料维度匹配耳号用）。 */
+function materialIdOf(productId: number | string | ''): string {
+  if (!productId) return '';
+  const p = products.value.find((x) => String(x.id) === String(productId));
+  return p ? effectiveMaterialId(p) : String(productId);
+}
+
+// 肉品打包左侧卡片：只显「今天有领用原料」的成品 —— 即其有效原材料出现在 sources（已领用原料 inhouse）。
+// 同一原材料的多个规格成品（猪皮原料 → 猪皮200/500）都会命中（一料多品共享池，doc/14 §5）。
 const requisitionedProductIds = computed<Set<string>>(() => {
   const set = new Set<string>();
   if (!props.earGroup) return set;
@@ -509,20 +503,53 @@ const requisitionedProductIds = computed<Set<string>>(() => {
 });
 
 const displayProducts = computed<ProductInfoVO[]>(() =>
-  props.earGroup ? products.value.filter((p) => requisitionedProductIds.value.has(String(p.id))) : products.value
+  props.earGroup
+    ? products.value.filter((p) => requisitionedProductIds.value.has(effectiveMaterialId(p)))
+    : products.value
 );
 
-// 肉品打包「原材料库存」：成品即原材料，库存 = 该产品已领用 inhouse(sources) 的 productWeight 之和（kg）。
-// pork 产品 product_material 全空，product_material 口径的 stockMap 显「—」，故 earGroup 用 sources 自算覆盖。
+// 肉品打包「原材料库存」= 领用待打包库存（doc/14 §5）：成品经有效原材料 id 聚合来源 inhouse 的 productWeight。
+// 同一原材料的多个成品卡共享同一池（一料多品）。
 const meatStockMap = computed<Record<string, number | null>>(() => {
-  const m: Record<string, number> = {};
+  const m: Record<string, number | null> = {};
   if (!props.earGroup) return m;
+  const byMaterial: Record<string, number> = {};
   effectiveSources.value.forEach((s) => {
     if (s.productId == null) return;
     const k = String(s.productId);
-    m[k] = (m[k] ?? 0) + (Number(s.productWeight) || 0);
+    byMaterial[k] = (byMaterial[k] ?? 0) + (Number(s.productWeight) || 0);
   });
-  Object.keys(m).forEach((k) => { m[k] = Math.round(m[k] * 100) / 100; });
+  products.value.forEach((p) => {
+    const w = byMaterial[effectiveMaterialId(p)];
+    if (w == null) return;
+    m[String(p.id)] = Math.round(w * 100) / 100;
+  });
+  return m;
+});
+
+/**
+ * 果蔬打包「原材料库存」= 领用待打包库存（doc/14 §5）：成品经 product_material 二跳反查原材料，
+ * 聚合该原材料全部活动来源 inhouse(sources) 的 productWeight。**同一原材料的多个成品卡共享同一池**。
+ * 取 `sources`（全部活动 inhouse，不限日期），与猪肉 meatStockMap 同口径（Σ 活动 inhouse）。
+ * 成品未配 product_material → 不入 map（卡片显 '—'）。
+ */
+const vegStockMap = computed<Record<string, number | null>>(() => {
+  const m: Record<string, number | null> = {};
+  if (props.kind !== 'veg') return m;
+  // 先按原材料 id 聚合全部活动来源 inhouse 重量（source.productId = 原材料 id）
+  const byMaterial: Record<string, number> = {};
+  sources.value.forEach((s) => {
+    if (s.productId == null) return;
+    const k = String(s.productId);
+    byMaterial[k] = (byMaterial[k] ?? 0) + (Number(s.productWeight) || 0);
+  });
+  // 成品 → 其 product_material 指向原材料的共享池
+  products.value.forEach((p) => {
+    if (p.productMaterial == null) return;
+    const w = byMaterial[String(p.productMaterial)];
+    if (w == null) return;
+    m[String(p.id)] = Math.round(w * 100) / 100;
+  });
   return m;
 });
 
@@ -533,10 +560,11 @@ const selectedEarNo = ref<number | string | ''>('');
 const earToggleOptions = computed<{ value: number | string; label: string }[]>(() => {
   if (!props.earGroup) return [];
   const seen = new Map<string, { value: number | string; label: string }>();
+  const matId = materialIdOf(form.value.productId);
   effectiveSources.value.forEach((s) => {
     if (!s.earNo) return;
-    // 已选目标产品时，耳号只列该产品的来源（避免跨产品同名耳号导致来源歧义）
-    if (form.value.productId && String(s.productId) !== String(form.value.productId)) return;
+    // 已选目标产品时，耳号只列该产品有效原材料的来源（成品→原材料 / 成品即原材料），避免来源歧义
+    if (matId && String(s.productId) !== matId) return;
     const key = String(s.earNo);
     if (!seen.has(key)) {
       seen.set(key, { value: s.earNo, label: s.earNo });
@@ -590,13 +618,14 @@ function onPlotChange() {
 }
 
 // 肉品打包来源区已隐藏（showSource=false）：只按猪只耳号溯源（门店做溯源码）。
-// 选耳号后按「目标产品 + 耳号」唯一确定来源 inhouse（扣减 + 追溯链路绑定该耳号）；
-// 同一耳号可能跨多产品，必须配 productId 才不歧义；无匹配则清空。
+// 选耳号后按「目标成品的有效原材料 + 耳号」唯一确定来源 inhouse（扣减 + 追溯绑该耳号）；
+// 成品→原材料(N:1) 或 成品即原材料，按有效原材料 id 匹配来源；无匹配则清空。
 function onEarChange() {
+  const matId = materialIdOf(form.value.productId);
   const earSrc = effectiveSources.value.find(
     (x) =>
       String(x.earNo) === String(selectedEarNo.value) &&
-      (!form.value.productId || String(x.productId) === String(form.value.productId))
+      (!matId || String(x.productId) === matId)
   );
   form.value.sourceInhouseId = earSrc ? earSrc.id : '';
 }
@@ -862,19 +891,37 @@ onMounted(async () => {
 }
 .demand-bar {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 14px;
   border-top: 1px solid var(--el-border-color-lighter);
+  background: var(--el-fill-color-light);
+  border-radius: 0 0 8px 8px;
 }
 .demand-label {
   flex: 0 0 auto;
-  font-size: 13px;
-  color: var(--el-text-color-regular);
-  line-height: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  line-height: 34px;
 }
 .demand-tags {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+}
+/* 门店需求 tag 放大（触屏点选 + 醒目，对齐原型底栏需求条） */
+.demand-tags :deep(.el-tag) {
+  height: 34px;
+  padding: 0 16px;
+  font-size: 15px;
+  border-radius: 8px;
+}
+.demand-tags .text-gray-400 {
+  font-size: 14px;
+  line-height: 34px;
 }
 </style>

@@ -75,19 +75,22 @@
       </el-table-column>
       <el-table-column :label="t('pickPlan.column.action')" width="200" fixed="right" align="center" header-align="center">
         <template #default="{ row }">
-          <el-button v-hasPermi="['djs:plant:pick:adjust']" link type="primary" size="small" @click="openScheduleDialog(row as AdjustRow)">
-            {{ t('pickPlan.adjust.action.setSchedule') }}
-          </el-button>
-          <el-button
-            v-hasPermi="['djs:plant:pick:adjust']"
-            link
-            :type="row.isPick === 1 ? 'warning' : 'primary'"
-            size="small"
-            :loading="togglingId === String(row.id)"
-            @click="toggleActivity(row as AdjustRow)"
-          >
-            {{ row.isPick === 1 ? t('pickPlan.adjust.action.unsetActivity') : t('pickPlan.adjust.action.setActivity') }}
-          </el-button>
+          <template v-if="rowEditable(row as AdjustRow)">
+            <el-button v-hasPermi="['djs:plant:pick:adjust']" link type="primary" size="small" @click="openScheduleDialog(row as AdjustRow)">
+              {{ t('pickPlan.adjust.action.setSchedule') }}
+            </el-button>
+            <el-button
+              v-hasPermi="['djs:plant:pick:adjust']"
+              link
+              :type="(row as AdjustRow).isPick === 1 ? 'warning' : 'primary'"
+              size="small"
+              :loading="togglingId === String(row.id)"
+              @click="toggleActivity(row as AdjustRow)"
+            >
+              {{ (row as AdjustRow).isPick === 1 ? t('pickPlan.adjust.action.unsetActivity') : t('pickPlan.adjust.action.setActivity') }}
+            </el-button>
+          </template>
+          <span v-else class="text-gray-400">-</span>
         </template>
       </el-table-column>
     </el-table>
@@ -137,6 +140,11 @@ const { djs_pick_status } = useDict('djs_pick_status');
 /** 详情行：后端 PlantDetailsVo 含 plantDate（plan/types.ts 暂未补，本视图本地扩展）。 */
 interface AdjustRow extends PlantDetailsVO {
   plantDate?: string;
+}
+
+/** 采摘状态门控：仅 待开始(pending)/延期(delayed) 可操作；采摘中(picking)/已完成(completed) 锁定。 */
+function rowEditable(row: AdjustRow): boolean {
+  return row.harvestStatus !== 'picking' && row.harvestStatus !== 'completed';
 }
 
 const visible = ref(false);

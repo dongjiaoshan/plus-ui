@@ -243,7 +243,9 @@ async function loadProducts() {
   productLoading.value = true;
   try {
     const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
-    allProducts.value = ((res as unknown as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
+    const rows = ((res as unknown as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
+    // 门店只下单可售产品，排除自产原料（type=1 & attr=2）；原料是仓库内部流转，不可被门店下单（doc/14 §5）。
+    allProducts.value = rows.filter((p) => !(Number(p.productType) === 1 && Number(p.productAttr) === 2));
   } catch (e) {
     console.warn('[DemandCartDrawer] loadProducts failed', e);
     allProducts.value = [];

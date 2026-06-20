@@ -10,6 +10,8 @@ export interface PlotInfoVO extends BaseEntity {
   zoneId: number | string;
   /** service enrich：所属片区名 */
   zoneName?: string;
+  /** service enrich：所属大区（取自所属片区 zone.zoneBelong；字典 djs_zone_belong） */
+  zoneBelong?: string;
   plotType?: string;
   plotName: string;
   plotStatus: number;
@@ -27,6 +29,12 @@ export interface PlotInfoVO extends BaseEntity {
   drainCondition?: string;
   /** D9+ PLT-PLAN-001 上线后启用，D8 阶段始终 null */
   currentCropName?: string;
+  /** service enrich：历史种植次数（按 plot_id COUNT t_plant_plant_details） */
+  historyPlantCount?: number;
+  /** service enrich：最高亩产作物名 */
+  maxYieldCropName?: string;
+  /** service enrich：最高亩作物产量 kg/亩 */
+  maxYieldPerMu?: number | string;
   /** 更新人姓名（后端 @Translation 回填） */
   updateByName?: string;
 }

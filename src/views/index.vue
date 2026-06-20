@@ -65,7 +65,7 @@ interface BoardCard {
 /** 5 板块卡片定义：后续新增板块在此追加一项即可（admin 端角色过滤范式） */
 const BOARD_CARDS: BoardCard[] = [
   { key: 'breed', labelKey: 'home.board.breed', img: breedImg, route: '/djs-breed/pig', roles: ['breed_admin'] },
-  { key: 'plant', labelKey: 'home.board.plant', img: plantImg, route: '/djs-plant/overview', roles: ['plant_admin'] },
+  { key: 'plant', labelKey: 'home.board.plant', img: plantImg, route: '/djs-plant/dashboard', roles: ['plant_admin'] },
   { key: 'warehouse', labelKey: 'home.board.warehouse', img: warehouseImg, route: '/djs-warehouse/dashboard', roles: ['warehouse_admin'] },
   { key: 'store', labelKey: 'home.board.store', img: storeImg, route: '/djs-store/dashboard', roles: ['store_admin'] },
   { key: 'dashboard', labelKey: 'home.board.system', img: dashboardImg, route: '/system/user', roles: ['system_admin'] }

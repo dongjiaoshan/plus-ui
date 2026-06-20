@@ -82,7 +82,10 @@ const searchModel = reactive<Record<string, any>>({
   cropFamily: undefined,
   varietyName: undefined,
   varietyOrigin: undefined,
-  updateTime: undefined
+  hasOrganic: undefined,
+  organicWarning: undefined,
+  updateTime: undefined,
+  updateBy: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -90,7 +93,28 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'cropFamily', label: t('plantCrop.field.cropFamily'), type: 'select', dictType: 'djs_crop_family' },
   { field: 'varietyName', label: t('plantCrop.field.varietyName'), type: 'input' },
   { field: 'varietyOrigin', label: t('plantCrop.search.varietyOrigin'), type: 'input' },
-  { field: 'updateTime', label: t('plantCrop.search.updateTime'), type: 'daterange' }
+  {
+    field: 'hasOrganic',
+    label: t('plantCrop.search.hasOrganic'),
+    type: 'select',
+    clearable: true,
+    options: [
+      { label: t('plantCrop.option.yes'), value: 1 },
+      { label: t('plantCrop.option.no'), value: 2 }
+    ]
+  },
+  {
+    field: 'organicWarning',
+    label: t('plantCrop.search.organicWarning'),
+    type: 'select',
+    clearable: true,
+    options: [
+      { label: t('plantCrop.option.warningYes'), value: 1 },
+      { label: t('plantCrop.option.warningNo'), value: 2 }
+    ]
+  },
+  { field: 'updateTime', label: t('plantCrop.search.updateTime'), type: 'daterange' },
+  { field: 'updateBy', label: t('plantCrop.search.updateBy'), type: 'input', placeholder: t('plantCrop.placeholder.updateBy'), clearable: true }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -155,6 +179,9 @@ function buildQuery(): CropInfoQuery {
     cropFamily: searchModel.cropFamily || undefined,
     varietyName: searchModel.varietyName || undefined,
     varietyOrigin: searchModel.varietyOrigin || undefined,
+    hasOrganic: searchModel.hasOrganic ?? undefined,
+    organicWarning: searchModel.organicWarning ?? undefined,
+    updateBy: searchModel.updateBy === undefined || searchModel.updateBy === '' ? undefined : Number(searchModel.updateBy),
     params: Object.keys(params).length ? params : undefined
   };
 }
@@ -230,6 +257,9 @@ function handleExport() {
       cropFamily: searchModel.cropFamily || undefined,
       varietyName: searchModel.varietyName || undefined,
       varietyOrigin: searchModel.varietyOrigin || undefined,
+      hasOrganic: searchModel.hasOrganic ?? undefined,
+      organicWarning: searchModel.organicWarning ?? undefined,
+      updateBy: searchModel.updateBy === undefined || searchModel.updateBy === '' ? undefined : Number(searchModel.updateBy),
       'params[beginTime]': Array.isArray(range) && range[0] ? range[0] : undefined,
       'params[endTime]': Array.isArray(range) && range[1] ? range[1] : undefined
     },

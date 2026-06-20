@@ -348,6 +348,19 @@ const rules = computed(() => ({
       },
       trigger: 'change'
     }
+  ],
+  productSpec: [
+    {
+      // 生产产品(product_attr=1) 必填规格（doc/14 §4；打包卡按规格展示，「按重量/散装」非空即合规）
+      validator: (_rule: any, value: any, callback: any) => {
+        if (form.value.productType === 1 && form.value.productAttr === 1 && !value) {
+          callback(new Error(t('product.rule.productSpec.required')));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'blur'
+    }
   ]
 }));
 

@@ -1,10 +1,8 @@
 <template>
   <el-dialog v-model="visible" :title="dialogTitle" destroy-on-close append-to-body width="900px" @closed="handleClosed">
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
-      <el-tabs v-model="activeTab">
-        <!-- Tab 1：基础信息 -->
-        <el-tab-pane :label="t('plantPlot.tab.basic')" name="basic">
-          <el-row :gutter="16">
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="110px" class="plot-form-scroll">
+      <div class="form-section-title">{{ t('plantPlot.tab.basic') }}</div>
+      <el-row :gutter="16">
             <el-col :span="12">
               <el-form-item :label="t('plantPlot.field.zoneId')" prop="zoneId">
                 <el-select v-model="form.zoneId" :placeholder="t('plantPlot.placeholder.zoneId')" filterable style="width: 100%">
@@ -53,11 +51,9 @@
               </el-form-item>
             </el-col>
           </el-row>
-        </el-tab-pane>
 
-        <!-- Tab 2：位置 & 面积 -->
-        <el-tab-pane :label="t('plantPlot.tab.location')" name="location">
-          <el-row :gutter="16">
+      <div class="form-section-title">{{ t('plantPlot.tab.location') }}</div>
+      <el-row :gutter="16">
             <el-col :span="12">
               <el-form-item :label="t('plantPlot.field.plotArea')" prop="plotArea">
                 <el-input-number
@@ -92,11 +88,9 @@
               </el-form-item>
             </el-col>
           </el-row>
-        </el-tab-pane>
 
-        <!-- Tab 3：土壤 & 环境 -->
-        <el-tab-pane :label="t('plantPlot.tab.soil')" name="soil">
-          <el-row :gutter="16">
+      <div class="form-section-title">{{ t('plantPlot.tab.soil') }}</div>
+      <el-row :gutter="16">
             <el-col :span="12">
               <el-form-item :label="t('plantPlot.field.soilType')" prop="soilType">
                 <el-select v-model="form.soilType" :placeholder="t('plantPlot.placeholder.soilType')" clearable style="width: 100%">
@@ -146,8 +140,6 @@
               </el-form-item>
             </el-col>
           </el-row>
-        </el-tab-pane>
-      </el-tabs>
     </el-form>
 
     <template #footer>
@@ -206,7 +198,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const visible = ref(false);
 const submitting = ref(false);
-const activeTab = ref('basic');
 const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 
@@ -270,7 +261,6 @@ const openCreate = async (zoneId?: number | string) => {
   await ensureZoneList();
   form.value = defaultForm();
   form.value.zoneId = zoneId ?? props.defaultZoneId ?? undefined;
-  activeTab.value = 'basic';
   visible.value = true;
 };
 
@@ -286,7 +276,6 @@ const openEdit = async (id: number | string) => {
     plotLocationY: data.plotLocationY != null ? Number(data.plotLocationY) : undefined,
     soilPh: data.soilPh != null ? Number(data.soilPh) : undefined
   };
-  activeTab.value = 'basic';
   visible.value = true;
 
   // 回填 OSS 图片（D04 testing-human #2 教训：setExistingFiles 必须 await nextTick）
@@ -335,3 +324,23 @@ const submit = () => {
   });
 };
 </script>
+
+<style scoped lang="scss">
+.plot-form-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+.form-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin: 8px 0 14px;
+  padding-left: 8px;
+  border-left: 3px solid var(--el-color-primary);
+  line-height: 1.4;
+}
+.form-section-title:first-child {
+  margin-top: 0;
+}
+</style>

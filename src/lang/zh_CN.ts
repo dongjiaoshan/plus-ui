@@ -1275,6 +1275,7 @@ export default {
       productUnit: { required: '产品单位不能为空' },
       belongType: { required: '自产产品归属类型不能为空' },
       supplierId: { required: '外购产品必须选择供应商' },
+      productSpec: { required: '生产产品必须填写规格' },
       giftComponents: { required: '礼盒至少需要 1 个组件' }
     },
     tip: {
@@ -1476,7 +1477,7 @@ export default {
     title: { add: '新增片区', edit: '编辑片区' },
     column: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '说明', zoneBelong: '所属大区', zoneStatus: '状态', createTime: '创建时间', plotCount: '管理地块数量', updateTime: '更新时间', updateByName: '更新人员' },
     field: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '片区说明', zoneBelong: '所属大区', zoneStatus: '状态' },
-    filter: { zoneName: '片区名称', updateTime: '更新时间', updateBy: '更新人员' },
+    filter: { zoneBelong: '所属大区', zoneName: '片区名称', updateTime: '更新时间', updateBy: '更新人员' },
     placeholder: {
       zoneCode: '请输入片区编码（如 Z001 / EAST-01）',
       zoneName: '请输入片区名称',
@@ -1487,7 +1488,7 @@ export default {
     },
     action: { edit: '修改信息', disable: '禁用', enable: '启用', del: '删除' },
     rule: { zoneCode: { required: '片区编码不能为空' }, zoneName: { required: '片区名称不能为空' } },
-    confirm: { del: '是否确认删除选中的 {count} 个片区？删除前需确保片区下无关联地块。' },
+    confirm: { del: '是否确认删除选中的 {count} 个片区？仅当片区下无种植/采摘状态地块时可删，删除后将一并删除该片区下的空地地块。' },
     empty: '暂无片区数据，请新建片区开始'
   },
   // 种植 - 地块（PLT-MD-001）
@@ -1525,6 +1526,7 @@ export default {
     column: {
       plotCode: '地块编码',
       plotName: '地块名称',
+      zoneBelong: '所属大区',
       zoneName: '所属片区',
       plotType: '类型',
       soilType: '土壤类型',
@@ -1533,6 +1535,10 @@ export default {
       plotArea: '面积',
       isLease: '租赁',
       plotImage: '图片',
+      historyPlantCount: '历史种植次数',
+      maxYieldCrop: '最高亩产作物',
+      maxYieldPerMu: '最高亩作物产量',
+      plotRemark: '地块备注',
       createTime: '创建时间',
       updateTime: '更新时间'
     },
@@ -1697,8 +1703,16 @@ export default {
     },
     search: {
       varietyOrigin: '品种来源',
+      hasOrganic: '有机证书',
+      organicWarning: '是否预警',
       updateTime: '更新时间',
       updateBy: '更新人员'
+    },
+    option: {
+      yes: '是',
+      no: '否',
+      warningYes: '预警',
+      warningNo: '正常'
     },
     planting: {
       plantDate: '种植日期',
@@ -1763,7 +1777,10 @@ export default {
       relatedProduct: '请选择关联产品',
       plantingSeason: '多选种植季节',
       sowingPeriod: '例：3 月上旬 - 4 月下旬',
-      qualityDesc: '品质描述'
+      qualityDesc: '品质描述',
+      hasOrganic: '请选择是否有机证书',
+      organicWarning: '请选择证书是否预警',
+      updateBy: '请输入更新人员ID'
     },
     rule: { cropCode: { required: '作物编码不能为空' }, cropName: { required: '作物名称不能为空' }, maxCycle: { gtMin: '生长最大周期必须大于生长最小周期' } },
     confirm: { del: '是否确认删除选中的 {count} 个作物？' }

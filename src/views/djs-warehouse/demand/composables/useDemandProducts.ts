@@ -66,7 +66,9 @@ export function useDemandProducts(productType: DemandProductType = 'white_bar') 
       const belongType = DEMAND_TYPE_TO_BELONG[tp];
       const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0 });
       const rsp = res as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] };
-      const rows = rsp.rows ?? rsp.data ?? [];
+      // 需求只能挂可售产品（自产成品 / 外购 / 礼盒），排除自产原料（type=1 & attr=2）：
+      // 原料是仓库内部流转（分割/毛菜处理产出 → 领用 → 打包成成品），不可被门店下单（doc/14 §5）。
+      const rows = (rsp.rows ?? rsp.data ?? []).filter((p) => !(Number(p.productType) === 1 && Number(p.productAttr) === 2));
       // other tab：服务端不过滤 belongType，前端兜底排除已知 6 类（剩"其他"）
       if (tp === 'other') {
         productOptions.value = rows.filter((p) => !KNOWN_BELONG_TYPES.includes(String(p.belongType ?? '')));

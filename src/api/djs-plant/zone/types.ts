@@ -35,6 +35,8 @@ export interface PlotZoneForm {
 
 export interface PlotZoneQuery extends PageQuery {
   zoneCode?: string;
+  /** 所属大区（字典 djs_zone_belong 值，精确匹配） */
+  zoneBelong?: string;
   zoneName?: string;
   zoneStatus?: number;
   /** 更新人 ID（精确匹配，FIX-PLT-AD-ZONE-001） */

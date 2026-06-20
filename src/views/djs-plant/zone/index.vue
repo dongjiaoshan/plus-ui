@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['sys_normal_disable']"
+      :dict-types="['sys_normal_disable', 'djs_zone_belong']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -79,12 +79,15 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
+  zoneBelong: undefined,
   zoneName: undefined,
   updateTime: undefined,
   updateBy: undefined
 });
 
+// 布局顺序：所属大区 → 片区名称 → 更新时间 → 更新人员
 const searchSchema = computed<SearchFieldSchema[]>(() => [
+  { field: 'zoneBelong', label: t('plantZone.filter.zoneBelong'), type: 'select', dictType: 'djs_zone_belong', clearable: true },
   { field: 'zoneName', label: t('plantZone.filter.zoneName'), type: 'input', clearable: true },
   { field: 'updateTime', label: t('plantZone.filter.updateTime'), type: 'daterange' },
   { field: 'updateBy', label: t('plantZone.filter.updateBy'), type: 'input', placeholder: t('plantZone.placeholder.updateBy'), clearable: true }
@@ -93,7 +96,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'zoneName', label: t('plantZone.column.zoneName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'zoneDesc', label: t('plantZone.column.zoneDesc'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'zoneBelong', label: t('plantZone.column.zoneBelong'), width: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'zoneBelong', label: t('plantZone.column.zoneBelong'), width: 120, align: 'center', dictType: 'djs_zone_belong', showOverflowTooltip: true },
   { prop: 'plotCount', label: t('plantZone.column.plotCount'), width: 120, align: 'center' },
   { prop: 'zoneStatus', label: t('plantZone.column.zoneStatus'), width: 90, align: 'center', dictType: 'sys_normal_disable' },
   { prop: 'updateTime', label: t('plantZone.column.updateTime'), width: 160, align: 'center', formatter: 'datetime' },
@@ -107,6 +110,7 @@ function buildQuery(): PlotZoneQuery {
   return {
     pageNum: pageNum.value,
     pageSize: pageSize.value,
+    zoneBelong: searchModel.zoneBelong || undefined,
     zoneName: searchModel.zoneName || undefined,
     updateBy: Number.isFinite(updateBy) ? (updateBy as number) : undefined,
     updateTimeStart: Array.isArray(range) && range[0] ? range[0] : undefined,
@@ -174,6 +178,7 @@ function handleExport() {
   proxy?.download(
     'djs/plant/zone/export',
     {
+      zoneBelong: searchModel.zoneBelong || undefined,
       zoneName: searchModel.zoneName || undefined,
       updateBy: Number.isFinite(updateBy) ? (updateBy as number) : undefined,
       updateTimeStart: Array.isArray(range) && range[0] ? range[0] : undefined,

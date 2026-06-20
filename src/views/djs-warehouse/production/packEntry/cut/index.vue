@@ -122,15 +122,16 @@ const locationOptions = computed<{ value: number | string; label: string }[]>(()
     .map((l) => ({ value: l.id, label: l.locationName }))
 );
 
-// 可选分割产品（按具体产品对齐原型）：产品主数据 belong_type=pork 的猪肉分割成品
+// 可选分割产品：产品主数据 belong_type=pork + **原材料(attr=2)**（doc/14：分割只产原料，领用原料→打包成成品）
 const porkProducts = ref<ProductInfoVO[]>([]);
 const porkProductLoading = ref(false);
 
 async function loadPorkProducts() {
   porkProductLoading.value = true;
   try {
-    // P3：仅加载分割车间（productWorkshop=2）的猪肉分割成品
-    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork', productWorkshop: 2 } as any);
+    // 分割车间(productWorkshop=2) 的猪肉**原材料**(productAttr=2)：分割产出入冷库的是原料，不是成品。
+    // 成品(attr=1)由打包产出、不可被分割/领用（领用都是原材料，doc/14 §1）。
+    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork', productWorkshop: 2, productAttr: 2 } as any);
     porkProducts.value = ((res as any).rows ?? []) as ProductInfoVO[];
   } finally {
     porkProductLoading.value = false;
