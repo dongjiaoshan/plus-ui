@@ -102,8 +102,8 @@
 
 <script setup name="PorkTracePanel" lang="ts">
 import { Food } from '@element-plus/icons-vue';
-import { listTraceablePig, genStoreTraceCode } from '@/api/djs-store/trace';
-import type { TraceablePigVO } from '@/api/djs-store/trace/types';
+import { listTraceablePig, genStoreTraceCode, listStorePackProducts } from '@/api/djs-store/trace';
+import type { TraceablePigVO, StorePackProductVO } from '@/api/djs-store/trace/types';
 import { listImage } from '@/api/djs-common/image';
 import type { ImageLibraryVO } from '@/api/djs-common/image/types';
 import TraceLabelDialog from './TraceLabelDialog.vue';
@@ -125,6 +125,8 @@ const pigLoading = ref(false);
 const genLoading = ref(false);
 const selectedEarNo = ref<string>();
 const labelDialogRef = ref<InstanceType<typeof TraceLabelDialog>>();
+// 门店猪肉打包产品（生产车间「门店打包间」workshop=5，邓博 2026-06-21 定调）；空则回退部位字典
+const packProducts = ref<StorePackProductVO[]>([]);
 
 // 部位中文名 → 本地原型抠图兜底（前腿肉/五花肉/排骨/肘子/大排，从原型截图裁出）；图库命中则覆盖
 const LOCAL_CUT_IMG: Record<string, string> = {
@@ -140,7 +142,14 @@ const cutImgMap = ref<Record<string, string>>({ ...LOCAL_CUT_IMG });
 const form = reactive<{ cutLabel?: string; weight?: number }>({ cutLabel: undefined, weight: undefined });
 
 const selectedPig = computed(() => pigs.value.find((p) => p.earNo === selectedEarNo.value) ?? null);
-const cutOptions = computed(() => (djs_pork_cut_product?.value ?? []) as { label: string; value: string }[]);
+// 产品卡数据源：优先「门店打包间(workshop=5)」产品（产品名做卡片标题 + 生码 cutLabel）；
+// 无 workshop=5 产品时回退旧部位字典 djs_pork_cut_product，保证功能不空。
+const cutOptions = computed<{ label: string; value: string }[]>(() => {
+  if (packProducts.value.length) {
+    return packProducts.value.map((p) => ({ label: p.productName, value: p.productName }));
+  }
+  return (djs_pork_cut_product?.value ?? []) as { label: string; value: string }[];
+});
 const canGen = computed(() => !!selectedEarNo.value && !!form.cutLabel && (form.weight ?? 0) > 0);
 
 async function loadPigs() {
@@ -150,6 +159,17 @@ async function loadPigs() {
     pigs.value = (res.rows ?? res.data ?? []) as TraceablePigVO[];
   } finally {
     pigLoading.value = false;
+  }
+}
+
+// 门店打包产品（workshop=5）；失败/空 → 空数组，cutOptions 自动回退部位字典
+async function loadPackProducts() {
+  try {
+    const res = await listStorePackProducts();
+    packProducts.value = (res.rows ?? res.data ?? []) as StorePackProductVO[];
+  } catch (e) {
+    console.warn('[PorkTracePanel] loadPackProducts failed', e);
+    packProducts.value = [];
   }
 }
 
@@ -217,6 +237,7 @@ function todayYmd(): string {
 
 onMounted(async () => {
   await loadPigs();
+  await loadPackProducts();
   loadCutImages();
 });
 </script>

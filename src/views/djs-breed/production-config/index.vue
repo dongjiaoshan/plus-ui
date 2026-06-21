@@ -99,6 +99,7 @@ const activeTab = ref<'sow' | 'fatten' | 'slaughter'>('sow');
 // ============= Tab1 母猪生产配置（6 字段表单）=============
 // key 与后端 ProductionCycleConfigController.SOW_DEFAULTS 严格对齐
 const SOW_FIELDS = [
+  { key: 'sow_reserve_to_breed_days' },
   { key: 'sow_wean_to_breed_days' },
   { key: 'sow_return_to_breed_days' },
   { key: 'sow_empty_to_breed_days' },
@@ -108,6 +109,7 @@ const SOW_FIELDS = [
 ] as const;
 
 const sowForm = reactive<Record<string, number>>({
+  sow_reserve_to_breed_days: 7,
   sow_wean_to_breed_days: 6,
   sow_return_to_breed_days: 5,
   sow_empty_to_breed_days: 5,

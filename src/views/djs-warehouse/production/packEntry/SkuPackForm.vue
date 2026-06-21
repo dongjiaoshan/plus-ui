@@ -142,17 +142,23 @@
         </div>
       </div>
     </div>
+
+    <!-- 追溯码二维码标签卡（复用门店追溯标签组件，扫码落地 /trace/{type}/{code}） -->
+    <TraceLabelDialog ref="traceLabelRef" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import { InfoFilled, PriceTag } from '@element-plus/icons-vue';
 import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
 import DestToggle from './components/DestToggle.vue';
+import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialog.vue';
+import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
+import { parseTime } from '@/utils/ruoyi';
 import { usePackEntryOptions } from './useOptions';
 import { listMaterialStock, listPackedCount, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
 import type { DeliverDest, DryPackBo, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
@@ -248,6 +254,7 @@ const {
   sourceLoading,
   plotMap,
   plotLoading,
+  stores,
   loadProducts,
   loadVegProductsByMaterial,
   loadStores,
@@ -261,6 +268,9 @@ const {
 const effectiveSources = computed<PackSourceVO[]>(() => sources.value);
 
 const submitting = ref(false);
+
+/** 追溯码二维码标签卡组件 ref（提交成功后 open 生成二维码供打印）。 */
+const traceLabelRef = ref<InstanceType<typeof TraceLabelDialog>>();
 
 /** 打包序号 NO.x：会话内递增（每次成功提交 +1），对齐原型右台「打包序号 NO.2」展示。 */
 const packNo = ref(1);
@@ -779,10 +789,27 @@ async function handleSubmit(printTrace: boolean) {
     const traceCode: string | undefined = res?.data?.traceCode;
     if (printTrace) {
       if (traceCode) {
-        await ElMessageBox.alert(traceCode, t('djs.warehouse.packEntry.traceCodeTitle'), {
-          confirmButtonText: t('djs.warehouse.packEntry.print'),
-          callback: () => printTraceCode(traceCode)
-        });
+        // 必须在 refreshAfterPack 清空表单之前捕获本次重量 / 成品 / 耳号 / 地块 / 门店
+        const w = Number(form.value.productWeight) || undefined;
+        const sel = products.value.find((p) => String(p.id) === String(form.value.productId));
+        const storeName = stores.value.find((s) => String(s.id) === String(form.value.storeId))?.storeName;
+        const earNoStr = selectedEarNo.value ? String(selectedEarNo.value) : undefined;
+        const plotName = plotMap.value?.[String(selectedPlotId.value)] || undefined;
+        traceLabelRef.value?.open(
+          {
+            // ProductInfoVO 的「产品编码」字段是 productId（业务编码，非雪花 id）
+            productCode: sel?.productId,
+            packCode: res?.data?.id != null ? String(res.data.id) : undefined,
+            produceDate: parseTime(new Date(), '{y}-{m}-{d}'),
+            productName: sel?.productName,
+            storeName,
+            earNo: earNoStr,
+            sourceValue: earNoStr || plotName,
+            produceCode: traceCode,
+            traceType: traceTypeFromCode(traceCode)
+          },
+          w
+        );
       } else {
         ElMessage.warning(t('djs.warehouse.packEntry.noTraceCode'));
       }
@@ -824,20 +851,6 @@ async function refreshAfterPack() {
     form.value.productId = '';
     storeDemands.value = [];
   }
-}
-
-/** 打开浏览器打印窗口展示追溯码（功能对齐：最小实现，不接专用标签机）。 */
-function printTraceCode(code: string) {
-  const w = window.open('', '_blank', 'width=420,height=320');
-  if (!w) return;
-  w.document.write(
-    `<html><head><title>${t('djs.warehouse.packEntry.traceCodeTitle')}</title></head>` +
-      `<body style="font-family:sans-serif;text-align:center;padding:40px"><h3>${t('djs.warehouse.packEntry.traceCodeTitle')}</h3>` +
-      `<div style="font-size:28px;letter-spacing:2px;margin:24px 0">${code}</div></body></html>`
-  );
-  w.document.close();
-  w.focus();
-  w.print();
 }
 
 onMounted(async () => {

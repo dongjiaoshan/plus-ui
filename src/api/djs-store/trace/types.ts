@@ -20,8 +20,24 @@ export interface TraceablePigVO {
 export interface StoreTraceOnsiteForm {
   /** 猪只耳号（picker 选中） */
   earNo?: string;
-  /** 零售部位中文名（字典 djs_pork_cut_product） */
+  /** 产品名称（门店打包产品名，传给后端作 cutLabel；旧口径=零售部位中文名） */
   cutLabel?: string;
   /** 产品重量 kg（> 0） */
   weight?: number;
+}
+
+/** 门店猪肉打包可选产品（与后端 StorePackProductVo 对齐）。 */
+export interface StorePackProductVO {
+  /** 产品主键（雪花） */
+  productId: string;
+  /** 产品业务码 */
+  productCode?: string;
+  /** 产品名称（卡片标题 + 传给生码 cutLabel） */
+  productName: string;
+  /** 产品规格 */
+  productSpec?: string;
+  /** 缩略图 OSS id（用户上传，优先） */
+  productThumb?: string;
+  /** 主图 OSS id（图库自动匹配，兜底） */
+  imageOssId?: string;
 }

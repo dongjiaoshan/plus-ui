@@ -47,6 +47,9 @@
     <template #footer>
       <el-button @click="visible = false">{{ t('common.close') }}</el-button>
     </template>
+
+    <!-- 追溯码二维码标签卡（复用门店追溯标签组件，零回归跨目录引用） -->
+    <TraceLabelDialog ref="traceLabelRef" />
   </el-dialog>
 </template>
 
@@ -56,11 +59,13 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import { listProductionItems } from '@/api/djs-warehouse/production';
 import type { ProductProductionGroupVO, ProductProductionQuery, ProductProductionVO } from '@/api/djs-warehouse/production/types';
 import { useI18n } from 'vue-i18n';
+import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialog.vue';
+import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
 
 const { t } = useI18n();
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
+const traceLabelRef = ref<InstanceType<typeof TraceLabelDialog>>();
 
 const visible = ref(false);
 const list = ref<ProductProductionVO[]>([]);
@@ -187,7 +192,21 @@ function handlePageChange(pn: number, ps: number) {
 function handleTrace(row: BizRow) {
   const r = row as ProductProductionVO;
   if (!r.traceCode) return;
-  proxy?.$modal.msgSuccess(`${t('djs.warehouse.production.button.traceCode')}：${r.traceCode}`);
+  // 弹出二维码追溯标签卡（扫码落地 /trace/{type}/{code}），来源值取耳号优先、否则地块名
+  traceLabelRef.value?.open(
+    {
+      productCode: undefined,
+      packCode: r.produceNo,
+      produceDate: r.produceDate,
+      productName: r.productName,
+      storeName: r.storeName,
+      earNo: r.earNo,
+      sourceValue: r.earNo || r.plotName,
+      produceCode: r.traceCode,
+      traceType: traceTypeFromCode(r.traceCode)
+    },
+    Number(r.productWeight) || undefined
+  );
 }
 
 /** 父列表聚合行「查看」调用：传入当前行作为批次锚点（生产日期 + 产品） */

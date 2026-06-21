@@ -51,8 +51,10 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 /**
  * 农事记录页只列「农事」类（灾害记录 / 采摘活动有独立页，不在此页）。
- * 默认 farm_work_type 范围 = 全 12 类排除 disaster（灾害）+ harvest_activity（采摘活动）。
- * 顶部农事类型搜索下拉同此排除集；选中某类则收窄到该单类。
+ * 默认 farm_work_type 范围 = 全部农事类排除 disaster（灾害）+ harvest_activity（游客采摘活动）。
+ * 顶部农事类型搜索下拉同此排除集（farmTypeOptions）；选中某类则收窄到该单类。
+ * 注意：harvest（普通采收 is_pick=2，AppletPickServiceImpl 写入）属本页应显示的农事类，必须在默认集内，
+ * 否则采收记录在不选筛选时列表 + 导出都看不到（与下拉可选集自相矛盾）。
  */
 const EXCLUDED_WORK_TYPES = ['disaster', 'harvest_activity'];
 const DEFAULT_WORK_TYPES = [
@@ -65,7 +67,8 @@ const DEFAULT_WORK_TYPES = [
   'fertilize',
   'weed',
   'pest_control',
-  'pruning'
+  'pruning',
+  'harvest'
 ];
 
 const tableRef = ref<BizTableExpose>();

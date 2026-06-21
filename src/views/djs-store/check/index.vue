@@ -64,8 +64,15 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
+// docx：盘点列表默认仅展示当日盘点数据（用户可手动改期/清空看历史）。
+const todayStr = () => {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
+
 const searchModel = reactive<Record<string, unknown>>({
-  ledgerDate: undefined
+  ledgerDate: todayStr()
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [

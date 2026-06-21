@@ -474,6 +474,7 @@ export default {
       day: '天'
     },
     sow: {
+      sow_reserve_to_breed_days: '后备-配种天数',
       sow_wean_to_breed_days: '断奶-配种天数',
       sow_return_to_breed_days: '返情-配种天数',
       sow_empty_to_breed_days: '空怀-配种天数',

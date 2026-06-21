@@ -474,6 +474,7 @@ export default {
       day: 'day(s)'
     },
     sow: {
+      sow_reserve_to_breed_days: 'Reserve → Breed (days)',
       sow_wean_to_breed_days: 'Wean → Breed (days)',
       sow_return_to_breed_days: 'Return-to-estrus → Breed (days)',
       sow_empty_to_breed_days: 'Empty → Breed (days)',
