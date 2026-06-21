@@ -1585,6 +1585,7 @@ export default {
       plotArea: { required: 'Area is required' }
     },
     confirm: { del: 'Delete {count} plots?' },
+    tip: { statusNotIdle: 'Plot [{names}] is in planting/harvesting status and cannot be deleted' },
     empty: 'No plots in current zone',
     selectZoneFirst: 'Please select a zone on the left first'
   },

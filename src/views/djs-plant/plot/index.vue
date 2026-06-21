@@ -138,21 +138,6 @@ const plotColumns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.historyPlantCount != null ? `${r.historyPlantCount} 次` : '0 次')
   },
   {
-    prop: 'maxYieldCropName',
-    label: t('plantPlot.column.maxYieldCrop'),
-    width: 120,
-    align: 'center',
-    showOverflowTooltip: true,
-    formatter: (r: BizRow) => r.maxYieldCropName || '—'
-  },
-  {
-    prop: 'maxYieldPerMu',
-    label: t('plantPlot.column.maxYieldPerMu'),
-    width: 130,
-    align: 'right',
-    formatter: (r: BizRow) => (r.maxYieldPerMu != null ? `${Number(r.maxYieldPerMu).toFixed(2)} kg/亩` : '—')
-  },
-  {
     prop: 'plotRemark',
     label: t('plantPlot.column.plotRemark'),
     minWidth: 140,
@@ -242,7 +227,16 @@ function handleViewPlot(row: BizRow) {
   plotViewRef.value?.open(row.id);
 }
 async function handleDelPlot(rowOrRows: BizRow | BizRow[]) {
-  const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];
+  const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
+  // 前端前置拦截：种植(2)/采摘(3)态地块不弹确认框，直接提示不可删（后端仍兜底校验，此处省一次往返 + 改善体验）
+  const blocked = rows.filter((r) => Number(r.plotStatus) === 2 || Number(r.plotStatus) === 3);
+  if (blocked.length) {
+    proxy?.$modal.msgError(
+      t('plantPlot.tip.statusNotIdle', { names: blocked.map((r) => r.plotName || r.plotCode).join('、') })
+    );
+    return;
+  }
+  const ids = rows.map((r) => r.id);
   await proxy?.$modal.confirm(t('plantPlot.confirm.del', { count: ids.length }));
   await delPlot(ids);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));

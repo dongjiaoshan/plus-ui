@@ -136,10 +136,10 @@ async function loadProductOptions() {
     const belongType = effectiveType.value === 'other' ? undefined : effectiveType.value;
     const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0 });
     const rows = ((res as unknown as { rows?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
-    // 门店只能下单「可售产品」（自产成品 / 外购 / 礼盒），排除自产原料（type=1 & attr=2）：
+    // 门店只能下单「可售产品」（自产成品 / 外购 / 礼盒），排除所有原材料（product_attr=2）：
     // 原料是仓库内部流转（分割/毛菜处理产出 → 领用 → 打包成成品），门店订成品、不订原料。
     // 不过滤 → 用户会把原料当产品下单，需求落原料 id 上，打包卡（成品）按 product_id 查不到 → 需求量 0（doc/14 §5）。
-    productOptions.value = rows.filter((p) => !(Number(p.productType) === 1 && Number(p.productAttr) === 2));
+    productOptions.value = rows.filter((p) => Number(p.productAttr) !== 2);
   } catch (e) {
     console.warn('[StoreDemandForm] loadProductOptions failed', e);
     productOptions.value = [];

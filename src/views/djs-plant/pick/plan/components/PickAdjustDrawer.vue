@@ -135,7 +135,9 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_pick_status } = useDict('djs_pick_status');
+// useDict 异步回填，必须 toRefs 保持响应式；直接解构会拿到初始空数组快照，
+// 导致「采摘状态」列 dict-tag 与筛选下拉为空（对齐 overview/CropDetailDrawer 写法）。
+const { djs_pick_status } = toRefs(useDict('djs_pick_status'));
 
 /** 详情行：后端 PlantDetailsVo 含 plantDate（plan/types.ts 暂未补，本视图本地扩展）。 */
 interface AdjustRow extends PlantDetailsVO {

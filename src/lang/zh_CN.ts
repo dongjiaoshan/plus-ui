@@ -1588,6 +1588,7 @@ export default {
       plotArea: { required: '地块面积必填' }
     },
     confirm: { del: '是否确认删除选中的 {count} 个地块？' },
+    tip: { statusNotIdle: '地块 [{names}] 处于种植/采摘状态，不允许删除' },
     empty: '当前片区下暂无地块',
     selectZoneFirst: '请先选择左侧片区，再操作地块'
   },

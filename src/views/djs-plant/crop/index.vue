@@ -165,6 +165,13 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'updateTime', label: t('plantCrop.label.updateTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 
+/** 更新人员筛选框为自由文本，须守卫非数字输入（如填名字）→ undefined，避免 NaN 进 query 后端 String→Long 转换 500。 */
+function toUpdateById(v: unknown): number | undefined {
+  if (v === undefined || v === null || v === '') return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 function buildQuery(): CropInfoQuery {
   const range = searchModel.updateTime;
   const params: Record<string, any> = {};
@@ -181,7 +188,7 @@ function buildQuery(): CropInfoQuery {
     varietyOrigin: searchModel.varietyOrigin || undefined,
     hasOrganic: searchModel.hasOrganic ?? undefined,
     organicWarning: searchModel.organicWarning ?? undefined,
-    updateBy: searchModel.updateBy === undefined || searchModel.updateBy === '' ? undefined : Number(searchModel.updateBy),
+    updateBy: toUpdateById(searchModel.updateBy),
     params: Object.keys(params).length ? params : undefined
   };
 }
@@ -259,7 +266,7 @@ function handleExport() {
       varietyOrigin: searchModel.varietyOrigin || undefined,
       hasOrganic: searchModel.hasOrganic ?? undefined,
       organicWarning: searchModel.organicWarning ?? undefined,
-      updateBy: searchModel.updateBy === undefined || searchModel.updateBy === '' ? undefined : Number(searchModel.updateBy),
+      updateBy: toUpdateById(searchModel.updateBy),
       'params[beginTime]': Array.isArray(range) && range[0] ? range[0] : undefined,
       'params[endTime]': Array.isArray(range) && range[1] ? range[1] : undefined
     },

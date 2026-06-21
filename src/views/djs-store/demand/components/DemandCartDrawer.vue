@@ -244,8 +244,9 @@ async function loadProducts() {
   try {
     const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
     const rows = ((res as unknown as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
-    // 门店只下单可售产品，排除自产原料（type=1 & attr=2）；原料是仓库内部流转，不可被门店下单（doc/14 §5）。
-    allProducts.value = rows.filter((p) => !(Number(p.productType) === 1 && Number(p.productAttr) === 2));
+    // 门店只下单可售产品（自产成品 / 外购商品 / 礼盒），排除所有原材料（product_attr=2）；
+    // 原料是仓库内部流转（分割/毛菜处理产出 → 领用 → 打包成成品），不可被门店下单（doc/14 §5）。
+    allProducts.value = rows.filter((p) => Number(p.productAttr) !== 2);
   } catch (e) {
     console.warn('[DemandCartDrawer] loadProducts failed', e);
     allProducts.value = [];

@@ -471,6 +471,11 @@ function onProductChange(item: ProductInfoVO) {
     selectedEarNo.value = '';
     form.value.sourceInhouseId = '';
   }
+  // 果蔬打包：换产品 → 清地块 + 来源（地块现按产品过滤，残留旧产品地块会落到错误来源/空高亮）
+  if (props.plotGroup) {
+    selectedPlotId.value = '';
+    form.value.sourceInhouseId = '';
+  }
 }
 
 // 果蔬地块：按来源 plotId 分组成 button-toggle；选地块后来源下拉只显示该地块来源
@@ -483,7 +488,10 @@ const plotToggleOptions = computed<{ value: number | string; label: string }[]>(
   if (!props.plotGroup) return [];
   const seen = new Map<string, { value: number | string; label: string }>();
   let hasNoPlot = false;
+  // 已选目标产品时，地块只列该产品有效原材料的来源（成品→原材料 / 成品即原材料），避免地块歧义（镜像 earToggleOptions）
+  const matId = materialIdOf(form.value.productId);
   effectiveSources.value.forEach((s) => {
+    if (matId && String(s.productId) !== matId) return;
     if (s.plotId == null) {
       // 外购无地块来源聚合成单个「无地块信息」可选项（doc#13），不再过滤丢弃
       hasNoPlot = true;
@@ -527,11 +535,15 @@ function materialIdOf(productId: number | string | ''): string {
   return p ? effectiveMaterialId(p) : String(productId);
 }
 
-// 肉品打包左侧卡片：只显「今天有领用原料」的成品 —— 即其有效原材料出现在 sources（已领用原料 inhouse）。
+// 「按今天领用来源过滤成品」生效场景：① 肉品打包(earGroup) ② 其他产品打包(kind='dry' 且 showSource，egg/dry_good/other)。
+// 两者来源都是「今天已领用原料 inhouse」(meat/dry source)；果蔬(veg)走 loadVegProducts 自带过滤、礼盒(gift)无来源，均不在此列。
+const sourceFilterActive = computed(() => props.earGroup || (props.kind === 'dry' && props.showSource));
+
+// 左侧卡片：只显「今天有领用原料」的成品 —— 即其有效原材料出现在 sources（已领用原料 inhouse）。
 // 同一原材料的多个规格成品（猪皮原料 → 猪皮200/500）都会命中（一料多品共享池，doc/14 §5）。
 const requisitionedProductIds = computed<Set<string>>(() => {
   const set = new Set<string>();
-  if (!props.earGroup) return set;
+  if (!sourceFilterActive.value) return set;
   effectiveSources.value.forEach((s) => {
     if (s.productId != null) set.add(String(s.productId));
   });
@@ -539,7 +551,7 @@ const requisitionedProductIds = computed<Set<string>>(() => {
 });
 
 const displayProducts = computed<ProductInfoVO[]>(() =>
-  props.earGroup
+  sourceFilterActive.value
     ? products.value.filter((p) => requisitionedProductIds.value.has(effectiveMaterialId(p)))
     : products.value
 );
@@ -677,10 +689,9 @@ function onEarChange() {
   form.value.sourceInhouseId = earSrc ? earSrc.id : '';
 }
 
-const selectedUnit = computed<string>(() => {
-  if (props.kind === 'veg') return 'kg';
-  return form.value.productUnit || 'kg';
-});
+// 产品重量单位按当前选中产品的 product_unit 显示（果蔬成品单位多样：份/个/g/kg，不再固定 kg）。
+// onProductChange 选卡片时已回填 form.productUnit；veg 提交体 VegPackBo 不带 unit（后端取产品配置单位），故此处纯展示对齐。
+const selectedUnit = computed<string>(() => form.value.productUnit || 'kg');
 
 function onSourceChange() {
   const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
