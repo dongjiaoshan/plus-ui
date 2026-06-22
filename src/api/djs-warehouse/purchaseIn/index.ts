@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { PurchaseInBo, PurchaseInQuery, PurchaseInRecordVO } from './types';
+import type { PurchaseInBo, PurchaseInProductQuery, PurchaseInProductVO, PurchaseInQuery, PurchaseInRecordVO } from './types';
 
 /**
  * 采购入库简化版 API（D9 hotfix admin 端）。
@@ -25,6 +25,18 @@ export const submitPurchaseIn = (data: PurchaseInBo): AxiosPromise<number> => {
 export const listPurchaseIn = (query: PurchaseInQuery): AxiosPromise<PurchaseInRecordVO[]> => {
   return request({
     url: '/djs/warehouse/purchaseIn/list',
+    method: 'get',
+    params: query
+  });
+};
+
+/**
+ * 商品维度采购入库列表（WMS-OUTSOURCE）：以外购商品 product_type=2 为骨架，
+ * 聚合当前库存 / 最后入库时间 / 采购人 / 当月累计采购量。
+ */
+export const listPurchaseInProduct = (query: PurchaseInProductQuery): AxiosPromise<PurchaseInProductVO[]> => {
+  return request({
+    url: '/djs/warehouse/purchaseIn/productList',
     method: 'get',
     params: query
   });

@@ -70,6 +70,8 @@ export interface ProductInboundForm {
   locationId: number | string;
   quantity: number;
   remark?: string;
+  /** 采购入库场景：本商品 store_location_id 为空时回写为本次所选库位（首次入库认领家库位） */
+  autoConfigLocation?: boolean;
 }
 
 export interface GiftBoxVO {

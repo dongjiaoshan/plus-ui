@@ -60,6 +60,7 @@ import CropForm from './components/CropForm.vue';
 import CropView from './components/CropView.vue';
 import { delCrop, listCrop } from '@/api/djs-plant/crop';
 import { listByIds as listOssByIds } from '@/api/system/oss';
+import { listUser } from '@/api/system/user';
 import type { CropInfoQuery, CropInfoVO } from '@/api/djs-plant/crop/types';
 import { useI18n } from 'vue-i18n';
 
@@ -76,6 +77,8 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 const thumbUrlMap = ref<Record<string, string>>({});
+// 更新人员筛选下拉：value=用户ID，label=昵称（无昵称回退登录名）
+const userOptions = ref<Array<{ label: string; value: number | string }>>([]);
 
 const searchModel = reactive<Record<string, any>>({
   cropName: undefined,
@@ -114,7 +117,13 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
     ]
   },
   { field: 'updateTime', label: t('plantCrop.search.updateTime'), type: 'daterange' },
-  { field: 'updateBy', label: t('plantCrop.search.updateBy'), type: 'input', placeholder: t('plantCrop.placeholder.updateBy'), clearable: true }
+  {
+    field: 'updateBy',
+    label: t('plantCrop.search.updateBy'),
+    type: 'select',
+    clearable: true,
+    options: userOptions.value
+  }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -165,11 +174,15 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'updateTime', label: t('plantCrop.label.updateTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 
-/** 更新人员筛选框为自由文本，须守卫非数字输入（如填名字）→ undefined，避免 NaN 进 query 后端 String→Long 转换 500。 */
-function toUpdateById(v: unknown): number | undefined {
-  if (v === undefined || v === null || v === '') return undefined;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : undefined;
+async function loadUserOptions() {
+  try {
+    const res = await listUser({ pageNum: 1, pageSize: 1000 });
+    const rows = res.rows ?? [];
+    userOptions.value = rows.map((u) => ({ label: u.nickName || u.userName || String(u.userId), value: u.userId }));
+  } catch (e) {
+    console.warn('[Crop] listUser failed', e);
+    userOptions.value = [];
+  }
 }
 
 function buildQuery(): CropInfoQuery {
@@ -188,7 +201,7 @@ function buildQuery(): CropInfoQuery {
     varietyOrigin: searchModel.varietyOrigin || undefined,
     hasOrganic: searchModel.hasOrganic ?? undefined,
     organicWarning: searchModel.organicWarning ?? undefined,
-    updateBy: toUpdateById(searchModel.updateBy),
+    updateBy: searchModel.updateBy ?? undefined,
     params: Object.keys(params).length ? params : undefined
   };
 }
@@ -266,7 +279,7 @@ function handleExport() {
       varietyOrigin: searchModel.varietyOrigin || undefined,
       hasOrganic: searchModel.hasOrganic ?? undefined,
       organicWarning: searchModel.organicWarning ?? undefined,
-      updateBy: toUpdateById(searchModel.updateBy),
+      updateBy: searchModel.updateBy ?? undefined,
       'params[beginTime]': Array.isArray(range) && range[0] ? range[0] : undefined,
       'params[endTime]': Array.isArray(range) && range[1] ? range[1] : undefined
     },
@@ -277,5 +290,8 @@ function handleFormSuccess() {
   fetchList();
 }
 
-onMounted(fetchList);
+onMounted(() => {
+  loadUserOptions();
+  fetchList();
+});
 </script>

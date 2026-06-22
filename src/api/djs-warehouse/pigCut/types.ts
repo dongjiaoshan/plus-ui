@@ -77,10 +77,9 @@ export interface PigCutOutForm {
   proofOssIds?: string;
 }
 
-/** 阶段 3 分割完成表单（与后端 PigCutDoneBo 对齐） */
+/** 阶段 3 分割完成表单（与后端 PigCutDoneBo 对齐；滴水损耗后端自动计算，前端不录入） */
 export interface PigCutDoneForm {
   cutRecordId?: number;
-  dripLoss?: number;
   proofOssIds?: string;
   remark?: string;
 }

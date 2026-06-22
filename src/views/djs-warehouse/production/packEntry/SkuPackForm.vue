@@ -124,6 +124,10 @@
             :unit="selectedUnit"
             :precision="3"
           />
+          <!-- 剩余可打包份数 = floor(剩余总量 / 该产品「其它产品打包计量规则」)；materialNum 为空/0 时不显示 -->
+          <div v-if="kind !== 'gift' && remainingPackableCopies != null" class="remain-copies">
+            {{ t('djs.warehouse.packEntry.remainingCopiesLabel') }}：{{ remainingPackableCopies }} {{ t('djs.warehouse.packEntry.copiesUnit') }}
+          </div>
         </div>
 
         <!-- 发送位置 button-toggle（其他产品打包二选无礼盒；礼盒不显示） -->
@@ -160,7 +164,7 @@ import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialo
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
 import { parseTime } from '@/utils/ruoyi';
 import { usePackEntryOptions } from './useOptions';
-import { listMaterialStock, listPackedCount, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
+import { listMaterialStock, listPackedCount, listPackedWeight, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
 import type { DeliverDest, DryPackBo, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
@@ -394,6 +398,33 @@ async function loadPackedCount() {
   }
 }
 
+// 果蔬「领用剩余重量」口径用：成品雪花 id 字符串 → 已打包总重 kg（number，Number() 强转防 BigDecimal 字符串拼接坑）。
+const packedWeightMap = ref<Record<string, number>>({});
+
+async function loadPackedWeight() {
+  // 仅果蔬打包需要（「领用剩余重量」= 领用总重 − 已打包总重）；其余业态不拉。
+  if (props.kind !== 'veg') {
+    packedWeightMap.value = {};
+    return;
+  }
+  const ids = products.value.map((p) => p.id);
+  if (ids.length === 0) {
+    packedWeightMap.value = {};
+    return;
+  }
+  try {
+    const res = await listPackedWeight(ids);
+    const remote = ((res as any).data ?? {}) as Record<string, string>;
+    const map: Record<string, number> = {};
+    Object.keys(remote).forEach((k) => {
+      map[k] = Number(remote[k]) || 0;
+    });
+    packedWeightMap.value = map;
+  } catch {
+    packedWeightMap.value = {};
+  }
+}
+
 // 「打包完成」集合：门店需求 > 0 且 今天已打包份数 ≥ 需求份数 → 卡片标完成、禁选（避免超量打包）。
 const doneSet = computed<Set<string>>(() => {
   const s = new Set<string>();
@@ -586,10 +617,11 @@ const meatStockMap = computed<Record<string, number | null>>(() => {
 });
 
 /**
- * 果蔬打包「原材料库存」= 领用待打包库存（doc/14 §5）：成品经 product_material 二跳反查原材料，
- * 聚合该原材料全部活动来源 inhouse(sources) 的 productWeight。**同一原材料的多个成品卡共享同一池**。
- * 取 `sources`（全部活动 inhouse，不限日期），与猪肉 meatStockMap 同口径（Σ 活动 inhouse）。
- * 成品未配 product_material → 不入 map（卡片显 '—'）。
+ * 果蔬打包「领用剩余重量」= 领用总重 − 该成品已打包总重（钳 ≥ 0）。
+ * 领用总重：成品经 product_material 二跳反查原材料，聚合该原材料全部活动来源 inhouse(sources) 的 productWeight。
+ * **同一原材料的多个成品卡共享同一领用池**；已打包总重按成品自身维度从 packedWeightMap 扣减。
+ * 取 `sources`（全部活动 inhouse，不限日期）。成品未配 product_material → 不入 map（卡片显 '—'）。
+ * 数值全程 Number() 强转（防 BigDecimal 序列化字符串拼接坑）。
  */
 const vegStockMap = computed<Record<string, number | null>>(() => {
   const m: Record<string, number | null> = {};
@@ -601,12 +633,14 @@ const vegStockMap = computed<Record<string, number | null>>(() => {
     const k = String(s.productId);
     byMaterial[k] = (byMaterial[k] ?? 0) + (Number(s.productWeight) || 0);
   });
-  // 成品 → 其 product_material 指向原材料的共享池
+  // 成品 → 其 product_material 指向原材料的共享领用池 − 该成品已打包总重（钳 ≥ 0）
   products.value.forEach((p) => {
     if (p.productMaterial == null) return;
-    const w = byMaterial[String(p.productMaterial)];
-    if (w == null) return;
-    m[String(p.id)] = Math.round(w * 100) / 100;
+    const picked = byMaterial[String(p.productMaterial)];
+    if (picked == null) return;
+    const packed = packedWeightMap.value[String(p.id)] ?? 0;
+    const remain = Math.max(0, picked - packed);
+    m[String(p.id)] = Math.round(remain * 100) / 100;
   });
   return m;
 });
@@ -699,9 +733,34 @@ function onEarChange() {
   form.value.sourceInhouseId = earSrc ? earSrc.id : '';
 }
 
-// 产品重量单位按当前选中产品的 product_unit 显示（果蔬成品单位多样：份/个/g/kg，不再固定 kg）。
-// onProductChange 选卡片时已回填 form.productUnit；veg 提交体 VegPackBo 不带 unit（后端取产品配置单位），故此处纯展示对齐。
-const selectedUnit = computed<string>(() => form.value.productUnit || 'kg');
+// 产品重量单位展示（纯展示，不做数值换算 —— Kevin 已拍：仅显示 g）：
+// 果蔬(veg)录重单位统一显「g」（提交值 VegPackBo.productWeight 量纲保持原样，不换算）；
+// 其余业态按当前选中产品的 product_unit 显示（onProductChange 选卡片时已回填 form.productUnit）。
+const selectedUnit = computed<string>(() => (props.kind === 'veg' ? 'g' : form.value.productUnit || 'kg'));
+
+// 当前选中目标成品（卡片/角标份数展示用）。
+const selectedProduct = computed<ProductInfoVO | undefined>(() =>
+  products.value.find((p) => String(p.id) === String(form.value.productId))
+);
+
+/**
+ * 剩余可打包份数 = floor(剩余总量 / 该产品「其它产品打包计量规则」materialNum)。
+ * 剩余总量取当前展示的库存口径（果蔬=领用剩余重量 vegStockMap，肉品=meatStockMap，其余=stockMap）；
+ * materialNum 为空 / ≤ 0 或剩余总量缺失（'—' 占位）→ 返 null（不显示份数，兜底不报错）。
+ * 数值全程 Number() 强转（防 BigDecimal 序列化字符串拼接坑）。
+ */
+const remainingPackableCopies = computed<number | null>(() => {
+  const p = selectedProduct.value;
+  if (!p) return null;
+  const measure = Number(p.materialNum);
+  if (!measure || measure <= 0) return null;
+  const stockSource = props.earGroup ? meatStockMap.value : props.kind === 'veg' ? vegStockMap.value : stockMap.value;
+  const remain = stockSource[String(p.id)];
+  if (remain == null) return null;
+  const remainNum = Number(remain);
+  if (!Number.isFinite(remainNum)) return null;
+  return Math.floor(remainNum / measure);
+});
 
 function onSourceChange() {
   const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
@@ -841,7 +900,7 @@ async function refreshAfterPack() {
   } else if (props.kind === 'dry') {
     await loadSources(props.earGroup ? 'meat' : 'dry');
   }
-  await Promise.all([loadDemandMap(), loadMaterialStock(), loadPackedCount()]);
+  await Promise.all([loadDemandMap(), loadMaterialStock(), loadPackedCount(), loadPackedWeight()]);
   // 恢复产品选中：仍在卡片列表 且 未打包完成 → 保持；否则清空（打包完成或料已不在）
   const stillThere = products.value.some((p) => String(p.id) === keepProductId);
   if (keepProductId && stillThere && !isProductDone(keepProductId)) {
@@ -872,6 +931,8 @@ onMounted(async () => {
   void loadMaterialStock();
   // 各成品今天已打包份数（≥ 需求 → 卡片标「打包完成」、禁选）
   void loadPackedCount();
+  // 果蔬「领用剩余重量」= 领用总重 − 已打包总重，需各成品已打包总重
+  void loadPackedWeight();
 });
 </script>
 
@@ -977,6 +1038,13 @@ onMounted(async () => {
 }
 .panel-section {
   margin-bottom: 16px;
+}
+/* 剩余可打包份数提示（录重 numpad 下方角标） */
+.remain-copies {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--el-color-primary);
 }
 .panel-label {
   font-size: 13px;

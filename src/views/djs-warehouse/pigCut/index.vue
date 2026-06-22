@@ -140,10 +140,8 @@
 
     <!-- 分割完成弹窗 -->
     <el-dialog v-model="cutDoneVisible" :title="t('djs.warehouse.pigCut.cutDoneAction')" width="560px" destroy-on-close append-to-body>
-      <el-form ref="cutDoneFormRef" :model="cutDoneForm" :rules="cutDoneRules" label-width="120px">
-        <el-form-item :label="t('djs.warehouse.pigCut.dripLoss')" prop="dripLoss">
-          <el-input-number v-model="cutDoneForm.dripLoss" :min="0" :precision="3" :step="0.1" controls-position="right" style="width: 100%" />
-        </el-form-item>
+      <el-form ref="cutDoneFormRef" :model="cutDoneForm" label-width="120px">
+        <el-alert :title="t('djs.warehouse.pigCut.dripLossAutoHint')" type="info" :closable="false" show-icon class="mb-3" />
         <el-form-item :label="t('djs.warehouse.pigCut.proof')">
           <OssUpload v-model="cutDoneProofModel" biz-type="pig_cut_proof" :limit="6" :file-size="10" />
         </el-form-item>
@@ -436,17 +434,11 @@ const cutDoneFormRef = ref<FormInstance>();
 const cutDoneProofModel = ref<string[]>([]);
 const cutDoneForm = reactive<PigCutDoneForm>({
   cutRecordId: undefined,
-  dripLoss: undefined,
   remark: undefined
 });
 
-const cutDoneRules: FormRules = {
-  dripLoss: [{ required: true, message: t('djs.warehouse.pigCut.dripLossRequired'), trigger: 'blur' }]
-};
-
 function openCutDone(row: PigCutRecordVO) {
   cutDoneForm.cutRecordId = row.id;
-  cutDoneForm.dripLoss = undefined;
   cutDoneForm.remark = undefined;
   cutDoneProofModel.value = [];
   cutDoneVisible.value = true;
@@ -458,7 +450,6 @@ async function submitCutDone() {
   try {
     const payload: PigCutDoneForm = {
       cutRecordId: cutDoneForm.cutRecordId,
-      dripLoss: cutDoneForm.dripLoss,
       remark: cutDoneForm.remark,
       proofOssIds: cutDoneProofModel.value.join(',') || undefined
     };

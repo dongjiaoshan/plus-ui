@@ -77,11 +77,8 @@
 
     <!-- 白条完成分割（滴水损失） -->
     <el-dialog v-model="cutDoneVisible" :title="t('djs.warehouse.packEntry.finishCut')" width="420px" append-to-body destroy-on-close>
-      <el-form ref="doneFormRef" :model="doneForm" :rules="doneRules" label-width="110px">
-        <el-form-item :label="t('djs.warehouse.packEntry.dripLoss')" prop="dripLoss">
-          <el-input-number v-model="doneForm.dripLoss" :min="0" :precision="3" :step="0.1" controls-position="right" style="width: 200px" />
-          <span class="ml-2 text-gray-500">kg</span>
-        </el-form-item>
+      <el-form ref="doneFormRef" :model="doneForm" label-width="110px">
+        <el-alert :title="t('djs.warehouse.packEntry.dripLossAutoHint')" type="info" :closable="false" show-icon class="mb-3" />
         <el-form-item :label="t('djs.warehouse.packEntry.remark')" prop="remark">
           <el-input v-model="doneForm.remark" type="textarea" :rows="2" maxlength="500" />
         </el-form-item>
@@ -228,42 +225,34 @@ async function handleCutOut() {
 const cutDoneVisible = ref(false);
 const cutDoneSubmitting = ref(false);
 const doneFormRef = ref<any>();
-const doneForm = ref<{ dripLoss: number | undefined; remark: string | undefined }>({ dripLoss: 0, remark: undefined });
-
-const doneRules = computed(() => ({
-  dripLoss: [{ required: true, message: t('djs.warehouse.packEntry.dripLossRequired'), trigger: 'blur' }]
-}));
+const doneForm = ref<{ remark: string | undefined }>({ remark: undefined });
 
 function openCutDone() {
   if (!form.value.cutRecordId) {
     ElMessage.warning(t('djs.warehouse.packEntry.cutRecordRequired'));
     return;
   }
-  doneForm.value = { dripLoss: 0, remark: undefined };
+  doneForm.value = { remark: undefined };
   cutDoneVisible.value = true;
 }
 
 async function handleCutDone() {
-  if (!doneFormRef.value) return;
-  await doneFormRef.value.validate(async (valid: boolean) => {
-    if (!valid) return;
-    cutDoneSubmitting.value = true;
-    try {
-      await submitCutDone({
-        cutRecordId: form.value.cutRecordId as number | string,
-        dripLoss: doneForm.value.dripLoss as number,
-        remark: doneForm.value.remark
-      });
-      ElMessage.success(t('djs.warehouse.packEntry.finishCutSuccess'));
-      cutDoneVisible.value = false;
-      form.value = { cutRecordId: '', locationId: '' };
-      selectedProductId.value = '';
-      curWeight.value = undefined;
-      await loadCuttable();
-    } finally {
-      cutDoneSubmitting.value = false;
-    }
-  });
+  // 滴水损耗由后端自动计算（白条入库重量 − 出库重量），前端不再录入
+  cutDoneSubmitting.value = true;
+  try {
+    await submitCutDone({
+      cutRecordId: form.value.cutRecordId as number | string,
+      remark: doneForm.value.remark
+    });
+    ElMessage.success(t('djs.warehouse.packEntry.finishCutSuccess'));
+    cutDoneVisible.value = false;
+    form.value = { cutRecordId: '', locationId: '' };
+    selectedProductId.value = '';
+    curWeight.value = undefined;
+    await loadCuttable();
+  } finally {
+    cutDoneSubmitting.value = false;
+  }
 }
 
 onMounted(async () => {

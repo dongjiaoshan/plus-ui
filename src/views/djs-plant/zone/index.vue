@@ -56,13 +56,14 @@
  * 片区管理独立列表页（FIX-PLT-AD-ZONE-001）。
  *
  * 8 列：片区名称 / 片区说明 / 所属大区 / 管理地块数量 / 状态 / 更新时间 / 更新人员 / 操作。
- * 3 筛选：片区名称 / 更新时间（daterange）/ 更新人员（input → updateBy 用户 ID）。
+ * 3 筛选：片区名称 / 更新时间（daterange）/ 更新人员（select → updateBy 用户 ID）。
  * 行操作（文字链接常显）：修改信息 / 禁用 / 删除（含 has_plot 级联保护）。
  */
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import ZoneForm from '../plot/components/ZoneForm.vue';
 import { listZone, delZone, changeZoneStatus } from '@/api/djs-plant/zone';
+import { listUser } from '@/api/system/user';
 import type { PlotZoneQuery, PlotZoneVO } from '@/api/djs-plant/zone/types';
 import { useI18n } from 'vue-i18n';
 
@@ -77,6 +78,8 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
+// 更新人员筛选下拉：value=用户ID，label=昵称（无昵称回退登录名）
+const userOptions = ref<Array<{ label: string; value: number | string }>>([]);
 
 const searchModel = reactive<Record<string, any>>({
   zoneBelong: undefined,
@@ -90,7 +93,13 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'zoneBelong', label: t('plantZone.filter.zoneBelong'), type: 'select', dictType: 'djs_zone_belong', clearable: true },
   { field: 'zoneName', label: t('plantZone.filter.zoneName'), type: 'input', clearable: true },
   { field: 'updateTime', label: t('plantZone.filter.updateTime'), type: 'daterange' },
-  { field: 'updateBy', label: t('plantZone.filter.updateBy'), type: 'input', placeholder: t('plantZone.placeholder.updateBy'), clearable: true }
+  {
+    field: 'updateBy',
+    label: t('plantZone.filter.updateBy'),
+    type: 'select',
+    clearable: true,
+    options: userOptions.value
+  }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -103,16 +112,25 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'updateByName', label: t('plantZone.column.updateByName'), width: 110, align: 'center' }
 ]);
 
+async function loadUserOptions() {
+  try {
+    const res = await listUser({ pageNum: 1, pageSize: 1000 });
+    const rows = res.rows ?? [];
+    userOptions.value = rows.map((u) => ({ label: u.nickName || u.userName || String(u.userId), value: u.userId }));
+  } catch (e) {
+    console.warn('[Zone] listUser failed', e);
+    userOptions.value = [];
+  }
+}
+
 function buildQuery(): PlotZoneQuery {
   const range = searchModel.updateTime;
-  const updateByRaw = searchModel.updateBy;
-  const updateBy = updateByRaw === undefined || updateByRaw === '' ? undefined : Number(updateByRaw);
   return {
     pageNum: pageNum.value,
     pageSize: pageSize.value,
     zoneBelong: searchModel.zoneBelong || undefined,
     zoneName: searchModel.zoneName || undefined,
-    updateBy: Number.isFinite(updateBy) ? (updateBy as number) : undefined,
+    updateBy: searchModel.updateBy ?? undefined,
     updateTimeStart: Array.isArray(range) && range[0] ? range[0] : undefined,
     updateTimeEnd: Array.isArray(range) && range[1] ? range[1] : undefined
   };
@@ -173,14 +191,12 @@ async function handleToggleStatus(row: BizRow) {
 
 function handleExport() {
   const range = searchModel.updateTime;
-  const updateByRaw = searchModel.updateBy;
-  const updateBy = updateByRaw === undefined || updateByRaw === '' ? undefined : Number(updateByRaw);
   proxy?.download(
     'djs/plant/zone/export',
     {
       zoneBelong: searchModel.zoneBelong || undefined,
       zoneName: searchModel.zoneName || undefined,
-      updateBy: Number.isFinite(updateBy) ? (updateBy as number) : undefined,
+      updateBy: searchModel.updateBy ?? undefined,
       updateTimeStart: Array.isArray(range) && range[0] ? range[0] : undefined,
       updateTimeEnd: Array.isArray(range) && range[1] ? range[1] : undefined
     },
@@ -188,5 +204,8 @@ function handleExport() {
   );
 }
 
-onMounted(fetchList);
+onMounted(() => {
+  loadUserOptions();
+  fetchList();
+});
 </script>

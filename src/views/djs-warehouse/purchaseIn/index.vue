@@ -8,133 +8,131 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
+      :dict-types="['djs_buy_class']"
       :page-num="pageNum"
       :page-size="pageSize"
-      row-key="id"
+      :action-width="220"
+      row-key="productId"
       perm-prefix="djs:warehouse:purchaseIn"
-      show-export
-      :show-add="true"
+      :show-add="false"
       :show-batch-del="false"
+      :show-row-edit="false"
+      :show-row-del="false"
       @search="handleSearch"
       @reset="handleReset"
-      @add="openAddDialog"
-      @export="handleExport"
       @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
     >
-      <!-- 流水只读，无行级操作 -->
-      <template #action><span /></template>
+      <template #cell-productThumb="{ row }">
+        <ImagePreview
+          v-if="row.imageUrl"
+          :width="40"
+          :height="40"
+          :src="row.imageUrl"
+          :preview-src-list="[row.imageUrl]"
+        />
+        <span v-else class="text-gray-400">—</span>
+      </template>
+
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:warehouse:purchaseIn:list']" link type="primary" icon="View" @click="handleView(row)">
+          {{ t('common.view') }}
+        </el-button>
+        <el-button v-hasPermi="['djs:warehouse:product:edit']" link type="primary" icon="Download" @click="handleInbound(row)">
+          {{ t('djs.warehouse.purchaseIn.inbound') }}
+        </el-button>
+      </template>
     </BizTable>
 
-    <el-dialog
-      v-model="dialogVisible"
-      :title="t('djs.warehouse.purchaseIn.dialogTitle')"
-      destroy-on-close
-      append-to-body
-      width="560px"
-      @closed="handleDialogClosed"
-    >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item :label="t('djs.warehouse.purchaseIn.product')" prop="productId">
-          <el-select
-            v-model="form.productId"
-            :placeholder="t('djs.warehouse.purchaseIn.productPlaceholder')"
-            filterable
-            clearable
-            :loading="productLoading"
-            style="width: 100%"
-          >
-            <el-option v-for="p in productOptions" :key="String(p.id)" :label="`${p.productId} - ${p.productName}`" :value="p.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="t('djs.warehouse.purchaseIn.location')" prop="locationId">
-          <el-select
-            v-model="form.locationId"
-            :placeholder="t('djs.warehouse.purchaseIn.locationPlaceholder')"
-            filterable
-            clearable
-            :loading="locationLoading"
-            style="width: 100%"
-          >
-            <el-option v-for="l in locationOptions" :key="String(l.id)" :label="`${l.locationCode} - ${l.locationName}`" :value="l.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="t('djs.warehouse.purchaseIn.quantity')" prop="quantity">
-          <el-input-number v-model="form.quantity" :min="0.001" :precision="3" :step="1" controls-position="right" style="width: 100%" />
-          <span v-if="selectedProductUnit" class="ml-2 text-gray-500">{{ selectedProductUnit }}</span>
-        </el-form-item>
-        <el-form-item :label="t('djs.warehouse.purchaseIn.remark')" prop="remark">
-          <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" :loading="submitting" @click="handleSubmit">
-            {{ t('common.confirm') }}
-          </el-button>
-          <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <ProductView ref="productViewRef" />
+    <ProductInboundForm
+      ref="inboundFormRef"
+      :hide-unit="true"
+      :purchase-in-context="true"
+      :quantity-label="t('djs.warehouse.purchaseIn.inboundQuantity')"
+      @success="loadList"
+    />
   </div>
 </template>
 
 <script setup name="PurchaseIn" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
-import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { exportPurchaseIn, listPurchaseIn, submitPurchaseIn } from '@/api/djs-warehouse/purchaseIn';
-import type { PurchaseInBo, PurchaseInQuery, PurchaseInRecordVO } from '@/api/djs-warehouse/purchaseIn/types';
-import { listProduct } from '@/api/djs-warehouse/product';
-import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import ImagePreview from '@/components/ImagePreview/index.vue';
+import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import ProductView from '../product/components/ProductView.vue';
+import ProductInboundForm from '../product/components/ProductInboundForm.vue';
+import { listPurchaseInProduct } from '@/api/djs-warehouse/purchaseIn';
+import type { PurchaseInProductQuery, PurchaseInProductVO } from '@/api/djs-warehouse/purchaseIn/types';
+import { listSupplier } from '@/api/djs-common/supplier';
 import { listLocation } from '@/api/djs-warehouse/location';
-import type { LocationInfoVO } from '@/api/djs-warehouse/location/types';
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus';
 
 const { t } = useI18n();
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
 
-// ---- 列表 ----
-const list = ref<PurchaseInRecordVO[]>([]);
+const list = ref<PurchaseInProductVO[]>([]);
 const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
+/** 供应商 / 存储仓库 下拉项（ID 全 string） */
+const supplierOptions = ref<Array<{ label: string; value: string }>>([]);
+const locationOptions = ref<Array<{ label: string; value: string }>>([]);
+
 const searchModel = reactive<Record<string, any>>({
-  productId: undefined,
-  locationId: undefined,
-  dateFrom: undefined,
-  dateTo: undefined
+  productName: undefined,
+  buyClass: undefined,
+  supplierId: undefined,
+  storeLocationId: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'productId', label: t('djs.warehouse.purchaseIn.product'), type: 'input' },
-  { field: 'locationId', label: t('djs.warehouse.purchaseIn.location'), type: 'input' }
+  { field: 'productName', label: t('djs.warehouse.purchaseIn.productName'), type: 'input' },
+  { field: 'buyClass', label: t('djs.warehouse.purchaseIn.buyClass'), type: 'select', dictType: 'djs_buy_class' },
+  { field: 'supplierId', label: t('djs.warehouse.purchaseIn.supplier'), type: 'select', options: supplierOptions.value },
+  { field: 'storeLocationId', label: t('djs.warehouse.purchaseIn.storeLocation'), type: 'select', options: locationOptions.value }
 ]);
 
+/** BigDecimal→string 数量列渲染：Number() 防 "100.0001.000" 拼接，NaN/空兜底为 — */
+function fmtAmount(v?: string | number | null): string {
+  if (v === undefined || v === null || v === '') return '—';
+  const n = Number(v);
+  return Number.isNaN(n) ? '—' : String(n);
+}
+
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'flowNo', label: t('djs.warehouse.purchaseIn.flowNo'), minWidth: 160 },
-  { prop: 'flowDate', label: t('djs.warehouse.purchaseIn.flowDate'), minWidth: 160 },
-  { prop: 'productName', label: t('djs.warehouse.purchaseIn.product'), minWidth: 160 },
-  { prop: 'locationName', label: t('djs.warehouse.purchaseIn.location'), minWidth: 140 },
-  { prop: 'changeQuantity', label: t('djs.warehouse.purchaseIn.quantity'), minWidth: 100 },
-  { prop: 'productUnit', label: t('djs.warehouse.purchaseIn.unit'), minWidth: 80 },
-  { prop: 'operatorName', label: t('djs.warehouse.purchaseIn.operator'), minWidth: 100 },
-  { prop: 'remark', label: t('djs.warehouse.purchaseIn.remark'), minWidth: 160 }
+  { prop: 'productThumb', label: t('djs.warehouse.purchaseIn.productThumb'), width: 80, align: 'center' },
+  { prop: 'productCode', label: t('djs.warehouse.purchaseIn.productCode'), width: 140, showOverflowTooltip: true },
+  { prop: 'productName', label: t('djs.warehouse.purchaseIn.productName'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'productUnit', label: t('djs.warehouse.purchaseIn.unit'), width: 80, align: 'center' },
+  { prop: 'productSpec', label: t('djs.warehouse.purchaseIn.productSpec'), width: 110, align: 'center', showOverflowTooltip: true },
+  { prop: 'storeLocationName', label: t('djs.warehouse.purchaseIn.storeLocation'), width: 140, align: 'center', showOverflowTooltip: true },
+  { prop: 'currentStock', label: t('djs.warehouse.purchaseIn.currentStock'), width: 110, align: 'center', formatter: (row) => fmtAmount(row.currentStock) },
+  { prop: 'lastInTime', label: t('djs.warehouse.purchaseIn.lastInTime'), width: 170, align: 'center' },
+  { prop: 'lastPurchaserName', label: t('djs.warehouse.purchaseIn.lastPurchaser'), width: 110, align: 'center', showOverflowTooltip: true },
+  { prop: 'monthInTotal', label: t('djs.warehouse.purchaseIn.monthInTotal'), width: 130, align: 'center', formatter: (row) => fmtAmount(row.monthInTotal) }
 ]);
+
+function buildQuery(): Omit<PurchaseInProductQuery, 'pageNum' | 'pageSize'> {
+  return {
+    productName: searchModel.productName || undefined,
+    buyClass: searchModel.buyClass || undefined,
+    supplierId: searchModel.supplierId ? String(searchModel.supplierId) : undefined,
+    storeLocationId: searchModel.storeLocationId ? String(searchModel.storeLocationId) : undefined
+  };
+}
 
 async function loadList() {
   loading.value = true;
   try {
-    const params: PurchaseInQuery = {
-      ...searchModel,
+    const params: PurchaseInProductQuery = {
+      ...buildQuery(),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
-    const res = await listPurchaseIn(params);
-    list.value = (res as any).rows ?? [];
+    const res = await listPurchaseInProduct(params);
+    list.value = ((res as any).rows ?? []) as PurchaseInProductVO[];
     total.value = (res as any).total ?? 0;
   } finally {
     loading.value = false;
@@ -151,7 +149,8 @@ function handleReset() {
   Object.keys(searchModel).forEach((k) => {
     searchModel[k] = undefined;
   });
-  handleSearch();
+  pageNum.value = 1;
+  loadList();
 }
 
 function handlePageChange(pn: number, ps: number) {
@@ -160,107 +159,60 @@ function handlePageChange(pn: number, ps: number) {
   loadList();
 }
 
-function handleExport() {
-  proxy?.download('/djs/warehouse/purchaseIn/export', { ...searchModel }, `采购入库_${new Date().getTime()}.xlsx`);
+// ---- 行操作 ----
+const productViewRef = ref<{ open: (id: number | string, productType?: number) => void }>();
+const inboundFormRef =
+  ref<{
+    open: (row: {
+      id: number | string;
+      productName?: string;
+      productUnit?: string;
+      storeLocationId?: string | number;
+      buyClass?: string;
+    }) => void;
+  }>();
+
+function handleView(row: BizRow) {
+  // 外购商品 productType 固定 2（业务流水 tab）
+  productViewRef.value?.open(row.productId, 2);
 }
 
-// ---- 新增 dialog ----
-const dialogVisible = ref(false);
-const submitting = ref(false);
-const formRef = ref<ElFormInstance>();
-
-// 表单层 quantity 用 number（el-input-number 契约）；提交时 BO.quantity 再宽容到 number|string
-interface PurchaseInFormShape {
-  productId: number | string | '';
-  locationId: number | string | '';
-  quantity: number | undefined;
-  remark: string | undefined;
-}
-
-const defaultForm = (): PurchaseInFormShape => ({
-  productId: '',
-  locationId: '',
-  quantity: undefined,
-  remark: undefined
-});
-
-const form = ref<PurchaseInFormShape>(defaultForm());
-
-const rules = computed(() => ({
-  productId: [{ required: true, message: t('djs.warehouse.purchaseIn.productRequired'), trigger: 'change' }],
-  locationId: [{ required: true, message: t('djs.warehouse.purchaseIn.locationRequired'), trigger: 'change' }],
-  quantity: [{ required: true, message: t('djs.warehouse.purchaseIn.quantityRequired'), trigger: 'blur' }]
-}));
-
-const productOptions = ref<ProductInfoVO[]>([]);
-const productLoading = ref(false);
-const locationOptions = ref<LocationInfoVO[]>([]);
-const locationLoading = ref(false);
-
-const selectedProductUnit = computed<string>(() => {
-  if (form.value.productId === '' || form.value.productId == null) {
-    return '';
-  }
-  const p = productOptions.value.find((x) => String(x.id) === String(form.value.productId));
-  return p?.productUnit ?? '';
-});
-
-async function loadProducts() {
-  if (productOptions.value.length > 0) return;
-  productLoading.value = true;
-  try {
-    const res = await listProduct({ pageNum: 1, pageSize: 500 });
-    productOptions.value = ((res as any).rows ?? []) as ProductInfoVO[];
-  } finally {
-    productLoading.value = false;
-  }
-}
-
-async function loadLocations() {
-  if (locationOptions.value.length > 0) return;
-  locationLoading.value = true;
-  try {
-    const res = await listLocation({ pageNum: 1, pageSize: 500 });
-    locationOptions.value = ((res as any).rows ?? []) as LocationInfoVO[];
-  } finally {
-    locationLoading.value = false;
-  }
-}
-
-async function openAddDialog() {
-  form.value = defaultForm();
-  dialogVisible.value = true;
-  await Promise.all([loadProducts(), loadLocations()]);
-}
-
-function handleDialogClosed() {
-  formRef.value?.resetFields();
-  form.value = defaultForm();
-}
-
-async function handleSubmit() {
-  if (!formRef.value) return;
-  await formRef.value.validate(async (valid: boolean) => {
-    if (!valid) return;
-    submitting.value = true;
-    try {
-      const bo: PurchaseInBo = {
-        productId: form.value.productId as number | string,
-        locationId: form.value.locationId as number | string,
-        quantity: form.value.quantity as number,
-        remark: form.value.remark
-      };
-      await submitPurchaseIn(bo);
-      ElMessage.success(t('djs.warehouse.purchaseIn.submitSuccess'));
-      dialogVisible.value = false;
-      loadList();
-    } finally {
-      submitting.value = false;
-    }
+function handleInbound(row: BizRow) {
+  inboundFormRef.value?.open({
+    id: row.productId,
+    productName: row.productName,
+    productUnit: row.productUnit,
+    storeLocationId: row.storeLocationId,
+    buyClass: row.buyClass
   });
 }
 
+// ---- 下拉数据 ----
+async function loadSupplierOptions() {
+  try {
+    const res = await listSupplier({ pageNum: 1, pageSize: 500 });
+    const rows = ((res as any).rows ?? (res as any).data ?? []) as Array<{ id: number | string; supplierName: string }>;
+    supplierOptions.value = rows.map((r) => ({ label: r.supplierName, value: String(r.id) }));
+  } catch (e) {
+    console.warn('[PurchaseIn] listSupplier failed', e);
+    supplierOptions.value = [];
+  }
+}
+
+async function loadLocationOptions() {
+  try {
+    const res = await listLocation({ pageNum: 1, pageSize: 500 } as any);
+    const rows = ((res as any).rows ?? (res as any).data ?? []) as Array<{ id: number | string; locationName: string }>;
+    locationOptions.value = rows.map((r) => ({ label: r.locationName, value: String(r.id) }));
+  } catch (e) {
+    console.warn('[PurchaseIn] listLocation failed', e);
+    locationOptions.value = [];
+  }
+}
+
 onMounted(() => {
+  loadSupplierOptions();
+  loadLocationOptions();
   loadList();
 });
 </script>

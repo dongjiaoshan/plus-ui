@@ -149,10 +149,9 @@ export interface PigCutOutBo {
   proofOssIds?: string;
 }
 
-/** 白条完成分割 BO */
+/** 白条完成分割 BO（滴水损耗由后端自动计算：白条入库重量 − 出库重量，前端不录入） */
 export interface PigCutDoneBo {
   cutRecordId: number | string;
-  dripLoss: number;
   proofOssIds?: string;
   remark?: string;
 }
@@ -294,4 +293,13 @@ export const listMaterialStock = (productIds: (number | string)[]): AxiosPromise
  */
 export const listPackedCount = (productIds: (number | string)[]): AxiosPromise<Record<string, number>> => {
   return request({ url: '/djs/warehouse/packEntry/packedCount', method: 'get', params: { productIds: productIds.join(',') } });
+};
+
+/**
+ * 批量查目标成品「已打包总重量 kg」（果蔬「领用剩余重量」口径用）。
+ * 「领用剩余重量」= 领用总重 − 已打包总重（前端钳 ≥ 0）。
+ * 返回 Map：成品雪花 id 字符串 → 已打包总重 kg 字符串（BigDecimal 序列化为字符串，前端 Number() 强转再算；无记录的成品不在 Map）。
+ */
+export const listPackedWeight = (productIds: (number | string)[]): AxiosPromise<Record<string, string>> => {
+  return request({ url: '/djs/warehouse/packEntry/packedWeight', method: 'get', params: { productIds: productIds.join(',') } });
 };

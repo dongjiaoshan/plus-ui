@@ -138,6 +138,21 @@ const plotColumns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.historyPlantCount != null ? `${r.historyPlantCount} 次` : '0 次')
   },
   {
+    prop: 'maxYieldCropName',
+    label: t('plantPlot.column.maxYieldCrop'),
+    width: 130,
+    align: 'center',
+    showOverflowTooltip: true,
+    formatter: (r: BizRow) => r.maxYieldCropName || '—'
+  },
+  {
+    prop: 'maxYieldPerMu',
+    label: t('plantPlot.column.maxYieldPerMu'),
+    width: 130,
+    align: 'right',
+    formatter: (r: BizRow) => (r.maxYieldPerMu != null ? `${Number(r.maxYieldPerMu).toFixed(2)} kg/亩` : '—')
+  },
+  {
     prop: 'plotRemark',
     label: t('plantPlot.column.plotRemark'),
     minWidth: 140,
