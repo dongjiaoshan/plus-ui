@@ -58,14 +58,6 @@ export function listGrowth(query: PigGrowthQuery): AxiosPromise<any> {
   });
 }
 
-/** admin：生长记录详情 */
-export function getGrowth(id: number | string): AxiosPromise<{ data: PigGrowthVO }> {
-  return request({
-    url: `/djs/breed/event/growth/${id}`,
-    method: 'get'
-  });
-}
-
 /** admin：新增生长记录（背膘 / 背高 admin 端录） */
 export function addGrowth(body: PigGrowthBody): AxiosPromise<any> {
   return request({

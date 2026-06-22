@@ -3312,6 +3312,10 @@ export default {
     pork: {
       pickPig: '追溯猪只',
       noPig: '暂无当天确认收货白条',
+      remainOf: '剩余{remain}/到货{arrived}kg',
+      exhaustedTag: '已用完',
+      exhausted: '该白条剩余可打包重量已用完，不能再选',
+      overWeight: '本次打包重量超过白条剩余可打包重量（剩余{remain}kg）',
       pickCut: '选择追溯部位',
       opPanel: '操作',
       pigId: '猪只ID',
@@ -3334,6 +3338,9 @@ export default {
       creatorName: '生成人',
       createTime: '生成时间',
       codeDate: '生成日期',
+      sourceCol: '生成来源',
+      sourceWarehouse: '仓库',
+      sourceStore: '门店',
       reprint: '补打',
       noCode: '该行无追溯码可补打'
     }

@@ -15,6 +15,8 @@ export interface TraceCodeVO {
   produceCode: string;
   /** 追溯码类型（字典 djs_trace_code_type，值 pork/veg/gift） */
   codeType: string;
+  /** 生成来源：warehouse=仓库 / store=门店现场分割打包（service 按 remark 计算） */
+  source?: string;
   productId?: string;
   /** 产品名（service JOIN t_warehouse_product_info 取） */
   productName?: string;
@@ -95,6 +97,8 @@ export interface TraceCodeQuery extends PageQuery {
   productName?: string;
   /** 猪只耳号精确查 */
   pigEarNo?: string;
+  /** 生成来源筛选：warehouse=仓库生码 / store=门店现场分割打包生码（空=全部） */
+  source?: string;
   /** 生成时间起 yyyy-MM-dd HH:mm:ss */
   beginDate?: string;
   /** 生成时间止 yyyy-MM-dd HH:mm:ss */

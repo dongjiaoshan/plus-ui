@@ -14,6 +14,10 @@ export interface TraceablePigVO {
   pigBreedLabel?: string;
   /** 日龄（天） */
   ageDays?: number;
+  /** 白条到货重量 kg（该耳号已发货到店的白条总重） */
+  arrivedWeight?: number;
+  /** 剩余可打包重量 kg（到货 − 已现场打包；≤0 时禁选） */
+  remainingWeight?: number;
 }
 
 /** 现场生码入参（与后端 StoreTraceOnsiteBo 对齐）。 */

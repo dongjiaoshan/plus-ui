@@ -10,10 +10,12 @@
               :key="p.earNo"
               :effect="selectedEarNo === p.earNo ? 'dark' : 'plain'"
               class="pig-chip"
+              :class="{ 'is-exhausted': isExhausted(p) }"
               :type="selectedEarNo === p.earNo ? 'warning' : 'info'"
               @click="selectPig(p)"
             >
               {{ p.earNo }}
+              <text class="chip-weight">{{ chipWeightText(p) }}</text>
             </el-tag>
             <el-empty v-if="!pigLoading && !pigs.length" :description="t('storeTrace.pork.noPig')" :image-size="60" />
           </div>
@@ -152,6 +154,21 @@ const cutOptions = computed<{ label: string; value: string }[]>(() => {
 });
 const canGen = computed(() => !!selectedEarNo.value && !!form.cutLabel && (form.weight ?? 0) > 0);
 
+// ---- 白条剩余可打包重量（到货 − 已现场打包；≤0 禁选） ----
+function fmtKg(v?: number): string {
+  const n = Number(v ?? 0);
+  return Number.isFinite(n) ? String(n) : '0';
+}
+function remainingOf(p?: TraceablePigVO | null): number {
+  return Number(p?.remainingWeight ?? 0);
+}
+function isExhausted(p: TraceablePigVO): boolean {
+  return remainingOf(p) <= 0;
+}
+function chipWeightText(p: TraceablePigVO): string {
+  return isExhausted(p) ? `（${t('storeTrace.pork.exhaustedTag')}）` : `（${t('storeTrace.pork.remainOf', { remain: fmtKg(p.remainingWeight), arrived: fmtKg(p.arrivedWeight) })}）`;
+}
+
 async function loadPigs() {
   pigLoading.value = true;
   try {
@@ -201,11 +218,21 @@ async function loadCutImages() {
 }
 
 function selectPig(p: TraceablePigVO) {
+  if (isExhausted(p)) {
+    proxy?.$modal.msgWarning(t('storeTrace.pork.exhausted'));
+    return;
+  }
   selectedEarNo.value = p.earNo;
 }
 
 async function handleGen() {
   if (!canGen.value) return;
+  // 本次打包重量不得超过该白条剩余可打包重量
+  const remaining = remainingOf(selectedPig.value);
+  if (remaining > 0 && (form.weight ?? 0) > remaining) {
+    proxy?.$modal.msgWarning(t('storeTrace.pork.overWeight', { remain: fmtKg(remaining) }));
+    return;
+  }
   genLoading.value = true;
   try {
     const res = await genStoreTraceCode({ earNo: selectedEarNo.value, cutLabel: form.cutLabel, weight: form.weight });
@@ -225,6 +252,8 @@ async function handleGen() {
       form.weight
     );
     form.weight = undefined;
+    // 刷新白条剩余可打包重量（本次打包后该白条剩余减少，用完则禁选）
+    await loadPigs();
   } finally {
     genLoading.value = false;
   }
@@ -256,6 +285,18 @@ onMounted(async () => {
       margin: 0 8px 8px 0;
       cursor: pointer;
       font-size: 14px;
+
+      .chip-weight {
+        margin-left: 4px;
+        font-size: 12px;
+        opacity: 0.8;
+      }
+
+      &.is-exhausted {
+        cursor: not-allowed;
+        opacity: 0.45;
+        text-decoration: line-through;
+      }
     }
   }
 

@@ -3309,6 +3309,10 @@ export default {
     pork: {
       pickPig: 'Traceable Pig',
       noPig: 'No white-bar received today',
+      remainOf: 'left {remain}/arrived {arrived}kg',
+      exhaustedTag: 'used up',
+      exhausted: 'This white bar has no remaining weight to pack',
+      overWeight: 'Pack weight exceeds remaining ({remain}kg)',
       pickCut: 'Select Cut',
       opPanel: 'Operation',
       pigId: 'Pig ID',
@@ -3331,6 +3335,9 @@ export default {
       creatorName: 'Created By',
       createTime: 'Created Time',
       codeDate: 'Generated Date',
+      sourceCol: 'Source',
+      sourceWarehouse: 'Warehouse',
+      sourceStore: 'Store',
       reprint: 'Reprint',
       noCode: 'No trace code to reprint for this row'
     }
