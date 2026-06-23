@@ -128,7 +128,7 @@ async function loadPorkProducts() {
   try {
     // 分割车间(productWorkshop=2) 的猪肉**原材料**(productAttr=2)：分割产出入冷库的是原料，不是成品。
     // 成品(attr=1)由打包产出、不可被分割/领用（领用都是原材料，doc/14 §1）。
-    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork', productWorkshop: 2, productAttr: 2 } as any);
+    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork', productWorkshop: 2, productAttr: 2, productStatus: 0 } as any);
     porkProducts.value = ((res as any).rows ?? []) as ProductInfoVO[];
   } finally {
     porkProductLoading.value = false;
@@ -202,6 +202,12 @@ async function handleCutOut() {
   }
   if (!form.value.locationId) {
     ElMessage.warning(t('djs.warehouse.packEntry.locationRequired'));
+    return;
+  }
+  // 超量软校验（前端，与后端同口径：本次重量 ≤ 当前剩余可分割重量；后端为硬校验兜底）
+  const remaining = selectedCut.value?.remainingWeight;
+  if (remaining != null && curWeight.value > Number(remaining)) {
+    ElMessage.warning(t('djs.warehouse.packEntry.cutOutExceed', { remaining: Number(remaining).toFixed(2) }));
     return;
   }
   cutOutSubmitting.value = true;

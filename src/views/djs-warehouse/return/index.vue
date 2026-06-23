@@ -174,6 +174,7 @@ import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import { parseTime } from '@/utils/ruoyi';
 import type { FormInstance, FormRules } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 
@@ -191,8 +192,10 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
+// 退货记录默认查当天（退货日期 daterange 回显 [今天, 今天]）；重置清空 returnDate 即展示全部
+const today = parseTime(new Date(), '{y}-{m}-{d}') as string;
 const searchModel = reactive<Record<string, any>>({
-  returnDate: undefined,
+  returnDate: [today, today],
   returnCategory: undefined,
   productId: undefined,
   storeId: undefined

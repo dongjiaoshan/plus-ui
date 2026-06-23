@@ -1,20 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="t('storeTrace.label.dialogTitle')" width="420px" append-to-body @closed="onClosed">
-    <!-- 录重量 -->
-    <div class="label-weight">
-      <span class="label-weight__lbl">{{ t('storeTrace.label.weight') }}</span>
-      <el-input-number
-        v-model="weight"
-        :min="0"
-        :precision="2"
-        :step="0.5"
-        :placeholder="t('storeTrace.label.weightPlaceholder')"
-        controls-position="right"
-        style="width: 200px"
-      />
-    </div>
-
-    <!-- 结构化标签卡（8 字段 + 二维码），供打印 -->
+    <!-- 结构化标签卡（8 字段 + 二维码），供打印。产品重量只读展示（本次打包实重，不可修改） -->
     <div ref="labelRef" class="trace-label">
       <div class="trace-label__main">
         <div class="trace-label__row">
@@ -172,16 +158,6 @@ defineExpose({ open });
 </script>
 
 <style lang="scss" scoped>
-.label-weight {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.label-weight__lbl {
-  font-size: 14px;
-  color: #606266;
-}
 .trace-label {
   display: flex;
   gap: 16px;

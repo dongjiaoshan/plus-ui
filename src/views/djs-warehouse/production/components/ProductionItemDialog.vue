@@ -196,6 +196,8 @@ function handleTrace(row: BizRow) {
   traceLabelRef.value?.open(
     {
       productCode: undefined,
+      // 生产序号 = 生产编号业务码（row14 点2：不能为空）
+      serialNo: r.produceNo,
       packCode: r.produceNo,
       produceDate: r.produceDate,
       productName: r.productName,
@@ -204,6 +206,7 @@ function handleTrace(row: BizRow) {
       sourceValue: r.earNo || r.plotName,
       produceCode: r.traceCode,
       traceType: traceTypeFromCode(r.traceCode)
+      // 产品重量只读展示本次打包实重，不可修改
     },
     Number(r.productWeight) || undefined
   );

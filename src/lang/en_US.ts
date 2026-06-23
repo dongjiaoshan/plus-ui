@@ -2318,6 +2318,7 @@ export default {
         partsRequired: 'Enter at least one cut-product weight',
         confirmCutOut: 'Confirm Inbound',
         cutOutSuccess: 'Cut output stored',
+        cutOutExceed: 'Cut-product weight exceeds the remaining cuttable weight ({remaining}kg left)',
         finishCut: 'Finish Cut',
         finishCutShort: 'Finish Cut',
         dripLoss: 'Drip Loss',
@@ -2344,6 +2345,7 @@ export default {
         remainWeightLabel: 'Remaining Weight',
         noEarSource: 'No pork source ear No. available for packing',
         pickupWeightExceed: 'Pickup weight must not exceed the carcass marketing weight ({weight}kg)',
+        vegWeightExceed: 'Pack weight exceeds requisition remaining weight ({remain}kg), please re-weigh',
         pigAssignLabel: 'Pig Assignment',
         noBars: 'No bars available',
         agingHour: 'h',
@@ -2688,6 +2690,7 @@ export default {
       'productName.required': 'Product name is required',
       searchProductName: 'Demand Product',
       productType: 'Demand Product Type',
+      storeName: 'Demand Store',
       productSpec: 'Spec',
       demandQuantity: 'Quantity',
       'demandQuantity.required': 'Quantity is required',
@@ -3343,6 +3346,9 @@ export default {
     }
   },
   storeReturn: {
+    export: {
+      failed: 'Export failed, please try again later'
+    },
     field: {
       returnNo: 'Return No.',
       returnDirection: 'Direction',

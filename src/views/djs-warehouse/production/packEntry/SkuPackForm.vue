@@ -17,6 +17,7 @@
             :loading="productLoading || (earGroup && sourceLoading)"
             :demand-map="demandMap"
             :stock-map="earGroup ? meatStockMap : (kind === 'veg' ? vegStockMap : stockMap)"
+            :stock-unit="kind === 'veg' ? 'kg' : undefined"
             :done-set="doneSet"
             :show-stock="showStock"
             :large="wide"
@@ -733,10 +734,22 @@ function onEarChange() {
   form.value.sourceInhouseId = earSrc ? earSrc.id : '';
 }
 
-// 产品重量单位展示（纯展示，不做数值换算 —— Kevin 已拍：仅显示 g）：
-// 果蔬(veg)录重单位统一显「g」（提交值 VegPackBo.productWeight 量纲保持原样，不换算）；
+// 产品重量单位展示（row12 点2/点3，Kevin 2026-06-22 拍板量纲对齐到 kg）：
+// 果蔬(veg)产品称重录入单位显「g」（操作员按克称重），但系统权威量纲=kg —— 提交/校验前
+// 统一把 g 输入 ÷1000 换算成 kg（见 vegWeightKg / validate / handleSubmit），落库 kg；
+// 「领用剩余重量」「门店需求」「日损耗」等展示量统一 kg，不与录入 g 混用。
 // 其余业态按当前选中产品的 product_unit 显示（onProductChange 选卡片时已回填 form.productUnit）。
 const selectedUnit = computed<string>(() => (props.kind === 'veg' ? 'g' : form.value.productUnit || 'kg'));
+
+/**
+ * 果蔬录入量 g → 系统权威量纲 kg（÷1000）。其余业态 numpad 录入本就是 kg，原样透传。
+ * 提交（VegPackBo.productWeight）+ 前端超量校验 + 追溯标签重量均用此 kg 值，避免 g/kg 混用差 1000 倍。
+ */
+function packWeightKg(): number | undefined {
+  const raw = Number(form.value.productWeight);
+  if (!Number.isFinite(raw) || raw <= 0) return undefined;
+  return props.kind === 'veg' ? raw / 1000 : raw;
+}
 
 // 当前选中目标成品（卡片/角标份数展示用）。
 const selectedProduct = computed<ProductInfoVO | undefined>(() =>
@@ -790,6 +803,21 @@ function validate(): boolean {
       ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
       return false;
     }
+    // 果蔬：按重量超量校验（量纲对齐 row12 点3）——录入 g 换算成 kg 后，与领用剩余重量（vegStockMap，kg）比对，
+    // 超出领用剩余即拦截（与后端 requireInhouseEnough 同口径，避免提交才被后端拒）。
+    if (props.kind === 'veg') {
+      const packKg = packWeightKg();
+      if (packKg == null) {
+        ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
+        return false;
+      }
+      const remainKg = vegStockMap.value[String(form.value.productId)];
+      // remainKg 为 null/undefined（成品未配 product_material）→ 不前端拦截，交后端校验
+      if (remainKg != null && packKg > Number(remainKg)) {
+        ElMessage.warning(t('djs.warehouse.packEntry.vegWeightExceed', { remain: Number(remainKg) }));
+        return false;
+      }
+    }
   }
   // 入库库位不再前端采集（service 默认取产品配置库位/首个可用库位兜底，FIX-WMS-PACK-CASHIER）
   return true;
@@ -819,10 +847,11 @@ async function handleSubmit(printTrace: boolean) {
       };
       res = await submitGiftPack(bo);
     } else if (props.kind === 'veg') {
+      // 录入 g → 落库 kg（÷1000，row12 点3 量纲对齐）；packWeightKg 已在 validate 保证非空
       const bo: VegPackBo = {
         sourceInhouseId: form.value.sourceInhouseId as number | string,
         productId: form.value.productId as number | string,
-        productWeight: form.value.productWeight as number,
+        productWeight: packWeightKg() as number,
         storeId: form.value.storeId || undefined,
         deliverDest: form.value.deliverDest,
         productSpec: form.value.productSpec,
@@ -849,7 +878,8 @@ async function handleSubmit(printTrace: boolean) {
     if (printTrace) {
       if (traceCode) {
         // 必须在 refreshAfterPack 清空表单之前捕获本次重量 / 成品 / 耳号 / 地块 / 门店
-        const w = Number(form.value.productWeight) || undefined;
+        // 追溯标签重量统一 kg（果蔬录入 g 已 ÷1000 换算；其余业态本就是 kg）
+        const w = packWeightKg();
         const sel = products.value.find((p) => String(p.id) === String(form.value.productId));
         const storeName = stores.value.find((s) => String(s.id) === String(form.value.storeId))?.storeName;
         const earNoStr = selectedEarNo.value ? String(selectedEarNo.value) : undefined;
@@ -858,6 +888,8 @@ async function handleSubmit(printTrace: boolean) {
           {
             // ProductInfoVO 的「产品编码」字段是 productId（业务编码，非雪花 id）
             productCode: sel?.productId,
+            // 生产序号 = 后端回传的 produce_no 业务码（不能为空，row14 点2）
+            serialNo: res?.data?.produceNo,
             packCode: res?.data?.id != null ? String(res.data.id) : undefined,
             produceDate: parseTime(new Date(), '{y}-{m}-{d}'),
             productName: sel?.productName,
@@ -866,6 +898,7 @@ async function handleSubmit(printTrace: boolean) {
             sourceValue: earNoStr || plotName,
             produceCode: traceCode,
             traceType: traceTypeFromCode(traceCode)
+            // 产品重量只读展示本次打包实重，不可修改
           },
           w
         );

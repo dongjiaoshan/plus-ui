@@ -2321,6 +2321,7 @@ export default {
         partsRequired: '请至少录入一个分割产品重量',
         confirmCutOut: '确认入库',
         cutOutSuccess: '分割出库入库成功',
+        cutOutExceed: '分割产品重量超出剩余可分割重量（剩余 {remaining}kg）',
         finishCut: '白条完成分割',
         finishCutShort: '分割完成',
         dripLoss: '滴水损失',
@@ -2347,6 +2348,7 @@ export default {
         remainWeightLabel: '剩余重量',
         noEarSource: '当前无可打包的猪肉来源耳号',
         pickupWeightExceed: '领用称重不应大于该白条出栏重量（{weight}kg）',
+        vegWeightExceed: '打包重量超过领用剩余重量（{remain}kg），请重新称重',
         pigAssignLabel: '猪只指定',
         noBars: '暂无待领用白条',
         agingHour: '小时',
@@ -2691,6 +2693,7 @@ export default {
       'productName.required': '产品名称不能为空',
       searchProductName: '需求产品',
       productType: '需求产品类型',
+      storeName: '需求门店',
       productSpec: '规格',
       demandQuantity: '需求量',
       'demandQuantity.required': '需求量不能为空',
@@ -3346,6 +3349,9 @@ export default {
     }
   },
   storeReturn: {
+    export: {
+      failed: '导出失败，请稍后重试'
+    },
     field: {
       returnNo: '退回单号',
       returnDirection: '退回方向',

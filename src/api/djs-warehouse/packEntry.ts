@@ -103,6 +103,8 @@ export interface VegPackBo {
 export interface PackSubmitResultVO {
   id: number | string;
   traceCode?: string;
+  /** 生产编号（produce_no 业务码）：追溯码打印弹框「生产序号」展示 */
+  produceNo?: string;
 }
 
 /** 某产品各门店未发货需求份数（底部「门店(N份)」标签条） */

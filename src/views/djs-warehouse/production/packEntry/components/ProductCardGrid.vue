@@ -63,6 +63,12 @@ const props = withDefaults(
     large?: boolean;
     /** 「打包完成」成品 id 集合（今天已打包份数 ≥ 门店需求）：卡片标完成 + 禁选 */
     doneSet?: Set<string>;
+    /**
+     * 「领用剩余重量」单位强制覆盖（果蔬打包传 'kg'）：系统权威量纲=kg，
+     * stockMap 的数值是 kg；果蔬成品 product_unit 可能是「份」，若按产品单位渲染会出现
+     * 「kg 值贴份单位」错位（row12 点1）。传此 prop → 库存行固定显该单位，不用产品 product_unit。
+     */
+    stockUnit?: string;
   }>(),
   {
     loading: false,
@@ -70,7 +76,8 @@ const props = withDefaults(
     stockMap: () => ({}),
     showStock: true,
     large: false,
-    doneSet: () => new Set<string>()
+    doneSet: () => new Set<string>(),
+    stockUnit: undefined
   }
 );
 
@@ -93,11 +100,15 @@ function hasStockEntry(item: ProductInfoVO): boolean {
   return String(item.id) in props.stockMap;
 }
 
-/** 库存展示文案：已配显「数值 + 单位（产品单位，缺省 kg）」；未配（null 占位）显 '—'。 */
+/**
+ * 库存展示文案：已配显「数值 + 单位」；未配（null 占位）显 '—'。
+ * 单位优先用 stockUnit（果蔬打包传 'kg'，量纲对齐 row12 点1），否则回退产品 product_unit / 'kg'。
+ */
 function stockDisplay(item: ProductInfoVO): string {
   const v = props.stockMap[String(item.id)];
   if (v == null) return '—';
-  return `${v} ${item.productUnit || 'kg'}`;
+  const unit = props.stockUnit || item.productUnit || 'kg';
+  return `${v} ${unit}`;
 }
 
 /** 该成品是否已打包完成（今天已打包份数 ≥ 门店需求）→ 卡片置灰、禁选。 */

@@ -1,34 +1,17 @@
 <template>
   <div class="p-2 store-return-shell">
-    <!-- 退回管理 tab 壳：退回操作（常驻录入）| 退回记录（列表 + 仓库确认入库） -->
-    <el-tabs v-model="activeMainTab" class="return-main-tabs">
-      <el-tab-pane :label="t('storeReturn.mainTab.operation')" name="operation">
-        <ReturnOperationPanel v-if="activeMainTab === 'operation'" />
-      </el-tab-pane>
-      <el-tab-pane :label="t('storeReturn.mainTab.record')" name="record">
-        <ReturnRecordList v-if="activeMainTab === 'record'" />
-      </el-tab-pane>
-    </el-tabs>
+    <!-- 退回操作（10360 path=return-op，常驻录入）与 退回记录（10350 path=return-record，列表 + 仓库确认入库）
+         为两个独立菜单，各自只展示自己的面板，不用页内 tab 互跳（按路由 path 区分渲染）。 -->
+    <ReturnOperationPanel v-if="isOperation" />
+    <ReturnRecordList v-else />
   </div>
 </template>
 
 <script setup name="StoreReturn" lang="ts">
 import ReturnOperationPanel from './components/ReturnOperationPanel.vue';
 import ReturnRecordList from './components/ReturnRecordList.vue';
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-// 二级菜单（退回操作 / 退回记录）经 query_param 预选 tab
+// 同一组件挂在两个菜单：return-op → 退回操作；其余（return-record）→ 退回记录
 const route = useRoute();
-const activeMainTab = ref<'operation' | 'record'>(route.query.tab === 'record' ? 'record' : 'operation');
+const isOperation = computed(() => route.path.includes('return-op'));
 </script>
-
-<style lang="scss" scoped>
-.store-return-shell {
-  .return-main-tabs {
-    :deep(.el-tabs__header) {
-      margin-bottom: 12px;
-    }
-  }
-}
-</style>

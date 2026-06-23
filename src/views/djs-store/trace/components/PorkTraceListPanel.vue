@@ -12,6 +12,7 @@
     :selectable="false"
     :show-add="false"
     :show-row-edit="false"
+    :show-batch-del="false"
     :show-export="false"
     perm-prefix="djs:store:trace"
     @search="handleSearch"
@@ -131,6 +132,8 @@ function handlePrint(row: BizRow) {
   labelDialogRef.value?.open(
     {
       productCode: r.produceCode,
+      // 生产序号展示生产编号（produceNo）值
+      serialNo: r.produceNo,
       packCode: r.produceNo,
       produceDate: r.arrivalDate,
       productName: r.productName,

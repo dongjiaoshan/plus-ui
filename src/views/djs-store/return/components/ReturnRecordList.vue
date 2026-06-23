@@ -35,10 +35,12 @@
 <script setup name="StoreReturnRecordList" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listStoreReturn } from '@/api/djs-store/return';
+import { listStoreReturn, exportStoreReturn } from '@/api/djs-store/return';
 import type { StoreReturnQuery, StoreReturnVO } from '@/api/djs-store/return/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import { blobValidate } from '@/utils/ruoyi';
+import FileSaver from 'file-saver';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -160,8 +162,28 @@ function handlePageChange(p: number, s: number) {
   pageSize.value = s;
   fetchList();
 }
-function handleExport(query?: Record<string, unknown>) {
-  proxy?.download('djs/store/return/export', { ...(query ?? {}) }, `store_return_${new Date().getTime()}.xlsx`);
+// 导出走后端 GET /djs/store/return/export（与 api/djs-store/return.ts exportStoreReturn 对齐；
+// 不用 proxy.download —— 那是 POST，后端 export 是 GET，会报 "Request method 'POST' is not supported"）
+async function handleExport() {
+  const loading = ElLoading.service({ text: '正在下载数据，请稍候', background: 'rgba(0, 0, 0, 0.7)' });
+  try {
+    const params: StoreReturnQuery = {
+      returnStatus: (searchModel.returnStatus as string) || undefined,
+      returnDateFrom: (searchModel.returnDateFrom as string) || undefined,
+      returnDateTo: (searchModel.returnDateTo as string) || undefined
+    };
+    const data = await exportStoreReturn(params);
+    if (blobValidate(data)) {
+      FileSaver.saveAs(new Blob([data as unknown as BlobPart]), `store_return_${new Date().getTime()}.xlsx`);
+    } else {
+      proxy?.$modal.msgError(t('storeReturn.export.failed'));
+    }
+  } catch (e) {
+    console.error('[ReturnRecordList] export failed', e);
+    proxy?.$modal.msgError(t('storeReturn.export.failed'));
+  } finally {
+    loading.close();
+  }
 }
 
 onMounted(async () => {

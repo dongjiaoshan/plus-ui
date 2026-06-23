@@ -10,14 +10,13 @@
       :search-model="searchModel"
       :page-num="pageNum"
       :page-size="pageSize"
-      row-key="id"
+      row-key="checkId"
       perm-prefix="djs:warehouse:check"
       show-export
-      :show-add="true"
+      :show-add="false"
       :show-batch-del="false"
       @search="handleSearch"
       @reset="handleReset"
-      @add="openCreateDialog"
       @export="handleExport"
       @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
     >
@@ -25,28 +24,9 @@
         <el-button type="primary" link @click="openDetailDialog(row as StockCheckHeaderVO)">
           {{ t('djs.warehouse.check.detail') }}
         </el-button>
-        <el-button
-          v-if="(row as StockCheckHeaderVO).checkStatus === 'in_progress'"
-          v-hasPermi="['djs:warehouse:check:complete']"
-          type="success"
-          link
-          @click="handleComplete(row as StockCheckHeaderVO)"
-        >
-          {{ t('djs.warehouse.check.complete') }}
-        </el-button>
-        <el-button
-          v-if="(row as StockCheckHeaderVO).checkStatus === 'in_progress'"
-          v-hasPermi="['djs:warehouse:check:cancel']"
-          type="warning"
-          link
-          @click="handleCancel(row as StockCheckHeaderVO)"
-        >
-          {{ t('djs.warehouse.check.cancel') }}
-        </el-button>
       </template>
     </BizTable>
 
-    <CheckCreateDialog v-model="createVisible" @success="onCreated" />
     <CheckDetailDialog v-model="detailVisible" :header="currentRow" />
   </div>
 </template>
@@ -54,11 +34,10 @@
 <script setup name="StockCheck" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { cancelCheck, completeCheck, listCheck } from '@/api/djs-warehouse/check';
+import { listCheck } from '@/api/djs-warehouse/check';
 import type { StockCheckHeaderVO, StockCheckQuery } from '@/api/djs-warehouse/check/types';
 import { listLocation } from '@/api/djs-warehouse/location';
 import type { LocationInfoVO } from '@/api/djs-warehouse/location/types';
-import CheckCreateDialog from './components/CheckCreateDialog.vue';
 import CheckDetailDialog from './components/CheckDetailDialog.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
@@ -109,38 +88,12 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'createTime', label: t('djs.warehouse.check.createTime'), minWidth: 160, align: 'center', formatter: 'datetime' }
 ]);
 
-// 新建盘点单
-const createVisible = ref(false);
-function openCreateDialog() {
-  createVisible.value = true;
-}
-function onCreated() {
-  proxy?.$modal.msgSuccess(t('djs.warehouse.check.createSuccess'));
-  loadList();
-}
-
-// 详情
+// 详情（盘点记录只读：仅查看小程序端提交的盘点，不允许新增 / 完成 / 取消）
 const detailVisible = ref(false);
 const currentRow = ref<StockCheckHeaderVO | null>(null);
 function openDetailDialog(row: StockCheckHeaderVO) {
   currentRow.value = row;
   detailVisible.value = true;
-}
-
-// 完成盘点
-async function handleComplete(row: StockCheckHeaderVO) {
-  await proxy?.$modal.confirm(t('djs.warehouse.check.completeConfirm', { no: row.checkId }));
-  await completeCheck(row.id);
-  proxy?.$modal.msgSuccess(t('djs.warehouse.check.completeSuccess'));
-  await loadList();
-}
-
-// 取消盘点
-async function handleCancel(row: StockCheckHeaderVO) {
-  await proxy?.$modal.confirm(t('djs.warehouse.check.cancelConfirm', { no: row.checkId }));
-  await cancelCheck(row.id);
-  proxy?.$modal.msgSuccess(t('djs.warehouse.check.cancelSuccess'));
-  await loadList();
 }
 
 async function loadList() {

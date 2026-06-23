@@ -59,10 +59,24 @@ import DemandCart from './components/DemandCart.vue';
 import DemandKpiBar from './components/DemandKpiBar.vue';
 import { listDemandGroup } from '@/api/djs-warehouse/demand';
 import type { DemandGroupStatusCode, DemandGroupVO, DemandManageQuery } from '@/api/djs-warehouse/demand/types';
+import { listStore } from '@/api/djs-common/store';
+import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const router = useRouter();
+
+/** 需求门店下拉 options（按门店过滤汇总列表）。 */
+const storeOptions = ref<{ label: string; value: number | string }[]>([]);
+async function loadStoreOptions() {
+  try {
+    const res: any = await listStore({ pageNum: 1, pageSize: 200 });
+    const rows = (res.rows ?? res.data ?? []) as StoreVO[];
+    storeOptions.value = rows.map((s) => ({ label: s.storeName, value: s.id }));
+  } catch {
+    storeOptions.value = [];
+  }
+}
 
 const tableRef = ref<BizTableExpose>();
 const cartRef = ref<{ open: () => void }>();
@@ -77,6 +91,7 @@ const pageSize = ref(10);
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
   productType: undefined,
+  storeId: undefined,
   demandStatus: undefined,
   demandDateRange: undefined
 });
@@ -89,6 +104,7 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('demand.field.searchProductName'), type: 'input' },
   { field: 'productType', label: t('demand.field.productType'), type: 'select', dictType: 'djs_demand_product_type' },
+  { field: 'storeId', label: t('demand.field.storeName'), type: 'select', options: storeOptions.value },
   {
     field: 'demandStatus',
     label: t('demand.field.demandStatus'),
@@ -186,6 +202,7 @@ async function fetchList() {
       pageSize: pageSize.value,
       productName: searchModel.productName,
       productType: searchModel.productType,
+      storeId: searchModel.storeId != null && searchModel.storeId !== '' ? String(searchModel.storeId) : undefined,
       demandStatus: searchModel.demandStatus,
       beginDate: range && range[0] ? range[0] : undefined,
       endDate: range && range[1] ? range[1] : undefined
@@ -240,6 +257,7 @@ function onViewDemand(row: DemandGroupVO) {
 let firstActivate = true;
 
 onMounted(() => {
+  loadStoreOptions();
   fetchList();
 });
 
