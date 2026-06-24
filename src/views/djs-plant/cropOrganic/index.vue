@@ -26,11 +26,11 @@
     >
       <template #cell-cropImagePreview="{ row }">
         <ImagePreview
-          v-if="row.cropImagePreview && thumbUrlMap[String(row.cropImagePreview)]"
+          v-if="firstImageOssId(row) && thumbUrlMap[firstImageOssId(row)]"
           :width="40"
           :height="40"
-          :src="thumbUrlMap[String(row.cropImagePreview)]"
-          :preview-src-list="[thumbUrlMap[String(row.cropImagePreview)]]"
+          :src="thumbUrlMap[firstImageOssId(row)]"
+          :preview-src-list="[thumbUrlMap[firstImageOssId(row)]]"
         />
         <span v-else class="text-gray-400">—</span>
       </template>
@@ -40,10 +40,6 @@
         </template>
         <span v-else-if="row.cropName">{{ row.cropName }}</span>
         <span v-else class="text-gray-400">—</span>
-      </template>
-      <template #cell-isWarning="{ row }">
-        <el-tag v-if="row.isWarning === 1" type="danger">{{ t('plantCropOrganic.warning.yes') }}</el-tag>
-        <el-tag v-else type="success">{{ t('plantCropOrganic.warning.no') }}</el-tag>
       </template>
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:plant:cropOrganic:edit']" link type="primary" @click="handleEdit(row)">
@@ -90,22 +86,12 @@ const thumbUrlMap = ref<Record<string, string>>({});
 
 const searchModel = reactive<Record<string, any>>({
   cropCertNo: undefined,
-  cropCertCompany: undefined,
-  isWarning: undefined
+  cropCertCompany: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'cropCertNo', label: t('plantCropOrganic.field.cropCertNo'), type: 'input' },
-  { field: 'cropCertCompany', label: t('plantCropOrganic.field.cropCertCompany'), type: 'input' },
-  {
-    field: 'isWarning',
-    label: t('plantCropOrganic.field.isWarning'),
-    type: 'select',
-    options: [
-      { label: t('plantCropOrganic.warning.yes'), value: 1 },
-      { label: t('plantCropOrganic.warning.no'), value: 2 }
-    ]
-  }
+  { field: 'cropCertCompany', label: t('plantCropOrganic.field.cropCertCompany'), type: 'input' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -114,7 +100,6 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropCertNo', label: t('plantCropOrganic.column.cropCertNo'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'cropCertValid', label: t('plantCropOrganic.column.cropCertValid'), minWidth: 120, align: 'center' },
   { prop: 'cropName', label: t('plantCropOrganic.column.cropName'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'isWarning', label: t('plantCropOrganic.column.warning'), minWidth: 100, align: 'center' },
   { prop: 'updateTime', label: t('plantCropOrganic.column.updateTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'updateByName', label: t('plantCropOrganic.column.updateByName'), minWidth: 120, align: 'center' }
 ]);
@@ -126,8 +111,7 @@ async function fetchList() {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       cropCertNo: searchModel.cropCertNo || undefined,
-      cropCertCompany: searchModel.cropCertCompany || undefined,
-      isWarning: searchModel.isWarning === undefined || searchModel.isWarning === '' ? undefined : Number(searchModel.isWarning)
+      cropCertCompany: searchModel.cropCertCompany || undefined
     };
     const res = await listCropOrganic(query);
     list.value = (res.rows ?? res.data ?? []) as CropOrganicVO[];
@@ -138,8 +122,15 @@ async function fetchList() {
   }
 }
 
+/** 证书图取第一张：列表读 cropImagePreview 恒空，改取多图串 cropImageUrl 的首个 ossId。 */
+function firstImageOssId(row: BizRow): string {
+  const raw = (row.cropImageUrl as string | undefined) ?? '';
+  const first = raw.split(',')[0]?.trim();
+  return first ? String(first) : '';
+}
+
 async function loadThumbUrls() {
-  const ids = Array.from(new Set(list.value.map((r) => r.cropImagePreview).filter((v): v is string => !!v)));
+  const ids = Array.from(new Set(list.value.map((r) => firstImageOssId(r as BizRow)).filter((v) => !!v)));
   if (ids.length === 0) {
     thumbUrlMap.value = {};
     return;
@@ -196,8 +187,7 @@ function handleExport() {
     'djs/plant/cropOrganic/export',
     {
       cropCertNo: searchModel.cropCertNo || undefined,
-      cropCertCompany: searchModel.cropCertCompany || undefined,
-      isWarning: searchModel.isWarning === undefined || searchModel.isWarning === '' ? undefined : Number(searchModel.isWarning)
+      cropCertCompany: searchModel.cropCertCompany || undefined
     },
     `crop_organic_${new Date().getTime()}.xlsx`
   );

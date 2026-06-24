@@ -37,6 +37,16 @@
           <span class="w-28 shrink-0 truncate" :title="data.plot.plotName">{{ data.plot.plotName }}</span>
           <span class="w-16 shrink-0 text-xs text-gray-400">{{ data.plot.plotArea }} 亩</span>
 
+          <!-- 当年轮作次数 + 查看本地块当年计划明细 @click.stop：不触发整行勾选 -->
+          <span class="flex shrink-0 items-center gap-2" @click.stop>
+            <el-tag v-if="data.plot.rotationCount" size="small" type="warning">
+              {{ t('plantPlan.wizard.rotationCount', { n: data.plot.rotationCount }) }}
+            </el-tag>
+            <el-button v-if="data.plot.rotationCount" link type="primary" size="small" @click="openPlotPlans(data.plot)">
+              {{ t('plantPlan.wizard.viewPlotPlans') }}
+            </el-button>
+          </span>
+
           <!-- 选中后的配置区 @click.stop：操作下拉不触发整行勾选 -->
           <span v-if="isSelected(data.plot.plotId)" class="flex shrink-0 items-center gap-2" @click.stop>
             <el-select
@@ -95,6 +105,32 @@
     <div class="mt-4 text-sm text-gray-500">
       {{ t('plantPlan.wizard.selectedSummary', { count: modelValue?.length || 0 }) }}
     </div>
+
+    <!-- 查看某地块当年计划实际数据弹框（点蒙层可关，强约束 13） -->
+    <el-dialog v-model="plotPlansVisible" :title="plotPlansTitle" width="900px" append-to-body>
+      <el-table v-loading="plotPlansLoading" :data="plotPlanRows" stripe size="small" border>
+        <el-table-column :label="t('plantPlan.wizard.plotPlan.plantTime')" align="center" header-align="center">
+          <template #default="{ row }">{{ formatPlantTime(row) }}</template>
+        </el-table-column>
+        <el-table-column :label="t('plantPlan.wizard.plotPlan.crop')" prop="cropName" align="center" header-align="center" show-overflow-tooltip />
+        <el-table-column :label="t('plantPlan.wizard.plotPlan.earliestHarvestdate')" prop="earliestHarvestdate" align="center" header-align="center">
+          <template #default="{ row }">{{ row.earliestHarvestdate || '-' }}</template>
+        </el-table-column>
+        <el-table-column :label="t('plantPlan.wizard.plotPlan.lastHarvestdate')" prop="lastHarvestdate" align="center" header-align="center">
+          <template #default="{ row }">{{ row.lastHarvestdate || '-' }}</template>
+        </el-table-column>
+        <el-table-column :label="t('plantPlan.wizard.plotPlan.plantStatus')" align="center" header-align="center">
+          <template #default="{ row }">
+            <dict-tag :options="djs_plant_plan_status" :value="row.plantStatus" />
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('plantPlan.wizard.plotPlan.harvestStatus')" align="center" header-align="center">
+          <template #default="{ row }">
+            <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -102,10 +138,10 @@
 import { ref, onMounted, computed, getCurrentInstance } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { listAvailablePlots } from '@/api/djs-plant/plan';
+import { listAvailablePlots, getPlotPlanDetails } from '@/api/djs-plant/plan';
 import { listAllZone } from '@/api/djs-plant/zone';
 import { listAllTeam } from '@/api/djs-plant/team';
-import type { PlotByZoneVO, PlotByZoneRow, PlantDetailInput } from '@/api/djs-plant/plan/types';
+import type { PlotByZoneVO, PlotByZoneRow, PlotYearPlanRowVO, PlantDetailInput } from '@/api/djs-plant/plan/types';
 import type { PlantWorkTeamVO } from '@/api/djs-plant/team/types';
 
 interface RegionNode {
@@ -135,13 +171,22 @@ const emit = defineEmits<{ (e: 'update:modelValue', val: PlantDetailInput[]): vo
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 // 大区字典：树上把片区 zoneBelong 值（A/B）显示成字典 label（一期基地/二期基地）
-const { djs_zone_belong } = toRefs<any>(proxy?.useDict('djs_zone_belong'));
+// 状态字典：查看弹框里种植状态 / 采摘状态 + 旬别 label 拼接计划种植时间
+const { djs_zone_belong, djs_plant_plan_status, djs_pick_status, djs_plant_period } = toRefs<any>(
+  proxy?.useDict('djs_zone_belong', 'djs_plant_plan_status', 'djs_pick_status', 'djs_plant_period')
+);
 const zones = ref<PlotByZoneVO[]>([]);
 const teams = ref<PlantWorkTeamVO[]>([]);
 const zoneBelongMap = ref<Map<string, string>>(new Map());
 const loading = ref(false);
 const treeProps = { children: 'children', label: 'label' };
 const ORPHAN_BELONG = '未分组';
+
+// 查看某地块当年计划明细弹框
+const plotPlansVisible = ref(false);
+const plotPlansLoading = ref(false);
+const plotPlansTitle = ref('');
+const plotPlanRows = ref<PlotYearPlanRowVO[]>([]);
 
 const monthOpts = computed(() => Array.from({ length: 12 }, (_, i) => i + 1));
 const periodOpts = [
@@ -276,11 +321,34 @@ function belongLabel(value: string): string {
   return opt?.label || value;
 }
 
+// 查看：拉该地块当年计划实际数据，弹框列表展示
+async function openPlotPlans(plot: PlotByZoneRow) {
+  if (props.planYear == null) return;
+  plotPlansTitle.value = t('plantPlan.wizard.plotPlan.title', { plot: plot.plotName, year: props.planYear });
+  plotPlansVisible.value = true;
+  plotPlansLoading.value = true;
+  plotPlanRows.value = [];
+  try {
+    const res = await getPlotPlanDetails(plot.plotId, props.planYear);
+    plotPlanRows.value = (res.data || []) as PlotYearPlanRowVO[];
+  } finally {
+    plotPlansLoading.value = false;
+  }
+}
+
+// 计划种植时间：plantMonth + plantPeriod 拼成「6月中旬」（旬别走 djs_plant_period 字典 label）
+function formatPlantTime(row: PlotYearPlanRowVO): string {
+  if (row.plantMonth == null) return '-';
+  const opt = (djs_plant_period.value || []).find((d: any) => String(d.value) === String(row.plantPeriod));
+  const periodLabel = opt?.label ?? '';
+  return `${row.plantMonth}月${periodLabel}`;
+}
+
 onMounted(async () => {
   loading.value = true;
   try {
     const [zoneRes, allZoneRes, teamRes] = await Promise.all([
-      listAvailablePlots(),
+      listAvailablePlots(props.planYear),
       listAllZone(),
       listAllTeam({ teamStatus: 1 })
     ]);

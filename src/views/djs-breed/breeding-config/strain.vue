@@ -54,31 +54,18 @@ const searchModel = reactive<Record<string, any>>({
   createTimeRange: undefined
 });
 
-const codeOptions = ref<Array<{ label: string; value: string }>>([]);
-
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  {
-    field: 'breedStrainCode',
-    label: t('breeding.field.typeCode'),
-    type: 'select',
-    options: codeOptions.value
-  },
+  { field: 'breedStrainCode', label: t('breeding.field.typeCode'), type: 'input' },
   { field: 'breedStrainName', label: t('breeding.field.typeName'), type: 'input' },
   { field: 'createTimeRange', label: t('breeding.field.createTimeRange'), type: 'daterange' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'breedStrainCode', label: t('breeding.column.typeCode'), width: 160 },
+  { prop: 'breedStrainCode', label: t('breeding.column.typeCode'), minWidth: 160 },
   { prop: 'breedStrainName', label: t('breeding.column.typeName'), minWidth: 160 },
-  { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'createByName', label: t('breeding.column.createBy'), width: 120, align: 'center' }
+  { prop: 'createTime', label: t('breeding.column.createTime'), minWidth: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'createByName', label: t('breeding.column.createBy'), minWidth: 120, align: 'center' }
 ]);
-
-async function loadCodeOptions() {
-  const res = await listBreedInfo({ pageNum: 1, pageSize: 999, breedStrain: BREED_STRAIN });
-  const rows = (res.rows ?? res.data ?? []) as BreedInfoVO[];
-  codeOptions.value = rows.map((r) => ({ label: r.breedStrainCode, value: r.breedStrainCode }));
-}
 
 async function fetchList() {
   loading.value = true;
@@ -128,17 +115,13 @@ async function onDel(rowOrRows: BizRow | BizRow[]) {
   await delBreedInfo(ids);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
-  loadCodeOptions();
 }
 
-// 新增/编辑品系成功后：刷新列表 + 重拉筛选下拉选项（K164：新增品系后筛选框立即包含新 code，无需重登）
-async function onFormSuccess() {
+function onFormSuccess() {
   fetchList();
-  await loadCodeOptions();
 }
 
 onMounted(() => {
   fetchList();
-  loadCodeOptions();
 });
 </script>

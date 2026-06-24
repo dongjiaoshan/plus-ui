@@ -20,10 +20,10 @@
           <el-table-column :label="t('plantPlot.planting.cropName')" prop="cropName" min-width="120" align="center" header-align="center" show-overflow-tooltip />
           <el-table-column :label="t('plantPlot.planting.plantByName')" prop="plantByName" width="120" align="center" header-align="center" show-overflow-tooltip />
           <el-table-column :label="t('plantPlot.planting.expectedYield')" prop="expectedYield" width="120" align="center" header-align="center">
-            <template #default="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(2)} kg/亩` : '-' }}</template>
+            <template #default="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(3)} kg/亩` : '-' }}</template>
           </el-table-column>
           <el-table-column :label="t('plantPlot.planting.actualYield')" prop="actualYield" width="120" align="center" header-align="center">
-            <template #default="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(2)} kg/亩` : '-' }}</template>
+            <template #default="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(3)} kg/亩` : '-' }}</template>
           </el-table-column>
           <el-table-column :label="t('plantPlot.planting.earliestHarvestdate')" prop="earliestHarvestdate" width="120" align="center" header-align="center" />
           <el-table-column :label="t('plantPlot.planting.lastHarvestdate')" prop="lastHarvestdate" width="120" align="center" header-align="center" />

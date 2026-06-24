@@ -92,10 +92,10 @@
           <template #default="{ row }">{{ row.plotArea }} 亩</template>
         </el-table-column>
         <el-table-column :label="t('plantPlan.field.expectedYield')" prop="expectedYield" width="120" align="center" header-align="center">
-          <template #default="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(2)} kg` : '-' }}</template>
+          <template #default="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(3)} kg` : '-' }}</template>
         </el-table-column>
         <el-table-column :label="t('plantPlan.column.actualYield')" prop="actualYield" width="120" align="center" header-align="center">
-          <template #default="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(2)} kg` : '-' }}</template>
+          <template #default="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(3)} kg` : '-' }}</template>
         </el-table-column>
         <el-table-column :label="t('plantPlan.field.plantStatus')" width="100" align="center" header-align="center">
           <template #default="{ row }">
@@ -152,7 +152,6 @@
     <el-card v-if="!editMode" shadow="never">
       <template #header>
         <span class="text-base font-medium">{{ t('plantPlan.gantt.title') }}</span>
-        <el-tag size="small" type="info" class="ml-2">{{ t('plantPlan.gantt.v1Note') }}</el-tag>
       </template>
 
       <div v-if="!ganttRows.length" class="py-6 text-center text-gray-400">
@@ -162,7 +161,6 @@
       <div v-else ref="ganttWrapRef" class="gantt-wrap">
         <div class="gantt-legend mb-2 flex gap-4 text-xs">
           <span><i class="legend-block plan-bar" /> {{ t('plantPlan.gantt.legend.plan') }}</span>
-          <span><i class="legend-block actual-bar" /> {{ t('plantPlan.gantt.legend.actual') }}</span>
         </div>
 
         <div class="gantt-axis flex">
@@ -178,12 +176,6 @@
               class="gantt-bar plan-bar"
               :style="planBarStyle(row)"
               :title="`${t('plantPlan.gantt.legend.plan')}: ${row.earliestHarvestdate} ~ ${row.lastHarvestdate}`"
-            />
-            <div
-              v-if="row.beginActualdate"
-              class="gantt-bar actual-bar"
-              :style="actualBarStyle(row)"
-              :title="`${t('plantPlan.gantt.legend.actual')}: ${row.beginActualdate} ~ ${row.endActualdate || '...'}`"
             />
           </div>
         </div>
@@ -367,9 +359,6 @@ function formatPlantTime(row: PlantDetailsVO): string {
 function planBarStyle(row: PlantPlanGanttRow) {
   return barStyle(row.earliestHarvestdate, row.lastHarvestdate, 6);
 }
-function actualBarStyle(row: PlantPlanGanttRow) {
-  return barStyle(row.beginActualdate, row.endActualdate, 24);
-}
 
 function barStyle(start?: string, end?: string, topOffset = 6) {
   if (!start) return { display: 'none' } as Record<string, string>;
@@ -434,10 +423,6 @@ function goList() {
   background: #67c23a;
   opacity: 0.85;
 }
-.actual-bar {
-  background: #409eff;
-  opacity: 0.95;
-}
 .legend-block {
   display: inline-block;
   width: 14px;
@@ -448,8 +433,5 @@ function goList() {
 }
 .legend-block.plan-bar {
   background: #67c23a;
-}
-.legend-block.actual-bar {
-  background: #409eff;
 }
 </style>

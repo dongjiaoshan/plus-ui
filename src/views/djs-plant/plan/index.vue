@@ -31,12 +31,12 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <!-- 种植图片缩略图 -->
+      <!-- 作物图片缩略图：cropImage 为 crop_image_preview 的 ossId，需先解析成 url -->
       <template #cell-cropImage="{ row }">
         <el-image
-          v-if="row.cropImage"
-          :src="row.cropImage"
-          :preview-src-list="[row.cropImage]"
+          v-if="row.cropImage && thumbUrlMap[String(row.cropImage)]"
+          :src="thumbUrlMap[String(row.cropImage)]"
+          :preview-src-list="[thumbUrlMap[String(row.cropImage)]]"
           :preview-teleported="true"
           fit="cover"
           class="plan-crop-thumb"
@@ -58,6 +58,7 @@
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { delPlan, listPlan, getPlanStats } from '@/api/djs-plant/plan';
+import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { PlantPlanQuery, PlantPlanStatsVO, PlantPlanVO } from '@/api/djs-plant/plan/types';
 import { PLAN_BASE } from './route';
 import { useI18n } from 'vue-i18n';
@@ -69,6 +70,9 @@ const { t } = useI18n();
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
+// 旬别字典（05 上旬 / 15 中旬 / 25 下旬），用于「计划种植日期」列拼「6月中旬」
+const { djs_plant_period } = toRefs<any>(proxy?.useDict('djs_plant_period'));
+
 const tableRef = ref<BizTableExpose>();
 
 const list = ref<PlantPlanVO[]>([]);
@@ -76,6 +80,8 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
+// 作物图片：cropImage(ossId) → 解析后的 url
+const thumbUrlMap = ref<Record<string, string>>({});
 
 // ---- 顶部 KPI ----
 const stats = ref<PlantPlanStatsVO>({});
@@ -87,15 +93,29 @@ const kpiCards = computed(() => [
   { key: 'cropVarietyCount', label: t('plantPlan.kpi.cropVarietyCount'), value: stats.value.cropVarietyCount ?? '-' }
 ]);
 
-// ---- 筛选：原型 4 项（计划日期 / 种植农作物 / 计划更新时间 / 计划编制人） ----
+// 「计划种植日期」展示：plantMonth + plantPeriod 拼成「6月中旬」（旬别走 djs_plant_period 字典 label）
+function formatPlantingPeriod(r: BizRow): string {
+  const month = r.plantMonth as number | undefined;
+  if (month == null) return '-';
+  const opt = (djs_plant_period.value || []).find((d: any) => String(d.value) === String(r.plantPeriod));
+  const periodLabel = opt?.label ?? '';
+  return `${month}${t('plantPlan.unit.month')}${periodLabel}`;
+}
+
+// ---- 筛选：原型 4 项（计划月份 / 种植农作物 / 计划更新时间 / 计划编制人） ----
 // 农作物 / 计划编制人改为输入框模糊查询（cropName / queryCreateByName）。
 const searchModel = reactive<Record<string, unknown>>({
   planYear: undefined,
-  planDate: undefined,
+  planMonth: undefined,
   cropName: undefined,
   queryUpdateTime: undefined,
   queryCreateByName: undefined
 });
+
+// 计划月份下拉：1-12 月
+const planMonthOptions = computed(() =>
+  Array.from({ length: 12 }, (_, i) => ({ label: `${i + 1}${t('plantPlan.unit.month')}`, value: i + 1 }))
+);
 
 // 计划年份下拉：当前年向前 5 年 + 向后 1 年
 const planYearOptions = computed(() => {
@@ -109,7 +129,7 @@ const planYearOptions = computed(() => {
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'planYear', label: t('plantPlan.column.planYear'), type: 'select', placeholder: t('plantPlan.placeholder.planYear'), options: planYearOptions.value, width: 160 },
-  { field: 'planDate', label: t('plantPlan.field.planDate'), type: 'daterange', placeholder: t('plantPlan.placeholder.planDateFilter'), width: 240 },
+  { field: 'planMonth', label: t('plantPlan.field.planMonth'), type: 'select', clearable: true, placeholder: t('plantPlan.placeholder.planMonth'), options: planMonthOptions.value, width: 160 },
   { field: 'cropName', label: t('plantPlan.field.crop'), type: 'input', placeholder: t('plantPlan.placeholder.cropNameInput'), width: 160 },
   { field: 'queryUpdateTime', label: t('plantPlan.field.updateTime'), type: 'date', placeholder: t('plantPlan.placeholder.updateTime'), width: 160 },
   { field: 'queryCreateByName', label: t('plantPlan.field.createBy'), type: 'input', placeholder: t('plantPlan.placeholder.createByInput'), width: 160 }
@@ -118,8 +138,13 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 // ---- 列：原型 14 列序（去首列 planNo + plantDate 文本列；最早/最晚改取开始日期；时间列用 updateTime） ----
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'planYear', label: t('plantPlan.column.planYear'), minWidth: 90, align: 'center' },
-  { prop: 'earliestBegindate', label: t('plantPlan.column.earliestBegindate'), minWidth: 130, align: 'center' },
-  { prop: 'lastBegindate', label: t('plantPlan.column.lastBegindate'), minWidth: 130, align: 'center' },
+  {
+    prop: 'plantingPeriod',
+    label: t('plantPlan.column.plantingPeriod'),
+    minWidth: 130,
+    align: 'center',
+    formatter: (r: BizRow) => formatPlantingPeriod(r)
+  },
   { prop: 'cropImage', label: t('plantPlan.column.cropImage'), width: 90, align: 'center' },
   { prop: 'cropName', label: t('plantPlan.column.crop'), minWidth: 140, align: 'center', showOverflowTooltip: true },
   {
@@ -141,14 +166,14 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('plantPlan.column.expectedYield'),
     minWidth: 120,
     align: 'center',
-    formatter: (r: BizRow) => (r.expectedYield != null ? `${Number(r.expectedYield).toFixed(2)} kg` : '-')
+    formatter: (r: BizRow) => (r.expectedYield != null ? `${Number(r.expectedYield).toFixed(3)} kg` : '-')
   },
   {
     prop: 'actualYield',
     label: t('plantPlan.column.actualYield'),
     minWidth: 120,
     align: 'center',
-    formatter: (r: BizRow) => (r.actualYield != null ? `${Number(r.actualYield).toFixed(2)} kg` : '-')
+    formatter: (r: BizRow) => (r.actualYield != null ? `${Number(r.actualYield).toFixed(3)} kg` : '-')
   },
   {
     prop: 'finishedPlot',
@@ -180,14 +205,10 @@ async function loadStats() {
   }
 }
 
-// 计划日期 daterange [开始, 结束] 拆为后端 beginPlanDate/endPlanDate；移除原始数组字段
+// 筛选：planYear + planMonth（计划月份）+ cropName + 更新时间 + 编制人
 function buildQueryParams(): PlantPlanQuery {
-  const { planDate, ...rest } = searchModel as Record<string, unknown>;
-  const range = Array.isArray(planDate) ? (planDate as string[]) : [];
   return {
-    ...rest,
-    beginPlanDate: range[0] || undefined,
-    endPlanDate: range[1] || undefined,
+    ...(searchModel as Record<string, unknown>),
     pageNum: pageNum.value,
     pageSize: pageSize.value
   };
@@ -200,8 +221,29 @@ async function loadList() {
     const res = await listPlan(params);
     list.value = (res.rows as PlantPlanVO[]) || [];
     total.value = res.total || 0;
+    await loadThumbUrls();
   } finally {
     loading.value = false;
+  }
+}
+
+// 把列表里各行的 cropImage(ossId) 批量解析成可显示 url
+async function loadThumbUrls() {
+  const ids = Array.from(new Set(list.value.map((r) => r.cropImage).filter((v): v is string => !!v)));
+  if (ids.length === 0) {
+    thumbUrlMap.value = {};
+    return;
+  }
+  try {
+    const res = await listOssByIds(ids.join(','));
+    const map: Record<string, string> = {};
+    (res.data ?? []).forEach((o: any) => {
+      if (o?.ossId != null && o?.url) map[String(o.ossId)] = o.url;
+    });
+    thumbUrlMap.value = map;
+  } catch (e) {
+    console.warn('[PlantPlan] listOssByIds failed', e);
+    thumbUrlMap.value = {};
   }
 }
 

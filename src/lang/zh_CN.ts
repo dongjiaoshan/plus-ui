@@ -1483,6 +1483,7 @@ export default {
         cropName: '作物名称',
         plotCode: '地块编号',
         plotName: '种植地块',
+        plantStatus: '种植状态',
         harvestStatus: '采摘状态',
         planSeason: '种植季',
         planPlantDate: '计划种植日期',
@@ -1553,13 +1554,13 @@ export default {
       plotName: '地块名称',
       zoneBelong: '所属大区',
       zoneName: '所属片区',
-      plotType: '类型',
+      plotType: '土地类型',
       soilType: '土壤类型',
       soilFertility: '土壤肥力',
-      plotStatus: '状态',
+      plotStatus: '地块状态',
       plotArea: '面积',
       isLease: '租赁',
-      plotImage: '图片',
+      plotImage: '地块图片',
       historyPlantCount: '历史种植次数',
       maxYieldCrop: '最高亩产作物',
       maxYieldPerMu: '最高亩作物产量',
@@ -1765,6 +1766,7 @@ export default {
     column: {
       cropCode: '作物编码',
       cropName: '作物名称',
+      cropImage: '作物图片',
       varietyName: '品种名',
       cropFamily: '科属',
       plantingSeason: '种植季节',
@@ -1889,7 +1891,8 @@ export default {
       plantPeriod: '上中下旬',
       plantBy: '种植班组',
       harvestBy: '采摘班组',
-      expectedYield: '预计产量',
+      expectedYield: '预计产量(kg)',
+      planMonth: '计划月份',
       planDate: '计划日期',
       updateTime: '计划更新时间',
       createBy: '计划编制人'
@@ -1900,7 +1903,8 @@ export default {
       planSeason: '季节',
       crop: '作物',
       cropName: '种植农作物',
-      cropImage: '种植图片',
+      cropImage: '作物图片',
+      plantingPeriod: '计划种植日期',
       plantDate: '种植开始日期',
       earliestBegindate: '计划最早开始日期',
       lastBegindate: '计划最晚开始日期',
@@ -1928,9 +1932,10 @@ export default {
       cropNameInput: '请输入农作物名称',
       updateTime: '请选择计划更新时间',
       createBy: '请选择计划编制人',
-      createByInput: '请输入计划编制人姓名'
+      createByInput: '请输入计划编制人姓名',
+      planMonth: '请选择计划月份'
     },
-    unit: { mu: '亩' },
+    unit: { mu: '亩', month: '月' },
     kpi: {
       idlePlot: '空地块数',
       plantedPlot: '已种植地块数',
@@ -2004,6 +2009,17 @@ export default {
         month: '月',
         period: '上/中/下旬',
         team: '选班组'
+      },
+      rotationCount: '{n}次轮作计划',
+      viewPlotPlans: '查看',
+      plotPlan: {
+        title: '{plot}（{year}年）计划明细',
+        plantTime: '计划种植时间',
+        crop: '计划种植作物',
+        earliestHarvestdate: '最早采摘日期',
+        lastHarvestdate: '最晚采摘日期',
+        plantStatus: '种植状态',
+        harvestStatus: '采摘状态'
       }
     },
     dict: {
@@ -2015,7 +2031,7 @@ export default {
       missingId: '缺少计划 ID'
     },
     gantt: {
-      title: '采摘甘特图',
+      title: '采摘计划甘特图',
       v1Note: 'V1 简化版',
       empty: '暂无明细，无法绘制甘特图',
       legend: { plan: '计划范围', actual: '实际执行' }
@@ -2085,9 +2101,9 @@ export default {
         beginHarvestdate: '实际开始采摘日期',
         endHarvestdate: '实际结束采摘日期',
         harvestBy: '采摘班组',
-        standardYield: '标准产量',
-        actualYield: '实际采收量',
-        lossYield: '灾害损失'
+        standardYield: '预计产量(kg)',
+        actualYield: '实际采收量(kg)',
+        lossYield: '灾害预计损失量(kg)'
       },
       filter: {
         isPick: '是否采摘活动',
@@ -3547,9 +3563,10 @@ export default {
       disasterType: '灾害类型',
       plotName: '地块名称',
       plotCode: '地块编号',
+      plotZone: '地块片区',
       cropName: '作物',
       lossRate: '损失率',
-      lossYield: '损失产量',
+      lossYield: '预计损失产量',
       isWarning: '预警',
       teamName: '处理班组',
       createTime: '登记时间'
@@ -3559,6 +3576,7 @@ export default {
       dateRange: '发生日期',
       plot: '地块名称',
       plotCode: '地块编号',
+      plotZone: '地块片区',
       disasterType: '灾害类型',
       isWarning: '是否预警',
       crop: '作物',
@@ -3598,6 +3616,7 @@ export default {
       farmType: '农事类型',
       plotName: '地块名称',
       plotCode: '地块编号',
+      plotZone: '地块片区',
       cropName: '作物',
       teamName: '处理班组',
       remark: '备注',
@@ -3613,6 +3632,7 @@ export default {
       crop: '作物',
       plot: '地块名称',
       plotCode: '地块编号',
+      plotZone: '地块片区',
       team: '处理班组'
     },
     action: {

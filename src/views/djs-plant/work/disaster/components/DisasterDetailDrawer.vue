@@ -15,7 +15,7 @@
           {{ detail.lossRate != null ? `${detail.lossRate}%` : '-' }}
         </el-descriptions-item>
         <el-descriptions-item :label="t('plantDisaster.column.lossYield')">
-          {{ detail.lossYield != null ? `${detail.lossYield} kg` : '-' }}
+          {{ detail.lossYield != null ? `${Number(detail.lossYield).toFixed(3)} kg` : '-' }}
         </el-descriptions-item>
         <el-descriptions-item :label="t('plantDisaster.column.teamName')">{{ detail.teamName ?? '-' }}</el-descriptions-item>
         <el-descriptions-item :label="t('plantDisaster.detail.remark')">{{ detail.remark || '-' }}</el-descriptions-item>

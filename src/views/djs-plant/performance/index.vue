@@ -103,7 +103,7 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('plantPerformance.column.pickWeight'),
     minWidth: 140,
     align: 'center',
-    formatter: (r: BizRow) => (r.totalPickWeight != null ? `${Number(r.totalPickWeight).toFixed(2)} 斤` : '-')
+    formatter: (r: BizRow) => (r.totalPickWeight != null ? `${Number(r.totalPickWeight).toFixed(3)} 斤` : '-')
   },
   {
     prop: 'teamMonthAmount',

@@ -15,6 +15,8 @@ export interface DisasterRecordVO {
   plotName?: string;
   /** service enrich：地块编码 */
   plotCode?: string;
+  /** service enrich：地块所属片区名 */
+  plotZoneName?: string;
   /** 地块类型快照（字典 djs_plot_status） */
   plotType?: number;
   cropId?: string;
@@ -52,6 +54,8 @@ export interface DisasterRecordQuery extends PageQuery {
    * 后端依赖：FarmRecordsQuery 需新增 plotCode 字段 + buildWrapper 反查，否则此参数不生效。
    */
   plotCode?: string;
+  /** 地块片区筛选（后端经 plot_info.zone_id eq 反查 plotId 列表后 IN 过滤；FarmRecordsQuery.zoneId）。 */
+  zoneId?: number | string;
   disasterType?: string;
   /**
    * 作物名 like 筛选（原型「请输入作物信息」）。
@@ -85,6 +89,8 @@ export interface FarmRecordVO {
   plotName?: string;
   /** service enrich：地块编码 */
   plotCode?: string;
+  /** service enrich：地块所属片区名 */
+  plotZoneName?: string;
   /** 地块类型快照（字典 djs_plot_status） */
   plotType?: number;
   cropId?: string;
@@ -136,6 +142,8 @@ export interface FarmRecordQuery extends PageQuery {
   plotCode?: string;
   /** 地块名称模糊搜索（后端经 plot_info 反查 plotId 列表后 IN 过滤） */
   plotName?: string;
+  /** 地块片区筛选（后端经 plot_info.zone_id eq 反查 plotId 列表后 IN 过滤；FarmRecordsQuery.zoneId）。 */
+  zoneId?: number | string;
   /** 作物名称模糊搜索（后端 crop_name 已落主表，直接 like） */
   cropName?: string;
   /** 处理班组 ID */

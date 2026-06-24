@@ -8,7 +8,7 @@
       :columns="plotColumns"
       :search-schema="plotSearchSchema"
       :search-model="plotSearchModel"
-      :dict-types="['djs_plot_type', 'djs_plot_status', 'djs_plot_lease', 'djs_soil_type', 'djs_soil_fertility', 'djs_zone_belong']"
+      :dict-types="['djs_plot_type', 'djs_plot_status', 'djs_plot_lease', 'djs_zone_belong']"
       :page-num="plotPageNum"
       :page-size="plotPageSize"
       row-key="id"
@@ -115,14 +115,12 @@ const plotSearchSchema = computed<SearchFieldSchema[]>(() => [
 
 const plotColumns = computed<BizTableColumn[]>(() => [
   { prop: 'plotCode', label: t('plantPlot.column.plotCode'), width: 180, showOverflowTooltip: true },
+  { prop: 'plotImagePreview', label: t('plantPlot.column.plotImage'), width: 80, align: 'center' },
   { prop: 'plotName', label: t('plantPlot.column.plotName'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'plotStatus', label: t('plantPlot.column.plotStatus'), width: 90, align: 'center', dictType: 'djs_plot_status' },
   { prop: 'zoneBelong', label: t('plantPlot.column.zoneBelong'), width: 110, align: 'center', dictType: 'djs_zone_belong' },
   { prop: 'zoneName', label: t('plantPlot.column.zoneName'), width: 130, showOverflowTooltip: true },
   { prop: 'plotType', label: t('plantPlot.column.plotType'), width: 90, align: 'center', dictType: 'djs_plot_type' },
-  { prop: 'soilType', label: t('plantPlot.column.soilType'), width: 100, align: 'center', dictType: 'djs_soil_type' },
-  { prop: 'soilFertility', label: t('plantPlot.column.soilFertility'), width: 100, align: 'center', dictType: 'djs_soil_fertility' },
-  { prop: 'plotImagePreview', label: t('plantPlot.column.plotImage'), width: 80, align: 'center' },
-  { prop: 'plotStatus', label: t('plantPlot.column.plotStatus'), width: 90, align: 'center', dictType: 'djs_plot_status' },
   {
     prop: 'plotArea',
     label: t('plantPlot.column.plotArea'),
@@ -150,7 +148,7 @@ const plotColumns = computed<BizTableColumn[]>(() => [
     label: t('plantPlot.column.maxYieldPerMu'),
     width: 130,
     align: 'right',
-    formatter: (r: BizRow) => (r.maxYieldPerMu != null ? `${Number(r.maxYieldPerMu).toFixed(2)} kg/亩` : '—')
+    formatter: (r: BizRow) => (r.maxYieldPerMu != null ? `${Number(r.maxYieldPerMu).toFixed(3)} kg/亩` : '—')
   },
   {
     prop: 'plotRemark',

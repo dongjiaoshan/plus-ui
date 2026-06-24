@@ -68,7 +68,9 @@ export interface CropDetailVO {
   plotCode?: string;
   /** 3 种植地块（plot_name）。 */
   plotName?: string;
-  /** 3 采摘状态（字典 djs_pick_status）。 */
+  /** 3 种植状态（字典 djs_plant_plan_status）。 */
+  plantStatus?: string;
+  /** 4 采摘状态（字典 djs_pick_status）。 */
   harvestStatus?: string;
   /** 4 种植季（字典 djs_planting_season）。 */
   planSeason?: string;

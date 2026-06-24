@@ -8,6 +8,7 @@ import type {
   PlantPlanUpdateForm,
   PlantPlanDetailVO,
   PlotByZoneVO,
+  PlotYearPlanRowVO,
   PlantPlanGanttVO
 } from './plan/types';
 
@@ -71,9 +72,19 @@ export const getPlanGantt = (id: number | string): AxiosPromise<PlantPlanGanttVO
   });
 };
 
-export const listAvailablePlots = (): AxiosPromise<PlotByZoneVO[]> => {
+export const listAvailablePlots = (planYear?: number): AxiosPromise<PlotByZoneVO[]> => {
   return request({
     url: '/djs/plant/plan/availablePlots',
-    method: 'get'
+    method: 'get',
+    params: { planYear }
+  });
+};
+
+/** 向导 step3「查看」：某地块在某年份的计划实际数据列表（测试反馈 row27）。 */
+export const getPlotPlanDetails = (plotId: number | string, planYear: number): AxiosPromise<PlotYearPlanRowVO[]> => {
+  return request({
+    url: '/djs/plant/plan/plotPlanDetails',
+    method: 'get',
+    params: { plotId, planYear }
   });
 };

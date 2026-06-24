@@ -16,6 +16,11 @@
       <el-table-column :label="t('plantOverview.detail.col.cropName')" prop="cropName" min-width="110" show-overflow-tooltip align="center" header-align="center" />
       <el-table-column :label="t('plantOverview.detail.col.plotCode')" prop="plotCode" min-width="150" show-overflow-tooltip align="center" header-align="center" />
       <el-table-column :label="t('plantOverview.detail.col.plotName')" prop="plotName" min-width="120" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('plantOverview.detail.col.plantStatus')" min-width="100" align="center" header-align="center">
+        <template #default="{ row }">
+          <dict-tag :options="djs_plant_plan_status" :value="row.plantStatus" />
+        </template>
+      </el-table-column>
       <el-table-column :label="t('plantOverview.detail.col.harvestStatus')" min-width="100" align="center" header-align="center">
         <template #default="{ row }">
           <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
@@ -43,10 +48,10 @@
         <template #default="{ row }">{{ row.plotArea ?? '-' }}</template>
       </el-table-column>
       <el-table-column :label="t('plantOverview.detail.col.expectedYield')" min-width="120" align="center" header-align="center">
-        <template #default="{ row }">{{ row.expectedYield == null ? '-' : Number(row.expectedYield).toFixed(2) }}</template>
+        <template #default="{ row }">{{ row.expectedYield == null ? '-' : Number(row.expectedYield).toFixed(3) }}</template>
       </el-table-column>
       <el-table-column :label="t('plantOverview.detail.col.actualYield')" min-width="120" align="center" header-align="center">
-        <template #default="{ row }">{{ row.actualYield == null ? '-' : Number(row.actualYield).toFixed(2) }}</template>
+        <template #default="{ row }">{{ row.actualYield == null ? '-' : Number(row.actualYield).toFixed(3) }}</template>
       </el-table-column>
     </el-table>
 
@@ -75,7 +80,7 @@ import type { ComponentInternalInstance } from 'vue';
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-const { djs_pick_status } = toRefs<any>(proxy?.useDict('djs_pick_status'));
+const { djs_pick_status, djs_plant_plan_status } = toRefs<any>(proxy?.useDict('djs_pick_status', 'djs_plant_plan_status'));
 
 /** 抽屉开关（父用 v-model 控制）。 */
 const visible = defineModel<boolean>({ required: true });

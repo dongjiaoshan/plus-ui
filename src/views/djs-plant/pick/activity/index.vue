@@ -21,10 +21,10 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-todayPickWeight="{ row }">{{ row.todayPickWeight != null ? `${Number(row.todayPickWeight).toFixed(2)} kg` : '-' }}</template>
-      <template #cell-expectedYield="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(2)} kg` : '-' }}</template>
+      <template #cell-todayPickWeight="{ row }">{{ row.todayPickWeight != null ? `${Number(row.todayPickWeight).toFixed(3)} kg` : '-' }}</template>
+      <template #cell-expectedYield="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(3)} kg` : '-' }}</template>
       <template #cell-cumulativePickWeight="{ row }">
-        {{ row.cumulativePickWeight != null ? `${Number(row.cumulativePickWeight).toFixed(2)} kg` : '-' }}
+        {{ row.cumulativePickWeight != null ? `${Number(row.cumulativePickWeight).toFixed(3)} kg` : '-' }}
       </template>
     </BizTable>
   </div>

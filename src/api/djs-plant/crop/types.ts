@@ -12,6 +12,8 @@ export interface CropInfoVO extends BaseEntity {
   varietyOrigin?: string;
   cropFamily?: string;
   relatedProduct?: number | string;
+  /** 关联产品名称（后端按 relatedProduct → t_warehouse_product_info.product_name 批量 enrich） */
+  relatedProductName?: string;
   plantingSeason?: string;
   sowingPeriod?: string;
   maxCycle?: number;

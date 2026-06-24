@@ -35,7 +35,7 @@
         </el-descriptions-item>
         <el-descriptions-item v-if="detail.lossRate != null" :label="t('plantWork.column.lossRate')"> {{ detail.lossRate }}% </el-descriptions-item>
         <el-descriptions-item v-if="detail.lossYield != null" :label="t('plantWork.column.lossYield')">
-          {{ detail.lossYield }} kg
+          {{ Number(detail.lossYield).toFixed(3) }} kg
         </el-descriptions-item>
 
         <el-descriptions-item :label="t('plantWork.detail.remark')">{{ detail.remark || '-' }}</el-descriptions-item>
@@ -43,24 +43,14 @@
           {{ detail.createTime ? proxy?.parseTime?.(detail.createTime) : '-' }}
         </el-descriptions-item>
       </el-descriptions>
-
-      <div class="mt-4">
-        <div class="mb-2 font-bold">{{ t('plantWork.detail.proof') }}</div>
-        <div v-if="proofUrls.length > 0" class="flex flex-wrap gap-2">
-          <ImagePreview v-for="(url, idx) in proofUrls" :key="idx" :width="88" :height="88" :src="url" />
-        </div>
-        <el-empty v-else :description="t('plantWork.detail.noProof')" :image-size="60" />
-      </div>
     </template>
     <el-empty v-else :description="t('plantWork.detail.notFound')" />
   </el-drawer>
 </template>
 
 <script setup name="RecordDetailDrawer" lang="ts">
-import ImagePreview from '@/components/ImagePreview/index.vue';
 import { getFarmRecordDetail } from '@/api/djs-plant/farm-records';
 import type { FarmRecordVO } from '@/api/djs-plant/farm-records/types';
-import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 import { useDict } from '@/utils/dict';
 
@@ -83,7 +73,6 @@ const innerVisible = computed({
 
 const loading = ref(false);
 const detail = ref<FarmRecordVO | null>(null);
-const proofUrls = ref<string[]>([]);
 
 watch(
   () => [props.visible, props.id] as const,
@@ -97,34 +86,14 @@ watch(
 async function loadDetail(id: string) {
   loading.value = true;
   detail.value = null;
-  proofUrls.value = [];
   try {
     const res = await getFarmRecordDetail(id);
     detail.value = (res.data ?? null) as FarmRecordVO | null;
-    await loadProofUrls();
   } catch (e) {
     console.warn('[FarmRecord] getFarmRecordDetail failed', e);
     detail.value = null;
   } finally {
     loading.value = false;
-  }
-}
-
-async function loadProofUrls() {
-  const ossIds = (detail.value?.proofOssIds ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-  if (ossIds.length === 0) {
-    proofUrls.value = [];
-    return;
-  }
-  try {
-    const res = await listOssByIds(ossIds.join(','));
-    proofUrls.value = (res.data ?? []).map((o: any) => o?.url).filter((u: string): u is string => !!u);
-  } catch (e) {
-    console.warn('[FarmRecord] listOssByIds failed', e);
-    proofUrls.value = [];
   }
 }
 </script>

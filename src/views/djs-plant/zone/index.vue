@@ -102,14 +102,15 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   }
 ]);
 
+// 全列改用 minWidth（弹性列），让 Element Plus 在表格剩余宽度内按比例平均分配，避免固定 width 列纹丝不动导致名称/说明两列过宽、其余偏窄的不均匀问题。
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'zoneName', label: t('plantZone.column.zoneName'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'zoneDesc', label: t('plantZone.column.zoneDesc'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'zoneBelong', label: t('plantZone.column.zoneBelong'), width: 120, align: 'center', dictType: 'djs_zone_belong', showOverflowTooltip: true },
-  { prop: 'plotCount', label: t('plantZone.column.plotCount'), width: 120, align: 'center' },
-  { prop: 'zoneStatus', label: t('plantZone.column.zoneStatus'), width: 90, align: 'center', dictType: 'sys_normal_disable' },
-  { prop: 'updateTime', label: t('plantZone.column.updateTime'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'updateByName', label: t('plantZone.column.updateByName'), width: 110, align: 'center' }
+  { prop: 'zoneName', label: t('plantZone.column.zoneName'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'zoneDesc', label: t('plantZone.column.zoneDesc'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'zoneBelong', label: t('plantZone.column.zoneBelong'), minWidth: 140, align: 'center', dictType: 'djs_zone_belong', showOverflowTooltip: true },
+  { prop: 'plotCount', label: t('plantZone.column.plotCount'), minWidth: 140, align: 'center' },
+  { prop: 'zoneStatus', label: t('plantZone.column.zoneStatus'), minWidth: 140, align: 'center', dictType: 'sys_normal_disable' },
+  { prop: 'updateTime', label: t('plantZone.column.updateTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'updateByName', label: t('plantZone.column.updateByName'), minWidth: 140, align: 'center' }
 ]);
 
 async function loadUserOptions() {

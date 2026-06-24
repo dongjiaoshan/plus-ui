@@ -6,7 +6,7 @@
         <el-table v-loading="loading" :data="cropRows" border size="small" show-summary :summary-method="yieldSummary">
           <el-table-column prop="cropName" :label="t('plantPerformance.detail.cropName')" min-width="120" show-overflow-tooltip align="center" header-align="center" />
           <el-table-column :label="t('plantPerformance.detail.cropPickWeight')" width="130" align="center" header-align="center">
-            <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(2)} 斤` : '-' }}</template>
+            <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(3)} 斤` : '-' }}</template>
           </el-table-column>
           <el-table-column :label="t('plantPerformance.detail.cropUnitPrice')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ row.unitPriceSnapshot != null ? `${row.unitPriceSnapshot} 元/斤` : '-' }}</template>
@@ -68,7 +68,7 @@ function yieldSummary({ columns }: { columns: TableColumnCtx<PlantWorkPerformanc
     if (idx === 0) {
       sums[idx] = t('plantPerformance.detail.totalAmount');
     } else if (idx === 1) {
-      sums[idx] = `${weightSum.toFixed(2)} 斤`;
+      sums[idx] = `${weightSum.toFixed(3)} 斤`;
     } else if (idx === 2) {
       sums[idx] = '';
     } else {

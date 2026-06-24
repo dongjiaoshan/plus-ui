@@ -33,9 +33,9 @@
       </template>
       <template #cell-totalAcreage="{ row }">{{ row.totalAcreage != null ? `${row.totalAcreage} 亩` : '-' }}</template>
       <template #cell-currentPlantedArea="{ row }">{{ row.currentPlantedArea != null ? `${row.currentPlantedArea} 亩` : '-' }}</template>
-      <template #cell-expectedYield="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(2)} kg` : '-' }}</template>
-      <template #cell-actualYield="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(2)} kg` : '-' }}</template>
-      <template #cell-disasterLoss="{ row }">{{ row.disasterLoss != null ? `${Number(row.disasterLoss).toFixed(2)} kg` : '-' }}</template>
+      <template #cell-expectedYield="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(3)} kg` : '-' }}</template>
+      <template #cell-actualYield="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(3)} kg` : '-' }}</template>
+      <template #cell-disasterLoss="{ row }">{{ row.disasterLoss != null ? `${Number(row.disasterLoss).toFixed(3)} kg` : '-' }}</template>
       <template #cell-activityPlotCount="{ row }">
         <el-tag v-if="row.activityPlotCount > 0" type="warning" size="small">{{ row.activityPlotCount }}</el-tag>
         <span v-else>-</span>

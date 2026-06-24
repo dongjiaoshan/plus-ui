@@ -377,6 +377,13 @@ onUnmounted(() => {
 .cert-card {
   height: 100%;
 }
+/* 让左侧 KPI 卡内容纵向撑满卡片：两段 KPI（土地总览 / 今日工作）上下铺开，
+   使「今日工作」行底部下沉、与右侧有机证书一览卡片底部对齐在同一水平线（row29）。 */
+.kpi-card :deep(.el-card__body) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 .kpi-line {
   display: flex;
   align-items: center;
@@ -429,6 +436,10 @@ onUnmounted(() => {
 }
 .inner-divider {
   margin: 14px 0;
+}
+/* 分隔线 + 「今日工作」段整体下沉到卡片底部，与右侧证书卡底部对齐（row29） */
+.kpi-card :deep(.el-card__body) > .inner-divider {
+  margin-top: auto;
 }
 .cert-item {
   text-align: center;

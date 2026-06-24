@@ -16,8 +16,8 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.cropImageUrl')" prop="cropImageUrl">
-                <OssUpload ref="ossImgRef" v-model="imgOssIdsModel" biz-type="plant_crop" :limit="9" :file-size="10" />
+              <el-form-item :label="t('plantCrop.field.cropImageUrl')" prop="cropImagePreview">
+                <OssUpload ref="ossImgRef" v-model="imgOssIdsModel" biz-type="plant_crop" :limit="1" :file-size="10" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -32,9 +32,7 @@
             </el-col>
             <el-col :span="12">
               <el-form-item :label="t('plantCrop.field.cropFamily')" prop="cropFamily">
-                <el-select v-model="form.cropFamily" :placeholder="t('plantCrop.placeholder.cropFamily')" clearable style="width: 100%">
-                  <el-option v-for="d in djs_crop_family" :key="d.value" :label="d.label" :value="d.value" />
-                </el-select>
+                <el-input v-model="form.cropFamily" :placeholder="t('plantCrop.placeholder.cropFamily')" clearable maxlength="64" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -141,7 +139,7 @@ import { useOssBridge } from '@/composables/useOssBridge';
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-const { djs_crop_family, djs_planting_season } = toRefs<any>(proxy?.useDict('djs_crop_family', 'djs_planting_season'));
+const { djs_planting_season } = toRefs<any>(proxy?.useDict('djs_planting_season'));
 
 const visible = ref(false);
 const submitting = ref(false);
@@ -153,7 +151,10 @@ const defaultForm = (): CropInfoForm => ({
   id: undefined,
   cropCode: '',
   cropName: '',
+  cropImagePreview: undefined,
   cropImageUrl: undefined,
+  imageOssId: undefined,
+  imageSource: undefined,
   varietyName: undefined,
   varietyOrigin: undefined,
   cropFamily: undefined,
@@ -192,8 +193,9 @@ const plantingSeasonArr = computed<string[]>({
   }
 });
 
-// OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段是多 ossId 字符串（useOssBridge 桥接）
-const imgOssIdsModel = useOssBridge(form, 'cropImageUrl', 'multi');
+// OssUpload v-model string[]（雪花 ossId 全链路 string）；作物图单图：桥接到 cropImagePreview（单 ossId）
+// 提交时同步写 imageOssId（IMG-LIB-001 L1，供采摘计划/总览/resolver 链路读取，三端一致）
+const imgOssIdsModel = useOssBridge(form, 'cropImagePreview', 'single');
 
 const rules = computed(() => ({
   cropCode: [{ required: true, message: t('plantCrop.rule.cropCode.required'), trigger: 'blur' }],
@@ -237,9 +239,12 @@ const openEdit = async (id: number | string) => {
   visible.value = true;
 
   await nextTick();
-  if (form.value.cropImageUrl) {
+  // 回填单图：优先 cropImagePreview（新口径），兼容旧数据 imageOssId / cropImageUrl 首图
+  const previewOssId = form.value.cropImagePreview || form.value.imageOssId || form.value.cropImageUrl?.split(',')[0];
+  if (previewOssId) {
+    form.value.cropImagePreview = String(previewOssId);
     try {
-      const ossRes = await listOssByIds(form.value.cropImageUrl);
+      const ossRes = await listOssByIds(String(previewOssId));
       const items = (ossRes.data || []).map((o) => ({
         ossId: String(o.ossId),
         url: o.url,
@@ -264,6 +269,14 @@ const submit = () => {
     if (!valid) return;
     submitting.value = true;
     try {
+      // 单图同步：用户上传的图既写 cropImagePreview（列表缩略图），也写 imageOssId（IMG-LIB L1，供 resolver/采摘/总览读）
+      // 手动上传标记 imageSource=1，避免后端按作物名 rematch 覆盖
+      if (form.value.cropImagePreview) {
+        form.value.imageOssId = form.value.cropImagePreview;
+        form.value.imageSource = 1;
+      } else {
+        form.value.imageOssId = undefined;
+      }
       if (form.value.id) {
         await updateCrop(form.value);
       } else {

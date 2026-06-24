@@ -43,6 +43,7 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import RecordDetailDrawer from './components/RecordDetailDrawer.vue';
 import { listFarmRecords } from '@/api/djs-plant/farm-records';
 import { listAllTeam } from '@/api/djs-plant/team';
+import { listAllZone } from '@/api/djs-plant/zone';
 import type { FarmRecordQuery, FarmRecordVO } from '@/api/djs-plant/farm-records/types';
 import { useI18n } from 'vue-i18n';
 
@@ -82,6 +83,7 @@ const detailVisible = ref(false);
 const currentId = ref<string>('');
 
 const teamOptions = ref<Array<{ label: string; value: string }>>([]);
+const zoneOptions = ref<Array<{ label: string; value: string }>>([]);
 
 // 农事类型下拉（djs_farm_work_type 排除灾害 + 采摘活动 —— 这两类有独立页）
 const { djs_farm_work_type } = toRefs<any>(proxy?.useDict('djs_farm_work_type'));
@@ -93,6 +95,7 @@ const searchModel = reactive<Record<string, any>>({
   farmType: undefined,
   farmDate: undefined,
   cropName: undefined,
+  zoneId: undefined,
   plotCode: undefined,
   plotName: undefined,
   farmBy: undefined
@@ -102,21 +105,23 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'farmType', label: t('plantWork.field.farmType'), type: 'select', options: farmTypeOptions.value },
   { field: 'farmDate', label: t('plantWork.field.dateRange'), type: 'daterange' },
   { field: 'cropName', label: t('plantWork.field.crop'), type: 'input' },
+  { field: 'zoneId', label: t('plantWork.field.plotZone'), type: 'select', options: zoneOptions.value },
   { field: 'plotCode', label: t('plantWork.field.plotCode'), type: 'input' },
   { field: 'plotName', label: t('plantWork.field.plot'), type: 'input' },
   { field: 'farmBy', label: t('plantWork.field.team'), type: 'select', options: teamOptions.value }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'recordNo', label: t('plantWork.column.recordNo'), width: 150, showOverflowTooltip: true },
+  { prop: 'recordNo', label: t('plantWork.column.recordNo'), minWidth: 150, showOverflowTooltip: true },
   { prop: 'farmDate', label: t('plantWork.column.farmDate'), width: 120, align: 'center' },
-  { prop: 'farmType', label: t('plantWork.column.farmType'), width: 110, align: 'center', dictType: 'djs_farm_work_type' },
+  { prop: 'farmType', label: t('plantWork.column.farmType'), minWidth: 110, align: 'center', dictType: 'djs_farm_work_type' },
+  // 地块所属片区（plotZoneName 由后端 enrichRefs 每行 enrich 返回），列在地块编号之前
+  { prop: 'plotZoneName', label: t('plantWork.column.plotZone'), minWidth: 130, showOverflowTooltip: true },
   // 地块编号列对齐原型「地块编号」（如 A-D-001）；plotCode 由后端 FarmRecordsVo service enrich 返回
-  { prop: 'plotCode', label: t('plantWork.column.plotCode'), width: 120, showOverflowTooltip: true },
-  { prop: 'plotName', label: t('plantWork.column.plotName'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'cropName', label: t('plantWork.column.cropName'), width: 120, showOverflowTooltip: true },
-  { prop: 'teamName', label: t('plantWork.column.teamName'), width: 120, showOverflowTooltip: true },
-  { prop: 'remark', label: t('plantWork.column.remark'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'plotCode', label: t('plantWork.column.plotCode'), minWidth: 130, showOverflowTooltip: true },
+  { prop: 'plotName', label: t('plantWork.column.plotName'), minWidth: 130, showOverflowTooltip: true },
+  { prop: 'cropName', label: t('plantWork.column.cropName'), minWidth: 130, showOverflowTooltip: true },
+  { prop: 'teamName', label: t('plantWork.column.teamName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'createTime', label: t('plantWork.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 
@@ -132,6 +137,7 @@ function buildQuery(): FarmRecordQuery {
     pageSize: pageSize.value,
     farmWorkTypes: resolveWorkTypes(),
     cropName: searchModel.cropName || undefined,
+    zoneId: searchModel.zoneId || undefined,
     plotCode: searchModel.plotCode || undefined,
     plotName: searchModel.plotName || undefined,
     farmBy: searchModel.farmBy || undefined,
@@ -162,6 +168,17 @@ async function loadTeamOptions() {
   }
 }
 
+async function loadZoneOptions() {
+  try {
+    const res = await listAllZone();
+    const rows = (res.rows ?? res.data ?? []) as Array<{ id: string | number; zoneName: string }>;
+    zoneOptions.value = rows.map((z) => ({ label: z.zoneName, value: String(z.id) }));
+  } catch (e) {
+    console.warn('[FarmRecord] listAllZone failed', e);
+    zoneOptions.value = [];
+  }
+}
+
 function handleSearch(payload: Record<string, any>) {
   Object.assign(searchModel, payload);
   pageNum.value = 1;
@@ -188,6 +205,7 @@ function handleExport() {
     {
       farmWorkTypes: resolveWorkTypes(),
       cropName: searchModel.cropName || undefined,
+      zoneId: searchModel.zoneId || undefined,
       plotCode: searchModel.plotCode || undefined,
       plotName: searchModel.plotName || undefined,
       farmBy: searchModel.farmBy || undefined,
@@ -200,6 +218,7 @@ function handleExport() {
 
 onMounted(() => {
   loadTeamOptions();
+  loadZoneOptions();
   fetchList();
 });
 </script>

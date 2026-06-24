@@ -11,10 +11,10 @@
           <el-table-column prop="plotName" :label="t('plantCrop.planting.plotName')" min-width="110" show-overflow-tooltip align="center" header-align="center" />
           <el-table-column prop="plantTeamName" :label="t('plantCrop.planting.plantTeamName')" min-width="100" show-overflow-tooltip align="center" header-align="center" />
           <el-table-column prop="predictedPer" :label="t('plantCrop.planting.predictedPer')" min-width="120" align="center" header-align="center">
-            <template #default="{ row }">{{ row.predictedPer != null ? `${Number(row.predictedPer).toFixed(2)} kg/亩` : '-' }}</template>
+            <template #default="{ row }">{{ row.predictedPer != null ? `${Number(row.predictedPer).toFixed(3)} kg/亩` : '-' }}</template>
           </el-table-column>
           <el-table-column prop="actualPer" :label="t('plantCrop.planting.actualPer')" min-width="120" align="center" header-align="center">
-            <template #default="{ row }">{{ row.actualPer != null ? `${Number(row.actualPer).toFixed(2)} kg/亩` : '-' }}</template>
+            <template #default="{ row }">{{ row.actualPer != null ? `${Number(row.actualPer).toFixed(3)} kg/亩` : '-' }}</template>
           </el-table-column>
           <el-table-column prop="earliestHarvestDate" :label="t('plantCrop.planting.earliestHarvestDate')" min-width="140" align="center" header-align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.earliestHarvestDate, '{y}-{m}-{d}') || '-' }}</template>
@@ -67,12 +67,12 @@
           <el-descriptions-item :label="t('plantCrop.field.sowingPeriod')">{{ data.sowingPeriod || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.column.cycle')">{{ cycleText }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.predictedPer')">{{
-            data.predictedPer != null ? `${Number(data.predictedPer).toFixed(2)} kg/亩` : '-'
+            data.predictedPer != null ? `${Number(data.predictedPer).toFixed(3)} kg/亩` : '-'
           }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.pickUnitPrice')">{{
             data.pickUnitPrice != null ? `¥${data.pickUnitPrice}/斤` : '-'
           }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.relatedProduct')">{{ data.relatedProduct ?? '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.relatedProduct')">{{ data.relatedProductName ?? '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.cropImageUrl')" :span="2">
             <image-preview v-if="cropImageUrl" :src="cropImageUrl" :width="160" :height="120" />
             <el-text v-else type="info">-</el-text>
@@ -121,15 +121,19 @@ const open = async (id: number | string) => {
   farmworkList.value = [];
   activeTab.value = 'planting';
   visible.value = true;
-  // VO 已 enrich cropImageUrl 则直用；否则用 cropImagePreview(ossId) 回查
-  if (data.value.cropImageUrl) {
-    cropImageUrl.value = data.value.cropImageUrl;
-  } else if (data.value.cropImagePreview) {
-    try {
-      const ossRes = await listOssByIds(data.value.cropImagePreview);
-      cropImageUrl.value = ossRes.data?.[0]?.url ?? '';
-    } catch (e) {
-      console.warn('[CropView] listOssByIds failed for cropImagePreview', data.value.cropImagePreview, e);
+  // 单图展示：优先后端 resolver 已回填的 imageUrl（public url）；
+  // 否则用单 ossId（cropImagePreview 新口径，兼容旧 imageOssId / cropImageUrl 首图）回查 url
+  if (data.value.imageUrl) {
+    cropImageUrl.value = data.value.imageUrl;
+  } else {
+    const previewOssId = data.value.cropImagePreview || data.value.imageOssId || data.value.cropImageUrl?.split(',')[0];
+    if (previewOssId) {
+      try {
+        const ossRes = await listOssByIds(String(previewOssId));
+        cropImageUrl.value = ossRes.data?.[0]?.url ?? '';
+      } catch (e) {
+        console.warn('[CropView] listOssByIds failed for crop image', previewOssId, e);
+      }
     }
   }
   // 并发拉两张子表

@@ -54,31 +54,18 @@ const searchModel = reactive<Record<string, any>>({
   createTimeRange: undefined
 });
 
-const codeOptions = ref<Array<{ label: string; value: string }>>([]);
-
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  {
-    field: 'breedStrainCode',
-    label: t('breeding.field.lineCode'),
-    type: 'select',
-    options: codeOptions.value
-  },
+  { field: 'breedStrainCode', label: t('breeding.field.lineCode'), type: 'input' },
   { field: 'breedStrainName', label: t('breeding.field.lineName'), type: 'input' },
   { field: 'createTimeRange', label: t('breeding.field.createTimeRange'), type: 'daterange' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'breedStrainCode', label: t('breeding.column.lineCode'), width: 160 },
+  { prop: 'breedStrainCode', label: t('breeding.column.lineCode'), minWidth: 160 },
   { prop: 'breedStrainName', label: t('breeding.column.lineName'), minWidth: 160 },
-  { prop: 'createTime', label: t('breeding.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'createByName', label: t('breeding.column.createBy'), width: 120, align: 'center' }
+  { prop: 'createTime', label: t('breeding.column.createTime'), minWidth: 170, align: 'center', formatter: 'datetime' },
+  { prop: 'createByName', label: t('breeding.column.createBy'), minWidth: 120, align: 'center' }
 ]);
-
-async function loadCodeOptions() {
-  const res = await listBreedInfo({ pageNum: 1, pageSize: 999, breedStrain: BREED_STRAIN });
-  const rows = (res.rows ?? res.data ?? []) as BreedInfoVO[];
-  codeOptions.value = rows.map((r) => ({ label: r.breedStrainCode, value: r.breedStrainCode }));
-}
 
 async function fetchList() {
   loading.value = true;
@@ -128,11 +115,9 @@ async function onDel(rowOrRows: BizRow | BizRow[]) {
   await delBreedInfo(ids);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
-  loadCodeOptions();
 }
 
 onMounted(() => {
   fetchList();
-  loadCodeOptions();
 });
 </script>

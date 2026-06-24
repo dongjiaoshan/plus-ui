@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_crop_family', 'djs_planting_season']"
+      :dict-types="['djs_planting_season']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -93,7 +93,7 @@ const searchModel = reactive<Record<string, any>>({
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'cropName', label: t('plantCrop.field.cropName'), type: 'input' },
-  { field: 'cropFamily', label: t('plantCrop.field.cropFamily'), type: 'select', dictType: 'djs_crop_family' },
+  { field: 'cropFamily', label: t('plantCrop.field.cropFamily'), type: 'input' },
   { field: 'varietyName', label: t('plantCrop.field.varietyName'), type: 'input' },
   { field: 'varietyOrigin', label: t('plantCrop.search.varietyOrigin'), type: 'input' },
   {
@@ -127,10 +127,10 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'cropImagePreview', label: t('plantPlot.column.plotImage'), width: 80, align: 'center' },
+  { prop: 'cropImagePreview', label: t('plantCrop.column.cropImage'), width: 80, align: 'center' },
   { prop: 'cropName', label: t('plantCrop.column.cropName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'cropCode', label: t('plantCrop.column.cropCode'), width: 100, showOverflowTooltip: true },
-  { prop: 'cropFamily', label: t('plantCrop.column.cropFamily'), width: 100, align: 'center', dictType: 'djs_crop_family' },
+  { prop: 'cropFamily', label: t('plantCrop.column.cropFamily'), width: 100, align: 'center', showOverflowTooltip: true },
   { prop: 'varietyName', label: t('plantCrop.column.varietyName'), width: 130, showOverflowTooltip: true },
   { prop: 'varietyOrigin', label: t('plantCrop.label.varietyOrigin'), width: 140, showOverflowTooltip: true },
   {
@@ -146,21 +146,21 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('plantCrop.column.predictedPer'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.predictedPer != null ? `${Number(r.predictedPer).toFixed(2)} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.predictedPer != null ? `${Number(r.predictedPer).toFixed(3)} kg/亩` : '-')
   },
   {
     prop: 'maxYield',
     label: t('plantCrop.label.maxYield'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.maxYield != null ? `${Number(r.maxYield).toFixed(2)} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.maxYield != null ? `${Number(r.maxYield).toFixed(3)} kg/亩` : '-')
   },
   {
     prop: 'avgYield',
     label: t('plantCrop.label.avgYield'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.avgYield != null ? `${Number(r.avgYield).toFixed(2)} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.avgYield != null ? `${Number(r.avgYield).toFixed(3)} kg/亩` : '-')
   },
   {
     prop: 'historyPlantCount',
@@ -169,7 +169,7 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'right',
     formatter: (r: BizRow) => (r.historyPlantCount != null ? `${r.historyPlantCount} 次` : '0 次')
   },
-  { prop: 'relatedProduct', label: t('plantCrop.label.relatedProduct'), width: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'relatedProductName', label: t('plantCrop.label.relatedProduct'), width: 140, align: 'center', showOverflowTooltip: true },
   { prop: 'updateByName', label: t('plantCrop.label.updateByName'), width: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'updateTime', label: t('plantCrop.label.updateTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);

@@ -27,7 +27,7 @@
         <span>{{ row.lossRate != null ? `${row.lossRate}%` : '-' }}</span>
       </template>
       <template #cell-lossYield="{ row }">
-        <span>{{ row.lossYield != null ? `${Number(row.lossYield).toFixed(2)} kg` : '-' }}</span>
+        <span>{{ row.lossYield != null ? `${Number(row.lossYield).toFixed(3)} kg` : '-' }}</span>
       </template>
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:plant:farm:disaster:list']" link type="primary" @click="handleViewDetail(row)">
@@ -49,6 +49,7 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import DisasterDetailDrawer from './components/DisasterDetailDrawer.vue';
 import { listDisaster } from '@/api/djs-plant/farm-records';
 import { listAllTeam } from '@/api/djs-plant/team';
+import { listAllZone } from '@/api/djs-plant/zone';
 import type { DisasterRecordQuery, DisasterRecordVO } from '@/api/djs-plant/farm-records/types';
 import { useI18n } from 'vue-i18n';
 
@@ -66,9 +67,11 @@ const detailVisible = ref(false);
 const currentId = ref<string>('');
 
 const teamOptions = ref<Array<{ label: string; value: string }>>([]);
+const zoneOptions = ref<Array<{ label: string; value: string }>>([]);
 
 const searchModel = reactive<Record<string, any>>({
   farmDate: undefined,
+  zoneId: undefined,
   plotCode: undefined,
   plotName: undefined,
   disasterType: undefined,
@@ -78,6 +81,7 @@ const searchModel = reactive<Record<string, any>>({
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'farmDate', label: t('plantDisaster.field.dateRange'), type: 'daterange' },
+  { field: 'zoneId', label: t('plantDisaster.field.plotZone'), type: 'select', options: zoneOptions.value },
   // 地块编号 / 地块名称：均改文本输入框模糊搜索（后端经 plot_info 反查 plotId IN 过滤）
   { field: 'plotCode', label: t('plantDisaster.field.plotCode'), type: 'input' },
   { field: 'plotName', label: t('plantDisaster.field.plot'), type: 'input' },
@@ -88,16 +92,18 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'recordNo', label: t('plantDisaster.column.recordNo'), width: 150, showOverflowTooltip: true },
+  { prop: 'recordNo', label: t('plantDisaster.column.recordNo'), minWidth: 150, showOverflowTooltip: true },
   { prop: 'farmDate', label: t('plantDisaster.column.farmDate'), width: 120, align: 'center' },
+  // 地块所属片区（plotZoneName 由后端 enrichRefs 每行 enrich 返回），列在地块编号之前
+  { prop: 'plotZoneName', label: t('plantDisaster.column.plotZone'), minWidth: 120, showOverflowTooltip: true },
   // 地块编号列对齐原型「地块编号」（如 A-D-001）；plotCode 由后端 FarmRecordsVo service enrich 返回
-  { prop: 'plotCode', label: t('plantDisaster.column.plotCode'), width: 120, showOverflowTooltip: true },
-  { prop: 'plotName', label: t('plantDisaster.column.plotName'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'cropName', label: t('plantDisaster.column.cropName'), width: 120, showOverflowTooltip: true },
-  { prop: 'disasterType', label: t('plantDisaster.column.disasterType'), width: 100, align: 'center', dictType: 'djs_disaster_type' },
-  { prop: 'lossRate', label: t('plantDisaster.column.lossRate'), width: 100, align: 'right' },
-  { prop: 'lossYield', label: t('plantDisaster.column.lossYield'), width: 120, align: 'right' },
-  { prop: 'teamName', label: t('plantDisaster.column.teamName'), width: 120, showOverflowTooltip: true },
+  { prop: 'plotCode', label: t('plantDisaster.column.plotCode'), minWidth: 120, showOverflowTooltip: true },
+  { prop: 'plotName', label: t('plantDisaster.column.plotName'), minWidth: 120, showOverflowTooltip: true },
+  { prop: 'cropName', label: t('plantDisaster.column.cropName'), minWidth: 120, showOverflowTooltip: true },
+  { prop: 'disasterType', label: t('plantDisaster.column.disasterType'), minWidth: 100, align: 'center', dictType: 'djs_disaster_type' },
+  { prop: 'lossRate', label: t('plantDisaster.column.lossRate'), minWidth: 100, align: 'right' },
+  { prop: 'lossYield', label: t('plantDisaster.column.lossYield'), minWidth: 130, align: 'right' },
+  { prop: 'teamName', label: t('plantDisaster.column.teamName'), minWidth: 120, showOverflowTooltip: true },
   { prop: 'createTime', label: t('plantDisaster.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 
@@ -106,6 +112,7 @@ function buildQuery(): DisasterRecordQuery {
   return {
     pageNum: pageNum.value,
     pageSize: pageSize.value,
+    zoneId: searchModel.zoneId || undefined,
     plotCode: searchModel.plotCode || undefined,
     plotName: searchModel.plotName || undefined,
     disasterType: searchModel.disasterType || undefined,
@@ -140,6 +147,17 @@ async function loadTeamOptions() {
   }
 }
 
+async function loadZoneOptions() {
+  try {
+    const res = await listAllZone();
+    const rows = (res.rows ?? res.data ?? []) as Array<{ id: string | number; zoneName: string }>;
+    zoneOptions.value = rows.map((z) => ({ label: z.zoneName, value: String(z.id) }));
+  } catch (e) {
+    console.warn('[Disaster] listAllZone failed', e);
+    zoneOptions.value = [];
+  }
+}
+
 function handleSearch(payload: Record<string, any>) {
   Object.assign(searchModel, payload);
   pageNum.value = 1;
@@ -164,6 +182,7 @@ function handleExport() {
   proxy?.download(
     'djs/plant/farm/disaster/export',
     {
+      zoneId: searchModel.zoneId || undefined,
       plotCode: searchModel.plotCode || undefined,
       plotName: searchModel.plotName || undefined,
       disasterType: searchModel.disasterType || undefined,
@@ -178,6 +197,7 @@ function handleExport() {
 
 onMounted(() => {
   loadTeamOptions();
+  loadZoneOptions();
   fetchList();
 });
 </script>

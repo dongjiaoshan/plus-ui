@@ -1480,6 +1480,7 @@ export default {
         cropName: 'Crop Name',
         plotCode: 'Plot No.',
         plotName: 'Plot',
+        plantStatus: 'Planting Status',
         harvestStatus: 'Harvest Status',
         planSeason: 'Season',
         planPlantDate: 'Planned Date',
@@ -1550,13 +1551,13 @@ export default {
       plotName: 'Name',
       zoneBelong: 'Region',
       zoneName: 'Zone',
-      plotType: 'Type',
+      plotType: 'Land Type',
       soilType: 'Soil',
       soilFertility: 'Fertility',
-      plotStatus: 'Status',
+      plotStatus: 'Plot Status',
       plotArea: 'Area',
       isLease: 'Lease',
-      plotImage: 'Image',
+      plotImage: 'Plot Image',
       historyPlantCount: 'Planting Count',
       maxYieldCrop: 'Top-Yield Crop',
       maxYieldPerMu: 'Top Yield/mu',
@@ -1762,6 +1763,7 @@ export default {
     column: {
       cropCode: 'Code',
       cropName: 'Name',
+      cropImage: 'Crop Image',
       varietyName: 'Variety',
       cropFamily: 'Family',
       plantingSeason: 'Season',
@@ -1886,7 +1888,8 @@ export default {
       plantPeriod: 'Period',
       plantBy: 'Plant Team',
       harvestBy: 'Harvest Team',
-      expectedYield: 'Expected Yield',
+      expectedYield: 'Expected Yield (kg)',
+      planMonth: 'Plan Month',
       planDate: 'Plan Date',
       updateTime: 'Updated Time',
       createBy: 'Created By'
@@ -1898,6 +1901,7 @@ export default {
       crop: 'Crop',
       cropName: 'Crop',
       cropImage: 'Crop Image',
+      plantingPeriod: 'Planting Date',
       plantDate: 'Plant Start Date',
       earliestBegindate: 'Earliest Begin Date',
       lastBegindate: 'Latest Begin Date',
@@ -1925,9 +1929,10 @@ export default {
       cropNameInput: 'Enter crop name',
       updateTime: 'Select updated time',
       createBy: 'Select creator',
-      createByInput: 'Enter creator name'
+      createByInput: 'Enter creator name',
+      planMonth: 'Select plan month'
     },
-    unit: { mu: 'mu' },
+    unit: { mu: 'mu', month: 'Mo.' },
     kpi: {
       idlePlot: 'Idle Plots',
       plantedPlot: 'Planted Plots',
@@ -2001,6 +2006,17 @@ export default {
         month: 'Mo.',
         period: 'Early/Mid/Late',
         team: 'Team'
+      },
+      rotationCount: '{n} rotation plan(s)',
+      viewPlotPlans: 'View',
+      plotPlan: {
+        title: '{plot} ({year}) Plan Details',
+        plantTime: 'Plant Time',
+        crop: 'Crop',
+        earliestHarvestdate: 'Earliest Harvest Date',
+        lastHarvestdate: 'Latest Harvest Date',
+        plantStatus: 'Planting Status',
+        harvestStatus: 'Harvest Status'
       }
     },
     dict: {
@@ -2012,7 +2028,7 @@ export default {
       missingId: 'Missing plan id'
     },
     gantt: {
-      title: 'Harvest Gantt',
+      title: 'Harvest Plan Gantt',
       v1Note: 'V1 simplified',
       empty: 'No details; gantt unavailable',
       legend: { plan: 'Plan range', actual: 'Actual' }
@@ -2082,9 +2098,9 @@ export default {
         beginHarvestdate: 'Actual Start',
         endHarvestdate: 'Actual End',
         harvestBy: 'Harvest Team',
-        standardYield: 'Standard Yield',
-        actualYield: 'Actual Yield',
-        lossYield: 'Disaster Loss'
+        standardYield: 'Expected Yield (kg)',
+        actualYield: 'Actual Yield (kg)',
+        lossYield: 'Expected Disaster Loss (kg)'
       },
       filter: {
         isPick: 'Is Activity',
@@ -3544,9 +3560,10 @@ export default {
       disasterType: 'Disaster Type',
       plotName: 'Plot Name',
       plotCode: 'Plot Code',
+      plotZone: 'Plot Zone',
       cropName: 'Crop',
       lossRate: 'Loss Rate',
-      lossYield: 'Loss Yield',
+      lossYield: 'Estimated Loss Yield',
       isWarning: 'Warning',
       teamName: 'Work Team',
       createTime: 'Created At'
@@ -3556,6 +3573,7 @@ export default {
       dateRange: 'Date Range',
       plot: 'Plot Name',
       plotCode: 'Plot Code',
+      plotZone: 'Plot Zone',
       disasterType: 'Disaster Type',
       isWarning: 'Warning',
       crop: 'Crop',
@@ -3595,6 +3613,7 @@ export default {
       farmType: 'Farm Work',
       plotName: 'Plot Name',
       plotCode: 'Plot Code',
+      plotZone: 'Plot Zone',
       cropName: 'Crop',
       teamName: 'Work Team',
       remark: 'Remark',
@@ -3610,6 +3629,7 @@ export default {
       crop: 'Crop',
       plot: 'Plot Name',
       plotCode: 'Plot Code',
+      plotZone: 'Plot Zone',
       team: 'Work Team'
     },
     action: {

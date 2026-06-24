@@ -55,14 +55,14 @@
               <div class="metric-group-title">{{ t('plantOverview.card.planGroup') }}</div>
               <div class="metric-line">{{ t('plantOverview.card.plotCount') }}：{{ c.planPlotCount ?? 0 }}</div>
               <div class="metric-line">{{ t('plantOverview.card.area') }}：{{ c.planArea ?? 0 }}</div>
-              <div class="metric-line">{{ t('plantOverview.card.expectedYield') }}：{{ Number(c.planExpectedYield ?? 0).toFixed(2) }}</div>
+              <div class="metric-line">{{ t('plantOverview.card.expectedYield') }}：{{ Number(c.planExpectedYield ?? 0).toFixed(3) }}</div>
             </div>
             <div class="metric-divider" />
             <div class="metric-group">
               <div class="metric-group-title">{{ t('plantOverview.card.doneGroup') }}</div>
               <div class="metric-line">{{ t('plantOverview.card.donePlotCount') }}：{{ c.donePlotCount ?? 0 }}</div>
               <div class="metric-line">{{ t('plantOverview.card.doneArea') }}：{{ c.doneArea ?? 0 }}</div>
-              <div class="metric-line">{{ t('plantOverview.card.harvestYield') }}：{{ Number(c.doneHarvestYield ?? 0).toFixed(2) }}</div>
+              <div class="metric-line">{{ t('plantOverview.card.harvestYield') }}：{{ Number(c.doneHarvestYield ?? 0).toFixed(3) }}</div>
             </div>
           </div>
         </div>

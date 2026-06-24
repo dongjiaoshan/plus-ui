@@ -16,10 +16,12 @@ export interface PlantPlanQuery {
   /** 农作物名称模糊（原型「种植农作物」筛选，对 crop_info.crop_name like）。 */
   cropName?: string;
   plantStatus?: string;
-  /** 计划日期范围-起（原型「计划日期」筛选，按计划最早开始日期 earliestBegindate 搜索）。 */
+  /** 计划日期范围-起（导出/兼容保留，列表筛选已改为 planMonth）。 */
   beginPlanDate?: string;
-  /** 计划日期范围-止（含当日）。 */
+  /** 计划日期范围-止（导出/兼容保留）。 */
   endPlanDate?: string;
+  /** 计划月份（原型「计划月份」筛选，1-12；结合 planYear 查某年某月的计划）。 */
+  planMonth?: number;
   /** 计划更新时间（按天，原型「计划更新时间」筛选）。 */
   queryUpdateTime?: string;
   /** 计划编制人 user_id（原型「计划编制人」筛选，对 create_by 精确，导出/兼容保留）。 */
@@ -44,6 +46,10 @@ export interface PlantPlanVO {
   earliestBegindate?: string;
   /** 计划最晚开始日期 = MAX(details 开始日期推算)。 */
   lastBegindate?: string;
+  /** 计划种植月份（最早开始那条明细的 plant_month）；列表"计划种植日期"列用。 */
+  plantMonth?: number;
+  /** 计划种植旬别（05/15/25，dict djs_plant_period）；与 plantMonth 拼成「6月中旬」。 */
+  plantPeriod?: string;
   earliestHarvestdate?: string;
   lastHarvestdate?: string;
   totalArea?: number;
@@ -146,6 +152,27 @@ export interface PlotByZoneRow {
   plotCode: string;
   plotArea: number;
   plotStatus: number;
+  /** 当年该地块计划种植次数（轮作次数）；listAvailablePlots(planYear) 传 planYear 时回填。 */
+  rotationCount?: number;
+}
+
+/** 向导 step3「查看」弹框：某地块当年计划实际数据行（测试反馈 row27）。 */
+export interface PlotYearPlanRowVO {
+  detailId: string;
+  /** 计划种植月份 1-12。 */
+  plantMonth?: number;
+  /** 计划种植旬别 05/15/25（dict djs_plant_period）。 */
+  plantPeriod?: string;
+  /** 计划种植作物名。 */
+  cropName?: string;
+  /** 最早采摘日期。 */
+  earliestHarvestdate?: string;
+  /** 最晚采摘日期。 */
+  lastHarvestdate?: string;
+  /** 种植状态（dict djs_plant_plan_status）。 */
+  plantStatus?: string;
+  /** 采摘状态（dict djs_pick_status）。 */
+  harvestStatus?: string;
 }
 
 export interface PlotByZoneVO {
