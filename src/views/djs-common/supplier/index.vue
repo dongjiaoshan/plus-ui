@@ -80,17 +80,17 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'supplierCode', label: t('supplier.column.supplierCode'), width: 120, showOverflowTooltip: true },
+  { prop: 'supplierCode', label: t('supplier.column.supplierCode'), minWidth: 120, showOverflowTooltip: true },
   { prop: 'supplierName', label: t('supplier.column.supplierName'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'supplierType', label: t('supplier.column.supplierType'), width: 110, align: 'center', dictType: 'djs_supplier_type' },
-  { prop: 'liaisonName', label: t('supplier.column.liaisonName'), width: 120 },
-  { prop: 'liaisonPhone', label: t('supplier.column.liaisonPhone'), width: 140, align: 'center' },
-  { prop: 'settleType', label: t('supplier.column.settleType'), width: 100, align: 'center', dictType: 'djs_settle_type' },
-  { prop: 'businessStatus', label: t('supplier.column.businessStatus'), width: 100, align: 'center', dictType: 'djs_supplier_status' },
-  { prop: 'dealCount', label: t('supplier.column.dealCount'), width: 90, align: 'center' },
-  { prop: 'purchaseQty', label: t('supplier.column.purchaseQty'), width: 110, align: 'center' },
-  { prop: 'remark', label: t('supplier.column.remark'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'updateTime', label: t('supplier.column.createTime'), width: 170, align: 'center', formatter: 'datetime' }
+  { prop: 'supplierType', label: t('supplier.column.supplierType'), minWidth: 110, align: 'center', dictType: 'djs_supplier_type' },
+  { prop: 'liaisonName', label: t('supplier.column.liaisonName'), minWidth: 110, align: 'center' },
+  { prop: 'liaisonPhone', label: t('supplier.column.liaisonPhone'), minWidth: 130, align: 'center' },
+  { prop: 'settleType', label: t('supplier.column.settleType'), minWidth: 100, align: 'center', dictType: 'djs_settle_type' },
+  { prop: 'businessStatus', label: t('supplier.column.businessStatus'), minWidth: 100, align: 'center', dictType: 'djs_supplier_status' },
+  { prop: 'dealCount', label: t('supplier.column.dealCount'), minWidth: 90, align: 'center' },
+  { prop: 'purchaseQty', label: t('supplier.column.purchaseQty'), minWidth: 110, align: 'center' },
+  { prop: 'remark', label: t('supplier.column.remark'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'updateTime', label: t('supplier.column.createTime'), minWidth: 160, align: 'center', formatter: 'datetime' }
 ]);
 
 function buildQuery(): SupplierQuery {

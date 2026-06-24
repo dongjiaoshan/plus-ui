@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_flow_type']"
+      :dict-types="['djs_flow_type', 'djs_product_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -41,9 +41,14 @@ const route = useRoute();
 
 /** djs_flow_type 是出入合并字典，入库方式下拉只保留入库方向的值（按 value 白名单过滤，不动字典 seed） */
 const FLOW_TYPE_IN_VALUES = [
+  // 退回入库按来源拆分（FIX-WMS-FLOWDICT-001，旧 return_in 已停写，保留兼容历史流水筛选）
   'return_in',
+  'store_return_in',
+  'prod_return_in',
+  'pick_return_in',
   'cut_out_in',
   'veg_stock_in',
+  'slaughter_burn',
   'bar_in_stock',
   'check_in',
   'supplier_in',
@@ -79,6 +84,7 @@ const locationOptions = ref<Array<{ label: string; value: string | number }>>([]
 const searchModel = reactive<Record<string, any>>({
   dateRange: undefined,
   productName: undefined,
+  productType: undefined,
   flowType: undefined,
   warehouseId: undefined,
   operatorName: undefined,
@@ -89,6 +95,7 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('djs.warehouse.flowIn.flowDate'), type: 'daterange' },
   { field: 'productName', label: t('djs.warehouse.flowIn.productName'), type: 'input' },
+  { field: 'productType', label: t('djs.warehouse.flowIn.productType'), type: 'select', dictType: 'djs_product_type' },
   { field: 'flowType', label: t('djs.warehouse.flowIn.inMode'), type: 'select', options: inModeOptions.value },
   { field: 'warehouseId', label: t('djs.warehouse.flowIn.location'), type: 'select', options: locationOptions.value },
   { field: 'operatorName', label: t('djs.warehouse.flowIn.operator'), type: 'input' },
@@ -99,6 +106,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'flowDate', label: t('djs.warehouse.flowIn.flowDate'), minWidth: 160, formatter: 'datetime', align: 'center' },
   { prop: 'flowNo', label: t('djs.warehouse.flowIn.flowNo'), minWidth: 160, align: 'center' },
+  { prop: 'productType', label: t('djs.warehouse.flowIn.productType'), dictType: 'djs_product_type', minWidth: 100, align: 'center' },
   { prop: 'productCode', label: t('djs.warehouse.flowIn.productCode'), minWidth: 110, align: 'center' },
   { prop: 'productName', label: t('djs.warehouse.flowIn.productName'), minWidth: 160, align: 'center' },
   { prop: 'flowType', label: t('djs.warehouse.flowIn.inMode'), dictType: 'djs_flow_type', minWidth: 110, align: 'center' },
@@ -116,6 +124,7 @@ function buildQuery(): StockFlowQuery {
   return {
     productId: drillProductId.value || undefined,
     productName: searchModel.productName || undefined,
+    productType: searchModel.productType === undefined || searchModel.productType === '' ? undefined : Number(searchModel.productType),
     flowType: searchModel.flowType || undefined,
     warehouseId: searchModel.warehouseId ?? undefined,
     operatorName: searchModel.operatorName || undefined,

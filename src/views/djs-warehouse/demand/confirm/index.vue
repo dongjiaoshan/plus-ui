@@ -15,19 +15,14 @@
 -->
 <template>
   <div class="p-2 demand-confirm">
-    <div class="page-title">{{ t('demand.confirmPage.title') }}</div>
+    <div class="page-header">
+      <div class="page-title">{{ t('demand.confirmPage.title') }}</div>
+      <!-- row47：标题右侧刷新按钮，重拉当前筛选条件下的列表 -->
+      <el-button circle :icon="Refresh" :title="t('common.refresh')" @click="fetchList" />
+    </div>
 
-    <!-- 筛选区：产品名 / 门店 / 状态 -->
+    <!-- 筛选区：门店 / 状态（需求产品名称搜索框已按 row46 移除） -->
     <el-form :model="searchModel" inline class="search-bar">
-      <el-form-item :label="t('demand.confirmPage.filter.productName')">
-        <el-input
-          v-model="searchModel.productName"
-          :placeholder="t('demand.confirmPage.filter.productNamePh')"
-          clearable
-          style="width: 200px"
-          @keyup.enter="handleSearch"
-        />
-      </el-form-item>
       <el-form-item :label="t('demand.confirmPage.filter.storeId')">
         <el-select
           v-model="searchModel.storeId"
@@ -75,7 +70,8 @@
       <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="120" align="center" header-align="center" show-overflow-tooltip />
       <el-table-column :label="t('demand.confirmPage.column.demandStatus')" min-width="120" align="center" header-align="center">
         <template #default="{ row }">
-          <dict-tag :options="djs_demand_status" :value="row.demandStatus" />
+          <!-- row46：表格状态文案与筛选下拉门店视角一致（同源 confirmPage.storeStatus 映射） -->
+          <el-tag :type="storeStatusTagType(row.demandStatus)" effect="light">{{ storeStatusLabel(row.demandStatus) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column :label="t('demand.confirmPage.column.confirmerTime')" prop="confirmerTime" min-width="120" align="center" header-align="center">
@@ -113,6 +109,7 @@
 <script setup name="DemandConfirm" lang="ts">
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { Refresh } from '@element-plus/icons-vue';
 import PigAssignDialog from '../components/PigAssignDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
 import { confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';
@@ -121,8 +118,36 @@ import type { DemandManageQuery, DemandManageVO, DemandProductType, DemandStatus
 const { t } = useI18n();
 const route = useRoute();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-// 表格状态列 dict-tag 仍用全量字典（展示某行真实仓库态，不裁剪）
-const { djs_demand_status } = toRefs<any>(proxy?.useDict('djs_demand_status'));
+
+/**
+ * row46：表格「需求状态」列文案与筛选下拉门店视角（confirmPage.storeStatus）保持一致。
+ * 仓库 7 态 → 门店视角文案映射（同 statusFilterOptions 口径，避免「已提交 vs 待确认」双名）。
+ */
+const STORE_STATUS_LABEL_KEY: Record<string, string> = {
+  SUBMITTED: 'SUBMITTED', // 待确认
+  CONFIRMED: 'CONFIRMED', // 已确认
+  IN_PRODUCTION: 'SHIPPED', // 归「已发货」门店视角
+  PARTIAL_SHIPPED: 'SHIPPED', // 已发货
+  COMPLETED: 'ARRIVED' // 确认到店
+};
+function storeStatusLabel(code?: string): string {
+  const key = code ? STORE_STATUS_LABEL_KEY[code] : undefined;
+  return key ? t(`demand.confirmPage.storeStatus.${key}`) : '—';
+}
+function storeStatusTagType(code?: string): 'info' | 'success' | 'warning' | 'primary' {
+  switch (code) {
+    case 'CONFIRMED':
+      return 'success';
+    case 'IN_PRODUCTION':
+    case 'PARTIAL_SHIPPED':
+      return 'warning';
+    case 'COMPLETED':
+      return 'primary';
+    case 'SUBMITTED':
+    default:
+      return 'info';
+  }
+}
 
 /**
  * 状态筛选下拉门店视角裁剪为 4 态（待确认/已确认/已发货/确认到店），
@@ -160,8 +185,7 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const searchModel = reactive<{ productName?: string; storeId?: string; demandStatus?: string }>({
-  productName: undefined,
+const searchModel = reactive<{ storeId?: string; demandStatus?: string }>({
   storeId: undefined,
   demandStatus: undefined
 });
@@ -207,7 +231,6 @@ async function fetchList() {
       pageSize: pageSize.value,
       productId: productId || undefined,
       demandDate: demandDate || undefined,
-      productName: searchModel.productName || undefined,
       storeId: searchModel.storeId || undefined,
       demandStatus: (searchModel.demandStatus || undefined) as DemandStatusCode | undefined
     };
@@ -235,7 +258,6 @@ function handleSearch() {
   fetchList();
 }
 function handleReset() {
-  searchModel.productName = undefined;
   searchModel.storeId = undefined;
   searchModel.demandStatus = undefined;
   pageNum.value = 1;
@@ -276,10 +298,15 @@ onMounted(async () => {
   box-sizing: border-box;
   overflow-x: auto;
 }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0 12px;
+}
 .page-title {
   font-size: 18px;
   font-weight: 600;
-  margin: 4px 0 12px;
 }
 .search-bar {
   margin-bottom: 8px;

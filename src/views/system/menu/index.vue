@@ -55,14 +55,14 @@
           </template>
         </el-table-column>
         <el-table-column prop="orderNum" label="排序" width="60"></el-table-column>
-        <el-table-column prop="perms" label="权限标识" :show-overflow-tooltip="true"></el-table-column>
-        <el-table-column prop="component" label="组件路径" :show-overflow-tooltip="true"></el-table-column>
+        <el-table-column prop="perms" label="权限标识" :show-overflow-tooltip="true" min-width="200"></el-table-column>
+        <el-table-column prop="component" label="组件路径" :show-overflow-tooltip="true" min-width="200"></el-table-column>
         <el-table-column prop="status" label="状态" width="80">
           <template #default="scope">
             <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" align="center" prop="createTime">
+        <el-table-column label="创建时间" align="center" prop="createTime" min-width="170">
           <template #default="scope">
             <span>{{ scope.row.createTime }}</span>
           </template>

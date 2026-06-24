@@ -33,6 +33,9 @@
         <el-tooltip :content="t('store.title.setManager')" placement="top">
           <el-button v-hasPermi="['djs:common:store:setManager']" link type="primary" icon="User" @click="handleSetManager(row)" />
         </el-tooltip>
+        <el-tooltip :content="t('store.title.bindUser')" placement="top">
+          <el-button v-hasPermi="['djs:common:store:bindUser']" link type="primary" icon="UserFilled" @click="handleBindUser(row)" />
+        </el-tooltip>
         <el-tooltip :content="t('biz.table.action.del')" placement="top">
           <el-button v-hasPermi="['djs:common:store:remove']" link type="danger" icon="Delete" @click="handleDel(row)" />
         </el-tooltip>
@@ -42,6 +45,7 @@
     <StoreForm ref="formRef" @success="handleFormSuccess" />
     <StoreView ref="viewRef" />
     <SetManagerDialog ref="setManagerRef" @success="handleFormSuccess" />
+    <StoreUserBindDialog ref="bindUserRef" />
   </div>
 </template>
 
@@ -51,6 +55,7 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import StoreForm from './components/StoreForm.vue';
 import StoreView from './components/StoreView.vue';
 import SetManagerDialog from './components/SetManagerDialog.vue';
+import StoreUserBindDialog from './components/StoreUserBindDialog.vue';
 import { delStore, listStore } from '@/api/djs-common/store';
 import type { StoreQuery, StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
@@ -62,6 +67,7 @@ const tableRef = ref<BizTableExpose>();
 const formRef = ref<{ openCreate: () => void; openEdit: (id: number | string) => void }>();
 const viewRef = ref<{ open: (id: number | string) => void }>();
 const setManagerRef = ref<{ open: (storeId: number | string, currentUserId?: number | null) => void }>();
+const bindUserRef = ref<{ open: (storeId: number | string) => void }>();
 
 const list = ref<StoreVO[]>([]);
 const total = ref(0);
@@ -159,6 +165,9 @@ function handleView(row: BizRow) {
 }
 function handleSetManager(row: BizRow) {
   setManagerRef.value?.open(row.id, row.managerUserId ?? null);
+}
+function handleBindUser(row: BizRow) {
+  bindUserRef.value?.open(row.id);
 }
 async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];

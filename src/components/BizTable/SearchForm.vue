@@ -28,6 +28,7 @@
               v-model="innerModel[field.field]"
               :placeholder="field.placeholder ?? `${t('biz.table.search.selectPrefix')}${field.label}`"
               :clearable="field.clearable ?? true"
+              filterable
               :style="resolveWidth(field.width ?? 200)"
             >
               <el-option v-for="opt in resolveSelectOptions(field)" :key="String(opt.value)" :label="opt.label" :value="opt.value" />

@@ -2,15 +2,8 @@
   <el-dialog v-model="visible" :title="t('storeOperation.sale.form.title')" destroy-on-close append-to-body width="560px" @closed="handleClosed">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
       <el-form-item :label="t('storeOperation.sale.form.store')" prop="storeId">
-        <el-select
-          v-model="form.storeId"
-          filterable
-          :placeholder="t('storeOperation.sale.storePlaceholder')"
-          style="width: 100%"
-          @change="onStoreChange"
-        >
-          <el-option v-for="s in storeOptions" :key="String(s.id)" :label="s.storeName" :value="String(s.id)" />
-        </el-select>
+        <!-- 门店固定为当前全局门店，不可手改 -->
+        <span class="font-bold">{{ currentStoreName || '—' }}</span>
       </el-form-item>
       <el-form-item :label="t('storeOperation.sale.form.product')" prop="productId">
         <el-select
@@ -54,15 +47,19 @@
 import { listStoreRelation } from '@/api/djs-store/operation/relation';
 import { addStoreSale } from '@/api/djs-store/operation/sale';
 import type { StoreProductRelationVO, StoreSaleRecordForm } from '@/api/djs-store/operation/types';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
+import { storeToRefs } from 'pinia';
 import type { FormInstance, FormRules } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 
-const props = defineProps<{ storeOptions: StoreVO[] }>();
 const emit = defineEmits<{ success: [] }>();
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+const storeContext = useStoreContextStore();
+const { currentStoreId, myStores } = storeToRefs(storeContext);
+const currentStoreName = computed(() => myStores.value.find((s) => String(s.id) === currentStoreId.value)?.storeName ?? '');
 
 const visible = ref(false);
 const submitting = ref(false);
@@ -126,18 +123,17 @@ async function loadProductOptions() {
   }
 }
 
-function onStoreChange() {
-  form.productId = '';
-  loadProductOptions();
-}
 function onProductChange() {
   // saleUnit 由 computed 自动带出，无需额外处理
 }
 
-function openCreate() {
+async function openCreate() {
   Object.assign(form, defaultForm());
+  // 门店固定为当前全局门店，进表单即按该门店联动可售产品下拉
+  form.storeId = currentStoreId.value || '';
   productOptions.value = [];
   visible.value = true;
+  await loadProductOptions();
 }
 
 function handleClosed() {

@@ -109,6 +109,8 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productSpec', label: t('djs.warehouse.purchaseIn.productSpec'), width: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'storeLocationName', label: t('djs.warehouse.purchaseIn.storeLocation'), width: 140, align: 'center', showOverflowTooltip: true },
   { prop: 'currentStock', label: t('djs.warehouse.purchaseIn.currentStock'), width: 110, align: 'center', formatter: (row) => fmtAmount(row.currentStock) },
+  // row23：当前库存后新增供应商列（取商品配置的供应商）
+  { prop: 'supplierName', label: t('djs.warehouse.purchaseIn.supplier'), width: 140, align: 'center', showOverflowTooltip: true },
   { prop: 'lastInTime', label: t('djs.warehouse.purchaseIn.lastInTime'), width: 170, align: 'center' },
   { prop: 'lastPurchaserName', label: t('djs.warehouse.purchaseIn.lastPurchaser'), width: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'monthInTotal', label: t('djs.warehouse.purchaseIn.monthInTotal'), width: 130, align: 'center', formatter: (row) => fmtAmount(row.monthInTotal) }
@@ -169,6 +171,7 @@ const inboundFormRef =
       productUnit?: string;
       storeLocationId?: string | number;
       buyClass?: string;
+      supplierName?: string;
     }) => void;
   }>();
 
@@ -183,7 +186,8 @@ function handleInbound(row: BizRow) {
     productName: row.productName,
     productUnit: row.productUnit,
     storeLocationId: row.storeLocationId,
-    buyClass: row.buyClass
+    buyClass: row.buyClass,
+    supplierName: row.supplierName
   });
 }
 

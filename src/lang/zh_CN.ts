@@ -85,6 +85,7 @@ export default {
     message: '消息',
     layoutSize: '布局大小',
     selectTenant: '选择租户',
+    selectStore: '选择门店',
     layoutSetting: '布局设置',
     personalCenter: '个人中心',
     logout: '退出登录'
@@ -157,14 +158,14 @@ export default {
     column: {
       supplierCode: '供应商编码',
       supplierName: '供应商名称',
-      supplierType: '类型',
+      supplierType: '供应类型',
       liaisonName: '联系负责人',
       liaisonPhone: '负责人电话',
       address: '地址',
       businessStatus: '合作状态',
       settleType: '结算方式',
       dealCount: '交易次数',
-      purchaseQty: '购入数量',
+      purchaseQty: '购入量',
       remark: '备注',
       createTime: '创建时间'
     },
@@ -175,7 +176,7 @@ export default {
       licenseImage: '营业执照图片',
       businessLicenseNo: '经营许可证编号',
       cooperationStartDate: '合作开始日期',
-      supplierType: '类型',
+      supplierType: '供应类型',
       liaisonName: '联系负责人',
       liaisonPhone: '负责人电话',
       address: '地址',
@@ -199,7 +200,7 @@ export default {
       licenseNo: '请输入营业执照编号',
       businessLicenseNo: '请输入经营许可证编号',
       cooperationStartDate: '请选择合作开始日期',
-      supplierType: '请选择类型',
+      supplierType: '请选择供应类型',
       liaisonName: '请输入联系负责人',
       liaisonPhone: '请输入负责人电话',
       address: '请输入地址',
@@ -299,7 +300,20 @@ export default {
       add: '新增门店',
       edit: '编辑门店',
       view: '门店详情',
-      setManager: '设置店长'
+      setManager: '设置店长',
+      bindUser: '门店人员选择'
+    },
+    bindUser: {
+      title: '门店人员选择',
+      candidateTitle: '系统人员',
+      boundTitle: '已绑定人员',
+      searchPlaceholder: '搜索姓名 / 账号',
+      colNickName: '姓名',
+      colUserName: '账号',
+      colPhone: '手机号',
+      addSelected: '加入',
+      remove: '移除',
+      boundHint: '点「确定」后保存绑定关系（全量覆盖当前门店人员）'
     },
     column: {
       storeCode: '门店编码',
@@ -1207,14 +1221,14 @@ export default {
     },
     giftEmpty: '该礼盒暂无组件',
     column: {
-      productId: '编码',
-      productName: '名称',
+      productId: '产品编码',
+      productName: '产品名称',
       productType: '产品类型',
       productAttr: '产品属性',
       productWorkshop: '生产车间',
       storeLocation: '存储仓库',
-      belongType: '归属',
-      productThumb: '图片',
+      belongType: '产品类别',
+      productThumb: '产品图片',
       productUnit: '单位',
       productSpec: '规格',
       productStatus: '状态',
@@ -1230,13 +1244,13 @@ export default {
       productType: '产品类型',
       productUnit: '单位',
       productSpec: '规格',
-      belongType: '归属类型',
-      buyClass: '外购类',
+      belongType: '产品类别',
+      buyClass: '商品类别',
       productAttr: '产品属性',
       productWorkshop: '生产车间',
-      productMaterial: '原材料 ID',
+      productMaterial: '原材料产品',
       materialNum: '其它产品打包计量规则',
-      productThumb: '缩略图',
+      productThumb: '产品图片',
       productImg: '详情图',
       imageOssId: '主图（自动匹配）',
       imageOssIdTip: '留空则按产品名称从公共图库自动匹配；手动上传后不再自动覆盖',
@@ -1266,7 +1280,7 @@ export default {
       productSpec: '例 500g/包',
       productMaterial: '关联原材料产品 ID',
       productMaterialSelect: '请选择关联的原材料产品',
-      buyClass: '请选择外购类（如字典空请到字典管理添加）',
+      buyClass: '请选择商品类别（如字典空请到字典管理添加）',
       supplierId: '请选择供应商',
       storeLocation: '请选择存储库位'
     },
@@ -1275,13 +1289,16 @@ export default {
       productId: { required: '产品编码不能为空' },
       productName: { required: '产品名称不能为空' },
       productUnit: { required: '产品单位不能为空' },
-      belongType: { required: '自产产品归属类型不能为空' },
+      belongType: { required: '自产产品的产品类别不能为空' },
       supplierId: { required: '外购产品必须选择供应商' },
       productSpec: { required: '生产产品必须填写规格' },
-      giftComponents: { required: '礼盒至少需要 1 个组件' }
+      giftComponents: { required: '礼盒至少需要 1 个组件' },
+      storeLocation: { required: '请选择存储仓库' },
+      productAttr: { required: '请选择产品属性' },
+      productWorkshop: { required: '请选择生产车间' }
     },
     tip: {
-      buyClassEmpty: '暂无外购类字典，请到「系统管理 → 字典管理 → djs_buy_class」添加',
+      buyClassEmpty: '暂无商品类别字典，请到「系统管理 → 字典管理 → djs_buy_class」添加',
       materialEmpty: '暂无原材料产品，请先新增「产品属性=原材料」的产品'
     },
     action: {
@@ -1293,6 +1310,7 @@ export default {
     inbound: {
       title: '商品入库',
       product: '入库商品',
+      supplier: '供应商',
       location: '入库库位',
       locationPlaceholder: '请选择入库库位',
       locationType: '库位类型',
@@ -1325,7 +1343,9 @@ export default {
       bizUnit: '单位',
       typeInStock: '入库',
       typePickOut: '领用出库',
-      typeBackendOut: '后台出库'
+      typeBackendOut: '后台出库',
+      supplierName: '供应商',
+      operatorName: '操作人'
     },
     confirm: {
       del: '是否确认删除选中的 {count} 条商品？删除前需先确保无库存且未被作为原材料引用。'
@@ -1338,7 +1358,7 @@ export default {
       earNo: '耳号',
       blockNo: '地块编号',
       locationName: '库位',
-      belongType: '归属类型'
+      belongType: '产品类别'
     },
     column: {
       locationName: '库位',
@@ -1355,7 +1375,8 @@ export default {
       flowIn: '入库记录',
       flowOut: '出库记录',
       checkRecord: '盘点记录',
-      productOut: '产品出库'
+      productOut: '产品出库',
+      viewDetail: '查看详情'
     },
     outDialog: {
       title: '产品出库',
@@ -2223,7 +2244,7 @@ export default {
         matType: '物资类型',
         productName: '产品',
         productCode: '产品码',
-        belongType: '归属',
+        belongType: '产品类别',
         changeQuantity: '数量',
         productUnit: '单位',
         location: '库位',
@@ -2346,6 +2367,7 @@ export default {
         marketingWeightLabel: '出栏重量',
         whiteBarWeightShort: '白条重量',
         remainWeightLabel: '剩余重量',
+        burnProductsLabel: '燎毛产出',
         noEarSource: '当前无可打包的猪肉来源耳号',
         pickupWeightExceed: '领用称重不应大于该白条出栏重量（{weight}kg）',
         vegWeightExceed: '打包重量超过领用剩余重量（{remain}kg），请重新称重',
@@ -2496,10 +2518,11 @@ export default {
         flowType: '类型',
         inMode: '入库方式',
         matType: '物资类型',
+        productType: '产品类型',
         productCode: '产品码',
         productName: '产品',
         blockNo: '地块编号',
-        belongType: '归属',
+        belongType: '产品类别',
         changeQuantity: '入库量',
         productUnit: '单位',
         location: '入库库位',
@@ -2514,11 +2537,12 @@ export default {
         flowType: '类型',
         outMode: '出库方式',
         matType: '物资类型',
+        productType: '产品类型',
         stockOutDest: '出库去向',
         productCode: '产品码',
         productName: '产品',
         blockNo: '地块编号',
-        belongType: '归属',
+        belongType: '产品类别',
         changeQuantity: '出库量',
         productUnit: '单位',
         location: '出库库位',
@@ -3285,7 +3309,7 @@ export default {
       confirmPrint: '确认并打印',
       cancel: '取消',
       productCode: '产品编码',
-      serialNo: '生产序号',
+      serialNo: '生产编码',
       packCode: '打包编码',
       produceDate: '生产日期',
       productName: '产品名称',
@@ -3296,6 +3320,7 @@ export default {
       weightUnit: 'kg',
       noCode: '该行无追溯码可打印',
       scanHint: '扫码查看溯源',
+      traceCaption: '东角山产品追溯码',
       printFailed: '生成打印文件失败，请重试'
     },
     veg: {

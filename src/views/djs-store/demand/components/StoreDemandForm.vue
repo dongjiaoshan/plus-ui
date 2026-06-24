@@ -24,6 +24,7 @@
             </el-select>
           </el-form-item>
         </el-col>
+        <!-- 门店选项源 = 当前登录人有权限的门店（全局门店上下文） -->
         <el-col :span="12">
           <el-form-item :label="t('storeDemand.field.productId')" prop="productId">
             <el-select
@@ -87,8 +88,8 @@ import { addStoreDemand, getStoreDemand, updateStoreDemand } from '@/api/djs-sto
 import type { StoreDemandForm, StoreDemandProductType } from '@/api/djs-store/demand/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
+import { storeToRefs } from 'pinia';
 
 const props = defineProps<{ productType?: StoreDemandProductType; defaultStoreId?: string }>();
 const emit = defineEmits<{ (e: 'success'): void }>();
@@ -118,18 +119,9 @@ const form = reactive<StoreDemandForm>(baseForm());
 /** 业态优先取已载入单据的落库业态，其次取传入默认值，最后兜底 other。 */
 const effectiveType = computed<StoreDemandProductType>(() => form.productType ?? props.productType ?? 'other');
 
-const storeOptions = ref<StoreVO[]>([]);
+// 门店选项 = 当前登录人有权限的门店（全局门店上下文，不再 listStore 拉全部）
+const { myStores: storeOptions } = storeToRefs(useStoreContextStore());
 const productOptions = ref<ProductInfoVO[]>([]);
-
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[] }).rows ?? []) as StoreVO[];
-  } catch (e) {
-    console.warn('[StoreDemandForm] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
 
 async function loadProductOptions() {
   try {
@@ -190,12 +182,11 @@ function reset() {
 
 async function openCreate() {
   reset();
-  await Promise.all([loadStoreOptions(), loadProductOptions()]);
+  await loadProductOptions();
   visible.value = true;
 }
 
 async function loadDetail(id: string) {
-  await loadStoreOptions();
   const res = await getStoreDemand(id);
   const detail = (res as unknown as { data?: Record<string, unknown> }).data;
   if (!detail) {

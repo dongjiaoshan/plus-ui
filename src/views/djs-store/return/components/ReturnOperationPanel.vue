@@ -1,16 +1,8 @@
 <template>
   <div class="return-operation-panel">
+    <!-- 操作目标门店由顶部全局选择器统一控制 -->
     <div class="op-toolbar">
-      <el-select
-        v-model="storeId"
-        filterable
-        clearable
-        :placeholder="t('storeReturn.placeholder.store')"
-        class="store-select"
-        @change="handleStoreChange"
-      >
-        <el-option v-for="s in storeOptions" :key="s.id" :label="s.storeName" :value="String(s.id)" />
-      </el-select>
+      <span class="store-name">{{ currentStoreName || '—' }}</span>
     </div>
 
     <!-- 猪肉产品 / 果蔬产品 分段切换（对齐原型顶部段控） -->
@@ -86,8 +78,8 @@
 <script setup name="StoreReturnOperationPanel" lang="ts">
 import { batchCreateStoreReturn, listPorkReturnCandidates, listVegReturnCandidates } from '@/api/djs-store/return';
 import type { StoreReturnBatchItem } from '@/api/djs-store/return/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
+import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -103,11 +95,13 @@ interface MatrixRow {
   returnWeight?: number;
 }
 
-const storeId = ref<string>();
+const storeContext = useStoreContextStore();
+// 操作目标门店来自全局选择器（StoreSwitcher）；沿用 storeId 命名最小化改动
+const { currentStoreId: storeId, myStores } = storeToRefs(storeContext);
+const currentStoreName = computed(() => myStores.value.find((s) => String(s.id) === storeId.value)?.storeName ?? '');
 const activeCat = ref<'pork' | 'vegetable'>('pork');
 const loading = ref(false);
 const submitLoading = ref(false);
-const storeOptions = ref<StoreVO[]>([]);
 
 /** 猪肉产品：固定候选（belong_type IN pork/white_bar，与门店关联无关，原型「字典固定展示」口径）。 */
 const porkRows = ref<MatrixRow[]>([]);
@@ -118,16 +112,6 @@ const currentRows = computed(() => (activeCat.value === 'pork' ? porkRows.value 
 const filledCount = computed(
   () => [...porkRows.value, ...vegRows.value].filter((r) => (r.returnWeight ?? 0) > 0 || (r.returnQuantity ?? 0) > 0).length
 );
-
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
-  } catch (e) {
-    console.warn('[ReturnOperationPanel] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
 
 /** 猪肉 tab：从后端固定候选拉取（与门店无关，进入页面即固定展示）。 */
 async function loadPorkCandidates() {
@@ -169,9 +153,8 @@ async function loadVegRows() {
   }
 }
 
-function handleStoreChange() {
-  loadVegRows();
-}
+// 全局门店切换 → 重拉该门店果蔬退回候选（navbar 切换会刷新页面，watch 兜底同页响应）
+watch(storeId, () => loadVegRows());
 
 async function handleSubmit() {
   if (!storeId.value) {
@@ -206,7 +189,8 @@ async function handleSubmit() {
 }
 
 onMounted(async () => {
-  await Promise.all([loadStoreOptions(), loadPorkCandidates()]);
+  await loadPorkCandidates();
+  if (storeId.value) await loadVegRows();
 });
 </script>
 
@@ -217,8 +201,10 @@ onMounted(async () => {
     justify-content: flex-end;
     margin-bottom: 12px;
 
-    .store-select {
-      width: 240px;
+    .store-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
     }
   }
 

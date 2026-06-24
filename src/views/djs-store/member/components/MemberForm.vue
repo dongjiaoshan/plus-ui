@@ -29,9 +29,8 @@
         />
       </el-form-item>
       <el-form-item :label="t('storeMember.form.store')">
-        <el-select v-model="form.storeId" filterable clearable :placeholder="t('storeMember.form.storePlaceholder')" style="width: 100%">
-          <el-option v-for="s in storeOptions" :key="String(s.id)" :label="s.storeName" :value="String(s.id)" />
-        </el-select>
+        <!-- 门店固定为当前全局门店（新增）/ 会员原门店（编辑），不可手改 -->
+        <span class="font-bold">{{ formStoreName || '—' }}</span>
       </el-form-item>
       <el-form-item :label="t('storeMember.form.memberTags')">
         <el-input v-model="form.memberTags" maxlength="255" :placeholder="t('storeMember.form.memberTagsPlaceholder')" />
@@ -56,16 +55,20 @@
 <script setup name="MemberForm" lang="ts">
 import { addStoreMember, updateStoreMember } from '@/api/djs-store/member';
 import type { StoreMemberForm, StoreMemberVO } from '@/api/djs-store/member/types';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
 import type { FormInstance, FormRules } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 
-defineProps<{ storeOptions: StoreVO[] }>();
 const emit = defineEmits<{ success: [] }>();
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { djs_member_level } = toRefs<any>(proxy?.useDict('djs_member_level'));
+
+const storeContext = useStoreContextStore();
+const formStoreName = computed(
+  () => storeContext.myStores.find((s) => String(s.id) === String(form.storeId ?? ''))?.storeName ?? ''
+);
 
 const visible = ref(false);
 const submitting = ref(false);
@@ -96,6 +99,8 @@ const rules: FormRules = {
 function openCreate() {
   isEdit.value = false;
   Object.assign(form, defaultForm());
+  // 新增会员默认归属当前全局门店
+  form.storeId = storeContext.currentStoreId || undefined;
   visible.value = true;
 }
 

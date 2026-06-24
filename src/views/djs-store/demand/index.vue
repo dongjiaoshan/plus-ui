@@ -1,22 +1,6 @@
 <template>
   <div class="p-2">
-    <!-- 顶部：门店筛选（原型门店在全局右上角；列表门店视角必须带 storeId 过滤） -->
-    <el-card shadow="never" class="mb-2">
-      <div class="flex items-center gap-3 flex-wrap">
-        <span class="text-sm">{{ t('storeDemand.filter.store') }}</span>
-        <el-select
-          v-model="currentStoreId"
-          filterable
-          clearable
-          :placeholder="t('storeDemand.filter.storePlaceholder')"
-          style="width: 240px"
-          @change="onStoreChange"
-        >
-          <el-option v-for="s in storeOptions" :key="String(s.id)" :label="s.storeName" :value="String(s.id)" />
-        </el-select>
-      </div>
-    </el-card>
-
+    <!-- 门店由顶部全局选择器（StoreSwitcher）统一控制，列表数据靠请求头 Current-Store-Id 后端过滤 -->
     <BizTable
       ref="tableRef"
       :data="list"
@@ -72,7 +56,7 @@
     </BizTable>
 
     <!-- 编辑 / 详情用窄表单弹窗（仅 SUBMITTED 行编辑） -->
-    <StoreDemandForm ref="formRef" :default-store-id="currentStoreId" @success="fetchList" />
+    <StoreDemandForm ref="formRef" :default-store-id="currentStoreId || ''" @success="fetchList" />
     <!-- 新增需求：多产品购物车右抽屉 -->
     <DemandCartDrawer ref="cartDrawerRef" @success="fetchList" />
   </div>
@@ -85,12 +69,16 @@ import StoreDemandForm from './components/StoreDemandForm.vue';
 import DemandCartDrawer from './components/DemandCartDrawer.vue';
 import { listStoreDemand, removeStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
 import type { StoreDemandVO } from '@/api/djs-store/demand/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
+import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+const storeContext = useStoreContextStore();
+// 当前门店来自全局选择器（StoreSwitcher），切换由 navbar 统一控制
+const { currentStoreId } = storeToRefs(storeContext);
 
 const tableRef = ref<BizTableExpose>();
 const formRef = ref<{ openEdit: (id: string) => void; openDetail: (id: string) => void }>();
@@ -101,8 +89,6 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const currentStoreId = ref<string>('');
-const storeOptions = ref<StoreVO[]>([]);
 
 // 默认查询「今天」的需求（格式 YYYY-MM-DD），不引新依赖
 const today = (() => {
@@ -157,26 +143,12 @@ const canReceive = (r: BizRow) => {
 // 个人邮寄
 const isMailing = (r: BizRow) => (r as StoreDemandVO).demandType === 'mailing';
 
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
-    // 默认选中第一家门店（门店视角必须带 storeId 过滤）
-    if (!currentStoreId.value && storeOptions.value.length > 0) {
-      currentStoreId.value = String(storeOptions.value[0].id);
-    }
-  } catch (e) {
-    console.warn('[StoreDemand] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
-
 async function fetchList() {
   loading.value = true;
   try {
+    // storeId 不再显式传：后端按请求头 Current-Store-Id 做行级过滤
     const params = {
       ...searchModel,
-      storeId: currentStoreId.value || undefined,
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -207,16 +179,12 @@ function handlePageChange(p: number, s: number) {
   pageSize.value = s;
   fetchList();
 }
-function onStoreChange() {
-  pageNum.value = 1;
-  fetchList();
-}
 function handleAdd() {
   if (!currentStoreId.value) {
     proxy?.$modal.msgWarning(t('storeDemand.tip.selectStoreFirst'));
     return;
   }
-  // 新增需求 = 打开多产品购物车右抽屉（不再整页路由跳转）
+  // 新增需求 = 打开多产品购物车右抽屉（默认门店取全局当前门店）
   cartDrawerRef.value?.open(currentStoreId.value);
 }
 function handleEdit(row: BizRow) {
@@ -242,8 +210,7 @@ async function onReceive(row: BizRow) {
   fetchList();
 }
 
-onMounted(async () => {
-  await loadStoreOptions();
+onMounted(() => {
   fetchList();
 });
 </script>

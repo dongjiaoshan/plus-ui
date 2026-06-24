@@ -58,7 +58,7 @@
       </template>
     </BizTable>
 
-    <MemberForm ref="formRef" :store-options="storeOptions" @success="onSaved" />
+    <MemberForm ref="formRef" @success="onSaved" />
 
     <ConsumeRecordDialog ref="consumeRef" />
   </div>
@@ -71,8 +71,6 @@ import MemberForm from './components/MemberForm.vue';
 import ConsumeRecordDialog from './components/ConsumeRecordDialog.vue';
 import { listStoreMember, delStoreMember, getStoreMemberStats } from '@/api/djs-store/member';
 import type { StoreMemberVO, StoreMemberQuery, StoreMemberStatsVO } from '@/api/djs-store/member/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -88,26 +86,19 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const storeOptions = ref<StoreVO[]>([]);
 const stats = reactive<StoreMemberStatsVO>({ monthlyMemberCount: 0, monthlyConsumptionCount: 0 });
 
 const searchModel = reactive<Record<string, unknown>>({
   phone: undefined,
   memberName: undefined,
-  memberLevel: undefined,
-  storeId: undefined
+  memberLevel: undefined
 });
 
+// 门店筛选已由顶部全局选择器统一控制（列表靠请求头 Current-Store-Id 后端过滤），此处不再放门店筛选项
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'phone', label: t('storeMember.field.phone'), type: 'input' },
   { field: 'memberName', label: t('storeMember.field.memberName'), type: 'input' },
-  { field: 'memberLevel', label: t('storeMember.field.memberLevel'), type: 'select', dictType: 'djs_member_level' },
-  {
-    field: 'storeId',
-    label: t('storeMember.field.store'),
-    type: 'select',
-    options: storeOptions.value.map((s) => ({ label: s.storeName, value: String(s.id) }))
-  }
+  { field: 'memberLevel', label: t('storeMember.field.memberLevel'), type: 'select', dictType: 'djs_member_level' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -121,16 +112,6 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'memberStatus', label: t('storeMember.column.memberStatus'), width: 90, align: 'center' },
   { prop: 'createTime', label: t('storeMember.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
-
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
-  } catch (e) {
-    console.warn('[StoreMember] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
 
 async function loadStats() {
   try {
@@ -146,13 +127,13 @@ async function loadStats() {
 async function fetchList() {
   loading.value = true;
   try {
+    // storeId 不再显式传：后端按请求头 Current-Store-Id 做行级过滤
     const query: StoreMemberQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       phone: (searchModel.phone as string) || undefined,
       memberName: (searchModel.memberName as string) || undefined,
-      memberLevel: (searchModel.memberLevel as string) || undefined,
-      storeId: (searchModel.storeId as string) || undefined
+      memberLevel: (searchModel.memberLevel as string) || undefined
     };
     const res = await listStoreMember(query);
     list.value = (res.rows ?? res.data ?? []) as StoreMemberVO[];
@@ -206,8 +187,7 @@ function refresh() {
   loadStats();
 }
 
-onMounted(async () => {
-  await loadStoreOptions();
+onMounted(() => {
   fetchList();
   loadStats();
 });

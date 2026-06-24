@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_flow_type', 'djs_stock_out_dest']"
+      :dict-types="['djs_flow_type', 'djs_stock_out_dest', 'djs_product_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -42,11 +42,16 @@ const route = useRoute();
 /** djs_flow_type 是出入合并字典，出库方式下拉只保留出库方向的值（按 value 白名单过滤，不动字典 seed） */
 const FLOW_TYPE_OUT_VALUES = [
   'pick_out',
+  // 领用按来源拆分 + 盘点异常出库（FIX-WMS-FLOWDICT-001）
+  'dept_pick_out',
+  'prod_pick_out',
+  'feed_out',
   'loss',
   'cut_out',
   'slaughter_burn',
   'ship_out',
   'check_out',
+  'check_abnormal_out',
   'pack_consume',
   'backstage_out',
   'other'
@@ -75,6 +80,7 @@ const locationOptions = ref<Array<{ label: string; value: string | number }>>([]
 const searchModel = reactive<Record<string, any>>({
   dateRange: undefined,
   productName: undefined,
+  productType: undefined,
   flowType: undefined,
   warehouseId: undefined,
   stockOutDest: undefined,
@@ -86,6 +92,7 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('djs.warehouse.flowOut.flowDate'), type: 'daterange' },
   { field: 'productName', label: t('djs.warehouse.flowOut.productName'), type: 'input' },
+  { field: 'productType', label: t('djs.warehouse.flowOut.productType'), type: 'select', dictType: 'djs_product_type' },
   { field: 'flowType', label: t('djs.warehouse.flowOut.outMode'), type: 'select', options: outModeOptions.value },
   { field: 'warehouseId', label: t('djs.warehouse.flowOut.location'), type: 'select', options: locationOptions.value },
   { field: 'stockOutDest', label: t('djs.warehouse.flowOut.stockOutDest'), type: 'select', dictType: 'djs_stock_out_dest' },
@@ -97,9 +104,11 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'flowDate', label: t('djs.warehouse.flowOut.flowDate'), minWidth: 160, align: 'center', formatter: (row: any) => proxy?.parseTime?.(row.flowDate, '{y}-{m}-{d} {h}:{i}') },
   { prop: 'flowNo', label: t('djs.warehouse.flowOut.flowNo'), minWidth: 160, align: 'center' },
+  { prop: 'productType', label: t('djs.warehouse.flowOut.productType'), dictType: 'djs_product_type', minWidth: 100, align: 'center' },
   { prop: 'productCode', label: t('djs.warehouse.flowOut.productCode'), minWidth: 110, align: 'center' },
   { prop: 'productName', label: t('djs.warehouse.flowOut.productName'), minWidth: 160, align: 'center' },
   { prop: 'flowType', label: t('djs.warehouse.flowOut.outMode'), dictType: 'djs_flow_type', minWidth: 110, align: 'center' },
+  { prop: 'stockOutDest', label: t('djs.warehouse.flowOut.stockOutDest'), dictType: 'djs_stock_out_dest', minWidth: 110, align: 'center' },
   { prop: 'locationName', label: t('djs.warehouse.flowOut.location'), minWidth: 120, align: 'center' },
   { prop: 'changeQuantity', label: t('djs.warehouse.flowOut.changeQuantity'), minWidth: 110, align: 'center' },
   { prop: 'productUnit', label: t('djs.warehouse.flowOut.productUnit'), minWidth: 80, align: 'center' },
@@ -114,6 +123,7 @@ function buildQuery(): StockFlowQuery {
   return {
     productId: drillProductId.value || undefined,
     productName: searchModel.productName || undefined,
+    productType: searchModel.productType === undefined || searchModel.productType === '' ? undefined : Number(searchModel.productType),
     flowType: searchModel.flowType || undefined,
     warehouseId: searchModel.warehouseId ?? undefined,
     stockOutDest: searchModel.stockOutDest || undefined,

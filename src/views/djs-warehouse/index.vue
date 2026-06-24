@@ -110,32 +110,6 @@
         </el-card>
       </el-col>
     </el-row>
-
-    <!-- 库位概览：卡片网格（响应式 md 3 / sm 2 / xs 1，与顶部 KPI 卡风格统一） -->
-    <el-card shadow="never" class="location-overview">
-      <template #header>
-        <div class="card-header">
-          <span class="title">{{ t('warehouse.dashboard.locationOverview') }}</span>
-        </div>
-      </template>
-      <el-row v-loading="loading" :gutter="12" class="location-grid">
-        <el-col v-for="loc in summary?.locationOverview ?? []" :key="String(loc.locationId ?? loc.locationName)" :xs="24" :sm="12" :md="8">
-          <div class="location-tile" :class="{ abnormal: loc.status === 'abnormal' }">
-            <div class="tile-head">
-              <span class="loc-name">{{ loc.locationName }}</span>
-              <el-tag :type="loc.status === 'abnormal' ? 'danger' : 'success'" size="small">
-                {{ loc.status === 'abnormal' ? t('warehouse.dashboard.statusAbnormal') : t('warehouse.dashboard.statusNormal') }}
-              </el-tag>
-            </div>
-            <div class="loc-stock">{{ loc.currentStock }}</div>
-            <div class="tile-foot">
-              <dict-tag :options="djs_location_type" :value="loc.locationType" />
-            </div>
-          </div>
-        </el-col>
-      </el-row>
-      <el-empty v-if="!loading && (summary?.locationOverview ?? []).length === 0" :description="t('warehouse.dashboard.emptyLocation')" />
-    </el-card>
   </div>
 </template>
 
@@ -151,8 +125,6 @@ import {
 } from '@/api/djs-warehouse/dashboard';
 
 const { t } = useI18n();
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_location_type } = toRefs<any>(proxy?.useDict('djs_location_type'));
 
 const summary = ref<WarehouseDashboardSummaryVo | null>(null);
 const charts = ref<WarehouseDashboardChartsVo | null>(null);
@@ -487,51 +459,6 @@ onUnmounted(() => {
     .chart-canvas {
       width: 100%;
       height: 280px;
-    }
-  }
-
-  .location-grid {
-    margin: 0 !important;
-  }
-
-  .location-tile {
-    background: #f9fafc;
-    border: 1px solid #ebeef5;
-    border-left: 4px solid #67c23a;
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
-
-    &.abnormal {
-      border-left-color: #f56c6c;
-    }
-
-    .tile-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      .loc-name {
-        font-size: 14px;
-        font-weight: 600;
-        color: #2c3e50;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-    }
-
-    .loc-stock {
-      color: #2c3e50;
-      font-size: 26px;
-      font-weight: 700;
-      line-height: 1.3;
-      margin: 6px 0;
-    }
-
-    .tile-foot {
-      color: #888;
-      font-size: 12px;
     }
   }
 }

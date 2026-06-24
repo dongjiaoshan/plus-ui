@@ -58,15 +58,15 @@
       <el-table ref="roleTableRef" border v-loading="loading" :data="roleList" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column v-if="false" label="角色编号" prop="roleId" width="120" />
-        <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" width="150" />
-        <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" width="200" />
-        <el-table-column label="显示顺序" prop="roleSort" width="100" />
-        <el-table-column label="状态" align="center" width="100">
+        <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" min-width="150" />
+        <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" min-width="180" />
+        <el-table-column label="显示顺序" prop="roleSort" min-width="100" align="center" />
+        <el-table-column label="状态" align="center" min-width="100">
           <template #default="scope">
             <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" align="center" prop="createTime">
+        <el-table-column label="创建时间" align="center" prop="createTime" min-width="180">
           <template #default="scope">
             <span>{{ proxy.parseTime(scope.row.createTime) }}</span>
           </template>

@@ -7,9 +7,6 @@
             <el-form-item label="部门名称" prop="deptName">
               <el-input v-model="queryParams.deptName" placeholder="请输入部门名称" clearable @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="类别编码" prop="deptCategory">
-              <el-input v-model="queryParams.deptCategory" placeholder="请输入类别编码" clearable style="width: 240px" @keyup.enter="handleQuery" />
-            </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-select v-model="queryParams.status" placeholder="部门状态" clearable>
                 <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
@@ -46,15 +43,14 @@
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         :default-expand-all="isExpandAll"
       >
-        <el-table-column prop="deptName" label="部门名称" width="260"></el-table-column>
-        <el-table-column prop="deptCategory" align="center" label="类别编码" width="200"></el-table-column>
-        <el-table-column prop="orderNum" align="center" label="排序" width="200"></el-table-column>
-        <el-table-column prop="status" align="center" label="状态" width="100">
+        <el-table-column prop="deptName" label="部门名称" min-width="260" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="orderNum" align="center" label="排序" min-width="120"></el-table-column>
+        <el-table-column prop="status" align="center" label="状态" min-width="120">
           <template #default="scope">
             <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" align="center" prop="createTime" width="200">
+        <el-table-column label="创建时间" align="center" prop="createTime" min-width="180">
           <template #default="scope">
             <span>{{ proxy.parseTime(scope.row.createTime) }}</span>
           </template>
@@ -96,30 +92,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="类别编码" prop="deptCategory">
-              <el-input v-model="form.deptCategory" placeholder="请输入类别编码" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
             <el-form-item label="显示排序" prop="orderNum">
               <el-input-number v-model="form.orderNum" controls-position="right" :min="0" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="负责人" prop="leader">
-              <el-select v-model="form.leader" placeholder="请选择负责人">
-                <el-option v-for="item in deptUserList" :key="item.userId" :label="item.userName" :value="item.userId" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="联系电话" prop="phone">
-              <el-input v-model="form.phone" placeholder="请输入联系电话" maxlength="11" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -144,8 +118,6 @@
 <script setup name="Dept" lang="ts">
 import { listDept, getDept, delDept, addDept, updateDept, listDeptExcludeChild } from '@/api/system/dept';
 import { DeptForm, DeptQuery, DeptVO } from '@/api/system/dept/types';
-import { UserVO } from '@/api/system/user/types';
-import { listUserByDeptId } from '@/api/system/user';
 
 interface DeptOptionsType {
   deptId: number | string;
@@ -161,7 +133,6 @@ const loading = ref(true);
 const showSearch = ref(true);
 const deptOptions = ref<DeptOptionsType[]>([]);
 const isExpandAll = ref(true);
-const deptUserList = ref<UserVO[]>([]);
 
 const dialog = reactive<DialogOption>({
   visible: false,
@@ -176,11 +147,7 @@ const initFormData: DeptForm = {
   deptId: undefined,
   parentId: undefined,
   deptName: undefined,
-  deptCategory: undefined,
   orderNum: 0,
-  leader: undefined,
-  phone: undefined,
-  email: undefined,
   status: '0'
 };
 const initData: PageData<DeptForm, DeptQuery> = {
@@ -189,15 +156,12 @@ const initData: PageData<DeptForm, DeptQuery> = {
     pageNum: 1,
     pageSize: 10,
     deptName: undefined,
-    deptCategory: undefined,
     status: undefined
   },
   rules: {
     parentId: [{ required: true, message: '上级部门不能为空', trigger: 'blur' }],
     deptName: [{ required: true, message: '部门名称不能为空', trigger: 'blur' }],
-    orderNum: [{ required: true, message: '显示排序不能为空', trigger: 'blur' }],
-    email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }],
-    phone: [{ pattern: /^1[3456789][0-9]\d{8}$/, message: '请输入正确的手机号码', trigger: 'blur' }]
+    orderNum: [{ required: true, message: '显示排序不能为空', trigger: 'blur' }]
   }
 };
 const data = reactive<PageData<DeptForm, DeptQuery>>(initData);
@@ -214,14 +178,6 @@ const getList = async () => {
   }
   loading.value = false;
 };
-
-/** 查询当前部门的所有用户 */
-async function getDeptAllUser(deptId: any) {
-  if (deptId !== null && deptId !== '' && deptId !== undefined) {
-    const res = await listUserByDeptId(deptId);
-    deptUserList.value = res.data;
-  }
-}
 
 /** 取消按钮 */
 const cancel = () => {
@@ -275,8 +231,6 @@ const handleAdd = async (row?: DeptVO) => {
 /** 修改按钮操作 */
 const handleUpdate = async (row: DeptVO) => {
   reset();
-  //查询当前部门所有用户
-  getDeptAllUser(row.deptId);
   const res = await getDept(row.deptId);
   form.value = res.data;
   const response = await listDeptExcludeChild(row.deptId);

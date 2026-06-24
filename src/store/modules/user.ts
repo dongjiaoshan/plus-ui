@@ -5,6 +5,7 @@ import { LoginData } from '@/api/types';
 import defAva from '@/assets/images/profile.jpg';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { useStoreContextStore } from '@/store/modules/storeContext';
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(getToken());
@@ -64,6 +65,8 @@ export const useUserStore = defineStore('user', () => {
     roles.value = [];
     permissions.value = [];
     removeToken();
+    // STORE-PERM-001：清空门店上下文，避免下一个账号沿用上一个账号的门店权限
+    useStoreContextStore().reset();
   };
 
   const setAvatar = (value: string) => {

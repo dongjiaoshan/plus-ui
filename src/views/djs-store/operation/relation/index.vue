@@ -2,16 +2,9 @@
   <div class="p-2">
     <el-card shadow="never">
       <div class="mb-4 flex items-center gap-3">
+        <!-- 操作目标门店由顶部全局选择器统一控制 -->
         <span class="text-sm">{{ t('storeOperation.relation.store') }}</span>
-        <el-select
-          v-model="currentStoreId"
-          :placeholder="t('storeOperation.relation.storePlaceholder')"
-          filterable
-          style="width: 280px"
-          @change="handleStoreChange"
-        >
-          <el-option v-for="s in storeOptions" :key="String(s.id)" :label="s.storeName" :value="String(s.id)" />
-        </el-select>
+        <span class="text-sm font-bold">{{ currentStoreName || '—' }}</span>
         <el-button v-hasPermi="['djs:storeRelation:edit']" type="primary" :loading="saving" :disabled="!currentStoreId" @click="handleSave">
           {{ t('storeOperation.relation.save') }}
         </el-button>
@@ -31,10 +24,10 @@
 </template>
 
 <script setup name="StoreProductRelation" lang="ts">
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
 import { listStoreRelation, listStoreRelationCandidates, syncStoreRelation } from '@/api/djs-store/operation/relation';
 import type { StoreProductCandidateVO, StoreProductRelationVO } from '@/api/djs-store/operation/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
+import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -45,8 +38,10 @@ interface TransferItem {
   label: string;
 }
 
-const storeOptions = ref<StoreVO[]>([]);
-const currentStoreId = ref<string>('');
+const storeContext = useStoreContextStore();
+// 操作目标门店来自全局选择器（StoreSwitcher）
+const { currentStoreId, myStores } = storeToRefs(storeContext);
+const currentStoreName = computed(() => myStores.value.find((s) => String(s.id) === currentStoreId.value)?.storeName ?? '');
 const candidates = ref<StoreProductCandidateVO[]>([]);
 const rightIds = ref<string[]>([]);
 const loading = ref(false);
@@ -58,20 +53,6 @@ const transferData = computed<TransferItem[]>(() =>
     label: c.productSpec ? `${c.productName}（${c.productSpec}）` : c.productName
   }))
 );
-
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
-    if (!currentStoreId.value && storeOptions.value.length > 0) {
-      currentStoreId.value = String(storeOptions.value[0].id);
-      await loadRelations();
-    }
-  } catch (e) {
-    console.warn('[StoreRelation] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
 
 async function loadCandidates() {
   try {
@@ -101,9 +82,8 @@ async function loadRelations() {
   }
 }
 
-function handleStoreChange() {
-  loadRelations();
-}
+// 全局门店切换 → 重拉该门店关联（navbar 切换会刷新页面，watch 兜底同页响应）
+watch(currentStoreId, () => loadRelations());
 
 async function handleSave() {
   if (!currentStoreId.value) return;
@@ -119,6 +99,6 @@ async function handleSave() {
 
 onMounted(async () => {
   await loadCandidates();
-  await loadStoreOptions();
+  if (currentStoreId.value) await loadRelations();
 });
 </script>

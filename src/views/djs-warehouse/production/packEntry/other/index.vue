@@ -1,12 +1,13 @@
 <template>
   <div class="p-2">
-    <!-- 产品打包：去掉普通产品/礼盒 tab 切换（row113），直接产品打包台；
+    <!-- 其他产品打包管理：纯领用驱动（领用其他业态原料 → 反查命中成品），对齐肉品/果蔬口径。
          发送位置仅「发货月台」（去掉邮寄，row111）；隐藏猪只耳号 chip（其他产品无耳号，row111）；
          只有「确认」无追溯码打印。
          统一目标模型（2026-06-20）：其他产品（egg/dry_good/other 原料 attr=2）领用后产 inhouse，
          打包同 dry 口走「今天领用的其他业态原料 inhouse」做来源。故开 show-source 让工人选来源 chip，
          使 sourceInhouseId 有值、提交不再触发后端 @NotNull 400；卡片库存（show-stock）走成品
-         product_material → 原料 location_stock，对其他产品成立。 -->
+         product_material → 原料 location_stock，对其他产品成立。门店需求只在底部「门店(N份)」标签做参考
+         展示，不参与决定列表里出现哪些成品（领用驱动，不混排礼盒）。 -->
     <SkuPackForm
       kind="dry"
       :product-type="1"

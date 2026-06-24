@@ -30,6 +30,8 @@ export interface ProductInfoVO extends BaseEntity {
   storeLocationName?: string;
   productStatus: number;
   productMaterial?: number | string;
+  /** 关联原材料产品名称（后端 queryById 按 productMaterial 回查回填；row31 详情展示） */
+  productMaterialName?: string;
   productDesc?: string;
   materialNum?: number | string;
   isDelivery: number;
@@ -62,6 +64,10 @@ export interface ProductFlowRecordVO {
   bizType?: string;
   bizNum?: number | string;
   bizUnit?: string;
+  /** 供应商名称（row25：单位列后展示，无则空） */
+  supplierName?: string;
+  /** 操作人名称（row25：供应商列后展示） */
+  operatorName?: string;
 }
 
 /** 产品入库入参（产品 / 库位 / 数量） */
@@ -131,6 +137,8 @@ export interface ProductInfoQuery extends PageQuery {
   /** 归属类型集合（其他产品打包入口 {egg, dry_good, other}）；非空叠加 belong_type IN (...) */
   belongTypes?: string[];
   buyClass?: string;
+  /** 是否支持外购（djs_yes_no：1=是 / 0=否） */
+  isBuyOut?: number;
   /** 生产车间（djs_product_workshop） */
   productWorkshop?: number;
   /** 产品属性 djs_product_attr：1=生产产品（打包目标成品）/ 2=原材料（取数逻辑 doc#13） */

@@ -33,7 +33,7 @@ export interface OutsourcePigVO extends BaseEntity {
 export interface OutsourcePigForm {
   /** 购买日期 yyyy-MM-dd（必填） */
   purchaseDate?: string;
-  /** 到场时间 yyyy-MM-dd HH:mm:ss（可空） */
+  /** 到场时间 yyyy-MM-dd HH:mm:ss（不再手填；列表展示值由关联白条燎毛称重时刻 bar_info.in_time 自动回填，FIX-WMS-OUTSOURCE-001 行38） */
   arriveTime?: string;
   /** 猪只标识号（可空） */
   pigMarkNo?: string;

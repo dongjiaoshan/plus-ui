@@ -30,6 +30,16 @@ export interface PackSourceVO {
 }
 
 /** 待领用白条（status='in_stock'） */
+/** 燎毛产出分产品（白条领用卡片展示用，FIX-WMS-OUTSOURCE-001 行51） */
+export interface BurnProductVO {
+  /** 产品名（如「白条·半只」「五花肉」「整只」） */
+  productName?: string;
+  /** 该分产品燎毛入库重量 kg */
+  productWeight?: number;
+  /** 计量单位 */
+  productUnit?: string;
+}
+
 export interface BarInfoVO {
   id: number;
   barId: string;
@@ -39,6 +49,8 @@ export interface BarInfoVO {
   inWeight?: number;
   inTime?: string;
   status: string;
+  /** 该白条燎毛实际产出的分产品（半只/五花肉/整只 等 + 各自重量），FIX-WMS-OUTSOURCE-001 行51 */
+  burnProducts?: BurnProductVO[];
 }
 
 /** 待称重/称重中分割记录（picked/cutting） */
@@ -47,6 +59,10 @@ export interface PigCutRecordVO {
   cutId: string;
   barId: string;
   earNo?: string;
+  /** 外购猪只白条标识号 bar_info.mark_id（仅外购回填；外购无耳号时 chip 显示用，FIX-WMS-OUTSOURCE-001 行53） */
+  markId?: string;
+  /** 是否外购普通白条（后端 compute-on-read：bar_info.supplier_id != null） */
+  isOutsource?: boolean;
   /** 领用称重 kg（分割白条领用时现场过磅，白条重量展示用此值，非 in_weight） */
   pickupWeight?: number;
   /** 剩余可分割重量 kg（= pickupWeight − 已入库分割产品重量合计；后端计算回填） */
@@ -295,6 +311,16 @@ export const listMaterialStock = (productIds: (number | string)[]): AxiosPromise
  */
 export const listPackedCount = (productIds: (number | string)[]): AxiosPromise<Record<string, number>> => {
   return request({ url: '/djs/warehouse/packEntry/packedCount', method: 'get', params: { productIds: productIds.join(',') } });
+};
+
+/**
+ * 批量判定目标成品「是否打包完成（按门店分别判）」（FIX-WMS-PACKDEMAND-001 行52）。
+ *
+ * 同一产品多门店需求时「打包完成」按门店分别判：把份数全打给同一门店不会让另一门店也算完成。
+ * 返回已完成（每个有需求门店都打满）的成品雪花 id 字符串数组。
+ */
+export const listPackedDone = (productIds: (number | string)[]): AxiosPromise<string[]> => {
+  return request({ url: '/djs/warehouse/packEntry/packedDone', method: 'get', params: { productIds: productIds.join(',') } });
 };
 
 /**

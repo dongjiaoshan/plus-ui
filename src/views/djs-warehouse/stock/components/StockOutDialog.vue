@@ -35,7 +35,7 @@
       </el-form-item>
       <el-form-item :label="t('stock.outDialog.stockOutDest')" prop="stockOutDest">
         <el-select v-model="form.stockOutDest" :placeholder="t('stock.outDialog.stockOutDestPlaceholder')" style="width: 100%">
-          <el-option v-for="d in djs_stock_out_dest" :key="d.value" :label="d.label" :value="d.value" />
+          <el-option v-for="d in stockOutDestOptions" :key="d.value" :label="d.label" :value="d.value" />
         </el-select>
       </el-form-item>
     </el-form>
@@ -56,6 +56,14 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { djs_stock_out_dest } = toRefs<any>(proxy?.useDict('djs_stock_out_dest'));
+
+/**
+ * 后台手工出库去向下拉：隐藏 FIX-WMS-FLOWDICT-001 新增的 5 个工序去向
+ * （ship_dock / dept_pick / bar_cut / prod_pick / check_loss）—— 这 5 个由各业务出库路径
+ * 自动回填、不让后台手工出库选；只保留可手选的最终去向（厨房 / 矿山 / 大冶门店 / 个人 等）。
+ */
+const HIDDEN_OUT_DEST = new Set(['ship_dock', 'dept_pick', 'bar_cut', 'prod_pick', 'check_loss']);
+const stockOutDestOptions = computed(() => (djs_stock_out_dest.value ?? []).filter((d: any) => !HIDDEN_OUT_DEST.has(String(d.value))));
 
 const visible = ref(false);
 const submitting = ref(false);

@@ -75,6 +75,8 @@ export interface PurchaseInProductVO {
   /** 存储库位中文名（多库位「、」拼接，后端已回填） */
   storeLocationName?: string;
   supplierId?: string;
+  /** 供应商名称（row23：列表「供应商」列 + 入库弹框只读展示，后端 JOIN 回填，无则空） */
+  supplierName?: string;
   /** 当前库存（BigDecimal→string） */
   currentStock?: string;
   /** 最后一次入库时间（yyyy-MM-dd HH:mm:ss） */

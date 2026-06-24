@@ -50,19 +50,23 @@ export interface LocationInfoQuery extends PageQuery {
 }
 
 /**
- * 库位类型卡片汇总（DJS-FIX-ADMIN-W22-008）。
+ * 库位卡片汇总（DJS-FIX-ADMIN-W22-008）。
  *
- * 库位一览页顶部 2×4 网格数据源；后端固定按 djs_location_type 8 类返 8 行（某类无数据量为 0）。
+ * 库位总览页卡片网格数据源；后端按单个库位逐行返回（每库位一张卡）。
  * 镜像 be {@code LocationCardSummaryVo} 字段。
  */
 export interface LocationCardSummaryVO {
-  /** 库位类型字典 value */
+  /** 库位主键 id（卡片唯一 key） */
+  locationId: number | string;
+  /** 库位编码 */
+  locationCode: string;
+  /** 库位名称（卡片标题） */
+  locationName: string;
+  /** 库位类型字典 value（副标签） */
   locationType: string;
   /** 库位类型中文 label */
   locationTypeLabel: string;
-  /** 该类库位数 */
-  locationCount: number;
-  /** 该类在库产品数 */
+  /** 该库位在库产品数 */
   productCount: number;
   /** 当前库存总量 */
   currentStock: number | string;

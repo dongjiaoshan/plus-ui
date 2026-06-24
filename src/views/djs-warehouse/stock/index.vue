@@ -11,7 +11,7 @@
       :dict-types="['djs_check_result', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
-      :action-width="320"
+      :action-width="160"
       row-key="id"
       perm-prefix="djs:warehouse:stock"
       show-export
@@ -22,19 +22,13 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <!-- 操作列（对齐原型）：产品出库 + 3 钻取链接（入库 / 出库 / 盘点记录） -->
+      <!-- 操作列：产品出库 + 查看详情（入库/出库/盘点记录三 tab 合并进同一弹框） -->
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:warehouse:stock:out']" link type="primary" size="small" @click="handleProductOut(row as LocationStockVO)">
           {{ t('stock.action.productOut') }}
         </el-button>
         <el-button link type="primary" size="small" @click="drillTo('in', row as LocationStockVO)">
-          {{ t('stock.action.flowIn') }}
-        </el-button>
-        <el-button link type="primary" size="small" @click="drillTo('out', row as LocationStockVO)">
-          {{ t('stock.action.flowOut') }}
-        </el-button>
-        <el-button link type="primary" size="small" @click="drillTo('check', row as LocationStockVO)">
-          {{ t('stock.action.checkRecord') }}
+          {{ t('stock.action.viewDetail') }}
         </el-button>
       </template>
     </BizTable>

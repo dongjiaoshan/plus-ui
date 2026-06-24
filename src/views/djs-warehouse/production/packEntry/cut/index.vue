@@ -15,7 +15,8 @@
         >
           <div class="chip-line chip-line-ear">
             <el-icon><PriceTag /></el-icon>
-            <span class="chip-main">{{ r.earNo ?? r.cutId }}</span>
+            <!-- 外购无耳号：回退显白条标识号/白条编号(barId)，最后才回退 CUT 业务码（FIX-WMS-OUTSOURCE-001 行53） -->
+            <span class="chip-main">{{ r.earNo ?? r.markId ?? r.barId ?? r.cutId }}</span>
           </div>
           <div v-if="r.pickupWeight != null" class="chip-line">
             {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}：{{ Number(r.pickupWeight).toFixed(2) }}kg
@@ -44,10 +45,10 @@
           <div class="ear-row">
             <div v-if="selectedCut" class="ear-chip">
               <el-icon><PriceTag /></el-icon>
-              <span>{{ selectedCut.earNo ?? selectedCut.cutId }}</span>
+              <span>{{ selectedCut.earNo ?? selectedCut.markId ?? selectedCut.barId ?? selectedCut.cutId }}</span>
             </div>
             <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.cutRecordRequired') }}</span>
-            <el-button type="warning" plain :loading="cutDoneSubmitting" class="finish-cut-btn" @click="openCutDone">
+            <el-button type="primary" size="large" :loading="cutDoneSubmitting" class="finish-cut-btn" @click="openCutDone">
               {{ t('djs.warehouse.packEntry.finishCutShort') }}
             </el-button>
           </div>

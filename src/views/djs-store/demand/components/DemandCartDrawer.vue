@@ -1,7 +1,20 @@
 <template>
   <!-- 新增需求多产品购物车：右抽屉、宽 80%、点蒙层可关（保留 Element Plus 默认 close-on-click-modal=true） -->
   <el-drawer v-model="visible" direction="rtl" size="80%" :title="t('storeDemand.cart.title')" destroy-on-close @closed="handleClosed">
-    <div class="cart-drawer">
+    <div class="drawer-body">
+      <!-- 顶部：需求日期（默认明日；确认下单时整单按此日期落库） -->
+      <div class="demand-date-bar">
+        <span class="demand-date-label">{{ t('storeDemand.field.demandDate') }}</span>
+        <el-date-picker
+          v-model="demandDate"
+          type="date"
+          value-format="YYYY-MM-DD"
+          :clearable="false"
+          :placeholder="t('storeDemand.field.demandDate')"
+          style="width: 200px"
+        />
+      </div>
+      <div class="cart-drawer">
       <!-- 左主区：产品类型 tab + 候选产品表（按业态 tab 切列） -->
       <div class="main-area">
         <div class="area-title">{{ t('storeDemand.create.productType') }}</div>
@@ -101,6 +114,7 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
 
     <!-- 底部：需求门店 + 备注 + 需求确认 -->
@@ -108,9 +122,8 @@
       <div class="cart-footer">
         <div class="footer-fields">
           <span class="footer-label">{{ t('storeDemand.create.demandStore') }}</span>
-          <el-select v-model="storeId" filterable :placeholder="t('storeDemand.create.demandStorePh')" style="width: 200px">
-            <el-option v-for="s in storeOptions" :key="String(s.id)" :label="s.storeName" :value="String(s.id)" />
-          </el-select>
+          <!-- 门店由全局选择器锁定，新增需求自动绑当前门店、不可手改 -->
+          <span class="footer-store-name">{{ currentStoreName || '—' }}</span>
           <span class="footer-label">{{ t('storeDemand.create.remark') }}</span>
           <el-input
             v-model="demandRemark"
@@ -134,15 +147,31 @@ import { batchCreateStoreDemand, listStoreDemandAvailablePigs } from '@/api/djs-
 import type { StoreDemandBatchItem, StoreDemandProductType, StoreDemandTabType } from '@/api/djs-store/demand/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const emit = defineEmits<{ (e: 'success'): void }>();
 
+const storeContext = useStoreContextStore();
+/** 当前门店名（用于底部只读展示）。 */
+const currentStoreName = computed(() => {
+  const s = storeContext.myStores.find((x) => String(x.id) === storeId.value);
+  return s?.storeName ?? '';
+});
+
 const dash = '—';
+
+/** 明日日期 YYYY-MM-DD（本地时区，需求日期默认值）。 */
+function tomorrowStr(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 /** 7 业态 tab：belongType 为产品归属分组键，productType 为落库的仓库域 4 业态码。 */
 interface TabDef {
@@ -169,7 +198,7 @@ const activeTab = ref<StoreDemandTabType>('white_bar');
 const allProducts = ref<ProductInfoVO[]>([]);
 const availablePigCount = ref(0);
 const demandRemark = ref('');
-const storeOptions = ref<StoreVO[]>([]);
+const demandDate = ref<string>(tomorrowStr());
 
 /** 购物车项（含展示用 name/unit，提交时只取 productId/productType/demandQuantity/mailing）。 */
 interface CartLine extends StoreDemandBatchItem {
@@ -201,10 +230,20 @@ const cols = computed(() => {
 /** 当前 tab 的产品：按 belongType 归组；「其他」tab = belongType 不在已知 6 类（含空）。 */
 const tabProducts = computed<ProductInfoVO[]>(() => {
   const def = currentTab.value;
+  let list: ProductInfoVO[];
   if (def.belongType === null) {
-    return allProducts.value.filter((p) => !p.belongType || !KNOWN_BELONG.includes(p.belongType));
+    list = allProducts.value.filter((p) => !p.belongType || !KNOWN_BELONG.includes(p.belongType));
+  } else {
+    list = allProducts.value.filter((p) => p.belongType === def.belongType);
   }
-  return allProducts.value.filter((p) => p.belongType === def.belongType);
+  // 白条业态：加载「产品类型=自产(productType=1) + 类别=白条产品(belongType=white_bar)」全部数据。
+  // 白条(整只/半只)在仓库域建模为原材料(product_attr=2)，但门店订白条→现场分割，故不套用下方原料排除。
+  if (def.key === 'white_bar') {
+    return list.filter((p) => Number(p.productType) === 1);
+  }
+  // 其他业态：门店只下单可售成品，排除原材料(product_attr=2)；
+  // 原料是仓库内部流转(分割/毛菜处理产出→领用→打包成成品)，门店订成品不订原料(doc/14 §5)。
+  return list.filter((p) => Number(p.productAttr) !== 2);
 });
 
 function quantityOf(row: ProductInfoVO): number {
@@ -244,9 +283,9 @@ async function loadProducts() {
   try {
     const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
     const rows = ((res as unknown as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
-    // 门店只下单可售产品（自产成品 / 外购商品 / 礼盒），排除所有原材料（product_attr=2）；
-    // 原料是仓库内部流转（分割/毛菜处理产出 → 领用 → 打包成成品），不可被门店下单（doc/14 §5）。
-    allProducts.value = rows.filter((p) => Number(p.productAttr) !== 2);
+    // 加载全部启用产品，原料排除按 tab 业态区分（见 tabProducts）：
+    // 白条 tab 取自产白条(含原料态白条，门店订白条→现场分割)；其余业态排除原材料(product_attr=2)。
+    allProducts.value = rows;
   } catch (e) {
     console.warn('[DemandCartDrawer] loadProducts failed', e);
     allProducts.value = [];
@@ -265,16 +304,6 @@ async function loadAvailablePigs() {
   }
 }
 
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[] }).rows ?? []) as StoreVO[];
-  } catch (e) {
-    console.warn('[DemandCartDrawer] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
-
 async function submit() {
   if (!storeId.value) {
     proxy?.$modal.msgWarning(t('storeDemand.create.demandStorePh'));
@@ -288,6 +317,7 @@ async function submit() {
   try {
     await batchCreateStoreDemand({
       storeId: storeId.value,
+      demandDate: demandDate.value || undefined,
       demandRemark: demandRemark.value || undefined,
       items: cart.value.map((c) => ({
         productId: c.productId,
@@ -308,6 +338,7 @@ function reset() {
   activeTab.value = 'white_bar';
   cart.value = [];
   demandRemark.value = '';
+  demandDate.value = tomorrowStr();
 }
 
 function handleClosed() {
@@ -318,17 +349,37 @@ async function open(presetStoreId: string) {
   reset();
   storeId.value = presetStoreId || '';
   visible.value = true;
-  await Promise.all([loadProducts(), loadAvailablePigs(), loadStoreOptions()]);
+  await Promise.all([loadProducts(), loadAvailablePigs()]);
 }
 
 defineExpose({ open });
 </script>
 
 <style lang="scss" scoped>
+.drawer-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.demand-date-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-bottom: 12px;
+
+  .demand-date-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
 .cart-drawer {
   display: flex;
   gap: 12px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 
   .area-title {
     font-size: 15px;
@@ -427,6 +478,13 @@ defineExpose({ open });
     .footer-label {
       font-size: 14px;
       color: #606266;
+    }
+
+    .footer-store-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+      min-width: 80px;
     }
   }
 }

@@ -268,7 +268,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="form.userId">
-            <el-form-item label="微信 openid">
+            <el-form-item label="微信ID" label-width="68px">
               <el-input v-model="form.wxOpenid" placeholder="员工小程序首次登录后自动绑定" readonly />
             </el-form-item>
           </el-col>

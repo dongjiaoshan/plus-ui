@@ -39,6 +39,14 @@
                   <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inWeightLabel') }}</span>
                   <span class="bar-row-value">{{ b.inWeight != null ? `${b.inWeight}kg` : '-' }}</span>
                 </div>
+                <!-- 燎毛实际产出的分产品（半只/五花肉/整只 等 + 各自重量），FIX-WMS-OUTSOURCE-001 行51 -->
+                <div v-if="b.burnProducts && b.burnProducts.length > 0" class="burn-products">
+                  <div class="burn-products-label">{{ t('djs.warehouse.packEntry.burnProductsLabel') }}</div>
+                  <div v-for="(p, i) in b.burnProducts" :key="i" class="burn-product-row">
+                    <span class="burn-product-name">{{ p.productName }}</span>
+                    <span class="burn-product-weight">{{ p.productWeight != null ? `${Number(p.productWeight)}${p.productUnit ?? 'kg'}` : '-' }}</span>
+                  </div>
+                </div>
               </div>
             </button>
             <span v-if="!barLoading && bars.length === 0" class="bar-empty">{{ t('djs.warehouse.packEntry.noBars') }}</span>
@@ -283,6 +291,31 @@ onMounted(async () => {
 }
 .bar-row-value {
   color: var(--el-text-color-regular);
+}
+.burn-products {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--el-border-color-lighter);
+}
+.burn-products-label {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 6px;
+}
+.burn-product-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 3px 0;
+}
+.burn-product-name {
+  color: var(--el-text-color-primary);
+  font-weight: 500;
+}
+.burn-product-weight {
+  color: var(--el-color-warning-dark-2);
+  font-weight: 600;
 }
 .bar-empty {
   color: var(--el-text-color-placeholder);

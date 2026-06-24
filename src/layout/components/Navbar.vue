@@ -29,6 +29,9 @@
         <!-- SYS-AUTH-001 djs 多农场切换器（V1 multi-farm disabled 时组件自动隐藏） -->
         <farm-switcher />
 
+        <!-- STORE-PERM-001 全局门店选择器（仅门店域路由显示） -->
+        <store-switcher v-if="inStoreDomain" />
+
         <search-menu ref="searchMenuRef" />
         <el-tooltip content="搜索" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="openSearchMenu">
@@ -98,6 +101,8 @@
 <script setup lang="ts">
 import SearchMenu from './TopBar/search.vue';
 import FarmSwitcher from '@/components/FarmSwitcher/index.vue';
+import StoreSwitcher from '@/components/StoreSwitcher/index.vue';
+import { useRoute } from 'vue-router';
 import { useAppStore } from '@/store/modules/app';
 import { useUserStore } from '@/store/modules/user';
 import { useSettingsStore } from '@/store/modules/settings';
@@ -123,6 +128,10 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const userId = ref(userStore.userId);
 const navType = computed(() => settingsStore.navType);
 const showLogo = computed(() => settingsStore.sidebarLogo);
+
+// STORE-PERM-001：仅门店域路由显示全局门店选择器
+const route = useRoute();
+const inStoreDomain = computed(() => route.path.startsWith('/djs-store'));
 
 const companyName = ref(undefined);
 const tenantList = ref<TenantVO[]>([]);

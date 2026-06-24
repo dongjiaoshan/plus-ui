@@ -25,20 +25,23 @@
         </el-table>
       </el-tab-pane>
 
-      <!-- 出库记录 -->
+      <!-- 出库记录（出库口径文案 + 出库去向列） -->
       <el-tab-pane :label="t('stock.action.flowOut')" name="out">
         <el-table v-loading="outLoading" :data="outList" border max-height="460">
-          <el-table-column prop="flowDate" :label="t('djs.warehouse.flowIn.flowDate')" min-width="160" align="center" header-align="center">
+          <el-table-column prop="flowDate" :label="t('djs.warehouse.flowOut.flowDate')" min-width="160" align="center" header-align="center">
             <template #default="{ row }">{{ formatDateTime(row.flowDate) }}</template>
           </el-table-column>
-          <el-table-column prop="flowNo" :label="t('djs.warehouse.flowIn.flowNo')" min-width="160" align="center" header-align="center" />
-          <el-table-column prop="flowType" :label="t('djs.warehouse.flowIn.inMode')" min-width="110" align="center" header-align="center">
+          <el-table-column prop="flowNo" :label="t('djs.warehouse.flowOut.flowNo')" min-width="160" align="center" header-align="center" />
+          <el-table-column prop="flowType" :label="t('djs.warehouse.flowOut.outMode')" min-width="110" align="center" header-align="center">
             <template #default="{ row }"><dict-tag :options="djs_flow_type" :value="row.flowType" /></template>
           </el-table-column>
-          <el-table-column prop="locationName" :label="t('djs.warehouse.flowIn.location')" min-width="120" align="center" header-align="center" />
-          <el-table-column prop="changeQuantity" :label="t('djs.warehouse.flowIn.changeQuantity')" min-width="110" align="center" header-align="center" />
-          <el-table-column prop="productUnit" :label="t('djs.warehouse.flowIn.productUnit')" min-width="80" align="center" header-align="center" />
-          <el-table-column prop="operatorName" :label="t('djs.warehouse.flowIn.operator')" min-width="100" align="center" header-align="center" />
+          <el-table-column prop="stockOutDest" :label="t('djs.warehouse.flowOut.stockOutDest')" min-width="110" align="center" header-align="center">
+            <template #default="{ row }"><dict-tag :options="djs_stock_out_dest" :value="row.stockOutDest" /></template>
+          </el-table-column>
+          <el-table-column prop="locationName" :label="t('djs.warehouse.flowOut.location')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="changeQuantity" :label="t('djs.warehouse.flowOut.changeQuantity')" min-width="110" align="center" header-align="center" />
+          <el-table-column prop="productUnit" :label="t('djs.warehouse.flowOut.productUnit')" min-width="80" align="center" header-align="center" />
+          <el-table-column prop="operatorName" :label="t('djs.warehouse.flowOut.operator')" min-width="100" align="center" header-align="center" />
         </el-table>
       </el-tab-pane>
 
@@ -78,7 +81,9 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_flow_type, djs_check_result } = toRefs<Record<string, any>>(proxy?.useDict('djs_flow_type', 'djs_check_result'));
+const { djs_flow_type, djs_check_result, djs_stock_out_dest } = toRefs<Record<string, any>>(
+  proxy?.useDict('djs_flow_type', 'djs_check_result', 'djs_stock_out_dest')
+);
 
 const visible = ref(false);
 const activeTab = ref<'in' | 'out' | 'check'>('in');

@@ -1,11 +1,11 @@
 <template>
   <div v-loading="loading" class="location-card-grid">
     <el-row :gutter="12">
-      <el-col v-for="card in cards" :key="card.locationType" :xs="12" :sm="12" :md="6" :lg="6" class="mb-3">
+      <el-col v-for="card in cards" :key="String(card.locationId)" :xs="12" :sm="12" :md="6" :lg="6" class="mb-3">
         <el-card shadow="hover" class="location-card" :body-style="{ padding: '12px 14px' }">
           <div class="location-card__header">
+            <span class="location-card__name">{{ card.locationName }}</span>
             <dict-tag :options="djs_location_type" :value="card.locationType" />
-            <span class="location-card__count"> {{ t('location.summary.productCount') }}：{{ card.productCount }} </span>
           </div>
           <div class="location-card__metric">
             <span class="location-card__metric-label">{{ t('location.summary.currentStock') }}</span>
@@ -23,11 +23,13 @@
           </div>
           <div class="location-card__check">
             <span class="location-card__row-label">{{ t('location.summary.lastCheck') }}</span>
-            <template v-if="card.lastCheckDate">
-              <span class="location-card__check-date">{{ formatDate(card.lastCheckDate) }}</span>
-              <dict-tag v-if="card.lastCheckResult != null" :options="djs_check_result" :value="card.lastCheckResult" />
-            </template>
-            <span v-else class="text-gray-400">{{ t('location.summary.noCheck') }}</span>
+            <div class="location-card__check-result">
+              <template v-if="card.lastCheckDate">
+                <span class="location-card__check-date">{{ formatDate(card.lastCheckDate) }}</span>
+                <dict-tag v-if="card.lastCheckResult != null" :options="djs_check_result" :value="card.lastCheckResult" />
+              </template>
+              <span v-else class="text-gray-400">{{ t('location.summary.noCheck') }}</span>
+            </div>
           </div>
         </el-card>
       </el-col>
@@ -86,12 +88,17 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 6px;
     margin-bottom: 8px;
   }
 
-  &__count {
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
+  &__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__metric {
@@ -136,9 +143,17 @@ onMounted(() => {
   &__check {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 6px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
+  }
+
+  &__check-result {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
   }
 
   &__check-date {

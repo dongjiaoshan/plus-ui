@@ -35,16 +35,17 @@
       <!-- 自产专属 -->
       <template v-if="form.productType === 1">
         <el-row :gutter="16">
+          <!-- row29：自产产品「产品类别(归属类型)」必填，显示红星 -->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.belongType')" prop="belongType">
+            <el-form-item :label="t('product.field.belongType')" prop="belongType" required>
               <el-select v-model="form.belongType" clearable>
                 <el-option v-for="d in djs_belong_type" :key="d.value" :label="d.label" :value="d.value" />
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- row119：归属类型右侧选存储库位（单选），入库时锁定到此库位 -->
+          <!-- row29：存储仓库必填（入库时锁定到此库位） -->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId">
+            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId" required>
               <el-select
                 v-model="form.storeLocationId"
                 filterable
@@ -56,15 +57,17 @@
               </el-select>
             </el-form-item>
           </el-col>
+          <!-- row29：产品属性必填 -->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.productAttr')" prop="productAttr">
+            <el-form-item :label="t('product.field.productAttr')" prop="productAttr" required>
               <el-select v-model="form.productAttr" clearable @change="onProductAttrChange">
                 <el-option v-for="d in djs_product_attr" :key="d.value" :label="d.label" :value="Number(d.value)" />
               </el-select>
             </el-form-item>
           </el-col>
+          <!-- row29：生产车间必填 -->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.productWorkshop')" prop="productWorkshop">
+            <el-form-item :label="t('product.field.productWorkshop')" prop="productWorkshop" required>
               <el-select v-model="form.productWorkshop" clearable>
                 <el-option v-for="d in djs_product_workshop" :key="d.value" :label="d.label" :value="Number(d.value)" />
               </el-select>
@@ -116,27 +119,18 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item :label="t('product.field.supplierId')" prop="supplierId">
+            <el-form-item :label="t('product.field.supplierId')" prop="supplierId" required>
               <el-select v-model="form.supplierId" filterable :placeholder="t('product.placeholder.supplierId')">
                 <el-option v-for="s in supplierOptions" :key="String(s.id)" :label="s.supplierName" :value="s.id" />
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- WMS-BELONGTYPE-001：外购发货品（如外购白条）需选归属业态，否则发货按业态匹配落空；物资类可留空 -->
+          <!-- row24：归属类型已去除（外购商品业态由供应商/分类决定，无需手选归属） -->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.belongType')" prop="belongType">
-              <el-select v-model="form.belongType" clearable>
-                <el-option v-for="d in djs_belong_type" :key="d.value" :label="d.label" :value="d.value" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <!-- row118：归属类型右侧选存储库位（单选），入库时锁定到此库位 -->
-          <el-col :span="12">
-            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId">
+            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId" required>
               <el-select
                 v-model="form.storeLocationId"
                 filterable
-                clearable
                 :placeholder="t('product.placeholder.storeLocation')"
                 style="width: 100%"
               >
@@ -190,7 +184,8 @@
             <OssUpload ref="ossThumbRef" v-model="thumbOssIdsModel" biz-type="product_image" :limit="1" :file-size="10" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <!-- row24：外购商品（productType=2）不展示「是否支持外购」；自产/礼盒保留 -->
+        <el-col v-if="form.productType !== 2" :span="12">
           <el-form-item :label="t('product.field.isBuyOutSupport')">
             <el-radio-group v-model="form.isBuyOut">
               <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
@@ -337,6 +332,45 @@ const rules = computed(() => ({
       validator: (_rule: any, value: any, callback: any) => {
         if (form.value.productType === 2 && !value) {
           callback(new Error(t('product.rule.supplierId.required')));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  // row24/row29：存储仓库必填（自产 productType=1 / 外购 productType=2 均必填；礼盒不要求）
+  storeLocationId: [
+    {
+      validator: (_rule: any, value: any, callback: any) => {
+        if ((form.value.productType === 1 || form.value.productType === 2) && !value) {
+          callback(new Error(t('product.rule.storeLocation.required')));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  // row29：自产产品属性必填
+  productAttr: [
+    {
+      validator: (_rule: any, value: any, callback: any) => {
+        if (form.value.productType === 1 && (value === undefined || value === null || value === '')) {
+          callback(new Error(t('product.rule.productAttr.required')));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  // row29：自产生产车间必填
+  productWorkshop: [
+    {
+      validator: (_rule: any, value: any, callback: any) => {
+        if (form.value.productType === 1 && (value === undefined || value === null || value === '')) {
+          callback(new Error(t('product.rule.productWorkshop.required')));
         } else {
           callback();
         }

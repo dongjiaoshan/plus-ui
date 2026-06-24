@@ -85,6 +85,7 @@ export default {
     message: 'Message',
     layoutSize: 'Layout Size',
     selectTenant: 'Select Tenant',
+    selectStore: 'Select Store',
     layoutSetting: 'Layout Setting',
     personalCenter: 'Personal Center',
     logout: 'Logout'
@@ -157,14 +158,14 @@ export default {
     column: {
       supplierCode: 'Supplier code',
       supplierName: 'Supplier name',
-      supplierType: 'Type',
+      supplierType: 'Supply type',
       liaisonName: 'Liaison',
       liaisonPhone: 'Phone',
       address: 'Address',
       businessStatus: 'Cooperation',
       settleType: 'Settle type',
       dealCount: 'Deals',
-      purchaseQty: 'Purchased qty',
+      purchaseQty: 'Purchased amount',
       remark: 'Remark',
       createTime: 'Created at'
     },
@@ -175,7 +176,7 @@ export default {
       licenseImage: 'License image',
       businessLicenseNo: 'Business permit No.',
       cooperationStartDate: 'Cooperation start',
-      supplierType: 'Type',
+      supplierType: 'Supply type',
       liaisonName: 'Liaison',
       liaisonPhone: 'Phone',
       address: 'Address',
@@ -199,7 +200,7 @@ export default {
       licenseNo: 'Enter license number',
       businessLicenseNo: 'Enter business permit number',
       cooperationStartDate: 'Select cooperation start date',
-      supplierType: 'Select type',
+      supplierType: 'Select supply type',
       liaisonName: 'Enter liaison name',
       liaisonPhone: 'Enter phone',
       address: 'Enter address',
@@ -299,7 +300,20 @@ export default {
       add: 'Add store',
       edit: 'Edit store',
       view: 'Store details',
-      setManager: 'Set manager'
+      setManager: 'Set manager',
+      bindUser: 'Store staff'
+    },
+    bindUser: {
+      title: 'Store staff',
+      candidateTitle: 'System users',
+      boundTitle: 'Bound staff',
+      searchPlaceholder: 'Search name / account',
+      colNickName: 'Name',
+      colUserName: 'Account',
+      colPhone: 'Phone',
+      addSelected: 'Add',
+      remove: 'Remove',
+      boundHint: 'Click Confirm to save bindings (full overwrite of this store)'
     },
     column: {
       storeCode: 'Store code',
@@ -1205,14 +1219,14 @@ export default {
     },
     giftEmpty: 'No components in this gift box',
     column: {
-      productId: 'Code',
-      productName: 'Name',
+      productId: 'Product Code',
+      productName: 'Product Name',
       productType: 'Type',
       productAttr: 'Attribute',
       productWorkshop: 'Workshop',
       storeLocation: 'Store Location',
-      belongType: 'Belong',
-      productThumb: 'Image',
+      belongType: 'Category',
+      productThumb: 'Product Image',
       productUnit: 'Unit',
       productSpec: 'Spec',
       productStatus: 'Status',
@@ -1228,13 +1242,13 @@ export default {
       productType: 'Product type',
       productUnit: 'Unit',
       productSpec: 'Spec',
-      belongType: 'Belong type',
-      buyClass: 'Purchase class',
+      belongType: 'Category',
+      buyClass: 'Category',
       productAttr: 'Attribute',
       productWorkshop: 'Workshop',
-      productMaterial: 'Material ID',
+      productMaterial: 'Raw Material Product',
       materialNum: 'Other-product packing measure',
-      productThumb: 'Thumb',
+      productThumb: 'Product Image',
       productImg: 'Images',
       imageOssId: 'Main Image (auto)',
       imageOssIdTip: 'Leave empty to auto-match from the shared library by product name; manual upload is never auto-overridden',
@@ -1264,7 +1278,7 @@ export default {
       productSpec: 'e.g. 500g/pack',
       productMaterial: 'Related raw material product ID',
       productMaterialSelect: 'Select the related raw material product',
-      buyClass: 'Choose purchase class (add via dict manager if empty)',
+      buyClass: 'Choose category (add via dict manager if empty)',
       supplierId: 'Choose supplier',
       storeLocation: 'Select storage location'
     },
@@ -1273,13 +1287,16 @@ export default {
       productId: { required: 'Product code is required' },
       productName: { required: 'Product name is required' },
       productUnit: { required: 'Product unit is required' },
-      belongType: { required: 'Self-produce belong type is required' },
+      belongType: { required: 'Self-produce category is required' },
       supplierId: { required: 'Supplier is required for purchased products' },
       productSpec: { required: 'Spec is required for production products' },
-      giftComponents: { required: 'Gift box requires at least one component' }
+      giftComponents: { required: 'Gift box requires at least one component' },
+      storeLocation: { required: 'Please select storage location' },
+      productAttr: { required: 'Please select product attribute' },
+      productWorkshop: { required: 'Please select workshop' }
     },
     tip: {
-      buyClassEmpty: 'No purchase class yet — add via System → Dict → djs_buy_class',
+      buyClassEmpty: 'No category yet — add via System → Dict → djs_buy_class',
       materialEmpty: 'No raw material product yet — first add a product with attribute = Raw material'
     },
     action: {
@@ -1291,6 +1308,7 @@ export default {
     inbound: {
       title: 'Goods inbound',
       product: 'Goods',
+      supplier: 'Supplier',
       location: 'Inbound location',
       locationPlaceholder: 'Select inbound location',
       locationType: 'Location Type',
@@ -1323,7 +1341,9 @@ export default {
       bizUnit: 'Unit',
       typeInStock: 'Inbound',
       typePickOut: 'Pick Out',
-      typeBackendOut: 'Backend Out'
+      typeBackendOut: 'Backend Out',
+      supplierName: 'Supplier',
+      operatorName: 'Operator'
     },
     confirm: {
       del: 'Delete {count} product(s)? Make sure none has active stock or is referenced as raw material.'
@@ -1336,7 +1356,7 @@ export default {
       earNo: 'Ear No.',
       blockNo: 'Plot No.',
       locationName: 'Location',
-      belongType: 'Belong Type'
+      belongType: 'Category'
     },
     column: {
       locationName: 'Location',
@@ -1353,7 +1373,8 @@ export default {
       flowIn: 'Inbound',
       flowOut: 'Outbound',
       checkRecord: 'Check log',
-      productOut: 'Stock Out'
+      productOut: 'Stock Out',
+      viewDetail: 'View Detail'
     },
     outDialog: {
       title: 'Product Stock Out',
@@ -2220,7 +2241,7 @@ export default {
         matType: 'Mat Type',
         productName: 'Product',
         productCode: 'Code',
-        belongType: 'Belong',
+        belongType: 'Category',
         changeQuantity: 'Qty',
         productUnit: 'Unit',
         location: 'Location',
@@ -2343,6 +2364,7 @@ export default {
         marketingWeightLabel: 'Marketing Weight',
         whiteBarWeightShort: 'Carcass wt ',
         remainWeightLabel: 'Remaining Weight',
+        burnProductsLabel: 'Singe Output',
         noEarSource: 'No pork source ear No. available for packing',
         pickupWeightExceed: 'Pickup weight must not exceed the carcass marketing weight ({weight}kg)',
         vegWeightExceed: 'Pack weight exceeds requisition remaining weight ({remain}kg), please re-weigh',
@@ -2493,6 +2515,7 @@ export default {
         flowType: 'Type',
         inMode: 'Inbound Mode',
         matType: 'Material Type',
+        productType: 'Product Type',
         productCode: 'Product Code',
         productName: 'Product',
         blockNo: 'Block No.',
@@ -2511,6 +2534,7 @@ export default {
         flowType: 'Type',
         outMode: 'Outbound Mode',
         matType: 'Material Type',
+        productType: 'Product Type',
         stockOutDest: 'Out Dest',
         productCode: 'Product Code',
         productName: 'Product',
@@ -3282,7 +3306,7 @@ export default {
       confirmPrint: 'Confirm & Print',
       cancel: 'Cancel',
       productCode: 'Product Code',
-      serialNo: 'Production Serial',
+      serialNo: 'Production Code',
       packCode: 'Pack Code',
       produceDate: 'Production Date',
       productName: 'Product Name',
@@ -3293,6 +3317,7 @@ export default {
       weightUnit: 'kg',
       noCode: 'No trace code to print for this row',
       scanHint: 'Scan to view traceability',
+      traceCaption: 'Dongjiaoshan Product Trace Code',
       printFailed: 'Failed to generate print file, please retry'
     },
     veg: {

@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_product_type', 'djs_belong_type', 'djs_buy_class', 'djs_product_attr', 'djs_product_workshop', 'sys_normal_disable']"
+      :dict-types="['djs_product_type', 'djs_belong_type', 'djs_buy_class', 'djs_product_attr', 'djs_product_workshop', 'djs_yes_no', 'sys_normal_disable']"
       :page-num="pageNum"
       :page-size="pageSize"
       :action-width="isGoodsEntry ? 340 : 270"
@@ -131,7 +131,8 @@ const searchModel = reactive<Record<string, any>>({
   productName: undefined,
   productType: undefined,
   belongType: undefined,
-  buyClass: undefined,
+  productAttr: undefined,
+  isBuyOut: undefined,
   productWorkshop: undefined,
   storeLocationId: undefined,
   productStatus: undefined,
@@ -145,7 +146,10 @@ const searchSchema = computed<SearchFieldSchema[]>(() => {
     { field: 'productName', label: t(isGoods ? 'product.field.goodsName' : 'product.field.productName'), type: 'input' },
     { field: 'productType', label: t(isGoods ? 'product.field.goodsType' : 'product.field.productType'), type: 'select', dictType: 'djs_product_type' },
     { field: 'belongType', label: t('product.field.belongType'), type: 'select', dictType: 'djs_belong_type' },
-    { field: 'buyClass', label: t('product.field.buyClass'), type: 'select', dictType: 'djs_buy_class' },
+    // row41：新增「产品属性」搜索条件
+    { field: 'productAttr', label: t('product.field.productAttr'), type: 'select', dictType: 'djs_product_attr' },
+    // row30：去掉外购类搜索，改为「是否支持外购」筛选
+    { field: 'isBuyOut', label: t('product.field.isBuyOutSupport'), type: 'select', dictType: 'djs_yes_no' },
     // 原型新增筛选：生产车间 / 存储仓库 / 更新时间 / 更新人员
     { field: 'productWorkshop', label: t('product.field.productWorkshop'), type: 'select', dictType: 'djs_product_workshop' },
     { field: 'storeLocationId', label: t('product.field.storeLocation'), type: 'select', options: locationOptions.value },
@@ -157,17 +161,20 @@ const searchSchema = computed<SearchFieldSchema[]>(() => {
   return presetTypes !== undefined ? schema.filter((f) => f.field !== 'productType') : schema;
 });
 
+// row30：产品配置列表按指定 14 列顺序 + 全称列头
+// 产品图片/产品编码/产品名称/产品类型/产品类别/产品属性/生产车间/单位/规格/存储仓库/是否支持外购/状态/更新时间/更新人员
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productThumb', label: t('product.column.productThumb'), width: 80, align: 'center' },
   { prop: 'productId', label: t('product.column.productId'), width: 140, showOverflowTooltip: true },
   { prop: 'productName', label: t('product.column.productName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'productType', label: t(isGoods ? 'product.column.goodsType' : 'product.column.productType'), width: 90, align: 'center', dictType: 'djs_product_type' },
+  { prop: 'belongType', label: t('product.column.belongType'), width: 110, align: 'center', dictType: 'djs_belong_type' },
   { prop: 'productAttr', label: t(isGoods ? 'product.column.goodsAttr' : 'product.column.productAttr'), width: 100, align: 'center', dictType: 'djs_product_attr' },
   { prop: 'productWorkshop', label: t('product.column.productWorkshop'), width: 110, align: 'center', dictType: 'djs_product_workshop' },
-  // 原型新增列：产品单位 / 规格 / 存储仓库
   { prop: 'productUnit', label: t('product.column.productUnit'), width: 90, align: 'center' },
   { prop: 'productSpec', label: t('product.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true },
   { prop: 'storeLocationName', label: t('product.column.storeLocation'), width: 130, align: 'center', showOverflowTooltip: true },
+  { prop: 'isBuyOut', label: t('product.field.isBuyOutSupport'), width: 120, align: 'center', dictType: 'djs_yes_no' },
   { prop: 'productStatus', label: t('product.column.productStatus'), width: 90, align: 'center', dictType: 'sys_normal_disable' },
   { prop: 'updateTime', label: t('product.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'updateByName', label: t('common.updateByName'), width: 100, align: 'center' }
@@ -188,7 +195,8 @@ function buildQuery(): Omit<ProductInfoQuery, 'pageNum' | 'pageSize'> {
           ? undefined
           : Number(searchModel.productType),
     belongType: searchModel.belongType || undefined,
-    buyClass: searchModel.buyClass || undefined,
+    productAttr: searchModel.productAttr === undefined || searchModel.productAttr === '' ? undefined : Number(searchModel.productAttr),
+    isBuyOut: searchModel.isBuyOut === undefined || searchModel.isBuyOut === '' ? undefined : Number(searchModel.isBuyOut),
     productWorkshop:
       searchModel.productWorkshop === undefined || searchModel.productWorkshop === '' ? undefined : Number(searchModel.productWorkshop),
     storeLocationId: searchModel.storeLocationId || undefined,

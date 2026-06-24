@@ -10,30 +10,37 @@
           </el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productUnit')">{{ data.productUnit || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productSpec')">{{ data.productSpec || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.belongType')">
+          <!-- row25：商品（外购 type=2）详情去掉归属类型/商品属性/生产车间/是否支持外购显示 -->
+          <el-descriptions-item v-if="!isGoods" :label="t('product.field.belongType')">
             <dict-tag :options="djs_belong_type" :value="data.belongType" />
           </el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.buyClass')">
+          <!-- row25：商品类别（外购）；row31：自产/礼盒详情去掉外购类显示 -->
+          <el-descriptions-item v-if="isGoods" :label="t('product.field.buyClass')">
             <dict-tag :options="djs_buy_class" :value="data.buyClass" />
           </el-descriptions-item>
-          <el-descriptions-item :label="t(isGoods ? 'product.field.goodsAttr' : 'product.field.productAttr')">
+          <el-descriptions-item v-if="!isGoods" :label="t(isGoods ? 'product.field.goodsAttr' : 'product.field.productAttr')">
             <dict-tag :options="djs_product_attr" :value="data.productAttr" />
           </el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.productWorkshop')">
+          <el-descriptions-item v-if="!isGoods" :label="t('product.field.productWorkshop')">
             <dict-tag :options="djs_product_workshop" :value="data.productWorkshop" />
           </el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productStatus')">
             <dict-tag :options="sys_normal_disable" :value="data.productStatus" />
           </el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.isBuyOutSupport')">
-            <dict-tag :options="djs_yes_no" :value="data.isBuyOut" />
-          </el-descriptions-item>
+          <!-- row25：商品详情去掉是否支持外购；row31：自产/礼盒保留 + 右侧新增原材料产品 -->
+          <template v-if="!isGoods">
+            <el-descriptions-item :label="t('product.field.isBuyOutSupport')">
+              <dict-tag :options="djs_yes_no" :value="data.isBuyOut" />
+            </el-descriptions-item>
+            <el-descriptions-item :label="t('product.field.productMaterial')">{{ data.productMaterialName || '-' }}</el-descriptions-item>
+          </template>
+          <!-- row31：缩略图文案改「产品图片」（i18n key productThumb 全局已统一） -->
           <el-descriptions-item :label="t('product.field.productThumb')" :span="2">
             <image-preview v-if="thumbUrl" :src="thumbUrl" :width="120" :height="120" />
             <el-text v-else type="info">-</el-text>
           </el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productDesc')" :span="2">{{ data.productDesc || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.remark')" :span="2">{{ data.remark || '-' }}</el-descriptions-item>
+          <!-- row25/row31：去掉备注显示 -->
         </el-descriptions>
       </el-tab-pane>
 
@@ -97,7 +104,7 @@
             <template #default="{ row }">{{ formatKg(row.diffWeight) }}</template>
           </el-table-column>
           <template #empty>
-            <el-empty :description="t('common.noData')" :image-size="60" />
+            <el-empty :description="t('common.empty')" :image-size="60" />
           </template>
         </el-table>
       </el-tab-pane>
@@ -127,8 +134,15 @@
           </el-table-column>
           <el-table-column prop="bizNum" :label="t('product.flow.bizNum')" min-width="120" align="center" header-align="center" />
           <el-table-column prop="bizUnit" :label="t('product.flow.bizUnit')" width="100" align="center" header-align="center" />
+          <!-- row25：单位列后加供应商，供应商后加操作人 -->
+          <el-table-column prop="supplierName" :label="t('product.flow.supplierName')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
+            <template #default="{ row }">{{ row.supplierName || '-' }}</template>
+          </el-table-column>
+          <el-table-column prop="operatorName" :label="t('product.flow.operatorName')" min-width="110" align="center" header-align="center" show-overflow-tooltip>
+            <template #default="{ row }">{{ row.operatorName || '-' }}</template>
+          </el-table-column>
           <template #empty>
-            <el-empty :description="t('common.noData')" :image-size="60" />
+            <el-empty :description="t('common.empty')" :image-size="60" />
           </template>
         </el-table>
       </el-tab-pane>

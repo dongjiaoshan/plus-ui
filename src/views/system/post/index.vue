@@ -27,15 +27,6 @@
                 <el-form-item label="岗位编码" prop="postCode">
                   <el-input v-model="queryParams.postCode" placeholder="请输入岗位编码" clearable @keyup.enter="handleQuery" />
                 </el-form-item>
-                <el-form-item label="类别编码" prop="postCategory">
-                  <el-input
-                    v-model="queryParams.postCategory"
-                    placeholder="请输入类别编码"
-                    clearable
-                    style="width: 200px"
-                    @keyup.enter="handleQuery"
-                  />
-                </el-form-item>
                 <el-form-item label="岗位名称" prop="postName">
                   <el-input v-model="queryParams.postName" placeholder="请输入岗位名称" clearable @keyup.enter="handleQuery" />
                 </el-form-item>
@@ -88,7 +79,6 @@
             <el-table-column type="selection" width="55" align="center" />
             <el-table-column v-if="false" label="岗位编号" align="center" prop="postId" />
             <el-table-column label="岗位编码" align="center" prop="postCode" />
-            <el-table-column label="类别编码" align="center" prop="postCategory" />
             <el-table-column label="岗位名称" align="center" prop="postName" />
             <el-table-column label="部门" align="center" prop="deptName" />
             <el-table-column label="排序" align="center" prop="postSort" />
@@ -141,9 +131,6 @@
             </el-form-item>
             <el-form-item label="岗位编码" prop="postCode">
               <el-input v-model="form.postCode" placeholder="请输入编码名称" />
-            </el-form-item>
-            <el-form-item label="类别编码" prop="postCategory">
-              <el-input v-model="form.postCategory" placeholder="请输入类别编码" />
             </el-form-item>
             <el-form-item label="岗位顺序" prop="postSort">
               <el-input-number v-model="form.postSort" controls-position="right" :min="0" />

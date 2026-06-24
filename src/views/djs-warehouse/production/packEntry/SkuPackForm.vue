@@ -165,7 +165,7 @@ import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialo
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
 import { parseTime } from '@/utils/ruoyi';
 import { usePackEntryOptions } from './useOptions';
-import { listMaterialStock, listPackedCount, listPackedWeight, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
+import { listMaterialStock, listPackedDone, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
 import type { DeliverDest, DryPackBo, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
@@ -382,61 +382,24 @@ async function loadDemandMap() {
   demandMap.value = map;
 }
 
-// 卡片网格「今天已打包份数」（每条 product_production = 一份）：productId → 今天已打包份数。
-const packedMap = ref<Record<string, number>>({});
+// 「打包完成」集合（FIX-WMS-PACKDEMAND-001 行52）：后端按门店分别判——同一产品多门店需求时，
+// 把份数全打给同一门店不会让另一门店也算完成。doneSet 直接取后端 /packedDone 结果（成品雪花 id 字符串集合），
+// 不再前端用「总已打包份数 ≥ 总需求份数」误判（旧实现把 3 份全打一店就整产品判完成）。
+const doneSet = ref<Set<string>>(new Set<string>());
 
-async function loadPackedCount() {
+async function loadPackedDone() {
   const ids = products.value.map((p) => p.id);
   if (ids.length === 0) {
-    packedMap.value = {};
+    doneSet.value = new Set<string>();
     return;
   }
   try {
-    const res = await listPackedCount(ids);
-    packedMap.value = ((res as any).data ?? {}) as Record<string, number>;
+    const res = await listPackedDone(ids);
+    doneSet.value = new Set(((res as any).data ?? []).map((v: string | number) => String(v)));
   } catch {
-    packedMap.value = {};
+    doneSet.value = new Set<string>();
   }
 }
-
-// 果蔬「领用剩余重量」口径用：成品雪花 id 字符串 → 已打包总重 kg（number，Number() 强转防 BigDecimal 字符串拼接坑）。
-const packedWeightMap = ref<Record<string, number>>({});
-
-async function loadPackedWeight() {
-  // 仅果蔬打包需要（「领用剩余重量」= 领用总重 − 已打包总重）；其余业态不拉。
-  if (props.kind !== 'veg') {
-    packedWeightMap.value = {};
-    return;
-  }
-  const ids = products.value.map((p) => p.id);
-  if (ids.length === 0) {
-    packedWeightMap.value = {};
-    return;
-  }
-  try {
-    const res = await listPackedWeight(ids);
-    const remote = ((res as any).data ?? {}) as Record<string, string>;
-    const map: Record<string, number> = {};
-    Object.keys(remote).forEach((k) => {
-      map[k] = Number(remote[k]) || 0;
-    });
-    packedWeightMap.value = map;
-  } catch {
-    packedWeightMap.value = {};
-  }
-}
-
-// 「打包完成」集合：门店需求 > 0 且 今天已打包份数 ≥ 需求份数 → 卡片标完成、禁选（避免超量打包）。
-const doneSet = computed<Set<string>>(() => {
-  const s = new Set<string>();
-  products.value.forEach((p) => {
-    const key = String(p.id);
-    const demand = demandMap.value[key] ?? 0;
-    const packed = packedMap.value[key] ?? 0;
-    if (demand > 0 && packed >= demand) s.add(key);
-  });
-  return s;
-});
 
 function isProductDone(id: number | string): boolean {
   return doneSet.value.has(String(id));
@@ -618,30 +581,30 @@ const meatStockMap = computed<Record<string, number | null>>(() => {
 });
 
 /**
- * 果蔬打包「领用剩余重量」= 领用总重 − 该成品已打包总重（钳 ≥ 0）。
- * 领用总重：成品经 product_material 二跳反查原材料，聚合该原材料全部活动来源 inhouse(sources) 的 productWeight。
- * **同一原材料的多个成品卡共享同一领用池**；已打包总重按成品自身维度从 packedWeightMap 扣减。
- * 取 `sources`（全部活动 inhouse，不限日期）。成品未配 product_material → 不入 map（卡片显 '—'）。
+ * 果蔬打包「领用剩余重量」= 成品经 product_material 反查原材料后，聚合该原材料全部活动来源 inhouse(sources) 的 productWeight。
+ * **同一原材料的多个成品卡共享同一领用池**。
+ * 取 `sources`（全部活动 inhouse，不限日期）；成品未配 product_material → 不入 map（卡片显 '—'）。
+ *
+ * 不再扣减「已打包总重」：后端 consumeInhouse 打包时已从源 inhouse 行实时扣减本次重量，
+ * sources 重新加载后已反映扣减；前端若再减 packedWeightMap 会把同一次打包量重复扣两次（row45 双重扣减 bug）。
  * 数值全程 Number() 强转（防 BigDecimal 序列化字符串拼接坑）。
  */
 const vegStockMap = computed<Record<string, number | null>>(() => {
   const m: Record<string, number | null> = {};
   if (props.kind !== 'veg') return m;
-  // 先按原材料 id 聚合全部活动来源 inhouse 重量（source.productId = 原材料 id）
+  // 先按原材料 id 聚合全部活动来源 inhouse 重量（source.productId = 原材料 id；已含后端打包扣减）
   const byMaterial: Record<string, number> = {};
   sources.value.forEach((s) => {
     if (s.productId == null) return;
     const k = String(s.productId);
     byMaterial[k] = (byMaterial[k] ?? 0) + (Number(s.productWeight) || 0);
   });
-  // 成品 → 其 product_material 指向原材料的共享领用池 − 该成品已打包总重（钳 ≥ 0）
+  // 成品 → 其 product_material 指向原材料的共享领用池（实时余量，无需再减已打包）
   products.value.forEach((p) => {
     if (p.productMaterial == null) return;
     const picked = byMaterial[String(p.productMaterial)];
     if (picked == null) return;
-    const packed = packedWeightMap.value[String(p.id)] ?? 0;
-    const remain = Math.max(0, picked - packed);
-    m[String(p.id)] = Math.round(remain * 100) / 100;
+    m[String(p.id)] = Math.round(Math.max(0, picked) * 100) / 100;
   });
   return m;
 });
@@ -837,7 +800,8 @@ async function handleSubmit(printTrace: boolean) {
   try {
     let res: any;
     if (props.kind === 'gift') {
-      // 入库库位不再前端采集（locationId 省略；service 默认取产品配置库位/首个可用库位兜底）
+      // 礼盒提交（纯礼盒页 kind='gift'）：入库库位不再前端采集
+      // （locationId 省略；service 默认取产品配置库位/首个可用库位兜底）
       const bo: GiftPackBo = {
         giftBoxProductId: form.value.productId as number | string,
         packBoxCount: form.value.packBoxCount as number,
@@ -933,7 +897,7 @@ async function refreshAfterPack() {
   } else if (props.kind === 'dry') {
     await loadSources(props.earGroup ? 'meat' : 'dry');
   }
-  await Promise.all([loadDemandMap(), loadMaterialStock(), loadPackedCount(), loadPackedWeight()]);
+  await Promise.all([loadDemandMap(), loadMaterialStock(), loadPackedDone()]);
   // 恢复产品选中：仍在卡片列表 且 未打包完成 → 保持；否则清空（打包完成或料已不在）
   const stillThere = products.value.some((p) => String(p.id) === keepProductId);
   if (keepProductId && stillThere && !isProductDone(keepProductId)) {
@@ -962,10 +926,8 @@ onMounted(async () => {
   void loadDemandMap();
   // 卡片库存口径统一：成品 product_material 指向的原材料实时库存（与后端校验/扣减一致）
   void loadMaterialStock();
-  // 各成品今天已打包份数（≥ 需求 → 卡片标「打包完成」、禁选）
-  void loadPackedCount();
-  // 果蔬「领用剩余重量」= 领用总重 − 已打包总重，需各成品已打包总重
-  void loadPackedWeight();
+  // 各成品「打包完成」判定（后端按门店分别判，FIX-WMS-PACKDEMAND-001 行52）
+  void loadPackedDone();
 });
 </script>
 

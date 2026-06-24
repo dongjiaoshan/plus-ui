@@ -34,15 +34,14 @@
       </template>
     </BizTable>
 
-    <SaleRecordForm ref="formRef" :store-options="storeOptions" @success="fetchList" />
+    <SaleRecordForm ref="formRef" @success="fetchList" />
 
     <!-- Excel 导入对话框 -->
     <el-dialog v-model="importVisible" :title="t('storeOperation.sale.importTitle')" width="460px" append-to-body>
       <el-form label-width="90px">
         <el-form-item :label="t('storeOperation.sale.store')" required>
-          <el-select v-model="importStoreId" :placeholder="t('storeOperation.sale.storePlaceholder')" filterable style="width: 100%">
-            <el-option v-for="s in storeOptions" :key="String(s.id)" :label="s.storeName" :value="String(s.id)" />
-          </el-select>
+          <!-- 导入门店 = 当前全局门店，不可手改 -->
+          <span class="font-bold">{{ currentStoreName || '—' }}</span>
         </el-form-item>
         <el-form-item :label="t('storeOperation.sale.file')">
           <el-upload
@@ -81,14 +80,18 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import SaleRecordForm from './components/SaleRecordForm.vue';
 import { listStoreSale, removeStoreSale, storeSaleImportUrl } from '@/api/djs-store/operation/sale';
 import type { StoreSaleRecordQuery, StoreSaleRecordVO } from '@/api/djs-store/operation/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
+import { storeToRefs } from 'pinia';
 import { globalHeaders } from '@/utils/request';
 import type { UploadInstance, UploadProps } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+const storeContext = useStoreContextStore();
+const { currentStoreId, myStores } = storeToRefs(storeContext);
+const currentStoreName = computed(() => myStores.value.find((s) => String(s.id) === currentStoreId.value)?.storeName ?? '');
 
 const tableRef = ref<BizTableExpose>();
 const formRef = ref<{ openCreate: () => void }>();
@@ -99,28 +102,22 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const storeOptions = ref<StoreVO[]>([]);
 
 const importVisible = ref(false);
 const importStoreId = ref<string>('');
 const importing = ref(false);
 const importUrl = storeSaleImportUrl;
-const uploadHeaders = globalHeaders();
+// computed：每次打开导入弹窗都带最新 token + 当前门店头
+const uploadHeaders = computed(() => globalHeaders());
 
 const searchModel = reactive<Record<string, unknown>>({
-  storeId: undefined,
   source: undefined,
   saleDateFrom: undefined,
   saleDateTo: undefined
 });
 
+// 门店筛选已由顶部全局选择器统一控制（列表靠请求头 Current-Store-Id 后端过滤），此处不再放门店筛选项
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  {
-    field: 'storeId',
-    label: t('storeOperation.sale.store'),
-    type: 'select',
-    options: storeOptions.value.map((s) => ({ label: s.storeName, value: String(s.id) }))
-  },
   { field: 'source', label: t('storeOperation.sale.source'), type: 'select', dictType: 'djs_sale_source' },
   { field: 'saleDateFrom', label: t('storeOperation.sale.saleDateFrom'), type: 'date' },
   { field: 'saleDateTo', label: t('storeOperation.sale.saleDateTo'), type: 'date' }
@@ -138,23 +135,13 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'createTime', label: t('storeOperation.sale.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 
-async function loadStoreOptions() {
-  try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
-  } catch (e) {
-    console.warn('[StoreSale] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
-}
-
 async function fetchList() {
   loading.value = true;
   try {
+    // storeId 不再显式传：后端按请求头 Current-Store-Id 做行级过滤
     const query: StoreSaleRecordQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
-      storeId: (searchModel.storeId as string) || undefined,
       source: (searchModel.source as StoreSaleRecordQuery['source']) || undefined,
       saleDateFrom: (searchModel.saleDateFrom as string) || undefined,
       saleDateTo: (searchModel.saleDateTo as string) || undefined
@@ -194,7 +181,8 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
 }
 
 function openImport() {
-  importStoreId.value = (searchModel.storeId as string) || (storeOptions.value[0] ? String(storeOptions.value[0].id) : '');
+  // 导入门店固定为当前全局门店
+  importStoreId.value = currentStoreId.value || '';
   importVisible.value = true;
 }
 function submitImport() {
@@ -221,8 +209,7 @@ function downloadTemplate() {
   proxy?.download('djs/store/sale/importTemplate', {}, `store_sale_template_${new Date().getTime()}.xlsx`);
 }
 
-onMounted(async () => {
-  await loadStoreOptions();
+onMounted(() => {
   fetchList();
 });
 </script>

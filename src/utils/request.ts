@@ -16,11 +16,31 @@ const encryptHeader = 'encrypt-key';
 let downloadLoadingInstance: LoadingInstance;
 // 是否显示重新登录
 export const isRelogin = { show: false };
+
+/**
+ * STORE-PERM-001：当前门店 id。
+ * 直读 useStorage 持久化的同一 key（与 storeContext store / 选择器双向同步），
+ * 避免 request → storeContext → api/store → request 的模块循环依赖。
+ */
+const STORE_ID_KEY = 'djs-current-store-id';
+const getCurrentStoreId = (): string => {
+  try {
+    return (localStorage.getItem(STORE_ID_KEY) || '').replace(/^"|"$/g, '');
+  } catch {
+    return '';
+  }
+};
+
 export const globalHeaders = () => {
-  return {
+  const headers: Record<string, string> = {
     Authorization: 'Bearer ' + getToken(),
     clientid: import.meta.env.VITE_APP_CLIENT_ID
   };
+  const storeId = getCurrentStoreId();
+  if (storeId) {
+    headers['Current-Store-Id'] = storeId;
+  }
+  return headers;
 };
 
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8';
@@ -49,6 +69,11 @@ service.interceptors.request.use(
 
     if (getToken() && !isToken) {
       config.headers['Authorization'] = 'Bearer ' + getToken(); // 让每个请求携带自定义token 请根据实际情况自行修改
+    }
+    // STORE-PERM-001：注入当前门店上下文，后端按门店做行级数据隔离（空则不加，由后端默认放行/校验）
+    const currentStoreId = getCurrentStoreId();
+    if (currentStoreId) {
+      config.headers['Current-Store-Id'] = currentStoreId;
     }
     // get请求映射params参数
     if (config.method === 'get' && config.params) {

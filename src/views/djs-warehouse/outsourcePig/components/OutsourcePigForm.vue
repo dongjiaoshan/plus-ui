@@ -33,16 +33,6 @@
         />
       </el-form-item>
 
-      <el-form-item :label="t('djs.warehouse.outsourcePig.field.arriveTime')" prop="arriveTime">
-        <el-date-picker
-          v-model="form.arriveTime"
-          type="datetime"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          style="width: 100%"
-          :placeholder="t('djs.warehouse.outsourcePig.placeholder.arriveTime')"
-        />
-      </el-form-item>
-
       <el-form-item :label="t('djs.warehouse.outsourcePig.field.pigWeight')" prop="pigWeight">
         <el-input-number
           v-model="form.pigWeight"
@@ -108,11 +98,11 @@ const formRef = ref<ElFormInstance>();
 const supplierOptions = ref<Array<{ id: number | string; supplierName: string }>>([]);
 const buyerOptions = ref<Array<{ userId: number | string; nickName?: string; userName?: string }>>([]);
 
+// 到场时间不再手填：由关联白条「燎毛间称重完成时刻」(bar_info.in_time) 自动回填到列表（FIX-WMS-OUTSOURCE-001 行38）
 const defaultForm = (): OutsourcePigForm => ({
   pigMarkNo: undefined,
   purchaseDate: undefined,
   slaughterDate: undefined,
-  arriveTime: undefined,
   pigWeight: undefined,
   supplierId: undefined,
   buyer: undefined
