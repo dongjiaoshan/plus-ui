@@ -62,6 +62,37 @@
           <el-table-column prop="checkByName" :label="t('stock.recordDialog.checkBy')" min-width="100" align="center" header-align="center" />
         </el-table>
       </el-tab-pane>
+
+      <!-- 损耗记录（按本产品 productId 拉损耗明细，全产品都显示） -->
+      <el-tab-pane :label="t('stock.recordDialog.lossRecord')" name="loss">
+        <el-table v-loading="lossLoading" :data="lossList" border max-height="460">
+          <el-table-column prop="lossDate" :label="t('stock.recordDialog.lossDate')" min-width="160" align="center" header-align="center">
+            <template #default="{ row }">{{ formatDateTime(row.lossDate) }}</template>
+          </el-table-column>
+          <el-table-column prop="lossType" :label="t('stock.recordDialog.lossType')" min-width="120" align="center" header-align="center">
+            <template #default="{ row }"><dict-tag :options="djs_loss_type" :value="row.lossType" /></template>
+          </el-table-column>
+          <el-table-column prop="locationName" :label="t('stock.recordDialog.lossLocation')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="lossWeight" :label="t('stock.recordDialog.lossWeight')" min-width="110" align="center" header-align="center" />
+          <el-table-column prop="productUnit" :label="t('djs.warehouse.flowIn.productUnit')" min-width="80" align="center" header-align="center" />
+          <el-table-column prop="operatorName" :label="t('djs.warehouse.flowIn.operator')" min-width="100" align="center" header-align="center" />
+        </el-table>
+      </el-tab-pane>
+
+      <!-- 饲料饲喂记录（仅果蔬且原材料产品显示：belongType==='vegetable' && productAttr===2） -->
+      <el-tab-pane v-if="showFeedTab" :label="t('stock.recordDialog.feedRecord')" name="feed">
+        <el-table v-loading="feedLoading" :data="feedList" border max-height="460">
+          <el-table-column prop="feedDate" :label="t('stock.recordDialog.feedDate')" min-width="160" align="center" header-align="center">
+            <template #default="{ row }">{{ formatDateTime(row.feedDate) }}</template>
+          </el-table-column>
+          <el-table-column prop="locationName" :label="t('stock.recordDialog.feedLocation')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="feedWeight" :label="t('stock.recordDialog.feedWeight')" min-width="110" align="center" header-align="center" />
+          <el-table-column :label="t('djs.warehouse.flowIn.productUnit')" min-width="80" align="center" header-align="center">
+            <template #default>{{ anchor?.productUnit || 'kg' }}</template>
+          </el-table-column>
+          <el-table-column prop="operatorName" :label="t('djs.warehouse.flowIn.operator')" min-width="100" align="center" header-align="center" />
+        </el-table>
+      </el-tab-pane>
     </el-tabs>
 
     <template #footer>
@@ -76,25 +107,36 @@ import type { StockFlowVO } from '@/api/djs-warehouse/stockFlow/types';
 import { listCheckLines } from '@/api/djs-warehouse/check';
 import type { StockCheckRecordVO } from '@/api/djs-warehouse/check/types';
 import type { LocationStockVO } from '@/api/djs-warehouse/stock/types';
+import { lossByProduct } from '@/api/djs-warehouse/loss';
+import type { LossFlowVO } from '@/api/djs-warehouse/loss';
+import { feedLogByProduct } from '@/api/djs-warehouse/feedLog';
+import type { FeedLogVO } from '@/api/djs-warehouse/feedLog';
 import { parseTime } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_flow_type, djs_check_result, djs_stock_out_dest } = toRefs<Record<string, any>>(
-  proxy?.useDict('djs_flow_type', 'djs_check_result', 'djs_stock_out_dest')
+const { djs_flow_type, djs_check_result, djs_stock_out_dest, djs_loss_type } = toRefs<Record<string, any>>(
+  proxy?.useDict('djs_flow_type', 'djs_check_result', 'djs_stock_out_dest', 'djs_loss_type')
 );
 
 const visible = ref(false);
-const activeTab = ref<'in' | 'out' | 'check'>('in');
+const activeTab = ref<'in' | 'out' | 'check' | 'loss' | 'feed'>('in');
 const anchor = ref<LocationStockVO | null>(null);
 
 const inList = ref<StockFlowVO[]>([]);
 const outList = ref<StockFlowVO[]>([]);
 const checkList = ref<StockCheckRecordVO[]>([]);
+const lossList = ref<LossFlowVO[]>([]);
+const feedList = ref<FeedLogVO[]>([]);
 const inLoading = ref(false);
 const outLoading = ref(false);
 const checkLoading = ref(false);
+const lossLoading = ref(false);
+const feedLoading = ref(false);
+
+/** 饲料饲喂 tab 仅当本产品为【果蔬且原材料】时显示（belongType==='vegetable' && productAttr===2） */
+const showFeedTab = computed(() => anchor.value?.belongType === 'vegetable' && Number(anchor.value?.productAttr) === 2);
 
 const dialogTitle = computed(() => t('stock.recordDialog.title'));
 
@@ -148,16 +190,49 @@ async function loadCheck() {
   }
 }
 
-function open(row: LocationStockVO, kind: 'in' | 'out' | 'check') {
+async function loadLoss() {
+  if (!anchor.value?.productId) {
+    lossList.value = [];
+    return;
+  }
+  lossLoading.value = true;
+  try {
+    const res = await lossByProduct({ productId: String(anchor.value.productId) });
+    lossList.value = ((res as any).data ?? (res as any).rows ?? []) as LossFlowVO[];
+  } finally {
+    lossLoading.value = false;
+  }
+}
+
+async function loadFeed() {
+  // 仅果蔬原材料产品有饲料 tab，非该类不请求
+  if (!showFeedTab.value || !anchor.value?.productId) {
+    feedList.value = [];
+    return;
+  }
+  feedLoading.value = true;
+  try {
+    const res = await feedLogByProduct({ productId: String(anchor.value.productId) });
+    feedList.value = ((res as any).data ?? (res as any).rows ?? []) as FeedLogVO[];
+  } finally {
+    feedLoading.value = false;
+  }
+}
+
+function open(row: LocationStockVO, kind: 'in' | 'out' | 'check' | 'loss' | 'feed') {
   anchor.value = row;
   activeTab.value = kind;
   inList.value = [];
   outList.value = [];
   checkList.value = [];
+  lossList.value = [];
+  feedList.value = [];
   visible.value = true;
   loadIn();
   loadOut();
   loadCheck();
+  loadLoss();
+  loadFeed();
 }
 
 defineExpose({ open });

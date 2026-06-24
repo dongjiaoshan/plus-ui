@@ -1400,7 +1400,16 @@ export default {
       sysStock: '系统库存',
       checkStock: '实盘库存',
       diffStock: '差异',
-      checkBy: '盘点人'
+      checkBy: '盘点人',
+      lossRecord: '损耗记录',
+      lossDate: '损耗日期',
+      lossType: '损耗类型',
+      lossLocation: '损耗位置',
+      lossWeight: '损耗量',
+      feedRecord: '饲料饲喂记录',
+      feedDate: '饲喂日期',
+      feedLocation: '饲喂位置',
+      feedWeight: '饲喂量'
     }
   },
   // 种植看板（PLT-DASH-001 富图看板）
@@ -2148,6 +2157,118 @@ export default {
     }
   },
   // 东角山业务模块占位
+  matPick: {
+    tab: {
+      'package': '包材',
+      whiteBar: '白条',
+      pork: '猪肉',
+      vegetable: '果蔬',
+      egg: '鸡蛋',
+      dryGood: '干货',
+      other: '其他'
+    },
+    column: {
+      productCode: '产品编码',
+      locationName: '库位',
+      productName: '产品名称',
+      currentStock: '当前库存',
+      productUnit: '单位',
+      earNo: '耳号',
+      plotCode: '地块编号',
+      todayPicked: '今日出库',
+      todayReturned: '今日退回',
+      todayLoss: '今日损耗',
+      todayFeed: '今日饲喂'
+    },
+    action: {
+      pick: '领用出库',
+      'return': '退回入库',
+      loss: '当日损耗',
+      feed: '饲料饲喂'
+    },
+    field: {
+      keyword: '关键字',
+      productName: '产品名称',
+      locationName: '库位',
+      currentStock: '当前库存',
+      quantity: '数量',
+      remark: '备注'
+    },
+    placeholder: {
+      keyword: '产品名称/库位/耳号/地块编号',
+      remark: '请输入备注'
+    },
+    button: {
+      cancel: '取消',
+      confirm: '确定'
+    },
+    rule: {
+      quantityRequired: '请输入数量'
+    },
+    message: {
+      success: '操作成功'
+    }
+  },
+  stockOverview: {
+    action: {
+      detail: '详情'
+    },
+    field: {
+      dateRange: '日期范围'
+    },
+    column: {
+      statDate: '日期',
+      productCount: '汇总产品数量'
+    },
+    detail: {
+      title: '库存明细',
+      productName: '产品名称',
+      productNamePlaceholder: '请输入产品名称',
+      location: '库位',
+      locationPlaceholder: '请选择库位',
+      search: '搜索',
+      reset: '重置',
+      image: '产品图片',
+      productCode: '产品编码',
+      productNameCol: '产品名称',
+      productUnit: '单位',
+      locationCol: '库位',
+      beginStock: '期初库存',
+      inboundQty: '入库量',
+      outboundQty: '出库量',
+      lossQty: '损耗量',
+      feedQty: '饲料饲喂量',
+      endStock: '期末库存'
+    }
+  },
+  lossOverview: {
+    action: {
+      detail: '详情'
+    },
+    field: {
+      dateRange: '损耗日期'
+    },
+    column: {
+      lossDate: '日期',
+      productCount: '损耗产品数量'
+    },
+    detail: {
+      title: '当日损耗明细',
+      productName: '产品名称',
+      productNamePlaceholder: '请输入产品名称',
+      lossType: '损耗类型',
+      lossTypePlaceholder: '请选择损耗类型',
+      search: '查询',
+      reset: '重置',
+      lossDate: '记录时间',
+      image: '产品图片',
+      productCode: '产品编码',
+      productNameCol: '产品名称',
+      productUnit: '单位',
+      lossTypeCol: '损耗类型',
+      lossWeight: '损耗量'
+    }
+  },
   djs: {
     placeholder: {
       title: '{domain} 模块',

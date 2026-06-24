@@ -1398,7 +1398,16 @@ export default {
       sysStock: 'System Stock',
       checkStock: 'Counted Stock',
       diffStock: 'Difference',
-      checkBy: 'Checked By'
+      checkBy: 'Checked By',
+      lossRecord: 'Loss Records',
+      lossDate: 'Loss Date',
+      lossType: 'Loss Type',
+      lossLocation: 'Loss Location',
+      lossWeight: 'Loss Qty',
+      feedRecord: 'Feed Records',
+      feedDate: 'Feed Date',
+      feedLocation: 'Feed Location',
+      feedWeight: 'Feed Qty'
     }
   },
   // Planting - Zone (PLT-MD-001)
@@ -2145,6 +2154,118 @@ export default {
     }
   },
   // Dongjiaoshan business modules placeholder
+  matPick: {
+    tab: {
+      'package': 'Packaging',
+      whiteBar: 'White Carcass',
+      pork: 'Pork',
+      vegetable: 'Vegetables',
+      egg: 'Eggs',
+      dryGood: 'Dry Goods',
+      other: 'Other'
+    },
+    column: {
+      productCode: 'Product Code',
+      locationName: 'Location',
+      productName: 'Product Name',
+      currentStock: 'Current Stock',
+      productUnit: 'Unit',
+      earNo: 'Ear No.',
+      plotCode: 'Plot No.',
+      todayPicked: 'Picked Today',
+      todayReturned: 'Returned Today',
+      todayLoss: 'Loss Today',
+      todayFeed: 'Fed Today'
+    },
+    action: {
+      pick: 'Pick Out',
+      'return': 'Return In',
+      loss: 'Daily Loss',
+      feed: 'Feed'
+    },
+    field: {
+      keyword: 'Keyword',
+      productName: 'Product Name',
+      locationName: 'Location',
+      currentStock: 'Current Stock',
+      quantity: 'Quantity',
+      remark: 'Remark'
+    },
+    placeholder: {
+      keyword: 'Product name / location / ear no. / plot no.',
+      remark: 'Enter remark'
+    },
+    button: {
+      cancel: 'Cancel',
+      confirm: 'Confirm'
+    },
+    rule: {
+      quantityRequired: 'Quantity is required'
+    },
+    message: {
+      success: 'Operation succeeded'
+    }
+  },
+  stockOverview: {
+    action: {
+      detail: 'Detail'
+    },
+    field: {
+      dateRange: 'Date Range'
+    },
+    column: {
+      statDate: 'Date',
+      productCount: 'Product Count'
+    },
+    detail: {
+      title: 'Stock Detail',
+      productName: 'Product Name',
+      productNamePlaceholder: 'Enter product name',
+      location: 'Location',
+      locationPlaceholder: 'Select location',
+      search: 'Search',
+      reset: 'Reset',
+      image: 'Image',
+      productCode: 'Product Code',
+      productNameCol: 'Product Name',
+      productUnit: 'Unit',
+      locationCol: 'Location',
+      beginStock: 'Begin Stock',
+      inboundQty: 'Inbound',
+      outboundQty: 'Outbound',
+      lossQty: 'Loss',
+      feedQty: 'Feed',
+      endStock: 'End Stock'
+    }
+  },
+  lossOverview: {
+    action: {
+      detail: 'Detail'
+    },
+    field: {
+      dateRange: 'Loss Date'
+    },
+    column: {
+      lossDate: 'Date',
+      productCount: 'Loss Product Count'
+    },
+    detail: {
+      title: 'Daily Loss Detail',
+      productName: 'Product Name',
+      productNamePlaceholder: 'Enter product name',
+      lossType: 'Loss Type',
+      lossTypePlaceholder: 'Select loss type',
+      search: 'Search',
+      reset: 'Reset',
+      lossDate: 'Record Time',
+      image: 'Image',
+      productCode: 'Product Code',
+      productNameCol: 'Product Name',
+      productUnit: 'Unit',
+      lossTypeCol: 'Loss Type',
+      lossWeight: 'Loss Weight'
+    }
+  },
   djs: {
     placeholder: {
       title: '{domain} Module',

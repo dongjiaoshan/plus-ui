@@ -17,6 +17,10 @@ export interface LocationStockVO extends BaseEntity {
   plotId?: number | string;
   /** service 层 JOIN 地块表回填的地块编号（plot_code） */
   blockNo?: string;
+  /** 业态归属（djs_belong_type）：service JOIN product_info 回填；详情饲料 tab 显隐判定 */
+  belongType?: string;
+  /** 产品属性（1 生产产品 / 2 原材料）：service JOIN product_info 回填；详情饲料 tab 显隐判定 */
+  productAttr?: number;
   productName: string;
   productStock: number | string;
   productUnit: string;
