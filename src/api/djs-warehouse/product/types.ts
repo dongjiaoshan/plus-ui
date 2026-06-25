@@ -3,7 +3,6 @@
  *
  * - 共表 3 形态：productType=1 自产 / 2 外购 / 3 礼盒
  * - productId 是业务码 VARCHAR(32)（用户手填），不是 snowflake 主键 id
- * - giftComponents 仅 productType=3 时使用，详情接口返回；列表接口不返
  */
 
 export interface ProductInfoVO extends BaseEntity {
@@ -38,7 +37,6 @@ export interface ProductInfoVO extends BaseEntity {
   supplierId?: number | string;
   isBuyOut: number;
   remark?: string;
-  giftComponents?: GiftBoxVO[];
   /** 更新人姓名（后端 @Translation 回填） */
   updateByName?: string;
 }
@@ -80,16 +78,6 @@ export interface ProductInboundForm {
   autoConfigLocation?: boolean;
 }
 
-export interface GiftBoxVO {
-  id: number | string;
-  boxProductId: number | string;
-  componentProductId: number | string;
-  componentProductName?: string;
-  componentCount: number | string;
-  componentUnit: string;
-  componentSort: number;
-}
-
 export interface ProductInfoForm {
   id?: number | string;
   productId: string;
@@ -116,15 +104,6 @@ export interface ProductInfoForm {
   supplierId?: number | string;
   isBuyOut: number;
   remark?: string;
-  giftComponents?: GiftBoxForm[];
-}
-
-export interface GiftBoxForm {
-  id?: number | string;
-  componentProductId: number | string;
-  componentCount: number;
-  componentUnit: string;
-  componentSort: number;
 }
 
 export interface ProductInfoQuery extends PageQuery {

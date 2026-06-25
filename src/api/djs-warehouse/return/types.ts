@@ -92,6 +92,9 @@ export interface ReturnProductQuery {
   returnStatus?: string;
   applyDateFrom?: string;
   applyDateTo?: string;
+  /** STORE-RETURN-UNIFY-001：改读 t_store_return 后按 return_date 过滤（store 端点参数）。 */
+  returnDateFrom?: string;
+  returnDateTo?: string;
 }
 
 export interface ReturnConfirmBody {

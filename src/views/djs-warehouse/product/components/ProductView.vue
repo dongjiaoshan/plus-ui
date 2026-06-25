@@ -44,18 +44,6 @@
         </el-descriptions>
       </el-tab-pane>
 
-      <el-tab-pane v-if="data.productType === 3" :label="t('product.title.giftComponents')" name="gift">
-        <el-table :data="data.giftComponents || []" border>
-          <el-table-column type="index" :label="t('product.column.index')" width="60" align="center" header-align="center" />
-          <el-table-column prop="componentProductName" :label="t('product.field.componentProductName')" min-width="180" align="center" header-align="center" show-overflow-tooltip />
-          <el-table-column prop="componentCount" :label="t('product.field.componentCount')" width="120" align="center" header-align="center" />
-          <el-table-column prop="componentUnit" :label="t('product.field.componentUnit')" width="100" align="center" header-align="center" />
-          <template #empty>
-            <el-empty :description="t('product.giftEmpty')" :image-size="60" />
-          </template>
-        </el-table>
-      </el-tab-pane>
-
       <!-- 生产记录子表（自产 / 礼盒，即非外购）。原型：产品详情含生产记录 -->
       <el-tab-pane v-if="data.productType !== 2" :label="t('product.title.production')" name="production">
         <el-form :inline="true" class="mb-2">

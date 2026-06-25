@@ -26,7 +26,7 @@ export const listProduct = (query: ProductInfoQuery): AxiosPromise<ProductInfoVO
   });
 };
 
-/** 查询产品详情（productType=3 礼盒时附带 giftComponents） */
+/** 查询产品详情 */
 export const getProduct = (id: number | string): AxiosPromise<ProductInfoVO> => {
   return request({
     url: '/djs/warehouse/product/getInfo/' + id,

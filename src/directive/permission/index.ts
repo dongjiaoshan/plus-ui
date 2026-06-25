@@ -1,5 +1,6 @@
 import { Directive, DirectiveBinding } from 'vue';
 import { useUserStore } from '@/store/modules/user';
+import { permMatch } from '@/utils/permission';
 /**
  * 操作权限处理
  */
@@ -9,9 +10,8 @@ export const hasPermi: Directive = {
     // 「其他角色」按钮权限校验
     const { value } = binding;
     if (value && value instanceof Array && value.length > 0) {
-      const hasPermission = permissions.some((permi: string) => {
-        return permi === '*:*:*' || value.includes(permi);
-      });
+      // 已授权限里只要有一条（含通配，对齐后端 Sa-Token）覆盖按钮要求的任一权限即放行
+      const hasPermission = permissions.some((granted: string) => value.some((required: string) => permMatch(granted, required)));
       if (!hasPermission) {
         el.parentNode && el.parentNode.removeChild(el);
         return false;

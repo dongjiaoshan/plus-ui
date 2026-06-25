@@ -1207,7 +1207,6 @@ export default {
       edit: 'Edit commodity',
       view: 'Product detail',
       baseInfo: 'Product info',
-      giftComponents: 'Gift box list',
       production: 'Production Records',
       flow: 'Transaction Flow',
       goodsView: 'Goods detail',
@@ -1217,7 +1216,6 @@ export default {
       goodsAdd: 'New goods',
       goodsEdit: 'Edit goods'
     },
-    giftEmpty: 'No components in this gift box',
     column: {
       productId: 'Product Code',
       productName: 'Product Name',
@@ -1261,12 +1259,6 @@ export default {
       supplierId: 'Supplier',
       productDesc: 'Description',
       remark: 'Remark',
-      giftComponents: 'Gift components',
-      componentProduct: 'Component product',
-      componentProductName: 'Component product',
-      componentCount: 'Portions',
-      componentUnit: 'Unit',
-      componentSort: 'Sort',
       goodsId: 'Goods code',
       goodsName: 'Goods name',
       goodsType: 'Goods type',
@@ -1290,7 +1282,6 @@ export default {
       belongType: { required: 'Self-produce category is required' },
       supplierId: { required: 'Supplier is required for purchased products' },
       productSpec: { required: 'Spec is required for production products' },
-      giftComponents: { required: 'Gift box requires at least one component' },
       storeLocation: { required: 'Please select storage location' },
       productAttr: { required: 'Please select product attribute' },
       productWorkshop: { required: 'Please select workshop' }
@@ -1298,9 +1289,6 @@ export default {
     tip: {
       buyClassEmpty: 'No category yet — add via System → Dict → djs_buy_class',
       materialEmpty: 'No raw material product yet — first add a product with attribute = Raw material'
-    },
-    action: {
-      addComponent: 'Add component'
     },
     button: {
       inbound: 'Inbound'
@@ -2467,8 +2455,6 @@ export default {
         remark: 'Remark',
         submitSuccess: 'Packing submitted',
         packFailedTitle: 'Pack failed',
-        giftPoolTitle: 'Available gift components',
-        giftPoolEmpty: 'None yet — pack pork/veg/other products with delivery set to "Gift box" first',
         cutHint: 'Pick a picked cut record, enter cut-product weights and confirm inbound; click "Finish Cut" when all are weighed.',
         cutRecord: 'Cut Record (Ear No)',
         cutRecordPlaceholder: 'Select a picked/cutting record',
@@ -2521,7 +2507,6 @@ export default {
         specLabel: 'Spec',
         demandLabel: 'Demand',
         materialStockLabel: 'Requisition remaining weight',
-        giftComponentsLabel: 'Per box',
         packDone: 'Packed',
         noProduct: 'No products',
         operation: 'Operation',
@@ -3532,7 +3517,9 @@ export default {
       returnDate: 'Return Date',
       returnDateFrom: 'Return Date From',
       returnDateTo: 'Return Date To',
-      remark: 'Remark'
+      remark: 'Remark',
+      receivedQty: 'Received Qty',
+      receivedWeight: 'Received Weight (kg)'
     },
     column: {
       returnNo: 'Return No.',
@@ -3593,10 +3580,12 @@ export default {
       location: 'Inbound location is required',
       returnQuantity: 'Quantity is required',
       returnQuantityMin: 'Quantity must be greater than 0',
-      receivedQty: 'Received quantity is required'
+      receivedQty: 'Received quantity is required',
+      receivedQtyMin: 'Received quantity must be greater than 0'
     },
     tip: {
-      editLock: 'Product / Inbound Location / Quantity drive the inbound and cannot be changed after creation'
+      editLock: 'Product / Inbound Location / Quantity drive the inbound and cannot be changed after creation',
+      pendingOnly: 'Only pending returns can be confirmed for inbound'
     },
     dialog: {
       add: 'Add Return',

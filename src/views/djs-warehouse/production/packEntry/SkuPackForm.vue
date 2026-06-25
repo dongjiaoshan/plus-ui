@@ -19,8 +19,6 @@
             :stock-map="sourceFilterActive ? wipStockMap : (kind === 'veg' ? vegStockMap : stockMap)"
             :stock-unit="kind === 'veg' ? 'kg' : undefined"
             :stock-unit-map="sourceFilterActive ? wipStockUnitMap : undefined"
-            :components-map="componentsMap"
-            :done-set="doneSet"
             :show-stock="showStock"
             :large="wide"
             @change="onProductChange"
@@ -175,8 +173,8 @@ import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialo
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
 import { parseTime } from '@/utils/ruoyi';
 import { usePackEntryOptions } from './useOptions';
-import { listGiftComponents, listMaterialStock, listPackedDone, listStoreDemand, listStoreDemandBatch, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
-import type { DeliverDest, DryPackBo, GiftComponentVO, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
+import { listMaterialStock, listStoreDemand, listStoreDemandBatch, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
+import type { DeliverDest, DryPackBo, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
 /**
@@ -413,29 +411,6 @@ async function loadDemandMap() {
   demandMap.value = map;
 }
 
-// 「打包完成」集合（FIX-WMS-PACKDEMAND-001 行52）：后端按门店分别判——同一产品多门店需求时，
-// 把份数全打给同一门店不会让另一门店也算完成。doneSet 直接取后端 /packedDone 结果（成品雪花 id 字符串集合），
-// 不再前端用「总已打包份数 ≥ 总需求份数」误判（旧实现把 3 份全打一店就整产品判完成）。
-const doneSet = ref<Set<string>>(new Set<string>());
-
-async function loadPackedDone() {
-  const ids = products.value.map((p) => p.id);
-  if (ids.length === 0) {
-    doneSet.value = new Set<string>();
-    return;
-  }
-  try {
-    const res = await listPackedDone(ids);
-    doneSet.value = new Set(((res as any).data ?? []).map((v: string | number) => String(v)));
-  } catch {
-    doneSet.value = new Set<string>();
-  }
-}
-
-function isProductDone(id: number | string): boolean {
-  return doneSet.value.has(String(id));
-}
-
 /**
  * 卡片网格「原材料库存」（库存口径统一，取数逻辑 doc#13）：
  * key = 成品雪花 id 字符串，value = 该成品 product_material 指向的原材料 location_stock 合计（number）
@@ -445,27 +420,6 @@ function isProductDone(id: number | string): boolean {
  * 修复原先「卡片取来源 inhouse 汇总 ≠ 后端按 product_material 扣减」的口径分裂。
  */
 const stockMap = ref<Record<string, number | null>>({});
-
-/**
- * 礼盒组件清单（仅 kind='gift'）：礼盒产品 id → 组件清单（每盒需要什么产品、需要多少）。
- * 卡片展示用，不参与校验/提交（提交后端按 t_warehouse_gift_box 自查组件扣减）。
- */
-const componentsMap = ref<Record<string, GiftComponentVO[]>>({});
-
-async function loadGiftComponents() {
-  if (props.kind !== 'gift') return;
-  const ids = products.value.map((p) => p.id);
-  if (ids.length === 0) {
-    componentsMap.value = {};
-    return;
-  }
-  try {
-    const res = await listGiftComponents(ids);
-    componentsMap.value = ((res as any).data ?? {}) as Record<string, GiftComponentVO[]>;
-  } catch {
-    componentsMap.value = {};
-  }
-}
 
 async function loadMaterialStock() {
   if (!showStock.value) return;
@@ -1073,10 +1027,10 @@ async function refreshAfterPack() {
   } else if (props.kind === 'dry') {
     await loadSources(props.earGroup ? 'meat' : 'dry');
   }
-  await Promise.all([loadDemandMap(), loadMaterialStock(), loadPackedDone()]);
-  // 恢复产品选中：仍在卡片列表 且 未打包完成 → 保持；否则清空（打包完成或料已不在）
+  await Promise.all([loadDemandMap(), loadMaterialStock()]);
+  // 恢复产品选中：仍在卡片列表 → 保持（只要领用原料还在就能继续打包，不再因「需求打满」清空，Kevin 2026-06-25）；否则清空（料已不在）
   const stillThere = products.value.some((p) => String(p.id) === keepProductId);
-  if (keepProductId && stillThere && !isProductDone(keepProductId)) {
+  if (keepProductId && stillThere) {
     form.value.productId = keepProductId;
     // req3（Kevin 2026-06-25）：重新拉底部门店需求 chip——每打一份对应门店份数 -1、打满的门店
     // 从 chip 消失（不可再选）。保留产品时 productId 不变、watch 不触发，必须在此显式重拉。
@@ -1109,10 +1063,6 @@ onMounted(async () => {
   void loadDemandMap();
   // 卡片库存口径统一：成品 product_material 指向的原材料实时库存（与后端校验/扣减一致）
   void loadMaterialStock();
-  // 各成品「打包完成」判定（后端按门店分别判，FIX-WMS-PACKDEMAND-001 行52）
-  void loadPackedDone();
-  // 礼盒打包：卡片展示每盒组件清单（仅 kind='gift'）
-  void loadGiftComponents();
 });
 </script>
 

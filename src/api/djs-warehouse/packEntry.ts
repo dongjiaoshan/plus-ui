@@ -323,35 +323,6 @@ export const listMaterialStock = (productIds: (number | string)[]): AxiosPromise
   return request({ url: '/djs/warehouse/packEntry/materialStock', method: 'get', params: { productIds: productIds.join(',') } });
 };
 
-/** 礼盒组件清单项（礼盒打包卡片「需要什么产品、需要多少」展示用；count = 每盒用量）。 */
-export interface GiftComponentVO {
-  componentProductId: number | string;
-  componentProductName?: string;
-  componentCount: number | string;
-  componentUnit?: string;
-}
-
-/**
- * 批量查礼盒组件清单（礼盒打包卡片展示用）。
- * 返回 Map：key = 礼盒产品雪花 id 字符串，value = 组件清单；无组件的礼盒不在 Map 中。
- */
-export const listGiftComponents = (productIds: (number | string)[]): AxiosPromise<Record<string, GiftComponentVO[]>> => {
-  return request({ url: '/djs/warehouse/packEntry/giftComponents', method: 'get', params: { productIds: productIds.join(',') } });
-};
-
-/** 礼盒打包页顶部「可用礼盒组件」一项（发送礼盒产出、未被礼盒消耗的生产产品，按产品聚合可用量）。 */
-export interface GiftComponentStockVO {
-  productId: number | string;
-  productName?: string;
-  productUnit?: string;
-  availableQty: number | string;
-}
-
-/** 拉「可用礼盒组件」池（礼盒打包成功后重拉，对应产品可用量相应减少）。 */
-export const listGiftComponentStock = (): AxiosPromise<GiftComponentStockVO[]> => {
-  return request({ url: '/djs/warehouse/packEntry/giftComponentStock', method: 'get' });
-};
-
 /**
  * 批量查目标成品「今天已打包份数」（每条 product_production = 一份）。
  * 卡片用：份数 ≥ 门店需求 → 标「打包完成」、禁选。返回 Map：成品雪花 id 字符串 → 今天已打包份数（无记录的成品不在 Map）。

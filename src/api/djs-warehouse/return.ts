@@ -8,19 +8,26 @@ import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
 import type { ReturnConfirmBody, ReturnProductForm, ReturnProductQuery, ReturnProductVO, ReturnStoreDailyVO } from './return/types';
 
-/** 列表（分页，逐条明细；明细弹窗下钻复用） */
+/**
+ * 列表（分页，逐条明细；明细弹窗下钻复用）。
+ * STORE-RETURN-UNIFY-001：仓库退货记录统一读门店退回真相源 t_store_return（门店退货→仓库确认入库）。
+ * 端点改指 /djs/store/return/list（OR 权限：djs:store:return:list 或 djs:warehouse:return:list）。
+ */
 export const listReturn = (query?: ReturnProductQuery): AxiosPromise<ReturnProductVO[]> => {
   return request({
-    url: '/djs/warehouse/return/list',
+    url: '/djs/store/return/list',
     method: 'get',
     params: query
   });
 };
 
-/** 外层「门店 + 当日」汇总列表（图 153，主从视图外层） */
+/**
+ * 外层「门店 + 当日」汇总列表（主从视图外层）。
+ * STORE-RETURN-UNIFY-001：改指 /djs/store/return/store-daily（仅 store_to_warehouse 方向聚合）。
+ */
 export const listReturnStoreDaily = (query?: ReturnProductQuery): AxiosPromise<ReturnStoreDailyVO[]> => {
   return request({
-    url: '/djs/warehouse/return/store-daily',
+    url: '/djs/store/return/store-daily',
     method: 'get',
     params: query
   });

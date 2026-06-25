@@ -141,38 +141,6 @@
         </el-row>
       </template>
 
-      <!-- 礼盒专属：组件清单 -->
-      <template v-if="form.productType === 3">
-        <el-form-item :label="t('product.field.giftComponents')" prop="giftComponents">
-          <el-table :data="form.giftComponents" border style="width: 100%">
-            <el-table-column :label="t('product.field.componentProduct')" min-width="260" align="center" header-align="center">
-              <template #default="{ row }">
-                <el-select v-model="row.componentProductId" filterable>
-                  <el-option v-for="p in componentCandidates" :key="String(p.id)" :label="`${p.productName} (${p.productUnit})`" :value="p.id" />
-                </el-select>
-              </template>
-            </el-table-column>
-            <!-- 数量 = 份数（礼盒 = 把 N 份打包好的生产产品装一盒；整数份，无单位，Kevin 2026-06-25） -->
-            <el-table-column :label="t('product.field.componentCount')" width="160" align="center" header-align="center">
-              <template #default="{ row }">
-                <el-input-number v-model="row.componentCount" :precision="0" :min="1" style="width: 100%" />
-              </template>
-            </el-table-column>
-            <el-table-column :label="t('product.field.componentSort')" width="130" align="center" header-align="center">
-              <template #default="{ row }">
-                <el-input-number v-model="row.componentSort" :min="0" controls-position="right" style="width: 100%" />
-              </template>
-            </el-table-column>
-            <el-table-column label="" width="80" align="center" header-align="center">
-              <template #default="{ $index }">
-                <el-button link type="danger" @click="form.giftComponents?.splice($index, 1)">{{ t('common.delete') }}</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-          <el-button type="primary" link style="margin-top: 4px" @click="addComponent">+ {{ t('product.action.addComponent') }}</el-button>
-        </el-form-item>
-      </template>
-
       <!-- 共有：图片 / 是否支持外购 / 状态 / 描述（备注字段保留入库，表单不再展示） -->
       <el-row :gutter="16">
         <el-col :span="12">
@@ -248,7 +216,6 @@ const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 
 const supplierOptions = ref<Array<{ id: number | string; supplierName: string }>>([]);
-const componentCandidates = ref<ProductInfoVO[]>([]);
 /** 原材料候选（product_attr=2 原材料）：生产产品关联原材料下拉，FK→product.id */
 const materialCandidates = ref<ProductInfoVO[]>([]);
 /** 存储库位下拉（row118/119：归属类型右侧选存储库位，入库时锁定到此库位） */
@@ -275,8 +242,7 @@ const defaultForm = (): ProductInfoForm => ({
   isDelivery: 1,
   supplierId: undefined,
   isBuyOut: 0,
-  remark: undefined,
-  giftComponents: []
+  remark: undefined
 });
 
 const form = ref<ProductInfoForm>(defaultForm());
@@ -419,15 +385,7 @@ const openEdit = async (id: number | string, types?: number[]) => {
   form.value = {
     ...defaultForm(),
     ...data,
-    materialNum: data.materialNum != null ? Number(data.materialNum) : undefined,
-    giftComponents:
-      data.giftComponents?.map((g) => ({
-        id: g.id,
-        componentProductId: g.componentProductId,
-        componentCount: Number(g.componentCount),
-        componentUnit: g.componentUnit,
-        componentSort: g.componentSort
-      })) ?? []
+    materialNum: data.materialNum != null ? Number(data.materialNum) : undefined
   };
   visible.value = true;
   // 回填 OSS 图片
@@ -464,14 +422,12 @@ const onTypeChange = (newType: number) => {
   if (newType === 1) {
     form.value.buyClass = undefined;
     form.value.supplierId = undefined;
-    form.value.giftComponents = [];
   } else if (newType === 2) {
     form.value.belongType = undefined;
     form.value.productAttr = undefined;
     form.value.productWorkshop = undefined;
     form.value.productMaterial = undefined;
     form.value.materialNum = undefined;
-    form.value.giftComponents = [];
     // 切到外购才需要供应商下拉：尚未加载则懒加载一次（产品配置入口 [1,3] 初始不拉慢接口）
     if (supplierOptions.value.length === 0) {
       void loadSupplierOptions();
@@ -484,9 +440,6 @@ const onTypeChange = (newType: number) => {
     form.value.productWorkshop = undefined;
     form.value.productMaterial = undefined;
     form.value.materialNum = undefined;
-    if (!form.value.giftComponents) {
-      form.value.giftComponents = [];
-    }
   }
 };
 
@@ -498,19 +451,6 @@ const onProductAttrChange = (attr?: number) => {
   }
   // row69：切到原材料(2)后生产车间转非必填，清掉可能残留的旧必填错误文案
   formRef.value?.clearValidate('productWorkshop');
-};
-
-const addComponent = () => {
-  if (!form.value.giftComponents) {
-    form.value.giftComponents = [];
-  }
-  form.value.giftComponents.push({
-    componentProductId: '',
-    componentCount: 1,
-    // 单位已去除（礼盒数量统一按「份」）；保留字段写死 '份' 兼容存量 DDL 列
-    componentUnit: '份',
-    componentSort: form.value.giftComponents.length
-  });
 };
 
 const loadSupplierOptions = async () => {
@@ -548,22 +488,16 @@ const loadLocationOptions = async () => {
 };
 
 /**
- * 组件候选 + 原材料候选共用同一份全量产品列表（只拉一次，前端各自筛）：
- * - 组件候选（礼盒）：非礼盒产品（productType !== 3，礼盒不允许嵌套）
- * - 原材料候选：product_attr=2（原材料），编辑态排除自身（不能关联自己当原材料）
+ * 原材料候选（product_attr=2）：生产产品关联原材料下拉，编辑态排除自身（不能关联自己当原材料）。
  * 后端 list 不按 product_attr 过滤，故全量拉取后前端筛。
  */
 const loadProductCandidates = async (excludeId?: number | string) => {
   try {
     const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
     const rows = (res.rows ?? res.data ?? []) as ProductInfoVO[];
-    // 礼盒组件只能是「生产产品」（product_attr=1）：礼盒本质 = 把多份打包好的生产产品装一盒
-    // （排除原材料 attr=2 / 外购商品 / 礼盒自身，Kevin 2026-06-25）
-    componentCandidates.value = rows.filter((r) => r.productType !== 3 && r.productAttr === 1);
     materialCandidates.value = rows.filter((r) => r.productAttr === 2 && (excludeId == null || String(r.id) !== String(excludeId)));
   } catch (e) {
     console.warn('[ProductInfoForm] loadProductCandidates failed', e);
-    componentCandidates.value = [];
     materialCandidates.value = [];
   }
 };
@@ -571,11 +505,6 @@ const loadProductCandidates = async (excludeId?: number | string) => {
 const submit = () => {
   formRef.value?.validate(async (valid: boolean) => {
     if (!valid) {
-      return;
-    }
-    // 礼盒前端二次校验
-    if (form.value.productType === 3 && (!form.value.giftComponents || form.value.giftComponents.length === 0)) {
-      proxy?.$modal.msgWarning(t('product.rule.giftComponents.required'));
       return;
     }
     submitting.value = true;

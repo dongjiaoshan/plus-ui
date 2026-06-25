@@ -1209,7 +1209,6 @@ export default {
       edit: '编辑商品',
       view: '产品详情',
       baseInfo: '产品属性',
-      giftComponents: '礼盒清单',
       production: '生产记录',
       flow: '业务流水',
       goodsView: '商品详情',
@@ -1219,7 +1218,6 @@ export default {
       goodsAdd: '新增商品',
       goodsEdit: '编辑商品'
     },
-    giftEmpty: '该礼盒暂无组件',
     column: {
       productId: '产品编码',
       productName: '产品名称',
@@ -1263,12 +1261,6 @@ export default {
       supplierId: '供应商',
       productDesc: '产品描述',
       remark: '备注',
-      giftComponents: '礼盒组件',
-      componentProduct: '组件产品',
-      componentProductName: '组件产品',
-      componentCount: '份数',
-      componentUnit: '单位',
-      componentSort: '排序',
       goodsId: '商品编码',
       goodsName: '商品名称',
       goodsType: '商品类型',
@@ -1292,7 +1284,6 @@ export default {
       belongType: { required: '自产产品的产品类别不能为空' },
       supplierId: { required: '外购产品必须选择供应商' },
       productSpec: { required: '生产产品必须填写规格' },
-      giftComponents: { required: '礼盒至少需要 1 个组件' },
       storeLocation: { required: '请选择存储仓库' },
       productAttr: { required: '请选择产品属性' },
       productWorkshop: { required: '请选择生产车间' }
@@ -1300,9 +1291,6 @@ export default {
     tip: {
       buyClassEmpty: '暂无商品类别字典，请到「系统管理 → 字典管理 → djs_buy_class」添加',
       materialEmpty: '暂无原材料产品，请先新增「产品属性=原材料」的产品'
-    },
-    action: {
-      addComponent: '添加组件'
     },
     button: {
       inbound: '入库'
@@ -2470,8 +2458,6 @@ export default {
         remark: '备注',
         submitSuccess: '打包提交成功',
         packFailedTitle: '打包失败',
-        giftPoolTitle: '可用礼盒组件',
-        giftPoolEmpty: '暂无——请先在肉品/果蔬/其他产品打包时把产品「发送位置」选「礼盒」',
         cutHint: '选择已领用的白条分割单，录入各分割产品重量后确认入库；全部称重完成后点「白条完成分割」。',
         cutRecord: '分割单（猪只耳号）',
         cutRecordPlaceholder: '请选择待称重/称重中的分割单',
@@ -2524,7 +2510,6 @@ export default {
         specLabel: '规格',
         demandLabel: '需求量',
         materialStockLabel: '领用剩余重量',
-        giftComponentsLabel: '每盒需要',
         packDone: '打包完成',
         noProduct: '暂无产品',
         operation: '操作',
@@ -3535,7 +3520,9 @@ export default {
       returnDate: '退回日期',
       returnDateFrom: '退回日期起',
       returnDateTo: '退回日期止',
-      remark: '备注'
+      remark: '备注',
+      receivedQty: '仓库实收量',
+      receivedWeight: '仓库实收重量(kg)'
     },
     column: {
       returnNo: '退回单号',
@@ -3596,10 +3583,12 @@ export default {
       location: '请选择退回入库库位',
       returnQuantity: '请输入退回数量',
       returnQuantityMin: '退回数量必须大于 0',
-      receivedQty: '请输入仓库实收量'
+      receivedQty: '请输入仓库实收量',
+      receivedQtyMin: '仓库实收量必须大于 0'
     },
     tip: {
-      editLock: '产品 / 入库库位 / 退回数量为入库驱动字段，建后不可修改'
+      editLock: '产品 / 入库库位 / 退回数量为入库驱动字段，建后不可修改',
+      pendingOnly: '只能对待确认（pending）状态的退回记录确认入库'
     },
     dialog: {
       add: '新增退回',
