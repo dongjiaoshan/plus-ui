@@ -1264,7 +1264,7 @@ export default {
       giftComponents: 'Gift components',
       componentProduct: 'Component product',
       componentProductName: 'Component product',
-      componentCount: 'Count',
+      componentCount: 'Portions',
       componentUnit: 'Unit',
       componentSort: 'Sort',
       goodsId: 'Goods code',

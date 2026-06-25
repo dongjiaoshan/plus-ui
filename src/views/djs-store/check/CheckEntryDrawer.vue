@@ -104,8 +104,8 @@
 <script setup name="StoreCheckEntryDrawer" lang="ts">
 import { listStoreLedgerCandidates, batchSaveStoreLedger } from '@/api/djs-store/ledger';
 import type { StoreLedgerBatchItem, StoreLedgerCandidateVO, StoreLedgerCategory } from '@/api/djs-store/ledger/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { listMyStores } from '@/api/djs-common/store';
+import type { StoreOptionVO } from '@/api/djs-common/store';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -150,7 +150,7 @@ const storeId = ref<string>();
 const ledgerDate = ref<string>(todayStr());
 const loading = ref(false);
 const submitLoading = ref(false);
-const storeOptions = ref<StoreVO[]>([]);
+const storeOptions = ref<StoreOptionVO[]>([]);
 const rows = ref<EntryRow[]>([]);
 
 function nz(v: number | string | undefined): number {
@@ -185,8 +185,8 @@ function recalc(row: EntryRow) {
 
 async function loadStoreOptions() {
   try {
-    const res = await listStore({ pageNum: 1, pageSize: 200 });
-    storeOptions.value = ((res as unknown as { rows?: StoreVO[]; data?: StoreVO[] }).rows ?? []) as StoreVO[];
+    const res = await listMyStores();
+    storeOptions.value = (res.data ?? []) as StoreOptionVO[];
   } catch (e) {
     console.warn('[StoreCheckEntryDrawer] loadStoreOptions failed', e);
     storeOptions.value = [];
@@ -260,6 +260,10 @@ async function open() {
   rows.value = [];
   visible.value = true;
   await loadStoreOptions();
+  if (storeOptions.value.length > 0) {
+    storeId.value = String(storeOptions.value[0].id);
+    await loadCandidates();
+  }
 }
 
 defineExpose({ open });

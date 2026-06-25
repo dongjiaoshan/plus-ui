@@ -175,7 +175,7 @@ import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialo
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
 import { parseTime } from '@/utils/ruoyi';
 import { usePackEntryOptions } from './useOptions';
-import { listGiftComponents, listMaterialStock, listPackedDone, listStoreDemand, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
+import { listGiftComponents, listMaterialStock, listPackedDone, listStoreDemand, listStoreDemandBatch, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
 import type { DeliverDest, DryPackBo, GiftComponentVO, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
@@ -390,23 +390,26 @@ function fmtCopies(v: number | string | undefined | null): number {
 }
 
 async function loadDemandMap() {
+  // 批量端点去前端 N+1（onMounted / 每次「确定」后 refreshAfterPack 从 N 请求降为 1 请求）。
+  // 口径与原逐产品 reduce 完全一致：同 fmtCopies、同 Number()||0、同求和。
   const ids = products.value.map((p) => p.id);
-  const entries = await Promise.all(
-    ids.map(async (id) => {
-      try {
-        const res = await listStoreDemand(id);
-        const rows = ((res as any).data ?? []) as StoreDemandCopiesVO[];
-        const total = fmtCopies(rows.reduce((sum, r) => sum + (Number(r.copies) || 0), 0));
-        return [String(id), total] as const;
-      } catch {
-        return [String(id), 0] as const;
-      }
-    })
-  );
+  if (ids.length === 0) {
+    demandMap.value = {};
+    return;
+  }
   const map: Record<string, number> = {};
-  entries.forEach(([k, v]) => {
-    map[k] = v;
-  });
+  try {
+    const res = await listStoreDemandBatch(ids);
+    const grouped = ((res as any).data ?? {}) as Record<string, StoreDemandCopiesVO[]>;
+    ids.forEach((id) => {
+      const rows = grouped[String(id)] ?? [];
+      map[String(id)] = fmtCopies(rows.reduce((sum, r) => sum + (Number(r.copies) || 0), 0));
+    });
+  } catch {
+    ids.forEach((id) => {
+      map[String(id)] = 0;
+    });
+  }
   demandMap.value = map;
 }
 

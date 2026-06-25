@@ -33,7 +33,7 @@
             <div class="comp-title">{{ t('djs.warehouse.packEntry.giftComponentsLabel') }}</div>
             <div v-for="c in componentsOf(item)" :key="String(c.componentProductId)" class="comp-row">
               <span class="comp-name">{{ c.componentProductName || c.componentProductId }}</span>
-              <span class="comp-qty">× {{ fmtCount(c.componentCount) }}{{ c.componentUnit || '' }}</span>
+              <span class="comp-qty">× {{ fmtCount(c.componentCount) }}份</span>
             </div>
           </div>
         </div>

@@ -1266,7 +1266,7 @@ export default {
       giftComponents: '礼盒组件',
       componentProduct: '组件产品',
       componentProductName: '组件产品',
-      componentCount: '数量',
+      componentCount: '份数',
       componentUnit: '单位',
       componentSort: '排序',
       goodsId: '商品编码',

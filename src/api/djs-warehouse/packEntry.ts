@@ -219,6 +219,22 @@ export const listStoreDemand = (productId: number | string): AxiosPromise<StoreD
   return request({ url: '/djs/warehouse/packEntry/storeDemand', method: 'get', params: { productId } });
 };
 
+/**
+ * 批量版「各产品各门店未发货需求份数」（卡片网格「需求量」批量聚合，去前端 N+1）。
+ *
+ * 口径与单产品 listStoreDemand 完全一致，product_id 由 = 改 IN，按 productId 分组。
+ * 返回 Map：key = 产品雪花 id 字符串，value = 该产品各门店份数列表；无需求的产品不在 Map 中。
+ * productIds 为空 → 不带参数（后端返空 Map）。
+ */
+export const listStoreDemandBatch = (productIds: (number | string)[]): AxiosPromise<Record<string, StoreDemandCopiesVO[]>> => {
+  const ids = productIds.filter((v) => v != null && v !== '');
+  return request({
+    url: '/djs/warehouse/packEntry/storeDemand/batch',
+    method: 'get',
+    params: ids.length > 0 ? { productIds: ids.join(',') } : {}
+  });
+};
+
 /** 果蔬日损耗（V4，compute-on-read；statDate 缺省=当天 yyyy-MM-dd） */
 export const getVegDailyLoss = (statDate?: string): AxiosPromise<VegDailyLossVO> => {
   return request({ url: '/djs/warehouse/packEntry/vegDailyLoss', method: 'get', params: { statDate } });

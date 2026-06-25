@@ -145,21 +145,17 @@
       <template v-if="form.productType === 3">
         <el-form-item :label="t('product.field.giftComponents')" prop="giftComponents">
           <el-table :data="form.giftComponents" border style="width: 100%">
-            <el-table-column :label="t('product.field.componentProduct')" min-width="220" align="center" header-align="center">
+            <el-table-column :label="t('product.field.componentProduct')" min-width="260" align="center" header-align="center">
               <template #default="{ row }">
-                <el-select v-model="row.componentProductId" filterable @change="(val: any) => onComponentSelect(row, val)">
+                <el-select v-model="row.componentProductId" filterable>
                   <el-option v-for="p in componentCandidates" :key="String(p.id)" :label="`${p.productName} (${p.productUnit})`" :value="p.id" />
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column :label="t('product.field.componentCount')" width="140" align="center" header-align="center">
+            <!-- 数量 = 份数（礼盒 = 把 N 份打包好的生产产品装一盒；整数份，无单位，Kevin 2026-06-25） -->
+            <el-table-column :label="t('product.field.componentCount')" width="160" align="center" header-align="center">
               <template #default="{ row }">
-                <el-input-number v-model="row.componentCount" :precision="3" :min="0" style="width: 100%" />
-              </template>
-            </el-table-column>
-            <el-table-column :label="t('product.field.componentUnit')" width="100" align="center" header-align="center">
-              <template #default="{ row }">
-                <el-input v-model="row.componentUnit" maxlength="16" />
+                <el-input-number v-model="row.componentCount" :precision="0" :min="1" style="width: 100%" />
               </template>
             </el-table-column>
             <el-table-column :label="t('product.field.componentSort')" width="130" align="center" header-align="center">
@@ -218,7 +214,7 @@
 
 <script setup lang="ts">
 import { addProduct, getProduct, listProduct, updateProduct } from '@/api/djs-warehouse/product';
-import type { GiftBoxForm, ProductInfoForm, ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import type { ProductInfoForm, ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { listSupplier } from '@/api/djs-common/supplier';
 import { listLocation } from '@/api/djs-warehouse/location';
 import OssUpload from '@/components/OssUpload/index.vue';
@@ -406,21 +402,19 @@ const openCreate = async (presetType?: number, types?: number[]) => {
     // 触发类型分支字段初始化（如礼盒 belongType='gift_box'）
     onTypeChange(presetType);
   }
-  await loadSupplierOptions();
-  await loadComponentCandidates();
-  await loadMaterialCandidates();
-  await loadLocationOptions();
+  await Promise.all([loadSupplierOptionsIfNeeded(), loadProductCandidates(), loadLocationOptions()]);
   visible.value = true;
 };
 
 const openEdit = async (id: number | string, types?: number[]) => {
   reset();
   allowedTypes.value = types ? [...types] : [];
-  await loadSupplierOptions();
-  await loadComponentCandidates();
-  await loadMaterialCandidates(id);
-  await loadLocationOptions();
-  const res = await getProduct(id);
+  const [, , , res] = await Promise.all([
+    loadSupplierOptionsIfNeeded(),
+    loadProductCandidates(id),
+    loadLocationOptions(),
+    getProduct(id)
+  ]);
   const data = res.data;
   form.value = {
     ...defaultForm(),
@@ -478,6 +472,10 @@ const onTypeChange = (newType: number) => {
     form.value.productMaterial = undefined;
     form.value.materialNum = undefined;
     form.value.giftComponents = [];
+    // 切到外购才需要供应商下拉：尚未加载则懒加载一次（产品配置入口 [1,3] 初始不拉慢接口）
+    if (supplierOptions.value.length === 0) {
+      void loadSupplierOptions();
+    }
   } else if (newType === 3) {
     form.value.belongType = 'gift_box';
     form.value.buyClass = undefined;
@@ -509,16 +507,10 @@ const addComponent = () => {
   form.value.giftComponents.push({
     componentProductId: '',
     componentCount: 1,
-    componentUnit: '',
+    // 单位已去除（礼盒数量统一按「份」）；保留字段写死 '份' 兼容存量 DDL 列
+    componentUnit: '份',
     componentSort: form.value.giftComponents.length
   });
-};
-
-const onComponentSelect = (row: GiftBoxForm, productId: number | string) => {
-  const p = componentCandidates.value.find((c) => String(c.id) === String(productId));
-  if (p && !row.componentUnit) {
-    row.componentUnit = p.productUnit;
-  }
 };
 
 const loadSupplierOptions = async () => {
@@ -530,6 +522,17 @@ const loadSupplierOptions = async () => {
     console.warn('[ProductInfoForm] loadSupplierOptions failed', e);
     supplierOptions.value = [];
   }
+};
+
+/**
+ * 供应商下拉仅外购(productType=2)使用，慢接口（N+1）。
+ * 只有「可能用到外购」时才加载：入口 allowedTypes 含 2，或当前 productType 已是 2。
+ * 产品配置入口 [1,3] 完全跳过；切到外购时由 onTypeChange 懒加载。
+ */
+const loadSupplierOptionsIfNeeded = async () => {
+  const mayUseSupplier = allowedTypes.value.includes(2) || form.value.productType === 2;
+  if (!mayUseSupplier) return;
+  await loadSupplierOptions();
 };
 
 const loadLocationOptions = async () => {
@@ -544,29 +547,23 @@ const loadLocationOptions = async () => {
   }
 };
 
-const loadComponentCandidates = async () => {
-  try {
-    // 拉非礼盒产品当候选（礼盒不允许嵌套）；同时排除停用的
-    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
-    const rows = (res.rows ?? res.data ?? []) as ProductInfoVO[];
-    componentCandidates.value = rows.filter((r) => r.productType !== 3);
-  } catch (e) {
-    console.warn('[ProductInfoForm] loadComponentCandidates failed', e);
-    componentCandidates.value = [];
-  }
-};
-
 /**
- * 原材料候选：product_attr=2（原材料）的产品；编辑态排除自身（产品不能关联自己当原材料）。
+ * 组件候选 + 原材料候选共用同一份全量产品列表（只拉一次，前端各自筛）：
+ * - 组件候选（礼盒）：非礼盒产品（productType !== 3，礼盒不允许嵌套）
+ * - 原材料候选：product_attr=2（原材料），编辑态排除自身（不能关联自己当原材料）
  * 后端 list 不按 product_attr 过滤，故全量拉取后前端筛。
  */
-const loadMaterialCandidates = async (excludeId?: number | string) => {
+const loadProductCandidates = async (excludeId?: number | string) => {
   try {
     const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
     const rows = (res.rows ?? res.data ?? []) as ProductInfoVO[];
+    // 礼盒组件只能是「生产产品」（product_attr=1）：礼盒本质 = 把多份打包好的生产产品装一盒
+    // （排除原材料 attr=2 / 外购商品 / 礼盒自身，Kevin 2026-06-25）
+    componentCandidates.value = rows.filter((r) => r.productType !== 3 && r.productAttr === 1);
     materialCandidates.value = rows.filter((r) => r.productAttr === 2 && (excludeId == null || String(r.id) !== String(excludeId)));
   } catch (e) {
-    console.warn('[ProductInfoForm] loadMaterialCandidates failed', e);
+    console.warn('[ProductInfoForm] loadProductCandidates failed', e);
+    componentCandidates.value = [];
     materialCandidates.value = [];
   }
 };
