@@ -28,6 +28,14 @@
           <div v-if="showStock && hasStockEntry(item)" class="prod-row">
             {{ t('djs.warehouse.packEntry.materialStockLabel') }}：{{ stockDisplay(item) }}
           </div>
+          <!-- 礼盒组件清单：每盒需要什么产品、需要多少（componentsMap 仅礼盒打包页传） -->
+          <div v-if="componentsOf(item).length" class="prod-components">
+            <div class="comp-title">{{ t('djs.warehouse.packEntry.giftComponentsLabel') }}</div>
+            <div v-for="c in componentsOf(item)" :key="String(c.componentProductId)" class="comp-row">
+              <span class="comp-name">{{ c.componentProductName || c.componentProductId }}</span>
+              <span class="comp-qty">× {{ fmtCount(c.componentCount) }}{{ c.componentUnit || '' }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </template>
@@ -39,6 +47,7 @@
 import { useI18n } from 'vue-i18n';
 import { Goods } from '@element-plus/icons-vue';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import type { GiftComponentVO } from '@/api/djs-warehouse/packEntry';
 
 const { t } = useI18n();
 
@@ -69,6 +78,17 @@ const props = withDefaults(
      * 「kg 值贴份单位」错位（row12 点1）。传此 prop → 库存行固定显该单位，不用产品 product_unit。
      */
     stockUnit?: string;
+    /**
+     * 成品 id → 「领用剩余重量」单位（per-product，优先于 stockUnit/productUnit）。
+     * 其他产品打包：库存值是「原料」领用余量（如土鸡蛋 200 枚），须按原料单位「枚」展示，
+     * 而非成品自身单位（鸡蛋10个装的「份」）——否则 200 枚被渲染成「200 份」（200 枚≠200 份）。
+     */
+    stockUnitMap?: Record<string, string>;
+    /**
+     * 礼盒组件清单（礼盒打包卡片展示「每盒需要什么产品、需要多少」）：礼盒产品 id → 组件清单。
+     * 非礼盒打包页不传（其余业态卡片无此行）。
+     */
+    componentsMap?: Record<string, GiftComponentVO[]>;
   }>(),
   {
     loading: false,
@@ -77,7 +97,9 @@ const props = withDefaults(
     showStock: true,
     large: false,
     doneSet: () => new Set<string>(),
-    stockUnit: undefined
+    stockUnit: undefined,
+    stockUnitMap: () => ({}),
+    componentsMap: () => ({})
   }
 );
 
@@ -100,6 +122,17 @@ function hasStockEntry(item: ProductInfoVO): boolean {
   return String(item.id) in props.stockMap;
 }
 
+/** 该礼盒的组件清单（非礼盒页 componentsMap 为空 → 返空数组 → 不渲染组件行）。 */
+function componentsOf(item: ProductInfoVO): GiftComponentVO[] {
+  return props.componentsMap[String(item.id)] ?? [];
+}
+
+/** 组件每盒用量去尾零展示（避免 10.000）。 */
+function fmtCount(v: number | string | undefined): string {
+  const n = Number(v);
+  return Number.isFinite(n) ? String(Math.round(n * 1000) / 1000) : String(v ?? '');
+}
+
 /**
  * 库存展示文案：已配显「数值 + 单位」；未配（null 占位）显 '—'。
  * 单位优先用 stockUnit（果蔬打包传 'kg'，量纲对齐 row12 点1），否则回退产品 product_unit / 'kg'。
@@ -107,7 +140,8 @@ function hasStockEntry(item: ProductInfoVO): boolean {
 function stockDisplay(item: ProductInfoVO): string {
   const v = props.stockMap[String(item.id)];
   if (v == null) return '—';
-  const unit = props.stockUnit || item.productUnit || 'kg';
+  // 单位优先级：per-product stockUnitMap（其他产品打包按原料单位）> stockUnit（果蔬固定 kg）> 产品自身单位
+  const unit = props.stockUnitMap[String(item.id)] || props.stockUnit || item.productUnit || 'kg';
   return `${v} ${unit}`;
 }
 
@@ -215,6 +249,36 @@ function select(id: number | string) {
   font-size: 12px;
   color: var(--el-text-color-secondary);
   line-height: 1.6;
+}
+/* 礼盒组件清单：每盒需要什么产品、需要多少 */
+.prod-components {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--el-border-color-lighter);
+}
+.comp-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-regular);
+  margin-bottom: 2px;
+}
+.comp-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--el-text-color-secondary);
+}
+.comp-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.comp-qty {
+  flex: 0 0 auto;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
 }
 
 /* ===== 大卡片版（肉品打包，large）：缩略图 + 内边距 + 文字放大 ===== */

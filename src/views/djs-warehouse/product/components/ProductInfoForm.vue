@@ -65,9 +65,9 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- row29：生产车间必填 -->
+          <!-- row29：生产车间——原材料(productAttr=2)非必填，其余必填（row69） -->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.productWorkshop')" prop="productWorkshop" required>
+            <el-form-item :label="t('product.field.productWorkshop')" prop="productWorkshop" :required="form.productAttr !== 2">
               <el-select v-model="form.productWorkshop" clearable>
                 <el-option v-for="d in djs_product_workshop" :key="d.value" :label="d.label" :value="Number(d.value)" />
               </el-select>
@@ -365,11 +365,11 @@ const rules = computed(() => ({
       trigger: 'change'
     }
   ],
-  // row29：自产生产车间必填
+  // row29/row69：自产生产车间必填，但原材料(productAttr=2)非必填
   productWorkshop: [
     {
       validator: (_rule: any, value: any, callback: any) => {
-        if (form.value.productType === 1 && (value === undefined || value === null || value === '')) {
+        if (form.value.productType === 1 && form.value.productAttr !== 2 && (value === undefined || value === null || value === '')) {
           callback(new Error(t('product.rule.productWorkshop.required')));
         } else {
           callback();
@@ -498,6 +498,8 @@ const onProductAttrChange = (attr?: number) => {
     form.value.productMaterial = undefined;
     form.value.materialNum = undefined;
   }
+  // row69：切到原材料(2)后生产车间转非必填，清掉可能残留的旧必填错误文案
+  formRef.value?.clearValidate('productWorkshop');
 };
 
 const addComponent = () => {

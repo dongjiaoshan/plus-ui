@@ -21,7 +21,7 @@
       kind="veg"
       :product-type="1"
       belong-type="vegetable"
-      :send-dest-kinds="['platform']"
+      :send-dest-kinds="['platform', 'gift']"
       :title="t('djs.warehouse.packEntry.vegTitle')"
       plot-group
       :show-source="false"

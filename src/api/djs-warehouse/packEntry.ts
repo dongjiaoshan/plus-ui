@@ -197,19 +197,21 @@ export interface WhiteBarOutBo {
 
 // ==================== 打包提交 ====================
 
+// 打包提交（dry/gift/veg）统一带 suppressErrorMsg：失败不走全局自动消失的 ElMessage，
+// 由 SkuPackForm 在 catch 里用 ElNotification（X 才关）展示，便于工人看清「组件不足」等长文案。
 /** 肉品/其他产品打包（dry 口） → 返 {id, traceCode} */
 export const submitDryPack = (data: DryPackBo): AxiosPromise<PackSubmitResultVO> => {
-  return request({ url: '/djs/warehouse/packEntry/dry', method: 'post', data });
+  return request({ url: '/djs/warehouse/packEntry/dry', method: 'post', data, suppressErrorMsg: true } as any);
 };
 
 /** 礼盒打包 → 返 {id, traceCode} */
 export const submitGiftPack = (data: GiftPackBo): AxiosPromise<PackSubmitResultVO> => {
-  return request({ url: '/djs/warehouse/packEntry/gift', method: 'post', data });
+  return request({ url: '/djs/warehouse/packEntry/gift', method: 'post', data, suppressErrorMsg: true } as any);
 };
 
 /** 果蔬打包 → 返 {id, traceCode} */
 export const submitVegPack = (data: VegPackBo): AxiosPromise<PackSubmitResultVO> => {
-  return request({ url: '/djs/warehouse/packEntry/veg', method: 'post', data });
+  return request({ url: '/djs/warehouse/packEntry/veg', method: 'post', data, suppressErrorMsg: true } as any);
 };
 
 /** 某产品各门店未发货需求份数（底部「门店(N份)」标签条） */
@@ -303,6 +305,35 @@ export const listCuttable = (): AxiosPromise<PigCutRecordVO[]> => {
  */
 export const listMaterialStock = (productIds: (number | string)[]): AxiosPromise<Record<string, string>> => {
   return request({ url: '/djs/warehouse/packEntry/materialStock', method: 'get', params: { productIds: productIds.join(',') } });
+};
+
+/** 礼盒组件清单项（礼盒打包卡片「需要什么产品、需要多少」展示用；count = 每盒用量）。 */
+export interface GiftComponentVO {
+  componentProductId: number | string;
+  componentProductName?: string;
+  componentCount: number | string;
+  componentUnit?: string;
+}
+
+/**
+ * 批量查礼盒组件清单（礼盒打包卡片展示用）。
+ * 返回 Map：key = 礼盒产品雪花 id 字符串，value = 组件清单；无组件的礼盒不在 Map 中。
+ */
+export const listGiftComponents = (productIds: (number | string)[]): AxiosPromise<Record<string, GiftComponentVO[]>> => {
+  return request({ url: '/djs/warehouse/packEntry/giftComponents', method: 'get', params: { productIds: productIds.join(',') } });
+};
+
+/** 礼盒打包页顶部「可用礼盒组件」一项（发送礼盒产出、未被礼盒消耗的生产产品，按产品聚合可用量）。 */
+export interface GiftComponentStockVO {
+  productId: number | string;
+  productName?: string;
+  productUnit?: string;
+  availableQty: number | string;
+}
+
+/** 拉「可用礼盒组件」池（礼盒打包成功后重拉，对应产品可用量相应减少）。 */
+export const listGiftComponentStock = (): AxiosPromise<GiftComponentStockVO[]> => {
+  return request({ url: '/djs/warehouse/packEntry/giftComponentStock', method: 'get' });
 };
 
 /**

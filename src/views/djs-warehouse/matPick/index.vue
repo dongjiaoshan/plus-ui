@@ -15,7 +15,7 @@
       :search-model="searchModel"
       :page-num="pageNum"
       :page-size="pageSize"
-      :action-width="240"
+      :action-width="actionColWidth"
       row-key="rowKey"
       perm-prefix="djs:warehouse:matPick"
       show-export
@@ -127,19 +127,38 @@ const pagedList = computed(() => {
   return allRows.value.slice(start, start + pageSize.value);
 });
 
-const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'productCode', label: t('matPick.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-  { prop: 'locationName', label: t('matPick.column.locationName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-  { prop: 'productName', label: t('matPick.column.productName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-  { prop: 'currentStock', label: t('matPick.column.currentStock'), minWidth: 100, align: 'center', formatter: (row: BizRow) => fmtNum(row.currentStock) },
-  { prop: 'productUnit', label: t('matPick.column.productUnit'), minWidth: 70, align: 'center' },
-  { prop: 'earNo', label: t('matPick.column.earNo'), minWidth: 110, align: 'center' },
-  { prop: 'plotCode', label: t('matPick.column.plotCode'), minWidth: 110, align: 'center' },
-  { prop: 'todayPicked', label: t('matPick.column.todayPicked'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayPicked) },
-  { prop: 'todayReturned', label: t('matPick.column.todayReturned'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayReturned) },
-  { prop: 'todayLoss', label: t('matPick.column.todayLoss'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayLoss) },
-  { prop: 'todayFeed', label: t('matPick.column.todayFeed'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayFeed) }
-]);
+/**
+ * 列随业态 tab 动态拼装：
+ *  - 耳号 earNo：仅白条/猪肉业态显示（果蔬/其他无耳号概念）
+ *  - 地块编号 plotCode：仅果蔬业态显示（种植来源，猪肉/其他无地块概念）
+ *  - 包材/鸡蛋/干货/其他：两列都不显示
+ */
+const columns = computed<BizTableColumn[]>(() => {
+  const tab = activeBelongType.value;
+  const cols: BizTableColumn[] = [
+    { prop: 'productCode', label: t('matPick.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+    { prop: 'locationName', label: t('matPick.column.locationName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+    { prop: 'productName', label: t('matPick.column.productName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+    { prop: 'currentStock', label: t('matPick.column.currentStock'), minWidth: 100, align: 'center', formatter: (row: BizRow) => fmtNum(row.currentStock) },
+    { prop: 'productUnit', label: t('matPick.column.productUnit'), minWidth: 70, align: 'center' }
+  ];
+  if (tab === 'white_bar' || tab === 'pork') {
+    cols.push({ prop: 'earNo', label: t('matPick.column.earNo'), minWidth: 110, align: 'center' });
+  }
+  if (tab === 'vegetable') {
+    cols.push({ prop: 'plotCode', label: t('matPick.column.plotCode'), minWidth: 110, align: 'center' });
+  }
+  cols.push(
+    { prop: 'todayPicked', label: t('matPick.column.todayPicked'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayPicked) },
+    { prop: 'todayReturned', label: t('matPick.column.todayReturned'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayReturned) },
+    { prop: 'todayLoss', label: t('matPick.column.todayLoss'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayLoss) },
+    { prop: 'todayFeed', label: t('matPick.column.todayFeed'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayFeed) }
+  );
+  return cols;
+});
+
+/** 果蔬业态操作区多一个「饲料饲喂」按钮（4 个），加宽防换行；其余 3 个按钮 240 足够 */
+const actionColWidth = computed(() => (activeBelongType.value === 'vegetable' ? 320 : 240));
 
 /** BigDecimal→string 防 NaN 兜底，最多 3 位小数 */
 function fmtNum(v: number | string | undefined | null): string {

@@ -163,6 +163,10 @@ async function fetchList() {
 
 function handleSearch(payload: Record<string, unknown>) {
   Object.assign(searchModel, payload);
+  // 筛选区只有单个「需求日期」选择器（绑 beginDate）= 单日过滤；endDate 必须跟随 beginDate，
+  // 否则改日期后 endDate 仍卡在初始 today → 范围倒挂（begin>end）查空（选明天无数据的根因）。
+  // 清空日期时 beginDate=undefined → endDate 同步 undefined → 不按日期过滤。
+  searchModel.endDate = searchModel.beginDate;
   pageNum.value = 1;
   fetchList();
 }

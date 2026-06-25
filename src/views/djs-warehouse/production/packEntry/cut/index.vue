@@ -64,7 +64,12 @@
         <div class="panel-section">
           <div class="panel-label">{{ t('djs.warehouse.packEntry.inLocation') }}</div>
           <div v-loading="locationLoading">
-            <DestToggle v-model="form.locationId" :options="locationOptions" :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')" />
+            <DestToggle
+              v-model="form.locationId"
+              :options="locationOptions"
+              :disabled="locationLocked"
+              :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')"
+            />
           </div>
         </div>
 
@@ -158,29 +163,35 @@ const form = ref<{ cutRecordId: number | string | ''; locationId: number | strin
 const selectedProductId = ref<number | string | ''>('');
 const curWeight = ref<number | undefined>(undefined);
 
-// P4：选产品后按所选产品配置的入库库位（store_location_id CSV 首个有效项）自动填表单库位。
-// 仅当解析出的库位在可选库位范围（冻品/猪肉鲜品库）内、且用户尚未选库位时自动填，不覆盖用户手选。
+// row67：入库库位默认成所选产品配置的库位（store_location_id CSV 首个落在冻品/猪肉鲜品库范围内的项），且锁定不可改。
+// 仅当解析出有效库位才锁；产品未配 / 配的库位不在可选范围 → 不锁、保持可选（避免锁空导致无法提交，与后端 resolveCutLocationId 兜底一致）。
 function resolvePresetLocationId(product: ProductInfoVO | undefined): number | string | '' {
   if (!product?.storeLocationId) return '';
+  // 雪花 id 全程按字符串比较：禁止 Number(trimmed)（19 位雪花会精度丢失 → 与选项 id 永不相等 → 锁不上）
   for (const token of String(product.storeLocationId).split(',')) {
     const trimmed = token.trim();
     if (!trimmed) continue;
-    const candidate = Number(trimmed);
-    if (Number.isNaN(candidate)) continue;
-    if (locationOptions.value.some((o) => String(o.value) === String(candidate))) {
-      return candidate;
-    }
+    const match = locationOptions.value.find((o) => String(o.value) === trimmed);
+    if (match) return match.value; // 返回选项里的原值，不经 Number 转换
   }
   return '';
 }
 
+// 入库库位是否锁定（已按产品配置预填）。解析不到配置库位时为 false，保持自由选。
+const locationLocked = ref(false);
+
 watch(selectedProductId, (pid) => {
-  if (!pid) return;
-  if (form.value.locationId) return; // 用户已选库位，不覆盖
+  if (!pid) {
+    locationLocked.value = false;
+    return;
+  }
   const product = porkProducts.value.find((p) => String(p.id) === String(pid));
   const preset = resolvePresetLocationId(product);
   if (preset !== '') {
-    form.value.locationId = preset;
+    form.value.locationId = preset; // 强制按产品配置填，覆盖此前选择
+    locationLocked.value = true; // 锁定不可改
+  } else {
+    locationLocked.value = false; // 未配 / 不在范围 → 自由选
   }
 });
 

@@ -177,10 +177,16 @@ service.interceptors.response.use(
       }
       return Promise.reject('无效的会话，或者会话已过期，请重新登录。');
     } else if (code === HttpStatus.SERVER_ERROR) {
-      ElMessage({ message: msg, type: 'error' });
+      // 调用方在 config 设 suppressErrorMsg=true 时，跳过全局自动消失的 ElMessage，
+      // 由调用方自行用 ElNotification 等展示（如打包页让「组件不足」长文案 X 才关）。错误仍 reject 给 catch。
+      if (!(res.config as any)?.suppressErrorMsg) {
+        ElMessage({ message: msg, type: 'error' });
+      }
       return Promise.reject(new Error(msg));
     } else if (code === HttpStatus.WARN) {
-      ElMessage({ message: msg, type: 'warning' });
+      if (!(res.config as any)?.suppressErrorMsg) {
+        ElMessage({ message: msg, type: 'warning' });
+      }
       return Promise.reject(new Error(msg));
     } else if (code !== HttpStatus.SUCCESS) {
       ElNotification.error({ title: msg });

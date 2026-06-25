@@ -5,7 +5,8 @@
       :key="String(opt.value)"
       type="button"
       class="dest-btn"
-      :class="{ active: String(modelValue) === String(opt.value) }"
+      :class="{ active: String(modelValue) === String(opt.value), 'is-disabled': disabled }"
+      :disabled="disabled"
       @click="select(opt.value)"
     >
       {{ opt.label }}
@@ -19,10 +20,12 @@
  * 目的地 button-toggle（对齐打包/分割原型右侧 panel 的发送位置/入库位置/地块）。
  * 替代 el-radio-group，触屏大按钮。value 泛型为 number | string。
  */
-defineProps<{
+const props = defineProps<{
   modelValue: number | string | '' | undefined;
   options: { value: number | string; label: string }[];
   emptyText?: string;
+  /** 锁定：禁用所有按钮，点击无响应（默认 false，不影响既有调用方） */
+  disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -31,6 +34,7 @@ const emit = defineEmits<{
 }>();
 
 function select(v: number | string) {
+  if (props.disabled) return;
   emit('update:modelValue', v);
   emit('change', v);
 }
@@ -61,6 +65,13 @@ function select(v: number | string) {
   border-color: var(--el-color-primary);
   color: var(--el-color-primary);
   background: var(--el-color-primary-light-9);
+}
+.dest-btn.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.dest-btn.is-disabled:hover {
+  border-color: var(--el-border-color);
 }
 .dest-empty {
   color: var(--el-text-color-placeholder);

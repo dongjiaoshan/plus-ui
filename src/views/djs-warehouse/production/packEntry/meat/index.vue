@@ -9,7 +9,7 @@
       :product-type="1"
       belong-type="pork"
       :product-attr="1"
-      :send-dest-kinds="['platform']"
+      :send-dest-kinds="['platform', 'gift']"
       ear-group
       :show-source="false"
       :show-ear="false"
