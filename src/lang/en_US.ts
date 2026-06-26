@@ -2739,6 +2739,7 @@ export default {
           productSort: 'Product Seq',
           productWeight: 'Product Weight',
           storeName: 'Store',
+          deliverDest: 'Destination',
           packStatus: 'Pack Status',
           earNo: 'Source Ear No.',
           plotName: 'Source Plot',
@@ -2747,6 +2748,10 @@ export default {
           isArrivalConfirm: 'Arrived',
           createByName: 'Operator',
           remark: 'Remark'
+        },
+        dest: {
+          platform: 'Platform',
+          gift: 'Gift Box'
         },
         button: {
           traceCode: 'Trace Code'

@@ -31,6 +31,8 @@ export interface ProductProductionVO {
   supplierId?: number;
   produceLocation: number;
   deliverType?: number;
+  /** 去向：platform=发货月台 / gift=礼盒（礼盒组件） */
+  deliverDest?: 'platform' | 'gift' | string;
   packStatus: 'pending' | 'packed' | 'shipped_out';
   proofOssIds?: string;
   traceCode?: string;

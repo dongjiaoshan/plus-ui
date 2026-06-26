@@ -2742,6 +2742,7 @@ export default {
           productSort: '产品序号',
           productWeight: '产品重量',
           storeName: '需求门店',
+          deliverDest: '去向',
           packStatus: '打包状态',
           earNo: '来源耳号',
           plotName: '来源地块',
@@ -2750,6 +2751,10 @@ export default {
           isArrivalConfirm: '已到货',
           createByName: '录入人',
           remark: '备注'
+        },
+        dest: {
+          platform: '发货月台',
+          gift: '礼盒'
         },
         button: {
           traceCode: '追溯码'

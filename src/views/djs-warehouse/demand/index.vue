@@ -48,14 +48,17 @@
     </BizTable>
 
     <DemandCart ref="cartRef" @success="reloadAll" />
+
+    <!-- 查看需求：右侧抽屉（点蒙层自动关闭，每次打开重拉，无缓存）替代原整页子路由 -->
+    <DemandConfirmDrawer ref="confirmDrawerRef" @changed="reloadAll" />
   </div>
 </template>
 
 <script setup name="DemandManage" lang="ts">
-import { useRouter } from 'vue-router';
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import DemandCart from './components/DemandCart.vue';
+import DemandConfirmDrawer from './components/DemandConfirmDrawer.vue';
 import DemandKpiBar from './components/DemandKpiBar.vue';
 import { listDemandGroup } from '@/api/djs-warehouse/demand';
 import type { DemandGroupStatusCode, DemandGroupVO, DemandManageQuery } from '@/api/djs-warehouse/demand/types';
@@ -64,7 +67,6 @@ import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
-const router = useRouter();
 
 /** 需求门店下拉 options（按门店过滤汇总列表）。 */
 const storeOptions = ref<{ label: string; value: number | string }[]>([]);
@@ -81,6 +83,7 @@ async function loadStoreOptions() {
 const tableRef = ref<BizTableExpose>();
 const cartRef = ref<{ open: () => void }>();
 const kpiBarRef = ref<{ refresh: () => void }>();
+const confirmDrawerRef = ref<{ open: (row: DemandGroupVO) => void }>();
 
 const list = ref<DemandGroupVO[]>([]);
 const total = ref(0);
@@ -240,17 +243,9 @@ function handleAdd() {
   cartRef.value?.open();
 }
 
-/** 点「查看需求」→ 跳需求确认页（0613-11），携 demandDate + productId 下钻该日该产品各门店明细。 */
+/** 点「查看需求」→ 右侧抽屉下钻该日该产品各门店明细（每次打开重拉，无缓存）。 */
 function onViewDemand(row: DemandGroupVO) {
-  router.push({
-    path: '/djs-warehouse/demand-confirm',
-    query: {
-      demandDate: row.demandDate,
-      productId: String(row.productId),
-      productName: row.productName,
-      productType: row.productType
-    }
-  });
+  confirmDrawerRef.value?.open(row);
 }
 
 /** keep-alive 下首帧 onMounted + onActivated 都会触发，用此标记跳过 onActivated 的首次重复拉取。 */
@@ -261,8 +256,8 @@ onMounted(() => {
   fetchList();
 });
 
-// 从「需求确认」子页确认/删除后返回时，列表组件被 keep-alive 缓存不会重新 mount，
-// 用 onActivated 重新拉取分组列表 + 顶部 KPI，避免状态/确认率不刷新（test/d6-15 后台 #52）。
+// 列表组件被 keep-alive 缓存，切回本 tab 时用 onActivated 重拉分组列表 + 顶部 KPI，
+// 保证从别处操作后回来状态/确认率是最新的（确认抽屉内的改动已由 @changed→reloadAll 即时刷新）。
 onActivated(() => {
   if (firstActivate) {
     firstActivate = false;

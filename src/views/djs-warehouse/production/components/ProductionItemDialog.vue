@@ -119,6 +119,18 @@ const columns = computed<BizTableColumn[]>(() => [
     }
   },
   { prop: 'storeName', label: t('djs.warehouse.production.column.storeName'), minWidth: 140 },
+  {
+    prop: 'deliverDest',
+    label: t('djs.warehouse.production.column.deliverDest'),
+    minWidth: 100,
+    align: 'center',
+    formatter: (row: BizRow) => {
+      const d = (row as ProductProductionVO).deliverDest;
+      if (d === 'platform') return t('djs.warehouse.production.dest.platform');
+      if (d === 'gift') return t('djs.warehouse.production.dest.gift');
+      return '-';
+    }
+  },
   { prop: 'produceTime', label: t('djs.warehouse.production.column.produceTime'), minWidth: 160, formatter: 'datetime' },
   {
     prop: 'isDeliveryCheck',

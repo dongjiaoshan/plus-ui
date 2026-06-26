@@ -38,7 +38,7 @@
           <!-- row29：自产产品「产品类别(归属类型)」必填，显示红星 -->
           <el-col :span="12">
             <el-form-item :label="t('product.field.belongType')" prop="belongType" required>
-              <el-select v-model="form.belongType" clearable>
+              <el-select v-model="form.belongType" clearable @change="onBelongTypeChange">
                 <el-option v-for="d in djs_belong_type" :key="d.value" :label="d.label" :value="d.value" />
               </el-select>
             </el-form-item>
@@ -216,8 +216,8 @@ const formRef = ref<ElFormInstance>();
 const ossThumbRef = ref<InstanceType<typeof OssUpload>>();
 
 const supplierOptions = ref<Array<{ id: number | string; supplierName: string }>>([]);
-/** 原材料候选（product_attr=2 原材料）：生产产品关联原材料下拉，FK→product.id */
-const materialCandidates = ref<ProductInfoVO[]>([]);
+/** 原材料候选池（product_attr=2 原材料，已排除自身）：全量拉取，下拉再按产品类别过滤。 */
+const rawMaterialPool = ref<ProductInfoVO[]>([]);
 /** 存储库位下拉（row118/119：归属类型右侧选存储库位，入库时锁定到此库位） */
 const locationOptions = ref<Array<{ id: number | string; locationName: string }>>([]);
 
@@ -246,6 +246,17 @@ const defaultForm = (): ProductInfoForm => ({
 });
 
 const form = ref<ProductInfoForm>(defaultForm());
+
+/**
+ * 原材料下拉候选：只显示与当前产品「产品类别(belongType)」相同的原材料
+ *（Kevin 2026-06-26：如鸡蛋产品只关联鸡蛋类原材料，不混其他类别）。
+ * 产品类别未选时不过滤（避免选类别前下拉为空）。
+ */
+const materialCandidates = computed<ProductInfoVO[]>(() => {
+  const cat = form.value.belongType;
+  if (!cat) return rawMaterialPool.value;
+  return rawMaterialPool.value.filter((m) => m.belongType === cat);
+});
 
 // OssUpload v-model string[]（雪花 ossId 全链路 string）；业务字段 productThumb 是单 ossId 字符串
 const thumbOssIdsModel = computed<string[]>({
@@ -443,6 +454,16 @@ const onTypeChange = (newType: number) => {
   }
 };
 
+/** 产品类别切换：原材料下拉按类别过滤，已选原材料若不在新类别候选内则清空，避免提交跨类别孤儿映射 */
+const onBelongTypeChange = () => {
+  if (form.value.productMaterial == null) return;
+  const stillValid = materialCandidates.value.some((m) => String(m.id) === String(form.value.productMaterial));
+  if (!stillValid) {
+    form.value.productMaterial = undefined;
+    form.value.materialNum = undefined;
+  }
+};
+
 /** 产品属性切换：离开「生产产品」(1) 时清空原材料关联，避免遗留孤儿映射 */
 const onProductAttrChange = (attr?: number) => {
   if (attr !== 1) {
@@ -495,10 +516,10 @@ const loadProductCandidates = async (excludeId?: number | string) => {
   try {
     const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
     const rows = (res.rows ?? res.data ?? []) as ProductInfoVO[];
-    materialCandidates.value = rows.filter((r) => r.productAttr === 2 && (excludeId == null || String(r.id) !== String(excludeId)));
+    rawMaterialPool.value = rows.filter((r) => r.productAttr === 2 && (excludeId == null || String(r.id) !== String(excludeId)));
   } catch (e) {
     console.warn('[ProductInfoForm] loadProductCandidates failed', e);
-    materialCandidates.value = [];
+    rawMaterialPool.value = [];
   }
 };
 
