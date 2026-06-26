@@ -53,7 +53,7 @@ const FLOW_TYPE_IN_VALUES = [
   'check_in',
   'supplier_in',
   'purchase_in',
-  'pack_in',
+  // pack_in（打包入库）不在入库记录展示，下拉同步移除（D-row7）
   'veg_receive_in',
   'veg_purchase_in',
   'receive_in',

@@ -4,52 +4,44 @@
       <div class="station-title">{{ t('djs.warehouse.packEntry.pickupPageTitle') }}</div>
 
       <div class="station-body">
-        <!-- 左：待领用白条卡片网格（耳号/入库时间/排酸时长/入库重量） -->
+        <!-- 左：待领用白条卡片网格（FIX-WMS-CUTPICKUP-SPLIT-001：按燎毛产出行逐条出卡，半只/半扇各一张，可分次领） -->
         <div class="station-left">
-          <div v-loading="barLoading" class="bar-grid">
+          <div v-loading="itemLoading" class="bar-grid">
             <button
-              v-for="b in bars"
-              :key="String(b.id)"
+              v-for="it in items"
+              :key="itemKey(it)"
               type="button"
               class="bar-card"
-              :class="{ active: String(pickupForm.barInfoId) === String(b.id) }"
-              @click="pickupForm.barInfoId = b.id"
+              :class="{ active: selectedKey === itemKey(it) }"
+              @click="selectItem(it)"
             >
               <div class="bar-card-head">
-                <span class="bar-card-title">{{ t('djs.warehouse.packEntry.barCardTitle') }}</span>
+                <span class="bar-card-title">{{ it.productName || t('djs.warehouse.packEntry.barCardTitle') }}</span>
                 <span class="bar-chip">
                   <el-icon><PriceTag /></el-icon>
-                  <span>{{ b.earNo ?? b.barId }}</span>
+                  <span>{{ it.earNo ?? it.markId ?? it.barId }}</span>
                 </span>
               </div>
               <div class="bar-card-body">
                 <div class="bar-row">
                   <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inTimeLabel') }}</span>
-                  <span class="bar-row-value">{{ b.inTime ?? '-' }}</span>
+                  <span class="bar-row-value">{{ it.inTime ?? '-' }}</span>
                 </div>
                 <div class="bar-row">
                   <span class="bar-row-label">{{ t('djs.warehouse.packEntry.agingDurationLabel') }}</span>
-                  <span class="bar-row-value">{{ agingDuration(b.inTime) }}</span>
+                  <span class="bar-row-value">{{ agingDuration(it.inTime) }}</span>
                 </div>
                 <div class="bar-row">
                   <span class="bar-row-label">{{ t('djs.warehouse.packEntry.marketingWeightLabel') }}</span>
-                  <span class="bar-row-value">{{ b.marketingWeight != null ? `${b.marketingWeight}kg` : '-' }}</span>
+                  <span class="bar-row-value">{{ it.marketingWeight != null ? `${Number(it.marketingWeight)}kg` : '-' }}</span>
                 </div>
                 <div class="bar-row">
-                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inWeightLabel') }}</span>
-                  <span class="bar-row-value">{{ b.inWeight != null ? `${b.inWeight}kg` : '-' }}</span>
-                </div>
-                <!-- 燎毛实际产出的分产品（半只/五花肉/整只 等 + 各自重量），FIX-WMS-OUTSOURCE-001 行51 -->
-                <div v-if="b.burnProducts && b.burnProducts.length > 0" class="burn-products">
-                  <div class="burn-products-label">{{ t('djs.warehouse.packEntry.burnProductsLabel') }}</div>
-                  <div v-for="(p, i) in b.burnProducts" :key="i" class="burn-product-row">
-                    <span class="burn-product-name">{{ p.productName }}</span>
-                    <span class="burn-product-weight">{{ p.productWeight != null ? `${Number(p.productWeight)}${p.productUnit ?? 'kg'}` : '-' }}</span>
-                  </div>
+                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.outputWeightLabel') }}</span>
+                  <span class="bar-row-value bar-row-value--strong">{{ it.productWeight != null ? `${Number(it.productWeight)}${it.productUnit ?? 'kg'}` : '-' }}</span>
                 </div>
               </div>
             </button>
-            <span v-if="!barLoading && bars.length === 0" class="bar-empty">{{ t('djs.warehouse.packEntry.noBars') }}</span>
+            <span v-if="!itemLoading && items.length === 0" class="bar-empty">{{ t('djs.warehouse.packEntry.noBars') }}</span>
           </div>
         </div>
 
@@ -60,9 +52,10 @@
           <!-- 猪只耳号 chip（当前选中白条回显） -->
           <div class="panel-section">
             <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
-            <div v-if="selectedBar" class="ear-chip">
+            <div v-if="selectedItem" class="ear-chip">
               <el-icon><PriceTag /></el-icon>
-              <span>{{ selectedBar.earNo ?? selectedBar.barId }}</span>
+              <span>{{ selectedItem.earNo ?? selectedItem.markId ?? selectedItem.barId }}</span>
+              <span v-if="selectedItem.productName" class="ear-chip-sub">· {{ selectedItem.productName }}</span>
             </div>
             <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.barRequired') }}</span>
           </div>
@@ -116,18 +109,23 @@ import { PriceTag } from '@element-plus/icons-vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
 import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
-import { submitPickup, submitWhiteBarOut } from '@/api/djs-warehouse/packEntry';
+import { listPickupItems, submitPickup, submitWhiteBarOut } from '@/api/djs-warehouse/packEntry';
+import type { BarPickupItemVO } from '@/api/djs-warehouse/packEntry';
 
 const { t } = useI18n();
 
-const { sources, loadSources, bars, barLoading, loadBars, stores, loadStores } = usePackEntryOptions();
+const { sources, loadSources, stores, loadStores } = usePackEntryOptions();
 
 /** 出库位置枚举 → 后端两端点：cut=分割车间(submitPickup) / ship=发货月台(whiteBarOut)。 */
 type OutDest = 'cut' | 'ship';
 
+// FIX-WMS-CUTPICKUP-SPLIT-001：按燎毛产出行出卡（半只/半扇各一张），取代原「整猪一张卡」
+const items = ref<BarPickupItemVO[]>([]);
+const itemLoading = ref(false);
+const selectedKey = ref('');
+
 const submitting = ref(false);
 const pickupDefault = () => ({
-  barInfoId: '' as number | string | '',
   productWeight: undefined as number | undefined,
   outDest: 'cut' as OutDest,
   // 发货月台关联门店（ship 分支必填，后端 WhiteBarOutBo.storeId @NotNull）
@@ -135,12 +133,23 @@ const pickupDefault = () => ({
 });
 const pickupForm = ref(pickupDefault());
 
-const selectedBar = computed(() => bars.value.find((b) => String(b.id) === String(pickupForm.value.barInfoId)));
+/** 卡片唯一键：产出行卡用 inhouseId，整只兜底卡用 barInfoId。 */
+function itemKey(it: BarPickupItemVO): string {
+  return it.inhouseId != null ? `row-${it.inhouseId}` : `bar-${it.barInfoId}`;
+}
+
+const selectedItem = computed(() => items.value.find((it) => itemKey(it) === selectedKey.value) ?? null);
 
 const outDestOptions = computed<{ value: OutDest; label: string }[]>(() => [
   { value: 'cut', label: t('djs.warehouse.packEntry.outToCut') },
   { value: 'ship', label: t('djs.warehouse.packEntry.outToShip') }
 ]);
+
+/** 选中一张卡：高亮 + 把该产出行重量预填进过磅框（可改）。 */
+function selectItem(it: BarPickupItemVO) {
+  selectedKey.value = itemKey(it);
+  pickupForm.value.productWeight = it.productWeight != null ? Number(it.productWeight) : undefined;
+}
 
 /** 排酸时长：now - inTime，前端按入库时间算（无后端字段）。 */
 function agingDuration(inTime?: string): string {
@@ -160,9 +169,23 @@ function notifyMissing(message: string) {
   ElNotification.warning({ title: t('djs.warehouse.packEntry.cannotSubmit'), message });
 }
 
+async function loadItems() {
+  itemLoading.value = true;
+  try {
+    const res = await listPickupItems();
+    items.value = ((res as any).data ?? []) as BarPickupItemVO[];
+    // 刷新后若当前选中卡已不在列表（已领满/被领走）→ 清空选中
+    if (selectedKey.value && !items.value.some((it) => itemKey(it) === selectedKey.value)) {
+      selectedKey.value = '';
+    }
+  } finally {
+    itemLoading.value = false;
+  }
+}
+
 async function handleSubmit() {
-  const bar = selectedBar.value;
-  if (!bar) {
+  const it = selectedItem.value;
+  if (!it) {
     notifyMissing(t('djs.warehouse.packEntry.barRequired'));
     return;
   }
@@ -170,47 +193,52 @@ async function handleSubmit() {
     notifyMissing(t('djs.warehouse.packEntry.outLocationRequired'));
     return;
   }
-  // 领用称重校验：必填且不应大于该白条出栏重量（marketing_weight）
+  // 领用称重校验：必填且不应大于该白条出栏重量（marketing_weight；后端再做累计口径校验）
   const pickupWeight = pickupForm.value.productWeight;
   if (!pickupWeight || pickupWeight <= 0) {
     notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
     return;
   }
-  if (bar.marketingWeight != null && pickupWeight > bar.marketingWeight) {
-    notifyMissing(t('djs.warehouse.packEntry.pickupWeightExceed', { weight: bar.marketingWeight }));
+  if (it.marketingWeight != null && pickupWeight > Number(it.marketingWeight)) {
+    notifyMissing(t('djs.warehouse.packEntry.pickupWeightExceed', { weight: Number(it.marketingWeight) }));
     return;
   }
   submitting.value = true;
   try {
     if (pickupForm.value.outDest === 'cut') {
-      // 分割车间：领用进分割车间（领用阶段不采集库位，service 后续 cutOut 阶段采集）；
-      // 带现场领用称重，后端再校验 ≤ 出栏重量
-      await submitPickup({ barInfoId: bar.id, pickupWeight, isHalf: 2 });
+      // 分割车间：按燎毛产出行领用（inhouseId 非空 → 后端拆条消耗，领满才建整猪 cut_record）；
+      // 整只兜底卡 inhouseId 缺省 → 整猪路径。带现场过磅，后端再校验累计 ≤ 出栏重量。
+      await submitPickup({ barInfoId: it.barInfoId, inhouseId: it.inhouseId, pickupWeight });
       ElMessage.success(t('djs.warehouse.packEntry.pickupSuccess'));
     } else {
-      // 发货月台：白条/猪肉发货出库（需重量 + 来源 inhouse，按耳号匹配白条来源过程产品 + 关联发货门店）
+      // 发货月台：白条/猪肉发货出库。来源 inhouse 优先取该产出行 id；整只兜底卡回落按耳号匹配 whiteBar 来源。
       if (!pickupForm.value.storeId) {
         notifyMissing(t('djs.warehouse.packEntry.shipStoreRequired'));
         return;
       }
-      const earNo = bar.earNo ?? bar.barId;
-      const src = sources.value.find((s) => String(s.earNo ?? '') === String(earNo));
-      if (!src) {
+      let sourceInhouseId: number | string | undefined = it.inhouseId;
+      if (sourceInhouseId == null) {
+        const earNo = it.earNo ?? it.barId;
+        const src = sources.value.find((s) => String(s.earNo ?? '') === String(earNo));
+        sourceInhouseId = src?.id;
+      }
+      if (sourceInhouseId == null) {
         notifyMissing(t('djs.warehouse.packEntry.shipSourceNotFound'));
         return;
       }
-      await submitWhiteBarOut({ sourceInhouseId: src.id, productWeight: pickupWeight, storeId: pickupForm.value.storeId });
+      await submitWhiteBarOut({ sourceInhouseId, productWeight: pickupWeight, storeId: pickupForm.value.storeId });
       ElMessage.success(t('djs.warehouse.packEntry.shipOutSuccess'));
     }
     pickupForm.value = pickupDefault();
-    await Promise.all([loadBars(), loadSources('whiteBar')]);
+    selectedKey.value = '';
+    await Promise.all([loadItems(), loadSources('whiteBar')]);
   } finally {
     submitting.value = false;
   }
 }
 
 onMounted(async () => {
-  await Promise.all([loadBars(), loadSources('whiteBar'), loadStores()]);
+  await Promise.all([loadItems(), loadSources('whiteBar'), loadStores()]);
 });
 </script>
 
@@ -297,28 +325,7 @@ onMounted(async () => {
 .bar-row-value {
   color: var(--el-text-color-regular);
 }
-.burn-products {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--el-border-color-lighter);
-}
-.burn-products-label {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  margin-bottom: 6px;
-}
-.burn-product-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  padding: 3px 0;
-}
-.burn-product-name {
-  color: var(--el-text-color-primary);
-  font-weight: 500;
-}
-.burn-product-weight {
+.bar-row-value--strong {
   color: var(--el-color-warning-dark-2);
   font-weight: 600;
 }
@@ -360,6 +367,11 @@ onMounted(async () => {
   border: 1px solid var(--el-color-warning-light-5);
   font-weight: 600;
   font-size: 16px;
+}
+.ear-chip-sub {
+  font-weight: 500;
+  font-size: 14px;
+  opacity: 0.85;
 }
 .panel-actions {
   display: flex;

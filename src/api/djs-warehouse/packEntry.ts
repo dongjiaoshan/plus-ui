@@ -53,6 +53,32 @@ export interface BarInfoVO {
   burnProducts?: BurnProductVO[];
 }
 
+/**
+ * 白条领用「按燎毛产出行」卡片（FIX-WMS-CUTPICKUP-SPLIT-001）。
+ *
+ * 一头在库白条的每个未领燎毛产出行（半只/半扇）= 一项，可单独领用进分割车间；
+ * 燎毛无产出行的白条回落一项「整只」卡（inhouseId 缺省）。实现「两个半只→两条记录→分两次领用」。
+ */
+export interface BarPickupItemVO {
+  /** 燎毛产出行 id（缺省 = 整只兜底卡，提交走整猪路径） */
+  inhouseId?: number | string;
+  /** 白条 id */
+  barInfoId: number | string;
+  barId?: string;
+  earNo?: string;
+  /** 外购白条标识号（外购无耳号时 chip 用） */
+  markId?: string;
+  /** 出栏重量 kg（累计领用校验上界） */
+  marketingWeight?: number;
+  inWeight?: number;
+  inTime?: string;
+  /** 该产出行产品名（半只/半扇/整只） */
+  productName?: string;
+  /** 该产出行燎毛入库重量 kg（领用过磅默认值） */
+  productWeight?: number;
+  productUnit?: string;
+}
+
 /** 待称重/称重中分割记录（picked/cutting） */
 export interface PigCutRecordVO {
   id: number;
@@ -177,6 +203,11 @@ export interface PigCutDoneBo {
 /** 白条领用到分割车间 BO（locationId 领用阶段可空，实际入冻品库位在 cutOut 阶段采集） */
 export interface PigCutPickupBo {
   barInfoId: number | string;
+  /**
+   * 燎毛产出行 id（FIX-WMS-CUTPICKUP-SPLIT-001）：admin 按产出行逐条领用时回传，后端按此行消耗，
+   * 该白条所有产出行领满才建整猪 cut_record。缺省 = 整猪兜底路径。
+   */
+  inhouseId?: number | string;
   /** 领用称重 kg（现场过磅，校验 ≤ 白条出栏重量；可空则回落 in_weight 快照） */
   pickupWeight?: number;
   locationId?: number | string;
@@ -306,6 +337,11 @@ export const listSourceWhiteBar = (): AxiosPromise<PackSourceVO[]> => {
 /** 待领用白条列表（status='in_stock'） */
 export const listAvailableBars = (): AxiosPromise<BarInfoVO[]> => {
   return request({ url: '/djs/warehouse/packEntry/availableBars', method: 'get' });
+};
+
+/** 白条领用「按燎毛产出行」卡片列表（FIX-WMS-CUTPICKUP-SPLIT-001，半只/半扇各一条，可分次领用） */
+export const listPickupItems = (): AxiosPromise<BarPickupItemVO[]> => {
+  return request({ url: '/djs/warehouse/packEntry/pickupItems', method: 'get' });
 };
 
 /** 待称重/称重中分割记录列表（cut_status ∈ picked/cutting） */
