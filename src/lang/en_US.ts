@@ -2455,6 +2455,7 @@ export default {
         remark: 'Remark',
         submitSuccess: 'Packing submitted',
         packFailedTitle: 'Pack failed',
+        cannotSubmit: 'Cannot submit',
         cutHint: 'Pick a picked cut record, enter cut-product weights and confirm inbound; click "Finish Cut" when all are weighed.',
         cutRecord: 'Cut Record (Ear No)',
         cutRecordPlaceholder: 'Select a picked/cutting record',

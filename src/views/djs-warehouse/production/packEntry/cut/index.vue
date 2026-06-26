@@ -100,7 +100,7 @@
 <script setup name="PackEntryCut" lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 import { PriceTag } from '@element-plus/icons-vue';
 import ProductCardGrid from '../components/ProductCardGrid.vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
@@ -199,27 +199,32 @@ const selectedCut = computed(() => cuttable.value.find((r) => String(r.id) === S
 
 const cutOutSubmitting = ref(false);
 
+/** 条件缺失（前置校验不通过）走右侧 ElNotification；成功/失败走自动消失的全局 ElMessage，二者区分。 */
+function notifyMissing(message: string) {
+  ElNotification.warning({ title: t('djs.warehouse.packEntry.cannotSubmit'), message });
+}
+
 async function handleCutOut() {
   if (!form.value.cutRecordId) {
-    ElMessage.warning(t('djs.warehouse.packEntry.cutRecordRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.cutRecordRequired'));
     return;
   }
   if (!selectedProductId.value) {
-    ElMessage.warning(t('djs.warehouse.packEntry.cutProductRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.cutProductRequired'));
     return;
   }
   if (!curWeight.value || curWeight.value <= 0) {
-    ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
     return;
   }
   if (!form.value.locationId) {
-    ElMessage.warning(t('djs.warehouse.packEntry.locationRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.locationRequired'));
     return;
   }
   // 超量软校验（前端，与后端同口径：本次重量 ≤ 当前剩余可分割重量；后端为硬校验兜底）
   const remaining = selectedCut.value?.remainingWeight;
   if (remaining != null && curWeight.value > Number(remaining)) {
-    ElMessage.warning(t('djs.warehouse.packEntry.cutOutExceed', { remaining: Number(remaining).toFixed(2) }));
+    notifyMissing(t('djs.warehouse.packEntry.cutOutExceed', { remaining: Number(remaining).toFixed(2) }));
     return;
   }
   cutOutSubmitting.value = true;
@@ -247,7 +252,7 @@ const doneForm = ref<{ remark: string | undefined }>({ remark: undefined });
 
 function openCutDone() {
   if (!form.value.cutRecordId) {
-    ElMessage.warning(t('djs.warehouse.packEntry.cutRecordRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.cutRecordRequired'));
     return;
   }
   doneForm.value = { remark: undefined };

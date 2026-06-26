@@ -111,7 +111,7 @@
 <script setup name="PackEntryPickup" lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 import { PriceTag } from '@element-plus/icons-vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
 import DestToggle from '../components/DestToggle.vue';
@@ -155,24 +155,29 @@ function agingDuration(inTime?: string): string {
   return `${hours}${t('djs.warehouse.packEntry.agingHour')}${minutes}${t('djs.warehouse.packEntry.agingMinute')}`;
 }
 
+/** 条件缺失（前置校验不通过）走右侧 ElNotification；成功/失败走自动消失的全局 ElMessage，二者区分。 */
+function notifyMissing(message: string) {
+  ElNotification.warning({ title: t('djs.warehouse.packEntry.cannotSubmit'), message });
+}
+
 async function handleSubmit() {
   const bar = selectedBar.value;
   if (!bar) {
-    ElMessage.warning(t('djs.warehouse.packEntry.barRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.barRequired'));
     return;
   }
   if (!pickupForm.value.outDest) {
-    ElMessage.warning(t('djs.warehouse.packEntry.outLocationRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.outLocationRequired'));
     return;
   }
   // 领用称重校验：必填且不应大于该白条出栏重量（marketing_weight）
   const pickupWeight = pickupForm.value.productWeight;
   if (!pickupWeight || pickupWeight <= 0) {
-    ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
     return;
   }
   if (bar.marketingWeight != null && pickupWeight > bar.marketingWeight) {
-    ElMessage.warning(t('djs.warehouse.packEntry.pickupWeightExceed', { weight: bar.marketingWeight }));
+    notifyMissing(t('djs.warehouse.packEntry.pickupWeightExceed', { weight: bar.marketingWeight }));
     return;
   }
   submitting.value = true;
@@ -185,13 +190,13 @@ async function handleSubmit() {
     } else {
       // 发货月台：白条/猪肉发货出库（需重量 + 来源 inhouse，按耳号匹配白条来源过程产品 + 关联发货门店）
       if (!pickupForm.value.storeId) {
-        ElMessage.warning(t('djs.warehouse.packEntry.shipStoreRequired'));
+        notifyMissing(t('djs.warehouse.packEntry.shipStoreRequired'));
         return;
       }
       const earNo = bar.earNo ?? bar.barId;
       const src = sources.value.find((s) => String(s.earNo ?? '') === String(earNo));
       if (!src) {
-        ElMessage.warning(t('djs.warehouse.packEntry.shipSourceNotFound'));
+        notifyMissing(t('djs.warehouse.packEntry.shipSourceNotFound'));
         return;
       }
       await submitWhiteBarOut({ sourceInhouseId: src.id, productWeight: pickupWeight, storeId: pickupForm.value.storeId });

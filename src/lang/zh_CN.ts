@@ -2458,6 +2458,7 @@ export default {
         remark: '备注',
         submitSuccess: '打包提交成功',
         packFailedTitle: '打包失败',
+        cannotSubmit: '无法提交',
         cutHint: '选择已领用的白条分割单，录入各分割产品重量后确认入库；全部称重完成后点「白条完成分割」。',
         cutRecord: '分割单（猪只耳号）',
         cutRecordPlaceholder: '请选择待称重/称重中的分割单',

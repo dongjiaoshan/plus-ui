@@ -828,27 +828,32 @@ function onSourceChange() {
   }
 }
 
+/** 条件缺失（前置校验不通过）走右侧 ElNotification；成功/失败走自动消失的全局 ElMessage，二者区分。 */
+function notifyMissing(message: string) {
+  ElNotification.warning({ title: t('djs.warehouse.packEntry.cannotSubmit'), message });
+}
+
 function validate(): boolean {
   if (!form.value.productId) {
-    ElMessage.warning(t('djs.warehouse.packEntry.targetProductRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.targetProductRequired'));
     return false;
   }
   // 门店必选（req C）：礼盒也是门店下单的生产产品，礼盒打包须选门店（按门店礼盒需求扣盒数）。
   // 例外：组件打包发送位置=礼盒（成品作礼盒组件、被礼盒打包消耗、门店在礼盒打包环节绑定）→ 不强制门店。
   const isGiftComponent = props.kind !== 'gift' && form.value.deliverDest === 'gift';
   if (!isGiftComponent && !form.value.storeId) {
-    ElMessage.error(t('djs.warehouse.packEntry.storeRequired'));
+    notifyMissing(t('djs.warehouse.packEntry.storeRequired'));
     return false;
   }
   // req3：选中门店需求已打满（不在可见门店需求里）→ 不可再为其打包
   if (!isGiftComponent && form.value.storeId
     && !visibleStoreDemands.value.some((sd) => String(sd.storeId) === String(form.value.storeId))) {
-    ElMessage.warning(t('djs.warehouse.packEntry.storeDemandFulfilled'));
+    notifyMissing(t('djs.warehouse.packEntry.storeDemandFulfilled'));
     return false;
   }
   if (props.kind === 'gift') {
     if (!form.value.packBoxCount || form.value.packBoxCount < 1) {
-      ElMessage.warning(t('djs.warehouse.packEntry.packBoxCountRequired'));
+      notifyMissing(t('djs.warehouse.packEntry.packBoxCountRequired'));
       return false;
     }
   } else {
@@ -856,11 +861,11 @@ function validate(): boolean {
     // 自动解析来源；果蔬(plotGroup)选地块自动解析。三者最终都须有 sourceInhouseId（否则后端 @NotNull 400）。
     // autoSource 解析为空 = 该成品今日无领用来源（理论上不会进列表），给明确提示而非让后端报 400。
     if ((props.showSource || props.plotGroup || props.autoSource) && !form.value.sourceInhouseId) {
-      ElMessage.warning(t('djs.warehouse.packEntry.sourceRequired'));
+      notifyMissing(t('djs.warehouse.packEntry.sourceRequired'));
       return false;
     }
     if (!form.value.productWeight || form.value.productWeight <= 0) {
-      ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
+      notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
       return false;
     }
     // 其他产品按份数计量（req A）：录入的是「份数」，校验 ≤ 剩余可打包份数（remainingPackableCopies）。
@@ -868,7 +873,7 @@ function validate(): boolean {
     if (shouldUnitByCopies.value) {
       const max = remainingPackableCopies.value;
       if (max != null && Number(form.value.productWeight) > max) {
-        ElMessage.warning(t('djs.warehouse.packEntry.copiesExceed', { max }));
+        notifyMissing(t('djs.warehouse.packEntry.copiesExceed', { max }));
         return false;
       }
     }
@@ -877,13 +882,13 @@ function validate(): boolean {
     if (props.kind === 'veg') {
       const packKg = packWeightKg();
       if (packKg == null) {
-        ElMessage.warning(t('djs.warehouse.packEntry.productWeightRequired'));
+        notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
         return false;
       }
       const remainKg = vegStockMap.value[String(form.value.productId)];
       // remainKg 为 null/undefined（成品未配 product_material）→ 不前端拦截，交后端校验
       if (remainKg != null && packKg > Number(remainKg)) {
-        ElMessage.warning(t('djs.warehouse.packEntry.vegWeightExceed', { remain: Number(remainKg) }));
+        notifyMissing(t('djs.warehouse.packEntry.vegWeightExceed', { remain: Number(remainKg) }));
         return false;
       }
     }
@@ -905,7 +910,7 @@ async function handleSubmit(printTrace: boolean) {
   submitting.value = true;
   try {
     let res: any;
-    // 提交失败（如礼盒「组件不足」长文案）走 ElNotification（X 才关），不走全局自动消失的 ElMessage
+    // 成功/失败统一走全局自动消失的 ElMessage（与「条件缺失」走右侧 ElNotification 区分）。
     // （API 已带 suppressErrorMsg 抑制拦截器 toast）。inner try 只包提交，成功后逻辑不受影响。
     try {
       if (props.kind === 'gift') {
@@ -957,16 +962,19 @@ async function handleSubmit(printTrace: boolean) {
       res = await submitDryPack(bo);
       }
     } catch (submitErr: any) {
-      // 提交失败：ElNotification（X 才关）展示，message 取后端 reject 的 Error.message（如礼盒「组件不足…」长文案）
-      ElNotification.error({
-        title: t('djs.warehouse.packEntry.packFailedTitle'),
-        message: submitErr?.message || String(submitErr),
-        duration: 0
+      // 提交失败：自动消失的 ElMessage 展示，message 取后端 reject 的 Error.message（如礼盒「组件不足…」长文案）；
+      // showClose 让用户可手动关、duration 略放宽以便读长文案、grouping 合并重复失败。
+      ElMessage({
+        type: 'error',
+        message: t('djs.warehouse.packEntry.packFailedTitle') + '：' + (submitErr?.message || String(submitErr)),
+        showClose: true,
+        duration: 4000,
+        grouping: true
       });
       return;
     }
     packNo.value += 1;
-    ElNotification.success({ title: t('djs.warehouse.packEntry.submitSuccess'), duration: 0 });
+    ElMessage.success({ message: t('djs.warehouse.packEntry.submitSuccess'), grouping: true });
     emit('submitted', res?.data?.id);
     const traceCode: string | undefined = res?.data?.traceCode;
     if (printTrace) {
