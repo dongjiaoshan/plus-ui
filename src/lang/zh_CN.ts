@@ -2229,6 +2229,57 @@ export default {
       endStock: '期末库存'
     }
   },
+  warehouseStat: {
+    search: '查询',
+    reset: '重置',
+    field: { dateRange: '统计日期', monthRange: '统计月份', start: '开始', end: '结束' },
+    daily: {
+      statDate: '统计日期',
+      slaughterCount: '屠宰头数',
+      slaughterWeight: '送宰总重',
+      avgSlaughterWeight: '送宰均重',
+      arriveWeight: '接收重量',
+      slaughterRate: '屠宰率(%)',
+      barTotalWeight: '白条总重',
+      avgBarWeight: '白条均重',
+      barYieldRate: '白条出品率(%)',
+      cutBarCount: '分割白条数',
+      precoolLoss: '预冷损耗',
+      cutProductWeight: '分割产品总重',
+      cutBarWeight: '分割白条总重',
+      cutRate: '分割率(%)',
+      cutLoss: '分割间损耗',
+      vegWeighWeight: '毛菜称量总重',
+      vegLoss: '毛菜损耗',
+      vegLossRate: '毛菜损耗率(%)',
+      sendPlatformWeight: '发往月台果蔬总重',
+      receivePlatformWeight: '月台接收果蔬总重',
+      transportLossRate: '路损率(%)',
+      prodPickWeight: '果蔬生产领用总重',
+      prodLossWeight: '果蔬生产损耗总重',
+      netVegLossRate: '净菜损耗率(%)'
+    },
+    crop: {
+      statDate: '统计日期',
+      cropName: '作物',
+      image: '作物图片',
+      pickWeight: '采摘量',
+      feedWeight: '饲喂量',
+      vegHandleRate: '毛菜处理率(%)',
+      receiveWeight: '接收量',
+      sendPlatformWeight: '发往月台量',
+      transportLossRate: '路损率(%)',
+      outWeight: '出库量',
+      netVegLossRate: '净菜损耗率(%)'
+    },
+    monthly: {
+      statMonth: '统计月份',
+      slaughterCount: '屠宰头数',
+      slaughterRate: '屠宰率(%)',
+      barYieldRate: '白条出品率(%)',
+      cutYieldRate: '分割出品率(%)'
+    }
+  },
   lossOverview: {
     action: {
       detail: '详情'
@@ -2255,6 +2306,26 @@ export default {
       productUnit: '单位',
       lossTypeCol: '损耗类型',
       lossWeight: '损耗量'
+    }
+  },
+  feedRecord: {
+    action: {
+      search: '查询',
+      reset: '重置'
+    },
+    field: {
+      cropName: '作物搜索',
+      cropNamePlaceholder: '请输入作物名称',
+      feedType: '提供位置',
+      feedTypePlaceholder: '请选择提供位置'
+    },
+    column: {
+      feedDate: '日期',
+      cropImage: '作物图片',
+      cropName: '作物名称',
+      feedWeight: '饲喂饲料量',
+      feedType: '提供位置',
+      operator: '操作人'
     }
   },
   djs: {

@@ -2226,6 +2226,57 @@ export default {
       endStock: 'End Stock'
     }
   },
+  warehouseStat: {
+    search: 'Search',
+    reset: 'Reset',
+    field: { dateRange: 'Stat Date', monthRange: 'Stat Month', start: 'Start', end: 'End' },
+    daily: {
+      statDate: 'Stat Date',
+      slaughterCount: 'Slaughter Count',
+      slaughterWeight: 'Slaughter Weight',
+      avgSlaughterWeight: 'Avg Slaughter Weight',
+      arriveWeight: 'Arrive Weight',
+      slaughterRate: 'Slaughter Rate(%)',
+      barTotalWeight: 'Bar Total Weight',
+      avgBarWeight: 'Avg Bar Weight',
+      barYieldRate: 'Bar Yield Rate(%)',
+      cutBarCount: 'Cut Bar Count',
+      precoolLoss: 'Precool Loss',
+      cutProductWeight: 'Cut Product Weight',
+      cutBarWeight: 'Cut Bar Weight',
+      cutRate: 'Cut Rate(%)',
+      cutLoss: 'Cut Loss',
+      vegWeighWeight: 'Veg Weigh Weight',
+      vegLoss: 'Veg Loss',
+      vegLossRate: 'Veg Loss Rate(%)',
+      sendPlatformWeight: 'Send Platform Weight',
+      receivePlatformWeight: 'Receive Platform Weight',
+      transportLossRate: 'Transport Loss Rate(%)',
+      prodPickWeight: 'Prod Pick Weight',
+      prodLossWeight: 'Prod Loss Weight',
+      netVegLossRate: 'Net Veg Loss Rate(%)'
+    },
+    crop: {
+      statDate: 'Stat Date',
+      cropName: 'Crop',
+      image: 'Image',
+      pickWeight: 'Pick Weight',
+      feedWeight: 'Feed Weight',
+      vegHandleRate: 'Veg Handle Rate(%)',
+      receiveWeight: 'Receive Weight',
+      sendPlatformWeight: 'Send Platform Weight',
+      transportLossRate: 'Transport Loss Rate(%)',
+      outWeight: 'Out Weight',
+      netVegLossRate: 'Net Veg Loss Rate(%)'
+    },
+    monthly: {
+      statMonth: 'Stat Month',
+      slaughterCount: 'Slaughter Count',
+      slaughterRate: 'Slaughter Rate(%)',
+      barYieldRate: 'Bar Yield Rate(%)',
+      cutYieldRate: 'Cut Yield Rate(%)'
+    }
+  },
   lossOverview: {
     action: {
       detail: 'Detail'
@@ -2252,6 +2303,26 @@ export default {
       productUnit: 'Unit',
       lossTypeCol: 'Loss Type',
       lossWeight: 'Loss Weight'
+    }
+  },
+  feedRecord: {
+    action: {
+      search: 'Search',
+      reset: 'Reset'
+    },
+    field: {
+      cropName: 'Crop',
+      cropNamePlaceholder: 'Enter crop name',
+      feedType: 'Source',
+      feedTypePlaceholder: 'Select source'
+    },
+    column: {
+      feedDate: 'Date',
+      cropImage: 'Crop Image',
+      cropName: 'Crop Name',
+      feedWeight: 'Feed Weight',
+      feedType: 'Source',
+      operator: 'Operator'
     }
   },
   djs: {
