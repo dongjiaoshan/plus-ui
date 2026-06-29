@@ -92,13 +92,12 @@ const route = useRoute();
 
 /**
  * 菜单入口预过滤：query_param 注入 productType（产品/商品入口共用本组件）。
- * - 产品配置入口（query productType=1）→ 显示自产+礼盒 presetTypes=[1,3]
- * - 商品配置入口（query productType=2）→ 仅外购 presetTypes=[2]
- * - 旧礼盒入口（query productType=3，本轮已隐藏）→ presetTypes=[3]
- * 存在时类型被入口锁定：搜索/重置不可覆盖、搜索区类型下拉隐藏、新增态预置并锁 type。
+ * - 产品配置入口（query productType=1）→ 自产 presetTypes=[1]（礼盒 = 自产 + 产品类别 gift_box，无独立类型）
+ * - 商品配置入口（query productType=2）→ 外购 presetTypes=[2]
+ * djs_product_type 已废弃 3 礼盒。存在时类型被入口锁定：搜索/重置不可覆盖、搜索区类型下拉隐藏、新增态预置并锁 type。
  */
 const presetType = route.query.productType ? Number(route.query.productType) : undefined;
-const presetTypes: number[] | undefined = presetType === 1 ? [1, 3] : presetType !== undefined ? [presetType] : undefined;
+const presetTypes: number[] | undefined = presetType !== undefined ? [presetType] : undefined;
 /** 新增态默认锁定的 type（产品入口默认自产=1；其余取入口值） */
 const addLockType: number | undefined = presetType;
 /** 商品配置入口（外购）才显示「产品入库」行操作 */
@@ -161,13 +160,12 @@ const searchSchema = computed<SearchFieldSchema[]>(() => {
   return presetTypes !== undefined ? schema.filter((f) => f.field !== 'productType') : schema;
 });
 
-// row30：产品配置列表按指定 14 列顺序 + 全称列头
-// 产品图片/产品编码/产品名称/产品类型/产品类别/产品属性/生产车间/单位/规格/存储仓库/是否支持外购/状态/更新时间/更新人员
+// row30：产品配置列表全称列头（产品类型由菜单入口锁定恒为自产/外购，列冗余已去）
+// 产品图片/产品编码/产品名称/产品类别/产品属性/生产车间/单位/规格/存储仓库/是否支持外购/状态/更新时间/更新人员
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productThumb', label: t('product.column.productThumb'), width: 80, align: 'center' },
   { prop: 'productId', label: t('product.column.productId'), width: 140, showOverflowTooltip: true },
   { prop: 'productName', label: t('product.column.productName'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'productType', label: t(isGoods ? 'product.column.goodsType' : 'product.column.productType'), width: 90, align: 'center', dictType: 'djs_product_type' },
   { prop: 'belongType', label: t('product.column.belongType'), width: 110, align: 'center', dictType: 'djs_belong_type' },
   { prop: 'productAttr', label: t(isGoods ? 'product.column.goodsAttr' : 'product.column.productAttr'), width: 100, align: 'center', dictType: 'djs_product_attr' },
   { prop: 'productWorkshop', label: t('product.column.productWorkshop'), width: 110, align: 'center', dictType: 'djs_product_workshop' },
@@ -186,7 +184,7 @@ function buildQuery(): Omit<ProductInfoQuery, 'pageNum' | 'pageSize'> {
   return {
     productId: searchModel.productId || undefined,
     productName: searchModel.productName || undefined,
-    // 入口锁定时走 productTypes 集合（产品配置 {1,3} / 商品配置 {2}），不被搜索/重置覆盖
+    // 入口锁定时走 productTypes 集合（产品配置 {1}=自产含礼盒 / 商品配置 {2}=外购），不被搜索/重置覆盖
     productTypes: presetTypes,
     productType:
       presetTypes !== undefined

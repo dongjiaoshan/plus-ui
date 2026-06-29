@@ -183,7 +183,7 @@ import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
  * 三业态共用：
  *   kind='dry'  肉品打包 / 其他产品打包（来源过程产品 → 目标 SKU + 单位 kg/个）
  *   kind='veg'  果蔬打包（地块来源蔬菜 → 目标蔬菜 SKU，单位固定 kg）
- *   kind='gift' 礼盒打包（仅选礼盒 SKU + 盒数，service 自动按组件清单扣减）
+ *   kind='gift' 礼盒打包（仅选礼盒 SKU + 盒数；礼盒 = 自产 + belong_type=gift_box，独立成品打 N 盒，不消耗组件）
  *
  * 交互对齐（DJS-FIX-WMS-PACK）：
  *   左：ProductCardGrid 选目标产品（规格/需求量/原材料库存）+ 底部需求门店 tags
@@ -195,8 +195,8 @@ const props = withDefaults(
   defineProps<{
     kind: 'dry' | 'veg' | 'gift';
     title: string;
-    /** 目标产品 productType 过滤：dry/veg=1 产品；gift=3 礼盒 */
-    productType: number;
+    /** 目标产品 productType 过滤：dry/veg=1 自产；礼盒不传（按 belong_type=gift_box 过滤，djs_product_type 已废弃 3） */
+    productType?: number;
     /** 目标产品 belong_type 过滤（如 'pork' 肉品打包仅猪肉产品）；不传=不限 */
     belongType?: string;
     /** 目标产品 belong_type 集合过滤（如 ['egg','dry_good','other'] 其他产品打包）；非空落 belong_type IN */
@@ -229,6 +229,7 @@ const props = withDefaults(
     wide?: boolean;
   }>(),
   {
+    productType: undefined,
     belongType: undefined,
     belongTypes: undefined,
     productWorkshop: undefined,

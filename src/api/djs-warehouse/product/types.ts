@@ -1,7 +1,7 @@
 /**
- * 产品 / 商品 / 礼盒类型定义（WMS-MD-002）。
+ * 产品 / 商品类型定义（WMS-MD-002）。
  *
- * - 共表 3 形态：productType=1 自产 / 2 外购 / 3 礼盒
+ * - 共表 2 形态：productType=1 自产 / 2 外购（djs_product_type 已废弃 3 礼盒；礼盒 = 自产 + belongType=gift_box）
  * - productId 是业务码 VARCHAR(32)（用户手填），不是 snowflake 主键 id
  */
 
@@ -9,7 +9,7 @@ export interface ProductInfoVO extends BaseEntity {
   id: number | string;
   productId: string;
   productName: string;
-  productType: number; // 1 / 2 / 3
+  productType: number; // 1 自产 / 2 外购（已废弃 3 礼盒）
   productUnit: string;
   productSpec?: string;
   belongType?: string;

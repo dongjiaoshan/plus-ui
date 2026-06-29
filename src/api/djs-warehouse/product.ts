@@ -3,15 +3,15 @@ import { AxiosPromise } from 'axios';
 import type { ProductFlowRecordVO, ProductInboundForm, ProductInfoForm, ProductInfoQuery, ProductInfoVO, ProductionRecordVO } from './product/types';
 
 /**
- * 产品 / 商品 / 礼盒 API（WMS-MD-002）。
+ * 产品 / 商品 API（WMS-MD-002）。
  *
  * 后端：org.dromara.djs.warehouse.product.controller.ProductInfoController  /djs/warehouse/product
  */
 
 /**
- * 分页查询产品列表（不带礼盒组件清单）。
+ * 分页查询产品列表。
  *
- * productTypes 数组（产品配置入口 {1,3}）以 CSV 传给后端（Spring 自动绑定 List<Integer>）。
+ * productTypes 数组（产品配置入口 {1}=自产含礼盒 / 商品配置 {2}=外购）以 CSV 传给后端（Spring 自动绑定 List<Integer>）。
  */
 export const listProduct = (query: ProductInfoQuery): AxiosPromise<ProductInfoVO[]> => {
   const { productTypes, ...rest } = query;

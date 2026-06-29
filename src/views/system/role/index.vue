@@ -210,6 +210,9 @@ const multiple = ref(true);
 const total = ref(0);
 const dateRange = ref<[DateModelType, DateModelType]>(['', '']);
 const menuOptions = ref<MenuTreeOption[]>([]);
+// 小程序权限(11000)子树「被隐藏的 tab 后代」映射：tab 菜单 id → 其被折叠掉的全部后代菜单 id。
+// 角色树只显示到 tab 级（仓库再深一级），勾选 tab 时保存阶段自动补回这些隐藏后代，保证功能权限不丢。
+const hiddenDescendants = ref<Map<number, number[]>>(new Map());
 const menuExpand = ref(false);
 const menuNodeAll = ref(false);
 const deptExpand = ref(true);
@@ -338,10 +341,53 @@ const handleAuthUser = (row: RoleVO) => {
   router.push('/system/role-auth/user/' + row.roleId);
 };
 
+/**
+ * 小程序权限(11000)子树收成 tab 级显示。
+ * - 一般板块（养殖/种植/门店/通用）：保留到 tab（11000 下第 2 层），tab 以下功能权限叶子折叠隐藏。
+ * - 仓库小程序(11040)：再深一级（保留到子 tab，第 3 层），更深的叶子折叠隐藏。
+ * 折叠掉的后代登记进 hiddenDescendants，保存时按勾中的 tab 自动补回（tab 级授权语义）。
+ * 11000 以外子树（系统管理等）原样返回，零影响。
+ */
+const MP_PERM_ROOT_ID = 11000;
+const WAREHOUSE_MP_BOARD_ID = 11040;
+const buildMpTabLevelTree = (fullTree: MenuTreeOption[]): { tree: MenuTreeOption[]; hidden: Map<number, number[]> } => {
+  const hidden = new Map<number, number[]>();
+  const collectDescendantIds = (node: MenuTreeOption): number[] => {
+    const ids: number[] = [];
+    (node.children ?? []).forEach((c) => {
+      ids.push(Number(c.id));
+      ids.push(...collectDescendantIds(c));
+    });
+    return ids;
+  };
+  // depthFromMp：11000 自身为 0，其子节点递增。maxDepth 决定显示到第几层（tab=2 / 仓库子 tab=3）。
+  const walk = (node: MenuTreeOption, depthFromMp: number, insideWarehouse: boolean): MenuTreeOption => {
+    const maxDepth = insideWarehouse ? 3 : 2;
+    const clone: MenuTreeOption = { ...node };
+    if (depthFromMp >= maxDepth) {
+      if (node.children?.length) {
+        hidden.set(Number(node.id), collectDescendantIds(node));
+      }
+      clone.children = [];
+      return clone;
+    }
+    if (node.children?.length) {
+      clone.children = node.children.map((c) =>
+        walk(c, depthFromMp + 1, insideWarehouse || Number(c.id) === WAREHOUSE_MP_BOARD_ID)
+      );
+    }
+    return clone;
+  };
+  const tree = fullTree.map((root) => (Number(root.id) === MP_PERM_ROOT_ID ? walk(root, 0, false) : root));
+  return { tree, hidden };
+};
+
 /** 查询菜单树结构 */
 const getMenuTreeselect = async () => {
   const res = await menuTreeselect();
-  menuOptions.value = res.data;
+  const { tree, hidden } = buildMpTabLevelTree(res.data);
+  menuOptions.value = tree;
+  hiddenDescendants.value = hidden;
 };
 /** 所有部门节点数据 */
 const getDeptAllCheckedKeys = (): any => {
@@ -387,11 +433,23 @@ const handleUpdate = async (row?: RoleVO) => {
       menuRef.value?.setChecked(v, true, false);
     });
   });
+  // 父子联动模式下后端只下发叶子级 checkedKeys；小程序权限树里 tab 的功能叶子已被折叠隐藏，
+  // tab 节点本体不在 checkedKeys → 需按「隐藏后代是否被授权」单独点亮折叠后的 tab。
+  const grantedSet = new Set(res.checkedKeys.map(Number));
+  hiddenDescendants.value.forEach((descendants, tabId) => {
+    if (descendants.some((id) => grantedSet.has(Number(id)))) {
+      nextTick(() => {
+        menuRef.value?.setChecked(tabId, true, false);
+      });
+    }
+  });
 };
 /** 根据角色ID查询菜单树结构 */
 const getRoleMenuTreeselect = (roleId: string | number) => {
   return roleMenuTreeselect(roleId).then((res): RoleMenuTree => {
-    menuOptions.value = res.data.menus;
+    const { tree, hidden } = buildMpTabLevelTree(res.data.menus);
+    menuOptions.value = tree;
+    hiddenDescendants.value = hidden;
     return res.data;
   });
 };
@@ -438,13 +496,18 @@ const handleCheckedTreeConnect = (value: any, type: string) => {
 /** 所有菜单节点数据 */
 const getMenuAllCheckedKeys = (): any => {
   // 目前被选中的菜单节点
-  const checkedKeys = menuRef.value?.getCheckedKeys();
+  const checkedKeys: Array<number | string> = menuRef.value?.getCheckedKeys() ?? [];
   // 半选中的菜单节点
-  const halfCheckedKeys = menuRef.value?.getHalfCheckedKeys();
-  if (halfCheckedKeys) {
-    checkedKeys?.unshift(...halfCheckedKeys);
-  }
-  return checkedKeys;
+  const halfCheckedKeys: Array<number | string> = menuRef.value?.getHalfCheckedKeys() ?? [];
+  const all = new Set<number | string>([...halfCheckedKeys, ...checkedKeys]);
+  // 小程序权限树折叠了 tab 以下功能叶子：勾中的 tab 需把其被隐藏的后代菜单 id 补回，保证功能权限授全（tab 级授权）。
+  checkedKeys.forEach((k) => {
+    const descendants = hiddenDescendants.value.get(Number(k));
+    if (descendants) {
+      descendants.forEach((id) => all.add(id));
+    }
+  });
+  return [...all];
 };
 /** 提交按钮 */
 const submitForm = () => {

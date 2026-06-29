@@ -9,7 +9,7 @@ export interface StockFlowVO {
   flowNo: string;
   flowDate: string;
   productId?: number;
-  /** 产品类型 djs_product_type（1 自产 / 2 外购 / 3 礼盒，后端 JOIN 回填） */
+  /** 产品类型 djs_product_type（1 自产 / 2 外购，已废弃 3 礼盒；后端 JOIN 回填） */
   productType?: number;
   productName?: string;
   productCode?: string;
@@ -46,7 +46,7 @@ export interface StockFlowQuery {
   productCode?: string;
   /** 产品名称模糊匹配 */
   productName?: string;
-  /** 产品类型 djs_product_type（1 自产 / 2 外购 / 3 礼盒）精确匹配 */
+  /** 产品类型 djs_product_type（1 自产 / 2 外购，已废弃 3 礼盒）精确匹配 */
   productType?: number;
   earNo?: string;
   plotId?: number;
