@@ -13,11 +13,17 @@ const t = (key: string): string => i18n.global.t(key) as string;
 const TRACE_CONTENT_KEYS: Record<string, string> = {
   marketing: 'marketing',
   singe: 'singe',
+  white_bar_in: 'whiteBarIn',
+  white_bar_pick: 'whiteBarPick',
   slaughter: 'slaughter',
   acid: 'acid',
   in_stock: 'inStock',
   ship: 'ship',
-  arrival: 'arrival'
+  arrival: 'arrival',
+  sowing: 'sowing',
+  harvest: 'harvest',
+  veg_handle: 'vegHandle',
+  pack: 'pack'
 };
 
 /** 用药类型码 → i18n key 后缀。 */

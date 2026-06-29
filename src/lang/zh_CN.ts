@@ -4135,12 +4135,18 @@ export default {
     },
     content: {
       marketing: '营销出栏',
-      singe: '燎毛',
+      singe: '屠宰完成',
+      whiteBarIn: '白条入库',
+      whiteBarPick: '白条出库(领用)',
       slaughter: '屠宰',
       acid: '排酸',
       inStock: '入库',
       ship: '发货',
-      arrival: '到店'
+      arrival: '到店',
+      sowing: '播种',
+      harvest: '采摘',
+      vegHandle: '毛菜处理',
+      pack: '打包'
     },
     medType: {
       health: '保健',

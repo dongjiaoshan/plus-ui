@@ -4132,12 +4132,18 @@ export default {
     },
     content: {
       marketing: 'Marketing',
-      singe: 'Singeing',
+      singe: 'Slaughter Done',
+      whiteBarIn: 'White Bar In',
+      whiteBarPick: 'White Bar Out (Pick)',
       slaughter: 'Slaughter',
       acid: 'Acid Discharge',
       inStock: 'In Stock',
       ship: 'Shipment',
-      arrival: 'Arrival'
+      arrival: 'Arrival',
+      sowing: 'Sowing',
+      harvest: 'Harvest',
+      vegHandle: 'Veg Handling',
+      pack: 'Packing'
     },
     medType: {
       health: 'Health',
