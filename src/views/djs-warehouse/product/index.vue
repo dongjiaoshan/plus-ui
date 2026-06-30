@@ -11,7 +11,7 @@
       :dict-types="['djs_product_type', 'djs_belong_type', 'djs_buy_class', 'djs_product_attr', 'djs_product_workshop', 'djs_yes_no', 'sys_normal_disable']"
       :page-num="pageNum"
       :page-size="pageSize"
-      :action-width="isGoodsEntry ? 340 : 270"
+      :action-width="270"
       row-key="id"
       selectable
       show-export
@@ -39,16 +39,6 @@
         <el-button v-hasPermi="['djs:warehouse:product:list']" link type="primary" icon="View" @click="handleView(row)">
           {{ t('common.view') }}
         </el-button>
-        <el-button
-          v-if="isGoodsEntry && row.productStatus === 0"
-          v-hasPermi="['djs:warehouse:product:edit']"
-          link
-          type="primary"
-          icon="Download"
-          @click="handleInbound(row)"
-        >
-          {{ t('product.button.inbound') }}
-        </el-button>
         <el-button v-hasPermi="['djs:warehouse:product:edit']" link type="primary" icon="Edit" @click="handleEdit(row)">
           {{ t('common.edit') }}
         </el-button>
@@ -68,7 +58,6 @@
 
     <ProductInfoForm ref="formRef" @success="handleFormSuccess" />
     <ProductView ref="productViewRef" />
-    <ProductInboundForm ref="inboundFormRef" @success="handleFormSuccess" />
   </div>
 </template>
 
@@ -78,7 +67,6 @@ import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import ProductInfoForm from './components/ProductInfoForm.vue';
 import ProductView from './components/ProductView.vue';
-import ProductInboundForm from './components/ProductInboundForm.vue';
 import { changeProductStatus, delProduct, listProduct } from '@/api/djs-warehouse/product';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { listLocation } from '@/api/djs-warehouse/location';
@@ -100,8 +88,6 @@ const presetType = route.query.productType ? Number(route.query.productType) : u
 const presetTypes: number[] | undefined = presetType !== undefined ? [presetType] : undefined;
 /** 新增态默认锁定的 type（产品入口默认自产=1；其余取入口值） */
 const addLockType: number | undefined = presetType;
-/** 商品配置入口（外购）才显示「产品入库」行操作 */
-const isGoodsEntry = presetType === 2;
 /**
  * 商品配置入口（productType=2）下，列表/搜索/详情里「产品X」文案显示为「商品X」。
  * 产品配置入口（productType=1）仍用「产品X」。
@@ -112,7 +98,6 @@ const tableRef = ref<BizTableExpose>();
 const formRef =
   ref<{ openCreate: (presetType?: number, allowedTypes?: number[]) => void; openEdit: (id: number | string, allowedTypes?: number[]) => void }>();
 const productViewRef = ref<{ open: (id: number | string, productType?: number) => void }>();
-const inboundFormRef = ref<{ open: (row: { id: number | string; productName?: string; productUnit?: string }) => void }>();
 
 /** 存储仓库筛选下拉项（库位列表） */
 const locationOptions = ref<Array<{ label: string; value: string }>>([]);
@@ -267,10 +252,6 @@ function handleEdit(row: BizRow) {
 }
 function handleView(row: BizRow) {
   productViewRef.value?.open(row.id, row.productType);
-}
-/** 产品入库（仅商品配置入口出现）：打开录入弹窗 */
-function handleInbound(row: BizRow) {
-  inboundFormRef.value?.open({ id: row.id, productName: row.productName, productUnit: row.productUnit, storeLocationId: row.storeLocationId });
 }
 async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];

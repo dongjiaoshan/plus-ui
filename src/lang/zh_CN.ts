@@ -1407,11 +1407,11 @@ export default {
     lastRefresh: '最近刷新',
     land: {
       title: '土地总览',
-      pending: '未安排地块',
-      planting: '持续种植',
+      idle: '空闲地块数',
+      monthPending: '当月待种植地块数',
       planted: '已种植',
       currentArea: '当前种植面积(亩)',
-      currentYield: '当前预计产量(万斤)'
+      annualYield: '当年预计产量(吨)'
     },
     today: {
       title: '今日工作',
@@ -1720,8 +1720,8 @@ export default {
       qualityDesc: '作物说明',
       relatedProduct: '关联产品编号',
       historyPlantCount: '历史种植次数',
-      avgYield: '平均亩产(kg)',
-      maxYield: '最大亩产(kg)',
+      avgYield: '平均亩产(kg/亩)',
+      maxYield: '最大亩产(kg/亩)',
       updateTime: '更新时间',
       updateByName: '更新人员'
     },
@@ -1768,7 +1768,7 @@ export default {
       cropFamily: '科属',
       plantingSeason: '种植季节',
       cycle: '生长周期',
-      predictedPer: '预计亩产',
+      predictedPer: '预计亩产(kg/亩)',
       pickUnitPrice: '绩效单价',
       createTime: '创建时间'
     },
@@ -1934,11 +1934,11 @@ export default {
     },
     unit: { mu: '亩', month: '月' },
     kpi: {
-      idlePlot: '空地块数',
-      plantedPlot: '已种植地块数',
-      plannedPlot: '计划种植地块数',
-      plotUsageFreq: '计划地块使用频次',
-      cropVarietyCount: '计划种植作物品种数'
+      idlePlot: '当前空地块数',
+      plantedPlot: '当年已种植地块数',
+      plannedPlot: '当年计划种植地块数',
+      plotUsageFreq: '当年计划地块使用频次',
+      cropVarietyCount: '当年计划种植作物品种数'
     },
     query: {
       planDate: '计划日期',
@@ -2810,9 +2810,17 @@ export default {
           produceDate: '生产日期',
           produceNo: '生产单号',
           productName: '产品名称',
+          belongType: '产品品类',
           productSpec: '规格',
           productSort: '产品序号',
           productWeight: '产品重量',
+          materialConsume: '原材料使用量',
+          materialUnit: '原材料单位',
+          itemCount: '件数',
+          damageCount: '损坏量',
+          storeDemandCount: '需求门店数',
+          hasDamage: '是否存在损坏',
+          isDamaged2: '是否损坏',
           storeName: '需求门店',
           deliverDest: '去向',
           packStatus: '打包状态',
@@ -2833,6 +2841,14 @@ export default {
         },
         text: {
           noTrace: '暂无追溯码'
+        },
+        damage: {
+          view: '查看损坏',
+          viewTitle: '损坏详情',
+          evidence: '损坏凭证',
+          noEvidence: '暂无损坏凭证图',
+          remark: '损坏备注',
+          loading: '加载中…'
         }
       }
     }
@@ -3212,6 +3228,7 @@ export default {
       demandRemark: '备注',
       expectedWeight: '预计到店重量',
       demandStatus: '需求状态',
+      damagedCount: '损坏数量',
       confirmerTime: '需求确认时间',
       demandConfirmer: '需求确认人',
       expectedArriveDate: '期望到货',
@@ -3239,7 +3256,25 @@ export default {
       receive: '确认收货',
       detail: '详情',
       del: '删除',
-      viewList: '查看列表'
+      viewList: '查看列表',
+      productDetail: '产品明细'
+    },
+    damage: {
+      detailTitle: '产品明细',
+      markTitle: '记为损坏',
+      editTitle: '修改损坏凭证',
+      markAction: '记为损坏',
+      editAction: '修改',
+      produceNo: '生产单号',
+      materialConsume: '原材料量',
+      materialUnit: '原材料单位',
+      isDamaged: '是否损坏',
+      earNo: '来源耳号',
+      plotName: '来源地块',
+      evidence: '损坏凭证',
+      evidenceRequired: '请至少上传一张损坏凭证',
+      remark: '损坏备注',
+      remarkPh: '请输入损坏备注（选填）'
     },
     confirm: {
       del: '确认删除选中的 {count} 条需求？仅未确认需求可删',
@@ -3643,7 +3678,8 @@ export default {
       submit: '确认提交',
       submitConfirm: '确认提交 {n} 条退回？',
       quantityPlaceholder: '请输入退回量',
-      vegBothRequired: '果蔬「{name}」需同时填写退回量和退回产品重量'
+      vegBothRequired: '果蔬「{name}」需同时填写退回量和退回产品重量',
+      limitHint: '退回量不能超过该产品当日「期初库存 + 当日到货」总量，提交时由后端校验'
     },
     placeholder: {
       returnDirection: '请选择退回方向',

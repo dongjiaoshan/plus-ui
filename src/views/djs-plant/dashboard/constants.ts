@@ -38,6 +38,17 @@ export function kgToWanJin(kg?: number | null): number {
 }
 
 /**
+ * 把 kg 换算成"吨"（1 吨 = 1000 kg，吨 = kg / 1000）。
+ *
+ * @param kg 产量 kg（可空）
+ * @returns 吨，保留 2 位小数的 number
+ */
+export function kgToTon(kg?: number | null): number {
+  const v = Number(kg ?? 0);
+  return +(v / 1000).toFixed(2);
+}
+
+/**
  * 到期天数展示文案（负=已过期，null=无证书）。
  *
  * @param days 到期天数（可空）

@@ -28,6 +28,18 @@ export interface ProductProductionVO {
   whiteBarId?: number;
   materialId?: number;
   materialConsume?: number;
+  /** 原材料单位（契约 a：随 materialConsume 返回，损坏明细「原材料量」列单位展示）。 */
+  materialUnit?: string;
+  /** 关联需求 id（契约 a：按需求下钻 production 明细用）。 */
+  demandId?: number | string;
+  /** 是否损坏（0=否 / 1=是，字典 djs_yes_no；契约 a/b）。 */
+  isDamaged?: number;
+  /** 损坏凭证 ossId CSV（契约 b：标损时写入）。 */
+  damageEvidenceOssIds?: string;
+  /** 损坏备注（契约 b）。 */
+  damageRemark?: string;
+  /** 标损时间（契约 b）。 */
+  damageTime?: string;
   supplierId?: number;
   produceLocation: number;
   deliverType?: number;
@@ -59,6 +71,8 @@ export interface ProductProductionGroupVO {
   itemCount: number;
   /** 需求门店数：该产品当前有未发货需求的门店家数（后端聚合返回，row114-3 待后端补 SQL） */
   storeDemandCount?: number;
+  /** 损坏量：该组（同产品同生产日）已标损坏件数 SUM(is_damaged)（row50，>0 红色） */
+  damageCount?: number;
 }
 
 export interface ProductProductionQuery {
@@ -74,6 +88,12 @@ export interface ProductProductionQuery {
   earNo?: string;
   plotId?: number | string;
   storeId?: number | string;
+  /** 按需求下钻 production 明细（契约 a：损坏弹框列表用）。 */
+  demandId?: number | string;
+  /** 是否损坏过滤（0=否 / 1=是；契约 a：损坏弹框「是否损坏」搜索条用，空=全部）。 */
+  isDamaged?: number;
+  /** 是否存在损坏（作用于聚合 row50：0=组内无损坏 / 1=有；空=全部）。 */
+  hasDamage?: number;
   produceDate?: string;
   produceDateFrom?: string;
   produceDateTo?: string;
@@ -81,4 +101,18 @@ export interface ProductProductionQuery {
   produceTimeTo?: string;
   pageNum?: number;
   pageSize?: number;
+}
+
+/**
+ * 标记/修改产品损坏表单（契约 b：POST /djs/warehouse/production/mark-damage）。
+ *
+ * id 是雪花（19 位 > 2^53），全链路 string 避免精度丢失（见 OssUpload 数据契约）。
+ */
+export interface MarkDamageForm {
+  /** 产品生产记录 id（ProductProductionVO.id，雪花 string）。 */
+  id: string;
+  /** 损坏凭证 ossId CSV（OssUpload 上传后的 ossId 数组 join(',')）。 */
+  evidenceOssIds: string;
+  /** 损坏备注（非必填）。 */
+  remark?: string;
 }

@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_belong_type']"
+      :dict-types="['djs_belong_type', 'djs_yes_no']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="rowKey"
@@ -20,6 +20,13 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
+      <!-- 损坏量：>0 红色（标损件数），=0 灰色 -->
+      <template #cell-damageCount="{ row }">
+        <span :class="Number(row.damageCount) > 0 ? 'text-red-500 font-bold' : 'text-gray-400'">
+          {{ row.damageCount ?? 0 }}
+        </span>
+      </template>
+
       <!-- 行操作：查看 → 下钻产品列表（逐件）。admin 不暴露写入入口（写入走 mp 4 业态打包子页） -->
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:warehouse:production:list']" link type="primary" icon="View" @click="handleView(row)">
@@ -51,16 +58,29 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
+/** 今天 yyyy-MM-dd（生产日期范围默认值：今天~今天） */
+function todayStr(): string {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
   belongType: undefined,
-  produceDateFrom: undefined,
-  produceDateTo: undefined
+  // 生产日期范围 [start, end]（daterange，默认今天~今天）；@search 时拆成 produceDateFrom/To
+  produceDateRange: [todayStr(), todayStr()],
+  // 是否存在损坏（djs_yes_no，默认全部=undefined）
+  hasDamage: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'productName', label: '产品名称', type: 'input' },
-  { field: 'belongType', label: '产品品类', type: 'select', dictType: 'djs_belong_type' }
+  { field: 'productName', label: t('djs.warehouse.production.column.productName'), type: 'input' },
+  { field: 'belongType', label: t('djs.warehouse.production.column.belongType'), type: 'select', dictType: 'djs_belong_type' },
+  { field: 'produceDateRange', label: t('djs.warehouse.production.column.produceDate'), type: 'daterange' },
+  // 是否存在损坏（默认全部）
+  { field: 'hasDamage', label: t('djs.warehouse.production.column.hasDamage'), type: 'select', dictType: 'djs_yes_no' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -79,16 +99,27 @@ const columns = computed<BizTableColumn[]>(() => [
       return String(Math.round(Number(r.produceQty)));
     }
   },
-  { prop: 'itemCount', label: '件数', minWidth: 90, align: 'center' },
+  { prop: 'itemCount', label: t('djs.warehouse.production.column.itemCount'), minWidth: 90, align: 'center' },
+  // 损坏量：该组已标损坏件数（damageCount），>0 红色显示（走 cell-damageCount slot 上色）
+  { prop: 'damageCount', label: t('djs.warehouse.production.column.damageCount'), minWidth: 100, align: 'center' },
   // 需求门店数：该产品当前有未发货需求的门店家数（后端 ProductProductionGroupVo.storeDemandCount）
-  { prop: 'storeDemandCount', label: '需求门店数', minWidth: 110, align: 'center' }
+  { prop: 'storeDemandCount', label: t('djs.warehouse.production.column.storeDemandCount'), minWidth: 110, align: 'center' }
 ]);
 
 async function loadList() {
   loading.value = true;
   try {
+    // 生产日期范围 daterange [start, end] 拆成 produceDateFrom/To 传后端（README §daterange 约定）
+    const range = Array.isArray(searchModel.produceDateRange) ? searchModel.produceDateRange : [];
     const params: ProductProductionQuery = {
-      ...searchModel,
+      productName: searchModel.productName || undefined,
+      belongType: searchModel.belongType || undefined,
+      produceDateFrom: range[0] || undefined,
+      produceDateTo: range[1] || undefined,
+      hasDamage:
+        searchModel.hasDamage === undefined || searchModel.hasDamage === null || searchModel.hasDamage === ''
+          ? undefined
+          : Number(searchModel.hasDamage),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -109,10 +140,13 @@ function handleSearch(payload?: Record<string, any>) {
 }
 
 function handleReset() {
-  Object.keys(searchModel).forEach((k) => {
-    searchModel[k] = undefined;
-  });
-  handleSearch();
+  searchModel.productName = undefined;
+  searchModel.belongType = undefined;
+  searchModel.hasDamage = undefined;
+  // 生产日期范围重置回默认今天~今天（非清空）
+  searchModel.produceDateRange = [todayStr(), todayStr()];
+  pageNum.value = 1;
+  loadList();
 }
 
 function handlePageChange(pn: number, ps: number) {

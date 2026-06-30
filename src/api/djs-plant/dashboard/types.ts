@@ -49,6 +49,8 @@ export interface PlantDashboardSummaryVO {
   harvestingPlotCount: number;
   /** 待种地块数 */
   pendingPlotCount: number;
+  /** 当月待种植地块数（当月有计划但未实际开始种植的不重复地块数） */
+  monthPendingPlotCount: number;
   /** 地块总数 */
   totalPlotCount: number;
   /** 土地总面积（亩） */
@@ -57,6 +59,8 @@ export interface PlantDashboardSummaryVO {
   currentPlantingArea: number;
   /** 当前预计产量（kg，前端按 kg → 万斤换算） */
   currentExpectedYield: number;
+  /** 当年预计产量（kg，前端按 kg → 吨换算 ÷1000） */
+  annualExpectedYield: number;
   /** 今日工作 - 种植（今日 begin_actualdate=CURDATE 地块数） */
   todayPlantingPlotCount: number;
   /** 今日工作 - 采摘（今日 begin_harvestdate=CURDATE 地块数） */

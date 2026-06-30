@@ -3,15 +3,7 @@
   <el-drawer v-model="visible" :title="t('storeLedger.entry.title')" direction="rtl" size="85%" append-to-body destroy-on-close>
     <div class="ledger-entry">
       <div class="entry-tools">
-        <el-select
-          v-model="storeId"
-          filterable
-          :placeholder="t('storeLedger.entry.storePlaceholder')"
-          class="store-select"
-          @change="loadCandidates"
-        >
-          <el-option v-for="s in storeOptions" :key="s.id" :label="s.storeName" :value="String(s.id)" />
-        </el-select>
+        <!-- 门店由顶部全局选择器（StoreSwitcher）统一控制，本抽屉不再让用户改门店 -->
         <el-date-picker
           v-model="ledgerDate"
           type="date"
@@ -33,7 +25,7 @@
         <!-- 期初：只读（库存表结存） -->
         <el-table-column :label="t('storeLedger.column.openingQty')" width="110" align="center" header-align="center">
           <template #default="{ row }">
-            <span class="text-muted">{{ row.openingQty }}</span>
+            <span class="text-muted">{{ fmtQty(row.openingQty, row.productUnit) }}</span>
           </template>
         </el-table-column>
         <!-- 新到货：新到货行只读（发货量）；猪肉行可编辑 -->
@@ -43,48 +35,48 @@
               v-if="!row.inboundReadonly"
               v-model="row.inboundQty"
               :min="0"
-              :precision="2"
+              :precision="kgPrecision(row.productUnit)"
               :controls="false"
               class="cell-num"
               @change="recalc(row)"
             />
-            <span v-else class="text-muted">{{ row.inboundQty }}</span>
+            <span v-else class="text-muted">{{ fmtQty(row.inboundQty, row.productUnit) }}</span>
           </template>
         </el-table-column>
         <!-- 销售：手动 -->
         <el-table-column :label="t('storeLedger.column.saleQty')" width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.saleQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number v-model="row.saleQty" :min="0" :precision="kgPrecision(row.productUnit)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 赠送：手动 -->
         <el-table-column :label="t('storeLedger.column.giftQty')" width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.giftQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number v-model="row.giftQty" :min="0" :precision="kgPrecision(row.productUnit)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 退货（顾客退货）：手动 -->
         <el-table-column :label="t('storeLedger.column.returnQty')" width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.returnSaleQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number v-model="row.returnSaleQty" :min="0" :precision="kgPrecision(row.productUnit)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 退回（门店退回仓库）：只读 -->
         <el-table-column :label="t('storeLedger.column.returnedQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
-            <span class="text-muted">{{ row.returnWhQty }}</span>
+            <span class="text-muted">{{ fmtQty(row.returnWhQty, row.productUnit) }}</span>
           </template>
         </el-table-column>
         <!-- 期末：手动实盘录入 -->
         <el-table-column :label="t('storeLedger.column.closingQty')" width="130" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.closingQty" :min="0" :precision="2" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number v-model="row.closingQty" :min="0" :precision="kgPrecision(row.productUnit)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 损耗：只读（后端公式计算，前端同步展示） -->
         <el-table-column :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center" fixed="right">
           <template #default="{ row }">
-            <span class="loss" :class="{ 'loss-negative': row.lossQty < 0 }">{{ row.lossQty }}</span>
+            <span class="loss" :class="{ 'loss-negative': row.lossQty < 0 }">{{ fmtQty(row.lossQty, row.productUnit) }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -104,12 +96,13 @@
 <script setup name="StoreCheckEntryDrawer" lang="ts">
 import { listStoreLedgerCandidates, batchSaveStoreLedger } from '@/api/djs-store/ledger';
 import type { StoreLedgerBatchItem, StoreLedgerCandidateVO, StoreLedgerCategory } from '@/api/djs-store/ledger/types';
-import { listMyStores } from '@/api/djs-common/store';
-import type { StoreOptionVO } from '@/api/djs-common/store';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+// 门店从父页/顶部上下文（StoreSwitcher）固定传入，本抽屉不再提供门店选择
+const props = defineProps<{ storeId?: string }>();
 
 const emit = defineEmits<{ saved: [] }>();
 
@@ -150,12 +143,34 @@ const storeId = ref<string>();
 const ledgerDate = ref<string>(todayStr());
 const loading = ref(false);
 const submitLoading = ref(false);
-const storeOptions = ref<StoreOptionVO[]>([]);
 const rows = ref<EntryRow[]>([]);
 
 function nz(v: number | string | undefined): number {
   const n = Number(v ?? 0);
   return Number.isNaN(n) ? 0 : n;
+}
+
+/** 是否 kg（重量）单位：kg / KG / 公斤 视为重量列，保留 3 位小数。 */
+function isKgUnit(unit?: string): boolean {
+  const u = (unit ?? '').trim().toLowerCase();
+  return u === 'kg' || u === '公斤';
+}
+
+/** 只读量列展示：kg 单位保留 3 位小数；非 kg（计件）单位原样；空值显示 '-'。 */
+function fmtQty(value: number | string | null | undefined, unit?: string): string {
+  if (value === null || value === undefined || value === '') {
+    return '-';
+  }
+  if (!isKgUnit(unit)) {
+    return String(value);
+  }
+  const n = Number(value);
+  return Number.isNaN(n) ? '-' : n.toFixed(3);
+}
+
+/** 可编辑量输入框小数位：kg 单位 3 位，非 kg（计件）单位 0 位（整数件数）。 */
+function kgPrecision(unit?: string): number {
+  return isKgUnit(unit) ? 3 : 0;
 }
 
 function categoryLabel(c: StoreLedgerCategory): string {
@@ -179,18 +194,8 @@ function recalc(row: EntryRow) {
       nz(row.returnSaleQty) -
       nz(row.returnWhQty) -
       nz(row.closingQty)
-    ).toFixed(2)
+    ).toFixed(3)
   );
-}
-
-async function loadStoreOptions() {
-  try {
-    const res = await listMyStores();
-    storeOptions.value = (res.data ?? []) as StoreOptionVO[];
-  } catch (e) {
-    console.warn('[StoreCheckEntryDrawer] loadStoreOptions failed', e);
-    storeOptions.value = [];
-  }
 }
 
 async function loadCandidates() {
@@ -255,13 +260,12 @@ async function handleSubmit() {
 }
 
 async function open() {
-  storeId.value = undefined;
+  // 门店从父页传入（顶部 StoreSwitcher 当前门店），open 时预置，用户不可改
+  storeId.value = props.storeId ? String(props.storeId) : undefined;
   ledgerDate.value = todayStr();
   rows.value = [];
   visible.value = true;
-  await loadStoreOptions();
-  if (storeOptions.value.length > 0) {
-    storeId.value = String(storeOptions.value[0].id);
+  if (storeId.value) {
     await loadCandidates();
   }
 }
@@ -276,10 +280,6 @@ defineExpose({ open });
     align-items: center;
     gap: 12px;
     margin-bottom: 12px;
-
-    .store-select {
-      width: 220px;
-    }
   }
 
   .entry-table {

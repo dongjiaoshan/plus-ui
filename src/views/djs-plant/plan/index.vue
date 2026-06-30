@@ -104,8 +104,9 @@ function formatPlantingPeriod(r: BizRow): string {
 
 // ---- 筛选：原型 4 项（计划月份 / 种植农作物 / 计划更新时间 / 计划编制人） ----
 // 农作物 / 计划编制人改为输入框模糊查询（cropName / queryCreateByName）。
+// planYear 默认当年：5 张 KPI 卡 + 列表默认按当年过滤（row37）
 const searchModel = reactive<Record<string, unknown>>({
-  planYear: undefined,
+  planYear: new Date().getFullYear(),
   planMonth: undefined,
   cropName: undefined,
   queryUpdateTime: undefined,
@@ -197,7 +198,9 @@ const columns = computed<BizTableColumn[]>(() => [
 
 async function loadStats() {
   try {
-    const res = await getPlanStats();
+    // 5 张 KPI 卡受搜索「计划年份」影响（默认当年）
+    const planYear = (searchModel.planYear as number | undefined) ?? undefined;
+    const res = await getPlanStats(planYear);
     stats.value = res.data || {};
   } catch (e) {
     console.warn('[PlantPlan] loadStats failed', e);
@@ -251,10 +254,14 @@ const handleSearch = (payload?: Record<string, any>) => {
   Object.assign(searchModel, payload ?? {});
   pageNum.value = 1;
   loadList();
+  // 5 张 KPI 卡随「计划年份」变化重新统计
+  loadStats();
 };
 
 const handleReset = () => {
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
+  // 计划年份重置回默认当年（KPI 卡默认按当年统计）
+  searchModel.planYear = new Date().getFullYear();
   handleSearch();
 };
 

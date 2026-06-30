@@ -26,11 +26,12 @@ export const listPlan = (query: PlantPlanQuery): AxiosPromise<PlantPlanVO[]> => 
   });
 };
 
-/** 列表顶部 5 KPI 统计卡（FIX-PLT-AD-PLAN-001）。 */
-export const getPlanStats = (): AxiosPromise<PlantPlanStatsVO> => {
+/** 列表顶部 5 KPI 统计卡（FIX-PLT-AD-PLAN-001 · row37，按计划年份过滤，默认当年）。 */
+export const getPlanStats = (planYear?: number): AxiosPromise<PlantPlanStatsVO> => {
   return request({
     url: '/djs/plant/plan/stats',
-    method: 'get'
+    method: 'get',
+    params: { planYear }
   });
 };
 

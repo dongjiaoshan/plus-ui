@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { ProductProductionGroupVO, ProductProductionVO, ProductProductionQuery } from './production/types';
+import type { ProductProductionGroupVO, ProductProductionVO, ProductProductionQuery, MarkDamageForm } from './production/types';
 
 /**
  * 发货产品生产记录 API（WMS-PACK-001 admin 只读）。
@@ -43,5 +43,19 @@ export const exportProduction = (query: ProductProductionQuery) => {
     method: 'post',
     data: query,
     responseType: 'blob'
+  });
+};
+
+/**
+ * 标记/修改产品损坏（契约 b）。
+ *
+ * 后端：POST /djs/warehouse/production/mark-damage → UPDATE is_damaged=1 + 凭证 + 备注 + damage_time=now。
+ * 门店需求页「产品明细」弹框对单件产品标损 / 修改损坏凭证用。
+ */
+export const markProductionDamage = (data: MarkDamageForm): AxiosPromise<void> => {
+  return request({
+    url: '/djs/warehouse/production/mark-damage',
+    method: 'post',
+    data
   });
 };

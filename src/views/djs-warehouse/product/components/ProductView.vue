@@ -24,6 +24,8 @@
           <el-descriptions-item v-if="!isGoods" :label="t('product.field.productWorkshop')">
             <dict-tag :options="djs_product_workshop" :value="data.productWorkshop" />
           </el-descriptions-item>
+          <!-- row40：生产车间下新增存储库位（取 VO storeLocationName） -->
+          <el-descriptions-item v-if="!isGoods" :label="t('product.field.storeLocation')">{{ data.storeLocationName || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('product.field.productStatus')">
             <dict-tag :options="sys_normal_disable" :value="data.productStatus" />
           </el-descriptions-item>

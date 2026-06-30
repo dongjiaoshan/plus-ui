@@ -1406,11 +1406,11 @@ export default {
     lastRefresh: 'Last refresh',
     land: {
       title: 'Land Overview',
-      pending: 'Unscheduled Plots',
-      planting: 'Planting',
+      idle: 'Idle Plots',
+      monthPending: 'Pending Plots (This Month)',
       planted: 'Planted',
       currentArea: 'Current Planting Area (mu)',
-      currentYield: 'Current Expected Yield (10k jin)'
+      annualYield: 'Annual Expected Yield (t)'
     },
     today: {
       title: "Today's Work",
@@ -1717,8 +1717,8 @@ export default {
       qualityDesc: 'Crop Description',
       relatedProduct: 'Related Product No.',
       historyPlantCount: 'Planting Times',
-      avgYield: 'Avg Yield (kg)',
-      maxYield: 'Max Yield (kg)',
+      avgYield: 'Avg Yield (kg/mu)',
+      maxYield: 'Max Yield (kg/mu)',
       updateTime: 'Update Time',
       updateByName: 'Updated By'
     },
@@ -1765,7 +1765,7 @@ export default {
       cropFamily: 'Family',
       plantingSeason: 'Season',
       cycle: 'Cycle',
-      predictedPer: 'Predicted Yield',
+      predictedPer: 'Predicted Yield (kg/mu)',
       pickUnitPrice: 'Performance Unit Price',
       createTime: 'Created'
     },
@@ -1931,11 +1931,11 @@ export default {
     },
     unit: { mu: 'mu', month: 'Mo.' },
     kpi: {
-      idlePlot: 'Idle Plots',
-      plantedPlot: 'Planted Plots',
-      plannedPlot: 'Planned Plots',
-      plotUsageFreq: 'Plot Usage Freq',
-      cropVarietyCount: 'Crop Varieties'
+      idlePlot: 'Idle Plots (Now)',
+      plantedPlot: 'Planted Plots (This Year)',
+      plannedPlot: 'Planned Plots (This Year)',
+      plotUsageFreq: 'Plot Usage Freq (This Year)',
+      cropVarietyCount: 'Crop Varieties (This Year)'
     },
     query: {
       planDate: 'Plan Date',
@@ -2807,9 +2807,17 @@ export default {
           produceDate: 'Produce Date',
           produceNo: 'Produce No.',
           productName: 'Product Name',
+          belongType: 'Category',
           productSpec: 'Spec',
           productSort: 'Product Seq',
           productWeight: 'Product Weight',
+          materialConsume: 'Material Used',
+          materialUnit: 'Material Unit',
+          itemCount: 'Items',
+          damageCount: 'Damaged',
+          storeDemandCount: 'Stores in Demand',
+          hasDamage: 'Has Damage',
+          isDamaged2: 'Damaged',
           storeName: 'Store',
           deliverDest: 'Destination',
           packStatus: 'Pack Status',
@@ -2830,6 +2838,14 @@ export default {
         },
         text: {
           noTrace: 'No trace code'
+        },
+        damage: {
+          view: 'View Damage',
+          viewTitle: 'Damage Detail',
+          evidence: 'Damage Evidence',
+          noEvidence: 'No damage evidence images',
+          remark: 'Damage Remark',
+          loading: 'Loading…'
         }
       }
     }
@@ -3209,6 +3225,7 @@ export default {
       demandRemark: 'Remark',
       expectedWeight: 'Expected weight',
       demandStatus: 'Status',
+      damagedCount: 'Damaged qty',
       confirmerTime: 'Confirmed at',
       demandConfirmer: 'Confirmed by',
       expectedArriveDate: 'Expected arrival',
@@ -3236,7 +3253,25 @@ export default {
       receive: 'Confirm receipt',
       detail: 'Detail',
       del: 'Delete',
-      viewList: 'View List'
+      viewList: 'View List',
+      productDetail: 'Product detail'
+    },
+    damage: {
+      detailTitle: 'Product detail',
+      markTitle: 'Mark as damaged',
+      editTitle: 'Edit damage evidence',
+      markAction: 'Mark damaged',
+      editAction: 'Edit',
+      produceNo: 'Produce No.',
+      materialConsume: 'Material qty',
+      materialUnit: 'Material unit',
+      isDamaged: 'Damaged',
+      earNo: 'Source ear No.',
+      plotName: 'Source plot',
+      evidence: 'Damage evidence',
+      evidenceRequired: 'Upload at least one damage evidence image',
+      remark: 'Damage remark',
+      remarkPh: 'Enter damage remark (optional)'
     },
     confirm: {
       del: 'Delete {count} selected demand(s)? Only unconfirmed demands can be deleted',
@@ -3640,7 +3675,8 @@ export default {
       submit: 'Submit',
       submitConfirm: 'Submit {n} returns?',
       quantityPlaceholder: 'Enter return quantity',
-      vegBothRequired: 'Produce "{name}" requires both return quantity and return weight'
+      vegBothRequired: 'Produce "{name}" requires both return quantity and return weight',
+      limitHint: 'Return amount cannot exceed the product\'s "opening stock + today\'s inbound" for the day; validated by the server on submit'
     },
     placeholder: {
       returnDirection: 'Select direction',

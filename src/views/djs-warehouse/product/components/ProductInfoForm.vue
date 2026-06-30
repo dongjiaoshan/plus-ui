@@ -28,17 +28,18 @@
       <!-- 自产专属 -->
       <template v-if="form.productType === 1">
         <el-row :gutter="16">
-          <!-- row29：自产产品「产品类别(归属类型)」必填，显示红星 -->
+          <!-- row43①：产品属性与产品类别展示位置互换（产品属性在前）。row29：产品属性必填；礼盒为独立成品不要求 -->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.belongType')" prop="belongType" required>
-              <el-select v-model="form.belongType" clearable @change="onBelongTypeChange">
-                <el-option v-for="d in djs_belong_type" :key="d.value" :label="d.label" :value="d.value" />
+            <el-form-item :label="t('product.field.productAttr')" prop="productAttr" :required="!isGiftBoxForm()">
+              <el-select v-model="form.productAttr" clearable @change="onProductAttrChange">
+                <el-option v-for="d in djs_product_attr" :key="d.value" :label="d.label" :value="Number(d.value)" />
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- row29：存储仓库必填（入库时锁定到此库位）；礼盒为独立成品不要求 -->
+          <!-- row43②：存储仓库——产品属性=生产产品(product_attr=1)时非必填，其余维持必填；礼盒为独立成品不要求
+               （需求措辞「产品类别=生产产品」：djs_belong_type 字典无「生产产品」值，「生产产品」= djs_product_attr=1，故按 productAttr===1 判定）-->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId" :required="!isGiftBoxForm()">
+            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId" :required="!isGiftBoxForm() && form.productAttr !== 1">
               <el-select
                 v-model="form.storeLocationId"
                 filterable
@@ -50,11 +51,11 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- row29：产品属性必填；礼盒为独立成品不要求 -->
+          <!-- row43①：产品属性与产品类别展示位置互换（产品类别在后）。row29：自产产品「产品类别(归属类型)」必填，显示红星 -->
           <el-col :span="12">
-            <el-form-item :label="t('product.field.productAttr')" prop="productAttr" :required="!isGiftBoxForm()">
-              <el-select v-model="form.productAttr" clearable @change="onProductAttrChange">
-                <el-option v-for="d in djs_product_attr" :key="d.value" :label="d.label" :value="Number(d.value)" />
+            <el-form-item :label="t('product.field.belongType')" prop="belongType" required>
+              <el-select v-model="form.belongType" clearable @change="onBelongTypeChange">
+                <el-option v-for="d in djs_belong_type" :key="d.value" :label="d.label" :value="d.value" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -291,11 +292,13 @@ const rules = computed(() => ({
       trigger: 'change'
     }
   ],
-  // row24/row29：存储仓库必填（自产 productType=1 / 外购 productType=2 均必填）；礼盒（自产 + 产品类别 gift_box）为独立成品不要求
+  // row24/row29：存储仓库必填（自产 productType=1 / 外购 productType=2）；礼盒（自产 + 产品类别 gift_box）为独立成品不要求
+  // row43②：自产且产品属性=生产产品(product_attr=1)时非必填（需求「产品类别=生产产品」→ djs_belong_type 无此值，取 product_attr=1）
   storeLocationId: [
     {
       validator: (_rule: any, value: any, callback: any) => {
-        if (!isGiftBoxForm() && (form.value.productType === 1 || form.value.productType === 2) && !value) {
+        const selfProducedExemptByAttr = form.value.productType === 1 && form.value.productAttr === 1;
+        if (!isGiftBoxForm() && !selfProducedExemptByAttr && (form.value.productType === 1 || form.value.productType === 2) && !value) {
           callback(new Error(t('product.rule.storeLocation.required')));
         } else {
           callback();

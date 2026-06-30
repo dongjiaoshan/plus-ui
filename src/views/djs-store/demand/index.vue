@@ -40,17 +40,20 @@
           </template>
         </template>
         <!-- 已发货（PARTIAL_SHIPPED/COMPLETED 未收货）：确认收货 → 确认到店 -->
-        <el-button
-          v-else-if="canReceive(row)"
-          v-hasPermi="['djs:store:demand:receive']"
-          link
-          type="success"
-          size="small"
-          @click="onReceive(row)"
-        >
-          {{ t('storeDemand.action.receive') }}
+        <template v-else-if="canReceive(row)">
+          <el-button v-hasPermi="['djs:store:demand:receive']" link type="success" size="small" @click="onReceive(row)">
+            {{ t('storeDemand.action.receive') }}
+          </el-button>
+          <!-- 已发货行：产品明细（标损 / 修改损坏凭证，row47） -->
+          <el-button link type="primary" size="small" @click="onViewDetail(row)">
+            {{ t('storeDemand.action.productDetail') }}
+          </el-button>
+        </template>
+        <!-- 已发货且已收货（确认到店）：仅产品明细（仍可对已发货产品标损） -->
+        <el-button v-else-if="isShipped(row)" link type="primary" size="small" @click="onViewDetail(row)">
+          {{ t('storeDemand.action.productDetail') }}
         </el-button>
-        <!-- 已确认 / 确认到店 / 已删除 等：无操作 -->
+        <!-- 已确认 / 已删除 等：无操作 -->
         <span v-else class="text-placeholder">/</span>
       </template>
     </BizTable>
@@ -59,6 +62,8 @@
     <StoreDemandForm ref="formRef" :default-store-id="currentStoreId || ''" @success="fetchList" />
     <!-- 新增需求：多产品购物车右抽屉 -->
     <DemandCartDrawer ref="cartDrawerRef" @success="fetchList" />
+    <!-- 已发货需求行「产品明细」：逐件产品 + 标损（row47/48） -->
+    <ProductDetailDialog ref="detailDialogRef" @success="fetchList" />
   </div>
 </template>
 
@@ -67,6 +72,7 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import StoreDemandForm from './components/StoreDemandForm.vue';
 import DemandCartDrawer from './components/DemandCartDrawer.vue';
+import ProductDetailDialog from './components/ProductDetailDialog.vue';
 import { listStoreDemand, removeStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
 import type { StoreDemandVO } from '@/api/djs-store/demand/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
@@ -83,6 +89,7 @@ const { currentStoreId } = storeToRefs(storeContext);
 const tableRef = ref<BizTableExpose>();
 const formRef = ref<{ openEdit: (id: string) => void; openDetail: (id: string) => void }>();
 const cartDrawerRef = ref<{ open: (storeId: string) => void }>();
+const detailDialogRef = ref<InstanceType<typeof ProductDetailDialog>>();
 
 const list = ref<StoreDemandVO[]>([]);
 const total = ref(0);
@@ -127,9 +134,20 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'demandRemark', label: t('storeDemand.column.demandRemark'), minWidth: 130, align: 'center', showOverflowTooltip: true },
   { prop: 'expectedWeight', label: t('storeDemand.column.expectedWeight'), minWidth: 130, align: 'center' },
   { prop: 'storeDemandStatus', label: t('storeDemand.column.demandStatus'), minWidth: 110, align: 'center', dictType: 'djs_store_demand_status' },
+  {
+    prop: 'damagedCount',
+    label: t('storeDemand.column.damagedCount'),
+    minWidth: 100,
+    align: 'center',
+    // 后端仅对「已发货」行回填损坏件数，其余行 null → '—'
+    formatter: (row: BizRow) => {
+      const v = (row as StoreDemandVO).damagedCount;
+      return v == null ? '—' : String(v);
+    }
+  },
   { prop: 'confirmerTime', label: t('storeDemand.column.confirmerTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'demandConfirmerName', label: t('storeDemand.column.demandConfirmer'), minWidth: 110, align: 'center' },
-  { prop: 'actions', label: t('storeDemand.column.actions'), width: 200, fixed: 'right', align: 'center' }
+  { prop: 'actions', label: t('storeDemand.column.actions'), width: 220, fixed: 'right', align: 'center' }
 ]);
 
 // 待确认 = SUBMITTED（门店发起后即 SUBMITTED）；待确认才可编辑 / 删除
@@ -142,6 +160,11 @@ const canReceive = (r: BizRow) => {
 };
 // 个人邮寄
 const isMailing = (r: BizRow) => (r as StoreDemandVO).demandType === 'mailing';
+// 已发货（仓库 PARTIAL_SHIPPED / COMPLETED）：无论是否已收货，都可看产品明细并对产品标损（row47）
+const isShipped = (r: BizRow) => {
+  const s = (r as StoreDemandVO).demandStatus;
+  return s === 'PARTIAL_SHIPPED' || s === 'COMPLETED';
+};
 
 async function fetchList() {
   loading.value = true;
@@ -212,6 +235,10 @@ async function onReceive(row: BizRow) {
   await receiveStoreDemand(r.id);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
+}
+function onViewDetail(row: BizRow) {
+  // 打开「产品明细」弹框，按需求 id 拉该需求下逐件产品（含损坏标记）
+  detailDialogRef.value?.open(String(row.id));
 }
 
 onMounted(() => {

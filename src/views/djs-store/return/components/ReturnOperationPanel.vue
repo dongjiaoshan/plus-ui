@@ -13,6 +13,9 @@
       </el-radio-group>
     </div>
 
+    <!-- 退回上限软提示（后端按当日台账「期初库存 + 当日到货」校验，前端无独立上限接口故仅提示） -->
+    <el-alert class="op-limit-hint" :title="t('storeReturn.operation.limitHint')" type="info" :closable="false" show-icon />
+
     <!-- 猪肉产品：产品名称 / 退回产品重量(KG) -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="200" show-overflow-tooltip align="center" header-align="center" />
@@ -212,6 +215,11 @@ onMounted(async () => {
     display: flex;
     justify-content: center;
     margin-bottom: 16px;
+  }
+
+  .op-limit-hint {
+    max-width: 900px;
+    margin: 0 auto 16px;
   }
 
   .op-table {

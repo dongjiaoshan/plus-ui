@@ -18,12 +18,12 @@
             <div class="kpi-line-tag"><span class="tag-main">{{ t('plantDashboard.land.title') }}</span></div>
             <div class="kpi-items">
               <div class="kpi-item">
-                <div class="kpi-value">{{ summary?.pendingPlotCount ?? 0 }}</div>
-                <div class="kpi-label">{{ t('plantDashboard.land.pending') }}</div>
+                <div class="kpi-value">{{ summary?.idlePlotCount ?? 0 }}</div>
+                <div class="kpi-label">{{ t('plantDashboard.land.idle') }}</div>
               </div>
               <div class="kpi-item">
-                <div class="kpi-value">{{ summary?.plantingPlotCount ?? 0 }}</div>
-                <div class="kpi-label">{{ t('plantDashboard.land.planting') }}</div>
+                <div class="kpi-value">{{ summary?.monthPendingPlotCount ?? 0 }}</div>
+                <div class="kpi-label">{{ t('plantDashboard.land.monthPending') }}</div>
               </div>
               <div class="kpi-item">
                 <div class="kpi-value">{{ summary?.harvestingPlotCount ?? 0 }}</div>
@@ -34,8 +34,8 @@
                 <div class="kpi-label">{{ t('plantDashboard.land.currentArea') }}</div>
               </div>
               <div class="kpi-item">
-                <div class="kpi-value">{{ kgToWanJin(summary?.currentExpectedYield) }}</div>
-                <div class="kpi-label">{{ t('plantDashboard.land.currentYield') }}</div>
+                <div class="kpi-value">{{ kgToTon(summary?.annualExpectedYield) }}</div>
+                <div class="kpi-label">{{ t('plantDashboard.land.annualYield') }}</div>
               </div>
             </div>
           </div>
@@ -118,7 +118,7 @@
  * 种植看板 admin 入口（PLT-DASH-001 富图看板版）。
  *
  * 对照原型 doc/origin/prototype/admin/.../种植管理/种植看板/06edfbc1-...png，6 区块：
- *  ① 土地总览 KPI（未安排 / 持续种植 / 已种植 / 当前种植面积亩 / 当前预计产量万斤）
+ *  ① 土地总览 KPI（空闲地块数 / 当月待种植地块数 / 已种植 / 当前种植面积亩 / 当年预计产量吨）
  *  ② 今日工作 KPI（固定 6 格：种植 / 采摘 / 空地管理 / 种植管理 / 灾害损失 地块数 + 采摘活动 kg）
  *  ③ 有机证书情况一览（土地 / 作物证书最早到期天数 + 无证书 / 已建档品类数）
  *  ④ 实时种植物统计（bar=在种地块数 + line=预计产量 kg，双轴，by 作物）— ECharts
@@ -133,7 +133,7 @@ import * as echarts from 'echarts';
 import { useI18n } from 'vue-i18n';
 import { getPlantDashboardSummary, getPlantDashboardGantt } from '@/api/djs-plant/dashboard';
 import type { PlantDashboardSummaryVO, GanttItemVO } from '@/api/djs-plant/dashboard/types';
-import { CROP_STAT_COLOR, GANTT_COLOR, REFRESH_INTERVAL_MS, kgToWanJin, certDaysText } from './constants';
+import { CROP_STAT_COLOR, GANTT_COLOR, REFRESH_INTERVAL_MS, kgToTon, certDaysText } from './constants';
 
 const { t } = useI18n();
 

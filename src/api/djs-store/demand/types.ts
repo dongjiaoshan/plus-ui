@@ -52,6 +52,8 @@ export interface StoreDemandVO extends BaseEntity {
   receivedBy?: string;
   /** 门店收货确认人姓名。 */
   receivedByName?: string;
+  /** 损坏数量（row48）：后端对「已发货」行回填 is_damaged=1 的产品件数；非已发货行 null（前端 '—'）。 */
+  damagedCount?: number;
   expectedArriveDate?: string;
   shippedCount: number | string;
   confirmedCount: number | string;

@@ -146,21 +146,21 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('plantCrop.column.predictedPer'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.predictedPer != null ? `${Number(r.predictedPer).toFixed(3)} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.predictedPer != null ? Number(r.predictedPer).toFixed(3) : '-')
   },
   {
     prop: 'maxYield',
     label: t('plantCrop.label.maxYield'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.maxYield != null ? `${Number(r.maxYield).toFixed(3)} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.maxYield != null ? Number(r.maxYield).toFixed(3) : '-')
   },
   {
     prop: 'avgYield',
     label: t('plantCrop.label.avgYield'),
     width: 120,
     align: 'right',
-    formatter: (r: BizRow) => (r.avgYield != null ? `${Number(r.avgYield).toFixed(3)} kg/亩` : '-')
+    formatter: (r: BizRow) => (r.avgYield != null ? Number(r.avgYield).toFixed(3) : '-')
   },
   {
     prop: 'historyPlantCount',

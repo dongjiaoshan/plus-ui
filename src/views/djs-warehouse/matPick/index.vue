@@ -157,8 +157,8 @@ const columns = computed<BizTableColumn[]>(() => {
   return cols;
 });
 
-/** 果蔬业态操作区多一个「饲料饲喂」按钮（4 个），加宽防换行；其余 3 个按钮 240 足够 */
-const actionColWidth = computed(() => (activeBelongType.value === 'vegetable' ? 320 : 240));
+/** 果蔬业态操作区多一个「饲料饲喂」按钮（4 个×4 字），加宽到 360 防换行；其余 3 个按钮 240 足够 */
+const actionColWidth = computed(() => (activeBelongType.value === 'vegetable' ? 360 : 240));
 
 /** BigDecimal→string 防 NaN 兜底，最多 3 位小数 */
 function fmtNum(v: number | string | undefined | null): string {

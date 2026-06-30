@@ -35,12 +35,15 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
-      <!-- 追溯码列：有码渲染 link（点击复制提示），无码占位 -->
+      <!-- 行操作：追溯码（有码 link / 无码占位）+ 损坏行追加「查看损坏」 -->
       <template #action="{ row }">
         <el-button v-if="row.traceCode" v-hasPermi="['djs:warehouse:production:list']" link type="primary" @click="handleTrace(row)">
           {{ t('djs.warehouse.production.button.traceCode') }}
         </el-button>
         <span v-else class="text-gray-400">{{ t('djs.warehouse.production.text.noTrace') }}</span>
+        <el-button v-if="row.isDamaged === 1" v-hasPermi="['djs:warehouse:production:list']" link type="danger" @click="handleViewDamage(row)">
+          {{ t('djs.warehouse.production.damage.view') }}
+        </el-button>
       </template>
     </BizTable>
 
@@ -50,6 +53,8 @@
 
     <!-- 追溯码二维码标签卡（复用门店追溯标签组件，零回归跨目录引用） -->
     <TraceLabelDialog ref="traceLabelRef" />
+    <!-- 查看损坏（只读图集 + 备注） -->
+    <DamageEvidenceDialog ref="damageDialogRef" />
   </el-dialog>
 </template>
 
@@ -61,11 +66,13 @@ import type { ProductProductionGroupVO, ProductProductionQuery, ProductProductio
 import { useI18n } from 'vue-i18n';
 import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialog.vue';
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
+import DamageEvidenceDialog from './DamageEvidenceDialog.vue';
 
 const { t } = useI18n();
 
 const tableRef = ref<BizTableExpose>();
 const traceLabelRef = ref<InstanceType<typeof TraceLabelDialog>>();
+const damageDialogRef = ref<InstanceType<typeof DamageEvidenceDialog>>();
 
 const visible = ref(false);
 const list = ref<ProductProductionVO[]>([]);
@@ -79,30 +86,41 @@ const batch = ref<ProductProductionGroupVO | null>(null);
 
 const searchModel = reactive<Record<string, any>>({
   productSort: undefined,
-  storeName: undefined
+  storeName: undefined,
+  isDamaged: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productSort', label: t('djs.warehouse.production.column.productSort'), type: 'input' },
-  { field: 'storeName', label: t('djs.warehouse.production.column.storeName'), type: 'input' }
+  { field: 'storeName', label: t('djs.warehouse.production.column.storeName'), type: 'input' },
+  // 是否损坏（djs_yes_no，默认全部）—— 服务端过滤 isDamaged
+  { field: 'isDamaged', label: t('djs.warehouse.production.column.isDamaged2'), type: 'select', dictType: 'djs_yes_no' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'produceNo', label: t('djs.warehouse.production.column.produceNo'), minWidth: 160 },
-  { prop: 'productSort', label: t('djs.warehouse.production.column.productSort'), minWidth: 90, align: 'center' },
+  // 「产品重量」标签改「原材料使用量」，绑 materialConsume + 右侧「原材料单位」列（materialUnit）
   {
-    prop: 'productWeight',
-    label: t('djs.warehouse.production.column.productWeight'),
-    minWidth: 110,
+    prop: 'materialConsume',
+    label: t('djs.warehouse.production.column.materialConsume'),
+    minWidth: 120,
     align: 'center',
     formatter: (row: BizRow) => {
       const r = row as ProductProductionVO;
-      if (r.productWeight === undefined || r.productWeight === null) return '-';
-      return r.productUnit ? `${r.productWeight}${r.productUnit}` : String(r.productWeight);
+      return r.materialConsume === undefined || r.materialConsume === null ? '-' : String(r.materialConsume);
     }
+  },
+  {
+    prop: 'materialUnit',
+    label: t('djs.warehouse.production.column.materialUnit'),
+    minWidth: 100,
+    align: 'center',
+    formatter: (row: BizRow) => (row as ProductProductionVO).materialUnit || '-'
   },
   // 主列表删掉的逐件字段下沉到此子页（VO 已全有）
   { prop: 'packStatus', label: t('djs.warehouse.production.column.packStatus'), minWidth: 110, dictType: 'djs_pack_status' },
+  // 是否损坏（djs_yes_no dict-tag）
+  { prop: 'isDamaged', label: t('djs.warehouse.production.column.isDamaged2'), minWidth: 100, align: 'center', dictType: 'djs_yes_no' },
   {
     prop: 'earNo',
     label: t('djs.warehouse.production.column.earNo'),
@@ -164,6 +182,8 @@ async function loadList() {
       produceDate: batch.value.produceDate,
       // 产品序号改文本模糊搜索：原样透传字符串关键字，由后端 product_sort LIKE 匹配（row115-1 待后端）
       productSort: searchModel.productSort === undefined || searchModel.productSort === '' ? undefined : String(searchModel.productSort).trim(),
+      // 是否损坏（djs_yes_no，空=全部）：服务端按 is_damaged 过滤
+      isDamaged: searchModel.isDamaged === undefined || searchModel.isDamaged === '' ? undefined : Number(searchModel.isDamaged),
       // storeName 是前端搜索字段，后端按 storeId 过滤；本子页未提供 store 选择器，
       // storeName 模糊匹配交由前端在已加载行内不另发请求（仅按序号服务端筛）。
       pageNum: pageNum.value,
@@ -222,6 +242,11 @@ function handleTrace(row: BizRow) {
     },
     Number(r.productWeight) || undefined
   );
+}
+
+/** 查看损坏：弹只读图集 + 备注（损坏行操作列） */
+function handleViewDamage(row: BizRow) {
+  damageDialogRef.value?.open(row as ProductProductionVO);
 }
 
 /** 父列表聚合行「查看」调用：传入当前行作为批次锚点（生产日期 + 产品） */

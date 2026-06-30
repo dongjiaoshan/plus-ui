@@ -34,7 +34,8 @@
       </template>
     </BizTable>
 
-    <CheckEntryDrawer ref="entryRef" @saved="fetchList" />
+    <!-- 门店由顶部全局选择器（StoreSwitcher）统一控制，作为 prop 固定传入新增抽屉 -->
+    <CheckEntryDrawer ref="entryRef" :store-id="currentStoreId || ''" @saved="fetchList" />
     <CheckDetailDrawer ref="detailRef" />
   </div>
 </template>
@@ -46,9 +47,15 @@ import CheckEntryDrawer from './CheckEntryDrawer.vue';
 import CheckDetailDrawer from './CheckDetailDrawer.vue';
 import { listStoreLedger } from '@/api/djs-store/ledger';
 import type { StoreLedgerHeaderVO, StoreLedgerQuery } from '@/api/djs-store/ledger/types';
+import { useStoreContextStore } from '@/store/modules/storeContext';
+import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+
+const storeContext = useStoreContextStore();
+// 当前门店来自顶部全局选择器（StoreSwitcher），切换由 navbar 统一控制
+const { currentStoreId } = storeToRefs(storeContext);
 
 interface LedgerRow extends StoreLedgerHeaderVO {
   rowKey: string;
