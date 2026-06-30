@@ -251,6 +251,10 @@ function buildPublicUrlFallback(cred: OssStsCredentialVO, key: string): string {
 }
 
 function onRemove(file: UploadFile) {
+  // 删除路径同步清掉本组件维护的 fileList ref（el-upload 走 :file-list 初始绑定、内部自管 uploadFiles）。
+  // 不清的话，后续上传新图时 doUpload 会 [...fileList.value(含已删项), 新图] 重建 fileList 触发 :file-list
+  // watcher 重同步，已删图又渲染回第一张。按 uid 无条件移除，与上传路径对 fileList 的维护保持一致。
+  fileList.value = fileList.value.filter((f) => Number(f.uid) !== Number(file.uid));
   const ossId = uidToOssId.value.get(file.uid);
   if (ossId && resultMap.value.has(ossId)) {
     resultMap.value.delete(ossId);

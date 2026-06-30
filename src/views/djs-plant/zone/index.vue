@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['sys_normal_disable', 'djs_zone_belong']"
+      :dict-types="['djs_zone_belong']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -26,6 +26,11 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
+      <template #cell-zoneStatus="{ row }">
+        <el-tag :type="row.zoneStatus === 1 ? 'success' : 'info'">
+          {{ row.zoneStatus === 1 ? t('plantZone.action.enable') : t('plantZone.action.disable') }}
+        </el-tag>
+      </template>
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:plant:zone:edit']" link type="primary" @click="handleEdit(row)">
           {{ t('plantZone.action.edit') }}
@@ -108,7 +113,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'zoneDesc', label: t('plantZone.column.zoneDesc'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'zoneBelong', label: t('plantZone.column.zoneBelong'), minWidth: 140, align: 'center', dictType: 'djs_zone_belong', showOverflowTooltip: true },
   { prop: 'plotCount', label: t('plantZone.column.plotCount'), minWidth: 140, align: 'center' },
-  { prop: 'zoneStatus', label: t('plantZone.column.zoneStatus'), minWidth: 140, align: 'center', dictType: 'sys_normal_disable' },
+  { prop: 'zoneStatus', label: t('plantZone.column.zoneStatus'), minWidth: 140, align: 'center' },
   { prop: 'updateTime', label: t('plantZone.column.updateTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'updateByName', label: t('plantZone.column.updateByName'), minWidth: 140, align: 'center' }
 ]);
@@ -182,9 +187,9 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
     // 取消 / 后端 plant.zone.has_plot 级联保护由 axios 拦截器统一弹窗
   }
 }
-/** 行内启停：sys_normal_disable 0=正常 / 1=停用，toggle 当前值。 */
+/** 行内启停：zone_status 1=启用 / 0=停用（不走 sys_normal_disable），toggle 当前值。 */
 async function handleToggleStatus(row: BizRow) {
-  const next = row.zoneStatus === 0 ? 1 : 0;
+  const next = row.zoneStatus === 1 ? 0 : 1;
   await changeZoneStatus(row.id, next);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();

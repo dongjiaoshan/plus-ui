@@ -789,7 +789,9 @@ const shouldUnitByCopies = computed<boolean>(() => {
 const selectedUnit = computed<string>(() => {
   if (props.kind === 'veg') return 'g';
   if (shouldUnitByCopies.value) return t('djs.warehouse.packEntry.copiesUnit');
-  if (dryReqMode.value) return wipStockUnitMap.value[String(form.value.productId)] || 'kg';
+  // 肉品打包(earGroup) + 其他产品打包(dryReqMode) 均按「领用来源原材料」单位显示（排骨原料=kg），
+  // 而非成品自身单位（成品「份」会把按重量录入的肉品错标成「份」）。
+  if (sourceFilterActive.value) return wipStockUnitMap.value[String(form.value.productId)] || 'kg';
   return form.value.productUnit || 'kg';
 });
 
@@ -957,7 +959,7 @@ async function handleSubmit(printTrace: boolean) {
       const dryWeight = shouldUnitByCopies.value ? copies * measure : (form.value.productWeight as number);
       const dryUnit = shouldUnitByCopies.value
         ? 'kg'
-        : dryReqMode.value
+        : sourceFilterActive.value
           ? wipStockUnitMap.value[String(form.value.productId)] || 'kg'
           : form.value.productUnit;
       const bo: DryPackBo = {

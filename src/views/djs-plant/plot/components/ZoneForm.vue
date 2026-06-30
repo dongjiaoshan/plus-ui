@@ -21,10 +21,10 @@
         </el-col>
         <el-col :span="12">
           <el-form-item :label="t('plantZone.field.zoneStatus')" prop="zoneStatus">
+            <!-- zone_status 1=启用 / 0=停用（不走 sys_normal_disable，与片区数据实态 + admin toggle 同口径） -->
             <el-radio-group v-model="form.zoneStatus">
-              <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="Number(dict.value)">
-                {{ dict.label }}
-              </el-radio>
+              <el-radio :value="1">{{ t('plantZone.action.enable') }}</el-radio>
+              <el-radio :value="0">{{ t('plantZone.action.disable') }}</el-radio>
             </el-radio-group>
           </el-form-item>
         </el-col>
@@ -51,7 +51,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { sys_normal_disable, djs_zone_belong } = toRefs<any>(proxy?.useDict('sys_normal_disable', 'djs_zone_belong'));
+const { djs_zone_belong } = toRefs<any>(proxy?.useDict('djs_zone_belong'));
 
 const visible = ref(false);
 const submitting = ref(false);
