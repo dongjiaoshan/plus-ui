@@ -26,12 +26,17 @@
         <el-input-number
           v-model="form.quantity"
           :min="0.001"
+          :max="maxQuantity"
           :step="1"
           :precision="2"
           controls-position="right"
           :placeholder="t('stock.outDialog.quantityPlaceholder')"
           style="width: 100%"
         />
+      </el-form-item>
+      <!-- 计量单位（只读，取该产品商品配置单位） -->
+      <el-form-item :label="t('stock.outDialog.measureUnit')">
+        <el-input :model-value="unit || '-'" disabled />
       </el-form-item>
       <el-form-item :label="t('stock.outDialog.stockOutDest')" prop="stockOutDest">
         <el-select v-model="form.stockOutDest" :placeholder="t('stock.outDialog.stockOutDestPlaceholder')" style="width: 100%">
@@ -79,6 +84,14 @@ const currentStockText = computed(() => {
   const n = typeof v === 'number' ? v : Number(v);
   const text = Number.isNaN(n) ? String(v) : n.toFixed(2);
   return unit.value ? `${text}${unit.value}` : text;
+});
+
+/** 出库量上限 = 当前库存（超出禁止提交，row186-FE 前端拦）。库存缺失时回退 Infinity 不拦。 */
+const maxQuantity = computed(() => {
+  const v = currentStock.value;
+  if (v === undefined || v === null || v === '') return Infinity;
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isNaN(n) ? Infinity : n;
 });
 
 const today = () => new Date().toISOString().slice(0, 10);

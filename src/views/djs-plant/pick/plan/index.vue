@@ -33,7 +33,11 @@
       </template>
       <template #cell-totalAcreage="{ row }">{{ row.totalAcreage != null ? `${row.totalAcreage} 亩` : '-' }}</template>
       <template #cell-currentPlantedArea="{ row }">{{ row.currentPlantedArea != null ? `${row.currentPlantedArea} 亩` : '-' }}</template>
-      <template #cell-expectedYield="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(3)} kg` : '-' }}</template>
+      <!-- row185：预计产量列展示已扣灾害损失的净值（后端 netExpectedYield = max(0, 预计产量 − 预计灾害损失量)）；
+           后端无 netExpectedYield 时回退原 expectedYield，避免老数据空白 -->
+      <template #cell-expectedYield="{ row }">{{
+        (row.netExpectedYield ?? row.expectedYield) != null ? `${Number(row.netExpectedYield ?? row.expectedYield).toFixed(3)} kg` : '-'
+      }}</template>
       <template #cell-actualYield="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(3)} kg` : '-' }}</template>
       <template #cell-disasterLoss="{ row }">{{ row.disasterLoss != null ? `${Number(row.disasterLoss).toFixed(3)} kg` : '-' }}</template>
       <template #cell-activityPlotCount="{ row }">

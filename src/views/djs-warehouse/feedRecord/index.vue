@@ -181,11 +181,11 @@ function formatDateTime(v?: string): string {
   return parseTime(v, '{y}-{m}-{d} {h}:{i}:{s}') as string;
 }
 
-/** 饲喂量格式化：后端 BigDecimal 序列化为 string，统一 Number 强转保两位小数。 */
+/** 饲喂量格式化：后端 BigDecimal 序列化为 string，统一 Number 强转保两位小数 + kg 单位后缀。 */
 function formatWeight(v: number | string | undefined | null): string {
   if (v === undefined || v === null || v === '') return '';
   const n = typeof v === 'number' ? v : Number(v);
-  return Number.isNaN(n) ? String(v) : n.toFixed(2);
+  return Number.isNaN(n) ? String(v) : `${n.toFixed(2)} kg`;
 }
 
 onMounted(() => {

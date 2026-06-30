@@ -43,8 +43,10 @@ export interface PickPlanGroupVO {
   currentPlantedArea?: number;
   /** 预计需求量（kg；无来源时 NULL，前端 - 兜底）。 */
   demandQty?: number;
-  /** 预计产量（SUM expected_yield，kg）。 */
+  /** 预计产量（SUM expected_yield，kg；未扣灾害的理论标准产量）。 */
   expectedYield?: number;
+  /** 预计净产量（kg）= max(0, 预计产量 − 预计灾害损失量)；row185 灾害扣减后展示。 */
+  netExpectedYield?: number;
   /** 当年已采摘量（当年累计实采，kg）。 */
   actualYield?: number;
   /** 预计灾害损失量（SUM loss_yield，kg）。 */

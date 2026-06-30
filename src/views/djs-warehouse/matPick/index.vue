@@ -128,9 +128,9 @@ const pagedList = computed(() => {
 });
 
 /**
- * 列随业态 tab 动态拼装：
- *  - 耳号 earNo：仅白条/猪肉业态显示（果蔬/其他无耳号概念）
- *  - 地块编号 plotCode：仅果蔬业态显示（种植来源，猪肉/其他无地块概念）
+ * 列随业态 tab 动态拼装（口径 row5）：
+ *  - 耳号 earNo：仅白条/猪肉业态显示（猪只有耳号、无地块）
+ *  - 地块编号 plotCode：仅果蔬业态显示（蔬菜来自地块、无耳号）
  *  - 包材/鸡蛋/干货/其他：两列都不显示
  */
 const columns = computed<BizTableColumn[]>(() => {
@@ -157,8 +157,8 @@ const columns = computed<BizTableColumn[]>(() => {
   return cols;
 });
 
-/** 果蔬业态操作区多一个「饲料饲喂」按钮（4 个×4 字），加宽到 360 防换行；其余 3 个按钮 240 足够 */
-const actionColWidth = computed(() => (activeBelongType.value === 'vegetable' ? 360 : 240));
+/** 果蔬业态操作区多一个「饲料饲喂」按钮（4 个×4 字），加宽到 400 防换行；其余 3 个按钮 240 足够 */
+const actionColWidth = computed(() => (activeBelongType.value === 'vegetable' ? 400 : 240));
 
 /** BigDecimal→string 防 NaN 兜底，最多 3 位小数 */
 function fmtNum(v: number | string | undefined | null): string {

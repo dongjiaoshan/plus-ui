@@ -128,6 +128,8 @@ export interface PlantDetailsVO {
   harvestStatus: string;
   plotArea: number;
   expectedYield?: number;
+  /** 预计净产量（kg）= max(0, 标准产量 − 灾害损失 lossYield)；row185 灾害扣减后展示（仅采摘计划调整弹窗回填）。 */
+  netExpectedYield?: number;
   lossYield?: number;
   actualYield?: number;
   averageYield?: number;

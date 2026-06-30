@@ -64,8 +64,12 @@
       <el-table-column :label="t('pickPlan.adjust.col.plotArea')" prop="plotArea" width="100" align="center" header-align="center">
         <template #default="{ row }">{{ row.plotArea != null ? `${row.plotArea} 亩` : '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.standardYield')" prop="expectedYield" width="110" align="center" header-align="center">
-        <template #default="{ row }">{{ row.expectedYield != null ? `${row.expectedYield} kg` : '-' }}</template>
+      <!-- row185：标准产量列展示已扣灾害损失的净值（后端 netExpectedYield = max(0, 标准产量 − 灾害损失)）；
+           后端无 netExpectedYield 时回退原 expectedYield，避免老数据空白 -->
+      <el-table-column :label="t('pickPlan.adjust.col.standardYield')" prop="expectedYield" width="120" align="center" header-align="center">
+        <template #default="{ row }">{{
+          (row.netExpectedYield ?? row.expectedYield) != null ? `${row.netExpectedYield ?? row.expectedYield} kg` : '-'
+        }}</template>
       </el-table-column>
       <el-table-column :label="t('pickPlan.adjust.col.actualYield')" prop="actualYield" width="110" align="center" header-align="center">
         <template #default="{ row }">{{ `${row.actualYield ?? 0} kg` }}</template>

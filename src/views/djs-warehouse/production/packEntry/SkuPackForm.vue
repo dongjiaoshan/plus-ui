@@ -877,6 +877,16 @@ function validate(): boolean {
         notifyMissing(t('djs.warehouse.packEntry.copiesExceed', { max }));
         return false;
       }
+      // row53：份数不得超过所选门店剩余需求份数（demand-driven 上限，FE 拦）。
+      // 组件打包（发送位置=礼盒，无门店）跳过；门店需求缺失时不前端拦截，交后端校验。
+      if (!isGiftComponent && form.value.storeId) {
+        const demand = visibleStoreDemands.value.find((sd) => String(sd.storeId) === String(form.value.storeId));
+        const remainDemand = demand ? Number(demand.copies) : null;
+        if (remainDemand != null && Number.isFinite(remainDemand) && Number(form.value.productWeight) > remainDemand) {
+          notifyMissing(t('djs.warehouse.packEntry.demandCopiesExceed', { max: remainDemand }));
+          return false;
+        }
+      }
     }
     // 果蔬：按重量超量校验（量纲对齐 row12 点3）——录入 g 换算成 kg 后，与领用剩余重量（vegStockMap，kg）比对，
     // 超出领用剩余即拦截（与后端 requireInhouseEnough 同口径，避免提交才被后端拒）。
