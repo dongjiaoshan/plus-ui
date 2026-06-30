@@ -100,7 +100,10 @@ export interface DemandGroupVO {
   productId: string;
   productName: string;
   productSpec?: string;
+  /** 内部业态（驱动状态机分支）；列表「需求产品类型」列已改用 belongType 展示。 */
   productType: DemandProductType;
+  /** 产品类别（djs_belong_type，取自产品主数据 belong_type；列表统一按产品配置产品类别展示/筛选）。 */
+  belongType?: string;
   rawMaterial?: string;
   demandQuantity: number | string;
   materialQty?: number | string;

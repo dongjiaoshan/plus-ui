@@ -107,7 +107,7 @@ const searchModel = reactive<Record<string, any>>({
  */
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('demand.field.searchProductName'), type: 'input' },
-  { field: 'productType', label: t('demand.field.productType'), type: 'select', multiple: true, dictType: 'djs_demand_product_type' },
+  { field: 'productType', label: t('demand.field.productType'), type: 'select', multiple: true, dictType: 'djs_belong_type' },
   { field: 'storeId', label: t('demand.field.storeName'), type: 'select', multiple: true, options: storeOptions.value },
   {
     field: 'demandStatus',
@@ -135,7 +135,7 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => formatInt((row as unknown as DemandGroupVO).demandQuantity)
   },
-  { prop: 'productType', label: t('demand.column.productType'), minWidth: 120, align: 'center', dictType: 'djs_demand_product_type' },
+  { prop: 'belongType', label: t('demand.column.productType'), minWidth: 120, align: 'center', dictType: 'djs_belong_type' },
   { prop: 'rawMaterial', label: t('demand.column.rawMaterial'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   {
     prop: 'materialQty',
