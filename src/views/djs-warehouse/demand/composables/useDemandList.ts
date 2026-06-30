@@ -18,7 +18,8 @@ export function useDemandList(productType?: DemandProductType) {
   const searchModel = reactive<Record<string, any>>({
     demandNo: undefined,
     productType: undefined,
-    demandStatus: undefined,
+    // R70 需求状态下拉多选 → 默认空数组
+    demandStatus: [],
     productName: undefined,
     storeId: undefined,
     beginDate: undefined,
@@ -28,13 +29,15 @@ export function useDemandList(productType?: DemandProductType) {
   async function fetchList() {
     loading.value = true;
     try {
+      const statuses = Array.isArray(searchModel.demandStatus) && searchModel.demandStatus.length ? searchModel.demandStatus : undefined;
       const query: DemandManageQuery = {
         pageNum: pageNum.value,
         pageSize: pageSize.value,
         // 不传则取全部业态；显式 productType 闭包优先，否则用搜索表单选的业态
         productType: productType ?? (searchModel.productType as DemandProductType | undefined),
         demandNo: searchModel.demandNo,
-        demandStatus: searchModel.demandStatus,
+        // R70 多选 → 复数 demandStatuses（IN）；删单值发送（单值 fallback 在后端保留）
+        demandStatuses: statuses,
         productName: searchModel.productName,
         storeId: searchModel.storeId,
         beginDate: searchModel.beginDate,

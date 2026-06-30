@@ -199,7 +199,8 @@ const searchModel = reactive<Record<string, any>>({
   cutId: undefined,
   barId: undefined,
   earNo: undefined,
-  cutStatus: undefined,
+  // R70 分割状态下拉多选 → 默认空数组
+  cutStatus: [],
   pickupTimeFrom: undefined,
   pickupTimeTo: undefined
 });
@@ -208,8 +209,21 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'cutId', label: t('djs.warehouse.pigCut.cutId'), type: 'input' },
   { field: 'barId', label: t('djs.warehouse.pigCut.barId'), type: 'input' },
   { field: 'earNo', label: t('djs.warehouse.pigCut.earNo'), type: 'input' },
-  { field: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), type: 'select', dictType: 'djs_pig_cut_status' }
+  { field: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), type: 'select', multiple: true, dictType: 'djs_pig_cut_status' }
 ]);
+
+/** searchModel → 后端 query：R70 cutStatus 多选转复数 cutStatuses（后端 IN），删单值发送。 */
+function buildQuery(): PigCutRecordQuery {
+  const cutStatuses = Array.isArray(searchModel.cutStatus) && searchModel.cutStatus.length ? searchModel.cutStatus : undefined;
+  return {
+    cutId: searchModel.cutId || undefined,
+    barId: searchModel.barId || undefined,
+    earNo: searchModel.earNo || undefined,
+    cutStatuses,
+    pickupTimeFrom: searchModel.pickupTimeFrom || undefined,
+    pickupTimeTo: searchModel.pickupTimeTo || undefined
+  };
+}
 
 /** 比率 → 百分比文本；分母缺失（后端返 null/undefined）显「—」 */
 function fmtRate(v: unknown): string {
@@ -263,7 +277,7 @@ async function loadList() {
   loading.value = true;
   try {
     const params: PigCutRecordQuery = {
-      ...searchModel,
+      ...buildQuery(),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -295,7 +309,7 @@ function handlePageChange(p: { pageNum: number; pageSize: number }) {
 }
 
 function handleExport() {
-  proxy?.download('/djs/warehouse/pigCut/export', { ...searchModel }, `分割记录_${new Date().getTime()}.xlsx`);
+  proxy?.download('/djs/warehouse/pigCut/export', buildQuery(), `分割记录_${new Date().getTime()}.xlsx`);
 }
 
 // ============ 写动作共享数据源 ============

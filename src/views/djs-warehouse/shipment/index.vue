@@ -48,16 +48,30 @@ const pageSize = ref(10);
 const searchModel = reactive<Record<string, any>>({
   shipmentNo: undefined,
   demandId: undefined,
-  productType: undefined,
+  // R70 产品类型 / 发货状态下拉多选 → 默认空数组
+  productType: [],
   storeId: undefined,
-  shipmentStatus: undefined
+  shipmentStatus: []
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'shipmentNo', label: t('djs.warehouse.shipment.shipmentNo'), type: 'input' },
-  { field: 'productType', label: t('djs.warehouse.shipment.productType'), type: 'select', dictType: 'djs_demand_product_type' },
-  { field: 'shipmentStatus', label: t('djs.warehouse.shipment.shipmentStatus'), type: 'select', dictType: 'djs_shipment_status' }
+  { field: 'productType', label: t('djs.warehouse.shipment.productType'), type: 'select', multiple: true, dictType: 'djs_demand_product_type' },
+  { field: 'shipmentStatus', label: t('djs.warehouse.shipment.shipmentStatus'), type: 'select', multiple: true, dictType: 'djs_shipment_status' }
 ]);
+
+/** searchModel → 后端 query：R70 多选字段转复数数组参数（productTypes / shipmentStatuses，后端 IN），删单值发送。 */
+function buildQuery(): ShipmentQuery {
+  const productTypes = Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType : undefined;
+  const shipmentStatuses = Array.isArray(searchModel.shipmentStatus) && searchModel.shipmentStatus.length ? searchModel.shipmentStatus : undefined;
+  return {
+    shipmentNo: searchModel.shipmentNo || undefined,
+    demandId: searchModel.demandId || undefined,
+    storeId: searchModel.storeId || undefined,
+    productTypes,
+    shipmentStatuses
+  };
+}
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'shipmentNo', label: t('djs.warehouse.shipment.shipmentNo'), minWidth: 160 },
@@ -78,7 +92,7 @@ async function loadList() {
   loading.value = true;
   try {
     const params: ShipmentQuery = {
-      ...searchModel,
+      ...buildQuery(),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -110,7 +124,7 @@ function handlePageChange(pn: number, ps: number) {
 }
 
 function handleExport() {
-  proxy?.download('/djs/warehouse/shipment/export', { ...searchModel }, `发货流水_${new Date().getTime()}.xlsx`);
+  proxy?.download('/djs/warehouse/shipment/export', buildQuery(), `发货流水_${new Date().getTime()}.xlsx`);
 }
 
 onMounted(() => {

@@ -28,6 +28,9 @@
               v-model="innerModel[field.field]"
               :placeholder="field.placeholder ?? `${t('biz.table.search.selectPrefix')}${field.label}`"
               :clearable="field.clearable ?? true"
+              :multiple="field.multiple ?? false"
+              :collapse-tags="field.multiple ? true : undefined"
+              :collapse-tags-tooltip="field.multiple ? true : undefined"
               filterable
               :style="resolveWidth(field.width ?? 200)"
             >

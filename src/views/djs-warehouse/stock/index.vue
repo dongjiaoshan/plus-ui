@@ -63,10 +63,12 @@ const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
-  belongType: undefined,
+  // 归属类型多选（R70，djs_belong_type 10 项 > 2 → 多选）
+  belongType: [],
   earNo: undefined,
   blockNo: undefined,
-  locationId: undefined
+  // 库位多选（R70，库位实体下拉天然 > 2 → 多选）
+  locationId: []
 });
 
 /** 库位下拉选项（按 id/locationName 拉取，供搜索精确过滤 locationId）。 */
@@ -75,10 +77,10 @@ const locationOptions = ref<Array<{ label: string; value: string | number }>>([]
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('stock.field.productName'), type: 'input' },
   // 归属类型搜索（row152-1，后端 LocationStockQuery 需关联 product 表按 belong_type 过滤）
-  { field: 'belongType', label: t('stock.field.belongType'), type: 'select', dictType: 'djs_belong_type', clearable: true },
+  { field: 'belongType', label: t('stock.field.belongType'), type: 'select', multiple: true, dictType: 'djs_belong_type', clearable: true },
   { field: 'earNo', label: t('stock.field.earNo'), type: 'input' },
   { field: 'blockNo', label: t('stock.field.blockNo'), type: 'input' },
-  { field: 'locationId', label: t('stock.field.locationName'), type: 'select', options: locationOptions.value, clearable: true }
+  { field: 'locationId', label: t('stock.field.locationName'), type: 'select', multiple: true, options: locationOptions.value, clearable: true }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -113,10 +115,11 @@ async function fetchList() {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       productName: searchModel.productName || undefined,
-      belongType: searchModel.belongType || undefined,
+      // R70 多选：归属类型 / 库位发复数数组（删单值发送）
+      belongTypes: Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType : undefined,
       earNo: searchModel.earNo || undefined,
       blockNo: searchModel.blockNo || undefined,
-      locationId: searchModel.locationId || undefined
+      locationIds: Array.isArray(searchModel.locationId) && searchModel.locationId.length ? searchModel.locationId : undefined
     };
     const res = await listStock(query);
     list.value = (res.rows ?? res.data ?? []) as LocationStockVO[];
@@ -146,6 +149,9 @@ function handleSearch(payload: Record<string, any>) {
 }
 function handleReset() {
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
+  // 多选字段重置成空数组（el-select 多选）
+  searchModel.belongType = [];
+  searchModel.locationId = [];
   pageNum.value = 1;
   fetchList();
 }
@@ -159,10 +165,11 @@ function handleExport() {
     'djs/warehouse/stock/export',
     {
       productName: searchModel.productName || undefined,
-      belongType: searchModel.belongType || undefined,
+      // R70 多选：导出走同一 buildQueryWrapper，发复数数组
+      belongTypes: Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType : undefined,
       earNo: searchModel.earNo || undefined,
       blockNo: searchModel.blockNo || undefined,
-      locationId: searchModel.locationId || undefined
+      locationIds: Array.isArray(searchModel.locationId) && searchModel.locationId.length ? searchModel.locationId : undefined
     },
     `stock_${new Date().getTime()}.xlsx`
   );

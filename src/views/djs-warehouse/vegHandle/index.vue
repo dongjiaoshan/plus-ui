@@ -78,7 +78,8 @@ const recordsDialogVisible = ref(false);
 const searchModel = reactive<Record<string, any>>({
   plotId: undefined,
   cropId: undefined,
-  handleStatus: undefined,
+  // R70 处理状态下拉多选 → 默认空数组
+  handleStatus: [],
   pickStartTimeFrom: undefined,
   pickStartTimeTo: undefined
 });
@@ -86,8 +87,20 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'plotId', label: t('djs.warehouse.vegHandle.plot'), type: 'input' },
   { field: 'cropId', label: t('djs.warehouse.vegHandle.crop'), type: 'input' },
-  { field: 'handleStatus', label: t('djs.warehouse.vegHandle.handleStatus'), type: 'select', dictType: 'djs_veg_handle_status' }
+  { field: 'handleStatus', label: t('djs.warehouse.vegHandle.handleStatus'), type: 'select', multiple: true, dictType: 'djs_veg_handle_status' }
 ]);
+
+/** searchModel → 后端 query：R70 handleStatus 多选转复数 handleStatuses（后端 IN），删单值发送。 */
+function buildQuery(): VegHandleQuery {
+  const handleStatuses = Array.isArray(searchModel.handleStatus) && searchModel.handleStatus.length ? searchModel.handleStatus : undefined;
+  return {
+    plotId: searchModel.plotId || undefined,
+    cropId: searchModel.cropId || undefined,
+    handleStatuses,
+    pickStartTimeFrom: searchModel.pickStartTimeFrom || undefined,
+    pickStartTimeTo: searchModel.pickStartTimeTo || undefined
+  };
+}
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'plotName', label: t('djs.warehouse.vegHandle.plot'), minWidth: 120 },
@@ -108,7 +121,7 @@ async function loadList() {
   loading.value = true;
   try {
     const params: VegHandleQuery = {
-      ...searchModel,
+      ...buildQuery(),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -140,7 +153,7 @@ function handlePageChange(pn: number, ps: number) {
 }
 
 function handleExport() {
-  proxy?.download('/djs/warehouse/vegHandle/export', { ...searchModel }, `毛菜处理_${new Date().getTime()}.xlsx`);
+  proxy?.download('/djs/warehouse/vegHandle/export', buildQuery(), `毛菜处理_${new Date().getTime()}.xlsx`);
 }
 
 async function handleRowClick(row: VegetableHandleVO) {

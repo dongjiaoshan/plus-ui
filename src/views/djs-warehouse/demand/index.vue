@@ -61,7 +61,7 @@ import DemandCart from './components/DemandCart.vue';
 import DemandConfirmDrawer from './components/DemandConfirmDrawer.vue';
 import DemandKpiBar from './components/DemandKpiBar.vue';
 import { listDemandGroup } from '@/api/djs-warehouse/demand';
-import type { DemandGroupStatusCode, DemandGroupVO, DemandManageQuery } from '@/api/djs-warehouse/demand/types';
+import type { DemandGroupStatusCode, DemandGroupVO, DemandManageQuery, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
@@ -93,9 +93,10 @@ const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
-  productType: undefined,
-  storeId: undefined,
-  demandStatus: undefined,
+  // R70 产品类型 / 需求门店 / 需求状态下拉多选 → 默认空数组
+  productType: [],
+  storeId: [],
+  demandStatus: [],
   demandDateRange: undefined
 });
 
@@ -106,12 +107,13 @@ const searchModel = reactive<Record<string, any>>({
  */
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('demand.field.searchProductName'), type: 'input' },
-  { field: 'productType', label: t('demand.field.productType'), type: 'select', dictType: 'djs_demand_product_type' },
-  { field: 'storeId', label: t('demand.field.storeName'), type: 'select', options: storeOptions.value },
+  { field: 'productType', label: t('demand.field.productType'), type: 'select', multiple: true, dictType: 'djs_demand_product_type' },
+  { field: 'storeId', label: t('demand.field.storeName'), type: 'select', multiple: true, options: storeOptions.value },
   {
     field: 'demandStatus',
     label: t('demand.field.demandStatus'),
     type: 'select',
+    multiple: true,
     options: [
       { label: t('demand.groupStatus.PENDING'), value: 'PENDING' },
       { label: t('demand.groupStatus.ALL_CONFIRMED'), value: 'ALL_CONFIRMED' },
@@ -200,13 +202,20 @@ async function fetchList() {
   loading.value = true;
   try {
     const range = searchModel.demandDateRange as [string, string] | undefined;
+    // R70 多选 → 复数数组参数（productTypes / storeIds / demandStatuses，后端 IN）；删单值发送，单值 fallback 在后端保留
+    const productTypes =
+      Array.isArray(searchModel.productType) && searchModel.productType.length ? (searchModel.productType as DemandProductType[]) : undefined;
+    const storeIds =
+      Array.isArray(searchModel.storeId) && searchModel.storeId.length ? searchModel.storeId.map((v: number | string) => String(v)) : undefined;
+    const demandStatuses =
+      Array.isArray(searchModel.demandStatus) && searchModel.demandStatus.length ? (searchModel.demandStatus as DemandGroupStatusCode[]) : undefined;
     const query: DemandManageQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       productName: searchModel.productName,
-      productType: searchModel.productType,
-      storeId: searchModel.storeId != null && searchModel.storeId !== '' ? String(searchModel.storeId) : undefined,
-      demandStatus: searchModel.demandStatus,
+      productTypes,
+      storeIds,
+      demandStatuses,
       beginDate: range && range[0] ? range[0] : undefined,
       endDate: range && range[1] ? range[1] : undefined
     };

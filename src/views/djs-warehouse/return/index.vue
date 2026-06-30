@@ -18,12 +18,13 @@
       row-key="_rowKey"
       perm-prefix="djs:warehouse:return"
       :show-add="false"
-      :show-export="false"
+      show-export
       :show-batch-del="false"
       :show-row-edit="false"
       :show-row-del="false"
       @search="handleSearch"
       @reset="handleReset"
+      @export="handleExport"
       @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
     >
       <template #action="{ row }">
@@ -75,7 +76,7 @@ import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
-import { parseTime } from '@/utils/ruoyi';
+import { lastMonthRange } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -92,12 +93,12 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-// 退货记录默认查当天（退回日期 daterange 回显 [今天, 今天]）；重置清空即展示全部
-const today = parseTime(new Date(), '{y}-{m}-{d}') as string;
+// 退货记录默认查近一月（退回日期 daterange 回显 [今天-1月, 今天]）；重置清空即展示全部
+// R70 退回产品 / 退回门店下拉多选 → 默认空数组
 const searchModel = reactive<Record<string, any>>({
-  returnDate: [today, today],
-  productId: undefined,
-  storeId: undefined
+  returnDate: lastMonthRange(),
+  productId: [],
+  storeId: []
 });
 
 // 门店 / 产品 下拉数据源（搜索筛选用，onMounted 加载）
@@ -109,8 +110,8 @@ const storeSearchOptions = computed(() => storeOptions.value.map((s) => ({ label
 // 筛选：退回日期 / 退回产品 / 退回门店
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'returnDate', label: t('djs.warehouse.return.returnDate'), type: 'daterange' },
-  { field: 'productId', label: t('djs.warehouse.return.returnProduct'), type: 'select', options: productSearchOptions.value },
-  { field: 'storeId', label: t('djs.warehouse.return.storeId'), type: 'select', options: storeSearchOptions.value }
+  { field: 'productId', label: t('djs.warehouse.return.returnProduct'), type: 'select', multiple: true, options: productSearchOptions.value },
+  { field: 'storeId', label: t('djs.warehouse.return.storeId'), type: 'select', multiple: true, options: storeSearchOptions.value }
 ]);
 
 // 外层汇总列：退回日期/退回门店/品种数/退回重量/确认重量/重量差异/确认时间/确认人
@@ -170,11 +171,16 @@ async function loadDetailRows() {
 }
 
 // searchModel → 后端 query（退回日期 daterange 拆成 returnDateFrom/returnDateTo）
+// R70 退回产品 / 退回门店多选 → 复数 productIds / storeIds（后端 IN），删单值发送（单值 fallback 在后端保留）
 function buildQueryParams(): ReturnProductQuery {
   const range = (searchModel.returnDate as string[] | undefined) ?? [];
+  const productIds =
+    Array.isArray(searchModel.productId) && searchModel.productId.length ? searchModel.productId.map((v: number | string) => String(v)) : undefined;
+  const storeIds =
+    Array.isArray(searchModel.storeId) && searchModel.storeId.length ? searchModel.storeId.map((v: number | string) => String(v)) : undefined;
   return {
-    productId: searchModel.productId || undefined,
-    storeId: searchModel.storeId || undefined,
+    productIds,
+    storeIds,
     returnDateFrom: range[0] || undefined,
     returnDateTo: range[1] || undefined
   };
@@ -217,6 +223,11 @@ function handlePageChange(pn: number, ps: number) {
   pageNum.value = pn;
   pageSize.value = ps;
   loadList();
+}
+
+// 导出外层「门店 + 当日」汇总（与列表同口径，走 store-daily 导出端点）
+function handleExport() {
+  proxy?.download('djs/store/return/store-daily/export', buildQueryParams(), `退货记录_${new Date().getTime()}.xlsx`);
 }
 
 onMounted(() => {

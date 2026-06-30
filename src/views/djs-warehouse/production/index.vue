@@ -13,12 +13,13 @@
       :page-size="pageSize"
       row-key="rowKey"
       perm-prefix="djs:warehouse:production"
-      :show-export="false"
+      show-export
       :show-add="false"
       :show-batch-del="false"
       @search="handleSearch"
       @reset="handleReset"
       @page-change="handlePageChange"
+      @export="handleExport"
     >
       <!-- 损坏量：>0 红色（标损件数），=0 灰色 -->
       <template #cell-damageCount="{ row }">
@@ -45,9 +46,11 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import ProductionItemDialog from './components/ProductionItemDialog.vue';
 import { listProduction } from '@/api/djs-warehouse/production';
 import type { ProductProductionGroupVO, ProductProductionQuery } from '@/api/djs-warehouse/production/types';
+import { lastMonthRange } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
 const itemDialogRef = ref<{ open: (row: ProductProductionGroupVO) => void }>();
@@ -58,26 +61,19 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-/** 今天 yyyy-MM-dd（生产日期范围默认值：今天~今天） */
-function todayStr(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
-}
-
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
-  belongType: undefined,
-  // 生产日期范围 [start, end]（daterange，默认今天~今天）；@search 时拆成 produceDateFrom/To
-  produceDateRange: [todayStr(), todayStr()],
-  // 是否存在损坏（djs_yes_no，默认全部=undefined）
+  // 产品品类多选（R70，djs_belong_type 10 项 > 2 → 多选）
+  belongType: [],
+  // 生产日期范围 [start, end]（daterange，默认近一月）；@search 时拆成 produceDateFrom/To
+  produceDateRange: lastMonthRange(),
+  // 是否存在损坏（djs_yes_no 二元，保持单选；默认全部=undefined）
   hasDamage: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('djs.warehouse.production.column.productName'), type: 'input' },
-  { field: 'belongType', label: t('djs.warehouse.production.column.belongType'), type: 'select', dictType: 'djs_belong_type' },
+  { field: 'belongType', label: t('djs.warehouse.production.column.belongType'), type: 'select', multiple: true, dictType: 'djs_belong_type' },
   { field: 'produceDateRange', label: t('djs.warehouse.production.column.produceDate'), type: 'daterange' },
   // 是否存在损坏（默认全部）
   { field: 'hasDamage', label: t('djs.warehouse.production.column.hasDamage'), type: 'select', dictType: 'djs_yes_no' }
@@ -86,7 +82,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'produceDate', label: '生产日期', minWidth: 120 },
   { prop: 'productName', label: '产品名称', minWidth: 180 },
-  { prop: 'belongType', label: '产品品类', minWidth: 110, dictType: 'djs_belong_type' },
+  { prop: 'belongType', label: t('djs.warehouse.production.column.belongType'), minWidth: 110, dictType: 'djs_belong_type' },
   {
     prop: 'produceQty',
     label: '生产量',
@@ -99,9 +95,35 @@ const columns = computed<BizTableColumn[]>(() => [
       return String(Math.round(Number(r.produceQty)));
     }
   },
-  { prop: 'itemCount', label: t('djs.warehouse.production.column.itemCount'), minWidth: 90, align: 'center' },
+  // 产品单位：组内取任一 product_unit（后端 MAX 兜底）
+  {
+    prop: 'productUnit',
+    label: t('djs.warehouse.production.column.productUnit'),
+    minWidth: 90,
+    align: 'center',
+    formatter: (row: BizRow) => (row as ProductProductionGroupVO).productUnit || '-'
+  },
   // 损坏量：该组已标损坏件数（damageCount），>0 红色显示（走 cell-damageCount slot 上色）
   { prop: 'damageCount', label: t('djs.warehouse.production.column.damageCount'), minWidth: 100, align: 'center' },
+  // 原材料消耗量：该组 SUM(material_consume)（无配料则 0/空）
+  {
+    prop: 'materialConsume',
+    label: t('djs.warehouse.production.column.materialConsumeQty'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (row: BizRow) => {
+      const r = row as ProductProductionGroupVO;
+      return r.materialConsume === undefined || r.materialConsume === null ? '-' : String(r.materialConsume);
+    }
+  },
+  // 原材料单位：material_id → product_unit（后端聚合回填）
+  {
+    prop: 'materialUnit',
+    label: t('djs.warehouse.production.column.materialUnit'),
+    minWidth: 100,
+    align: 'center',
+    formatter: (row: BizRow) => (row as ProductProductionGroupVO).materialUnit || '-'
+  },
   // 需求门店数：该产品当前有未发货需求的门店家数（后端 ProductProductionGroupVo.storeDemandCount）
   { prop: 'storeDemandCount', label: t('djs.warehouse.production.column.storeDemandCount'), minWidth: 110, align: 'center' }
 ]);
@@ -113,7 +135,8 @@ async function loadList() {
     const range = Array.isArray(searchModel.produceDateRange) ? searchModel.produceDateRange : [];
     const params: ProductProductionQuery = {
       productName: searchModel.productName || undefined,
-      belongType: searchModel.belongType || undefined,
+      // R70 产品品类多选 → belongTypes 数组（删单值 belongType 发送）
+      belongTypes: Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType : undefined,
       produceDateFrom: range[0] || undefined,
       produceDateTo: range[1] || undefined,
       hasDamage:
@@ -141,10 +164,11 @@ function handleSearch(payload?: Record<string, any>) {
 
 function handleReset() {
   searchModel.productName = undefined;
-  searchModel.belongType = undefined;
+  // 多选重置成空数组（el-select 多选）
+  searchModel.belongType = [];
   searchModel.hasDamage = undefined;
-  // 生产日期范围重置回默认今天~今天（非清空）
-  searchModel.produceDateRange = [todayStr(), todayStr()];
+  // 生产日期范围重置回默认近一月（非清空）
+  searchModel.produceDateRange = lastMonthRange();
   pageNum.value = 1;
   loadList();
 }
@@ -153,6 +177,26 @@ function handlePageChange(pn: number, ps: number) {
   pageNum.value = pn;
   pageSize.value = ps;
   loadList();
+}
+
+/** 导出：按当前搜索条件导出逐件生产记录 Excel（后端 queryList，含产品/原材料单位列）。 */
+function handleExport() {
+  const range = Array.isArray(searchModel.produceDateRange) ? searchModel.produceDateRange : [];
+  proxy?.download(
+    'djs/warehouse/production/export',
+    {
+      productName: searchModel.productName || undefined,
+      // R70 产品品类多选 → belongTypes 数组（导出走同一 buildWrapper，删单值 belongType 发送）
+      belongTypes: Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType : undefined,
+      produceDateFrom: range[0] || undefined,
+      produceDateTo: range[1] || undefined,
+      hasDamage:
+        searchModel.hasDamage === undefined || searchModel.hasDamage === null || searchModel.hasDamage === ''
+          ? undefined
+          : Number(searchModel.hasDamage)
+    },
+    `产品生产_${Date.now()}.xlsx`
+  );
 }
 
 /** 查看 → 下钻该生产批次（生产日期 + 产品）的逐件产品列表 */

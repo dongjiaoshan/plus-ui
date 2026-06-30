@@ -63,6 +63,27 @@ export const addDateRange = (params: any, dateRange: any[], propName?: string) =
   return search;
 };
 
+/**
+ * 默认日期范围 [今天-1个月, 今天]（"近一个月"）。返回 'YYYY-MM-DD' 字符串二元组，
+ * 供搜索表单 daterange 初值用。不引 dayjs（plus-ui 未依赖），用原生 Date + parseTime。
+ */
+export const lastMonthRange = (): [string, string] => {
+  const end = new Date();
+  const start = new Date();
+  start.setMonth(start.getMonth() - 1);
+  return [parseTime(start, '{y}-{m}-{d}') as string, parseTime(end, '{y}-{m}-{d}') as string];
+};
+
+/**
+ * 默认日期范围 [今天, 今天+1个月]（"当天至未来一个月"）。返回 'YYYY-MM-DD' 字符串二元组。
+ */
+export const nextMonthRange = (): [string, string] => {
+  const start = new Date();
+  const end = new Date();
+  end.setMonth(end.getMonth() + 1);
+  return [parseTime(start, '{y}-{m}-{d}') as string, parseTime(end, '{y}-{m}-{d}') as string];
+};
+
 // 回显数据字典
 export const selectDictLabel = (datas: any, value: number | string) => {
   if (value === undefined) {

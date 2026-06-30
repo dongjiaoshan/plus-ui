@@ -46,8 +46,14 @@ export interface PurchaseInProductQuery {
   productName?: string;
   /** djs_buy_class 字典 value */
   buyClass?: string;
+  /** djs_buy_class 字典 value 多选 */
+  buyClasses?: string[];
   supplierId?: string;
+  /** 供应商 ID 多选 */
+  supplierIds?: string[];
   storeLocationId?: string;
+  /** 存储库位 ID 多选 */
+  storeLocationIds?: string[];
   pageNum?: number;
   pageSize?: number;
 }

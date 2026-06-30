@@ -84,9 +84,9 @@ const locationOptions = ref<Array<{ label: string; value: string | number }>>([]
 const searchModel = reactive<Record<string, any>>({
   dateRange: undefined,
   productName: undefined,
-  productType: undefined,
-  flowType: undefined,
-  warehouseId: undefined,
+  productType: [],
+  flowType: [],
+  warehouseId: [],
   operatorName: undefined,
   blockNo: undefined,
   earNo: undefined
@@ -95,9 +95,9 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('djs.warehouse.flowIn.flowDate'), type: 'daterange' },
   { field: 'productName', label: t('djs.warehouse.flowIn.productName'), type: 'input' },
-  { field: 'productType', label: t('djs.warehouse.flowIn.productType'), type: 'select', dictType: 'djs_product_type' },
-  { field: 'flowType', label: t('djs.warehouse.flowIn.inMode'), type: 'select', options: inModeOptions.value },
-  { field: 'warehouseId', label: t('djs.warehouse.flowIn.location'), type: 'select', options: locationOptions.value },
+  { field: 'productType', label: t('djs.warehouse.flowIn.productType'), type: 'select', multiple: true, dictType: 'djs_product_type' },
+  { field: 'flowType', label: t('djs.warehouse.flowIn.inMode'), type: 'select', multiple: true, options: inModeOptions.value },
+  { field: 'warehouseId', label: t('djs.warehouse.flowIn.location'), type: 'select', multiple: true, options: locationOptions.value },
   { field: 'operatorName', label: t('djs.warehouse.flowIn.operator'), type: 'input' },
   { field: 'blockNo', label: t('djs.warehouse.flowIn.blockNo'), type: 'input' },
   { field: 'earNo', label: t('djs.warehouse.flowIn.earNo'), type: 'input' }
@@ -124,9 +124,10 @@ function buildQuery(): StockFlowQuery {
   return {
     productId: drillProductId.value || undefined,
     productName: searchModel.productName || undefined,
-    productType: searchModel.productType === undefined || searchModel.productType === '' ? undefined : Number(searchModel.productType),
-    flowType: searchModel.flowType || undefined,
-    warehouseId: searchModel.warehouseId ?? undefined,
+    productTypes:
+      Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType.map((v: any) => Number(v)) : undefined,
+    flowTypes: Array.isArray(searchModel.flowType) && searchModel.flowType.length ? searchModel.flowType : undefined,
+    warehouseIds: Array.isArray(searchModel.warehouseId) && searchModel.warehouseId.length ? searchModel.warehouseId : undefined,
     operatorName: searchModel.operatorName || undefined,
     blockNo: searchModel.blockNo || undefined,
     earNo: searchModel.earNo || undefined,

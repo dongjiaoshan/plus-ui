@@ -51,6 +51,8 @@ export interface VegHandleQuery {
   cropId?: number | string;
   plantingRecordId?: number | string;
   handleStatus?: string;
+  /** 处理状态多选（R70 状态下拉多选）。 */
+  handleStatuses?: string[];
   pickStartTimeFrom?: string;
   pickStartTimeTo?: string;
   pageNum?: number;

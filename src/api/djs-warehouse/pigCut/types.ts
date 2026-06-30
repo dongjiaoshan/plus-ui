@@ -34,6 +34,8 @@ export interface PigCutRecordQuery {
   barId?: string;
   earNo?: string;
   cutStatus?: string;
+  /** 分割状态多选（R70 状态下拉多选）。 */
+  cutStatuses?: string[];
   operatorId?: number;
   pickupTimeFrom?: string;
   pickupTimeTo?: string;

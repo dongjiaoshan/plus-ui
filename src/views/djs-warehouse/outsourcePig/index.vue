@@ -58,6 +58,7 @@ import { listOutsourcePig, delOutsourcePig } from '@/api/djs-warehouse/outsource
 import type { OutsourcePigQuery, OutsourcePigVO } from '@/api/djs-warehouse/outsourcePig/types';
 import { listSupplier } from '@/api/djs-common/supplier';
 import { listUser } from '@/api/system/user';
+import { lastMonthRange } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -73,20 +74,35 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
-  purchaseDate: undefined,
+  // 采购日期范围（daterange，默认近一月；fetchList 拆成 From/To）
+  purchaseDateRange: lastMonthRange(),
   arriveTime: undefined,
-  supplierId: undefined,
-  buyer: undefined
+  supplierId: [],
+  buyer: []
 });
 
 const supplierOptions = ref<Array<{ label: string; value: string | number }>>([]);
 const buyerOptions = ref<Array<{ label: string; value: string | number }>>([]);
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'purchaseDate', label: t('djs.warehouse.outsourcePig.column.purchaseDate'), type: 'date', clearable: true },
+  { field: 'purchaseDateRange', label: t('djs.warehouse.outsourcePig.column.purchaseDate'), type: 'daterange', clearable: true },
   { field: 'arriveTime', label: t('djs.warehouse.outsourcePig.column.arriveTime'), type: 'date', clearable: true },
-  { field: 'supplierId', label: t('djs.warehouse.outsourcePig.column.supplier'), type: 'select', options: supplierOptions.value, clearable: true },
-  { field: 'buyer', label: t('djs.warehouse.outsourcePig.column.buyer'), type: 'select', options: buyerOptions.value, clearable: true }
+  {
+    field: 'supplierId',
+    label: t('djs.warehouse.outsourcePig.column.supplier'),
+    type: 'select',
+    options: supplierOptions.value,
+    clearable: true,
+    multiple: true
+  },
+  {
+    field: 'buyer',
+    label: t('djs.warehouse.outsourcePig.column.buyer'),
+    type: 'select',
+    options: buyerOptions.value,
+    clearable: true,
+    multiple: true
+  }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -101,13 +117,16 @@ const columns = computed<BizTableColumn[]>(() => [
 async function fetchList() {
   loading.value = true;
   try {
+    const range = (searchModel.purchaseDateRange as string[] | undefined) ?? [];
     const query: OutsourcePigQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
-      purchaseDate: searchModel.purchaseDate || undefined,
+      purchaseDateFrom: range[0] || undefined,
+      purchaseDateTo: range[1] || undefined,
       arriveTime: searchModel.arriveTime || undefined,
-      supplierId: searchModel.supplierId || undefined,
-      buyer: searchModel.buyer || undefined
+      supplierIds:
+        Array.isArray(searchModel.supplierId) && searchModel.supplierId.length ? searchModel.supplierId.map((v: any) => String(v)) : undefined,
+      buyers: Array.isArray(searchModel.buyer) && searchModel.buyer.length ? searchModel.buyer.map((v: any) => String(v)) : undefined
     };
     const res = await listOutsourcePig(query);
     list.value = (res.rows ?? res.data ?? []) as OutsourcePigVO[];
@@ -164,13 +183,16 @@ async function handleDel(row: BizRow) {
   fetchList();
 }
 function handleExport() {
+  const range = (searchModel.purchaseDateRange as string[] | undefined) ?? [];
   proxy?.download(
     'djs/warehouse/outsourcePig/export',
     {
-      purchaseDate: searchModel.purchaseDate || undefined,
+      purchaseDateFrom: range[0] || undefined,
+      purchaseDateTo: range[1] || undefined,
       arriveTime: searchModel.arriveTime || undefined,
-      supplierId: searchModel.supplierId || undefined,
-      buyer: searchModel.buyer || undefined
+      supplierIds:
+        Array.isArray(searchModel.supplierId) && searchModel.supplierId.length ? searchModel.supplierId.map((v: any) => String(v)) : undefined,
+      buyers: Array.isArray(searchModel.buyer) && searchModel.buyer.length ? searchModel.buyer.map((v: any) => String(v)) : undefined
     },
     `outsourcePig_${Date.now()}.xlsx`
   );

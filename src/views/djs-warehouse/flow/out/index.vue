@@ -46,7 +46,7 @@ const FLOW_TYPE_OUT_VALUES = [
   'dept_pick_out',
   'prod_pick_out',
   'feed_out',
-  'loss',
+  // 'loss'（领用后损耗）不计为出库 —— 后端 queryOutList 已排除，下拉也不提供（R72）
   'cut_out',
   'slaughter_burn',
   'ship_out',
@@ -80,10 +80,10 @@ const locationOptions = ref<Array<{ label: string; value: string | number }>>([]
 const searchModel = reactive<Record<string, any>>({
   dateRange: undefined,
   productName: undefined,
-  productType: undefined,
-  flowType: undefined,
-  warehouseId: undefined,
-  stockOutDest: undefined,
+  productType: [],
+  flowType: [],
+  warehouseId: [],
+  stockOutDest: [],
   operatorName: undefined,
   blockNo: undefined,
   earNo: undefined
@@ -92,10 +92,10 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('djs.warehouse.flowOut.flowDate'), type: 'daterange' },
   { field: 'productName', label: t('djs.warehouse.flowOut.productName'), type: 'input' },
-  { field: 'productType', label: t('djs.warehouse.flowOut.productType'), type: 'select', dictType: 'djs_product_type' },
-  { field: 'flowType', label: t('djs.warehouse.flowOut.outMode'), type: 'select', options: outModeOptions.value },
-  { field: 'warehouseId', label: t('djs.warehouse.flowOut.location'), type: 'select', options: locationOptions.value },
-  { field: 'stockOutDest', label: t('djs.warehouse.flowOut.stockOutDest'), type: 'select', dictType: 'djs_stock_out_dest' },
+  { field: 'productType', label: t('djs.warehouse.flowOut.productType'), type: 'select', multiple: true, dictType: 'djs_product_type' },
+  { field: 'flowType', label: t('djs.warehouse.flowOut.outMode'), type: 'select', multiple: true, options: outModeOptions.value },
+  { field: 'warehouseId', label: t('djs.warehouse.flowOut.location'), type: 'select', multiple: true, options: locationOptions.value },
+  { field: 'stockOutDest', label: t('djs.warehouse.flowOut.stockOutDest'), type: 'select', multiple: true, dictType: 'djs_stock_out_dest' },
   { field: 'operatorName', label: t('djs.warehouse.flowOut.operator'), type: 'input' },
   { field: 'blockNo', label: t('djs.warehouse.flowOut.blockNo'), type: 'input' },
   { field: 'earNo', label: t('djs.warehouse.flowOut.earNo'), type: 'input' }
@@ -123,10 +123,11 @@ function buildQuery(): StockFlowQuery {
   return {
     productId: drillProductId.value || undefined,
     productName: searchModel.productName || undefined,
-    productType: searchModel.productType === undefined || searchModel.productType === '' ? undefined : Number(searchModel.productType),
-    flowType: searchModel.flowType || undefined,
-    warehouseId: searchModel.warehouseId ?? undefined,
-    stockOutDest: searchModel.stockOutDest || undefined,
+    productTypes:
+      Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType.map((v: any) => Number(v)) : undefined,
+    flowTypes: Array.isArray(searchModel.flowType) && searchModel.flowType.length ? searchModel.flowType : undefined,
+    warehouseIds: Array.isArray(searchModel.warehouseId) && searchModel.warehouseId.length ? searchModel.warehouseId : undefined,
+    stockOutDests: Array.isArray(searchModel.stockOutDest) && searchModel.stockOutDest.length ? searchModel.stockOutDest : undefined,
     operatorName: searchModel.operatorName || undefined,
     blockNo: searchModel.blockNo || undefined,
     earNo: searchModel.earNo || undefined,

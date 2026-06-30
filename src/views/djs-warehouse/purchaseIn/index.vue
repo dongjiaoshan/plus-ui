@@ -18,18 +18,14 @@
       :show-batch-del="false"
       :show-row-edit="false"
       :show-row-del="false"
+      show-export
       @search="handleSearch"
       @reset="handleReset"
+      @export="handleExport"
       @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
     >
       <template #cell-productThumb="{ row }">
-        <ImagePreview
-          v-if="row.imageUrl"
-          :width="40"
-          :height="40"
-          :src="row.imageUrl"
-          :preview-src-list="[row.imageUrl]"
-        />
+        <ImagePreview v-if="row.imageUrl" :width="40" :height="40" :src="row.imageUrl" :preview-src-list="[row.imageUrl]" />
         <span v-else class="text-gray-400">—</span>
       </template>
 
@@ -67,6 +63,7 @@ import { listLocation } from '@/api/djs-warehouse/location';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
 
@@ -82,16 +79,16 @@ const locationOptions = ref<Array<{ label: string; value: string }>>([]);
 
 const searchModel = reactive<Record<string, any>>({
   productName: undefined,
-  buyClass: undefined,
-  supplierId: undefined,
-  storeLocationId: undefined
+  buyClass: [],
+  supplierId: [],
+  storeLocationId: []
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('djs.warehouse.purchaseIn.productName'), type: 'input' },
-  { field: 'buyClass', label: t('djs.warehouse.purchaseIn.buyClass'), type: 'select', dictType: 'djs_buy_class' },
-  { field: 'supplierId', label: t('djs.warehouse.purchaseIn.supplier'), type: 'select', options: supplierOptions.value },
-  { field: 'storeLocationId', label: t('djs.warehouse.purchaseIn.storeLocation'), type: 'select', options: locationOptions.value }
+  { field: 'buyClass', label: t('djs.warehouse.purchaseIn.buyClass'), type: 'select', dictType: 'djs_buy_class', multiple: true },
+  { field: 'supplierId', label: t('djs.warehouse.purchaseIn.supplier'), type: 'select', options: supplierOptions.value, multiple: true },
+  { field: 'storeLocationId', label: t('djs.warehouse.purchaseIn.storeLocation'), type: 'select', options: locationOptions.value, multiple: true }
 ]);
 
 /** BigDecimal→string 数量列渲染：Number() 防 "100.0001.000" 拼接，NaN/空兜底为 — */
@@ -105,23 +102,43 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productThumb', label: t('djs.warehouse.purchaseIn.productThumb'), width: 80, align: 'center' },
   { prop: 'productCode', label: t('djs.warehouse.purchaseIn.productCode'), width: 140, showOverflowTooltip: true },
   { prop: 'productName', label: t('djs.warehouse.purchaseIn.productName'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'productUnit', label: t('djs.warehouse.purchaseIn.unit'), width: 80, align: 'center' },
+  // row66：商品名称后新增「商品类别」列（字典 djs_buy_class）
+  { prop: 'buyClass', label: t('djs.warehouse.purchaseIn.buyClass'), width: 120, align: 'center', dictType: 'djs_buy_class' },
   { prop: 'productSpec', label: t('djs.warehouse.purchaseIn.productSpec'), width: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'storeLocationName', label: t('djs.warehouse.purchaseIn.storeLocation'), width: 140, align: 'center', showOverflowTooltip: true },
-  { prop: 'currentStock', label: t('djs.warehouse.purchaseIn.currentStock'), width: 110, align: 'center', formatter: (row) => fmtAmount(row.currentStock) },
+  // row66：当前库存列移到单位列前面
+  {
+    prop: 'currentStock',
+    label: t('djs.warehouse.purchaseIn.currentStock'),
+    width: 110,
+    align: 'center',
+    formatter: (row) => fmtAmount(row.currentStock)
+  },
+  { prop: 'productUnit', label: t('djs.warehouse.purchaseIn.unit'), width: 80, align: 'center' },
+  // row66：当月累计采购量列移到单位列后面
+  {
+    prop: 'monthInTotal',
+    label: t('djs.warehouse.purchaseIn.monthInTotal'),
+    width: 130,
+    align: 'center',
+    formatter: (row) => fmtAmount(row.monthInTotal)
+  },
   // row23：当前库存后新增供应商列（取商品配置的供应商）
   { prop: 'supplierName', label: t('djs.warehouse.purchaseIn.supplier'), width: 140, align: 'center', showOverflowTooltip: true },
   { prop: 'lastInTime', label: t('djs.warehouse.purchaseIn.lastInTime'), width: 170, align: 'center' },
-  { prop: 'lastPurchaserName', label: t('djs.warehouse.purchaseIn.lastPurchaser'), width: 110, align: 'center', showOverflowTooltip: true },
-  { prop: 'monthInTotal', label: t('djs.warehouse.purchaseIn.monthInTotal'), width: 130, align: 'center', formatter: (row) => fmtAmount(row.monthInTotal) }
+  { prop: 'lastPurchaserName', label: t('djs.warehouse.purchaseIn.lastPurchaser'), width: 110, align: 'center', showOverflowTooltip: true }
 ]);
 
 function buildQuery(): Omit<PurchaseInProductQuery, 'pageNum' | 'pageSize'> {
   return {
     productName: searchModel.productName || undefined,
-    buyClass: searchModel.buyClass || undefined,
-    supplierId: searchModel.supplierId ? String(searchModel.supplierId) : undefined,
-    storeLocationId: searchModel.storeLocationId ? String(searchModel.storeLocationId) : undefined
+    buyClasses: Array.isArray(searchModel.buyClass) && searchModel.buyClass.length ? searchModel.buyClass : undefined,
+    supplierIds:
+      Array.isArray(searchModel.supplierId) && searchModel.supplierId.length ? searchModel.supplierId.map((v: any) => String(v)) : undefined,
+    storeLocationIds:
+      Array.isArray(searchModel.storeLocationId) && searchModel.storeLocationId.length
+        ? searchModel.storeLocationId.map((v: any) => String(v))
+        : undefined
   };
 }
 
@@ -161,19 +178,23 @@ function handlePageChange(pn: number, ps: number) {
   loadList();
 }
 
+/** 导出（商品维度，按当前搜索条件）。 */
+function handleExport() {
+  proxy?.download('djs/warehouse/purchaseIn/productExport', buildQuery(), `采购入库_${Date.now()}.xlsx`);
+}
+
 // ---- 行操作 ----
 const productViewRef = ref<{ open: (id: number | string, productType?: number) => void }>();
-const inboundFormRef =
-  ref<{
-    open: (row: {
-      id: number | string;
-      productName?: string;
-      productUnit?: string;
-      storeLocationId?: string | number;
-      buyClass?: string;
-      supplierName?: string;
-    }) => void;
-  }>();
+const inboundFormRef = ref<{
+  open: (row: {
+    id: number | string;
+    productName?: string;
+    productUnit?: string;
+    storeLocationId?: string | number;
+    buyClass?: string;
+    supplierName?: string;
+  }) => void;
+}>();
 
 function handleView(row: BizRow) {
   // 外购商品 productType 固定 2（业务流水 tab）

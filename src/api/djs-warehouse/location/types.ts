@@ -46,6 +46,8 @@ export interface LocationInfoQuery extends PageQuery {
   locationCode?: string;
   locationName?: string;
   locationType?: string;
+  /** 库位类型多选（djs_location_type） */
+  locationTypes?: string[];
   locationStatus?: number;
 }
 

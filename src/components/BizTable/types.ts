@@ -37,6 +37,8 @@ export interface SearchFieldSchema {
   options?: Array<{ label: string; value: string | number }>;
   /** 是否可清空 */
   clearable?: boolean;
+  /** type=select 多选（R70 关键搜索筛选下拉多选）；多选时 v-model 值为数组，buildQuery 需按数组传后端 IN */
+  multiple?: boolean;
   /** 表单项宽度 */
   width?: string | number;
 }

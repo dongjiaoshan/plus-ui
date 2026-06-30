@@ -26,6 +26,7 @@
 
 <script setup name="DamageEvidenceForm" lang="ts">
 import OssUpload from '@/components/OssUpload/index.vue';
+import { listByIds as listOssByIds } from '@/api/system/oss';
 import { markProductionDamage } from '@/api/djs-warehouse/production';
 import type { ProductProductionVO } from '@/api/djs-warehouse/production/types';
 import { useI18n } from 'vue-i18n';
@@ -103,15 +104,29 @@ function onClosed() {
  * 打开弹框。
  * @param row 产品生产记录（is_damaged=1 → 修改模式，回填已有凭证 / 备注）
  */
-function open(row: ProductProductionVO) {
+async function open(row: ProductProductionVO) {
   currentId.value = String(row.id);
   isEdit.value = row.isDamaged === 1;
   form.remark = row.damageRemark ?? '';
-  // 修改模式回填已有凭证 ossId（CSV → string[]）；OssUpload v-model 直接吃 ossId 数组，
-  // 缩略图回显需父组件拿到 url 才能用 setExistingFiles，故此处仅回填 ossId（保留已传值），
-  // 用户重新选图覆盖即可。无 url 不调 setExistingFiles（避免传空 url 占位坏图）。
-  form.evidenceOssIds = row.damageEvidenceOssIds ? row.damageEvidenceOssIds.split(',').filter(Boolean) : [];
+  // 修改模式回填已有凭证 ossId（CSV → string[]）。OssUpload 不 watch v-model，编辑回显必须显式
+  // listByIds 拿 url 再 setExistingFiles，否则上传区空白、用户看不到/删不掉已有凭证图。
+  const ossIds = row.damageEvidenceOssIds ? row.damageEvidenceOssIds.split(',').filter(Boolean) : [];
+  form.evidenceOssIds = ossIds;
   visible.value = true;
+  await nextTick();
+  if (ossIds.length) {
+    try {
+      const ossRes = await listOssByIds(ossIds.join(','));
+      const items = (ossRes.data || []).map((o) => ({
+        ossId: String(o.ossId),
+        url: o.url,
+        originalName: o.originalName
+      }));
+      ossRef.value?.setExistingFiles(items);
+    } catch (e) {
+      console.warn('[DamageEvidenceForm] listOssByIds failed', e);
+    }
+  }
 }
 
 defineExpose({ open });

@@ -21,11 +21,14 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-todayPickWeight="{ row }">{{ row.todayPickWeight != null ? `${Number(row.todayPickWeight).toFixed(3)} kg` : '-' }}</template>
-      <template #cell-expectedYield="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(3)} kg` : '-' }}</template>
-      <template #cell-cumulativePickWeight="{ row }">
-        {{ row.cumulativePickWeight != null ? `${Number(row.cumulativePickWeight).toFixed(3)} kg` : '-' }}
-      </template>
+      <template #cell-todayPickWeight="{ row }">{{ fmtKg(row.todayPickWeight) }}</template>
+      <template #cell-saleWeight="{ row }">{{ fmtKg(row.saleWeight) }}</template>
+      <template #cell-vegFreshWeight="{ row }">{{ fmtKg(row.vegFreshWeight) }}</template>
+      <template #cell-platformWeight="{ row }">{{ fmtKg(row.platformWeight) }}</template>
+      <template #cell-lossWeight="{ row }">{{ fmtKg(row.lossWeight) }}</template>
+      <template #cell-feedWeight="{ row }">{{ fmtKg(row.feedWeight) }}</template>
+      <template #cell-expectedYield="{ row }">{{ fmtKg(row.expectedYield) }}</template>
+      <template #cell-cumulativePickWeight="{ row }">{{ fmtKg(row.cumulativePickWeight) }}</template>
     </BizTable>
   </div>
 </template>
@@ -63,9 +66,19 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropName', label: t('pickActivity.column.cropName'), minWidth: 130, showOverflowTooltip: true, align: 'center' },
   { prop: 'plotCount', label: t('pickActivity.column.plotCount'), minWidth: 120, align: 'center' },
   { prop: 'todayPickWeight', label: t('pickActivity.column.todayPickWeight'), minWidth: 150, align: 'right' },
+  { prop: 'saleWeight', label: t('pickActivity.column.saleWeight'), minWidth: 130, align: 'right' },
+  { prop: 'vegFreshWeight', label: t('pickActivity.column.vegFreshWeight'), minWidth: 150, align: 'right' },
+  { prop: 'platformWeight', label: t('pickActivity.column.platformWeight'), minWidth: 140, align: 'right' },
+  { prop: 'lossWeight', label: t('pickActivity.column.lossWeight'), minWidth: 120, align: 'right' },
+  { prop: 'feedWeight', label: t('pickActivity.column.feedWeight'), minWidth: 140, align: 'right' },
   { prop: 'expectedYield', label: t('pickActivity.column.expectedYield'), minWidth: 150, align: 'right' },
   { prop: 'cumulativePickWeight', label: t('pickActivity.column.cumulativePickWeight'), minWidth: 150, align: 'right' }
 ]);
+
+/** kg 格式化（null/undefined → '-'，否则保留 3 位 + 单位）。 */
+function fmtKg(v: number | null | undefined): string {
+  return v != null ? `${Number(v).toFixed(3)} kg` : '-';
+}
 
 /** daterange 字段绑成 [start, end] 数组，拆成 beginDate / endDate 传后端。 */
 function rangeOf(v: unknown): { begin?: string; end?: string } {

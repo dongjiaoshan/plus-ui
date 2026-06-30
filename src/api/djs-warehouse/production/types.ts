@@ -69,6 +69,10 @@ export interface ProductProductionGroupVO {
   productType?: number;
   produceQty: number;
   itemCount: number;
+  /** 原材料消耗量：该组 SUM(material_consume)（同产品当日累计消耗的来源原材料重量） */
+  materialConsume?: number;
+  /** 原材料单位：material_id → product_info.product_unit（后端聚合回填，无配料则空） */
+  materialUnit?: string;
   /** 需求门店数：该产品当前有未发货需求的门店家数（后端聚合返回，row114-3 待后端补 SQL） */
   storeDemandCount?: number;
   /** 损坏量：该组（同产品同生产日）已标损坏件数 SUM(is_damaged)（row50，>0 红色） */
@@ -82,6 +86,8 @@ export interface ProductProductionQuery {
   productId?: number | string;
   productType?: number;
   belongType?: string;
+  /** 产品品类多选（R70；非空时后端按 IN 过滤 product_info.belong_type，优先于单值 belongType）。 */
+  belongTypes?: string[];
   /** 产品序号：row115-1 改文本模糊搜索后透传字符串关键字（后端 product_sort LIKE） */
   productSort?: number | string;
   packStatus?: string;

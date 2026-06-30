@@ -27,11 +27,7 @@
         </span>
 
         <!-- 地块叶子：点整行即可勾选/取消；选中后内联设置 月份 / 上中下旬 / 种植班组 / 采收班组 -->
-        <span
-          v-else
-          class="plot-leaf flex items-center gap-x-3 py-1"
-          @click.stop="togglePlot(data.plot, !isSelected(data.plot.plotId))"
-        >
+        <span v-else class="plot-leaf flex items-center gap-x-3 py-1" @click.stop="togglePlot(data.plot, !isSelected(data.plot.plotId))">
           <el-checkbox :model-value="isSelected(data.plot.plotId)" class="pointer-events-none" />
           <span class="w-24 shrink-0 text-xs text-gray-500">{{ data.plot.plotCode }}</span>
           <span class="w-28 shrink-0 truncate" :title="data.plot.plotName">{{ data.plot.plotName }}</span>
@@ -347,11 +343,7 @@ function formatPlantTime(row: PlotYearPlanRowVO): string {
 onMounted(async () => {
   loading.value = true;
   try {
-    const [zoneRes, allZoneRes, teamRes] = await Promise.all([
-      listAvailablePlots(props.planYear),
-      listAllZone(),
-      listAllTeam({ teamStatus: 1 })
-    ]);
+    const [zoneRes, allZoneRes, teamRes] = await Promise.all([listAvailablePlots(props.planYear), listAllZone(), listAllTeam({ teamStatus: 1 })]);
     zones.value = (zoneRes.data || []) as PlotByZoneVO[];
     const map = new Map<string, string>();
     for (const z of allZoneRes.data || []) {

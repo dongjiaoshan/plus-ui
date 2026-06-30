@@ -36,18 +36,19 @@
             </el-descriptions-item>
             <el-descriptions-item :label="t('product.field.productMaterial')">{{ data.productMaterialName || '-' }}</el-descriptions-item>
           </template>
-          <!-- row31：缩略图文案改「产品图片」（i18n key productThumb 全局已统一） -->
-          <el-descriptions-item :label="t('product.field.productThumb')" :span="2">
+          <!-- row67：商品详情（isGoods）下「产品图片/产品描述」文案改「商品图片/商品描述」 -->
+          <el-descriptions-item :label="t(isGoods ? 'product.field.goodsThumb' : 'product.field.productThumb')" :span="2">
             <image-preview v-if="thumbUrl" :src="thumbUrl" :width="120" :height="120" />
             <el-text v-else type="info">-</el-text>
           </el-descriptions-item>
-          <el-descriptions-item :label="t('product.field.productDesc')" :span="2">{{ data.productDesc || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t(isGoods ? 'product.field.goodsDesc' : 'product.field.productDesc')" :span="2">{{ data.productDesc || '-' }}</el-descriptions-item>
           <!-- row25/row31：去掉备注显示 -->
         </el-descriptions>
       </el-tab-pane>
 
-      <!-- 生产记录子表（自产 / 礼盒，即非外购）。原型：产品详情含生产记录 -->
-      <el-tab-pane v-if="data.productType !== 2" :label="t('product.title.production')" name="production">
+      <!-- 生产记录子表（自产成品 / 礼盒，即非外购且非原材料）。原型：产品详情含生产记录。
+           row80：原材料（productType=1 & productAttr=2）不生产 → 改显出入库记录（flow tab），故此处排除原材料 -->
+      <el-tab-pane v-if="showProductionTab" :label="t('product.title.production')" name="production">
         <el-form :inline="true" class="mb-2">
           <el-form-item :label="t('product.production.produceDate')">
             <el-date-picker
@@ -99,17 +100,19 @@
         </el-table>
       </el-tab-pane>
 
-      <!-- 业务流水子表（外购商品）。原型：商品详情含业务流水 -->
-      <el-tab-pane v-if="data.productType === 2" :label="t('product.title.flow')" name="flow">
+      <!-- 业务流水子表：外购商品=业务流水；row80 原材料（productType=1 & productAttr=2）=出入库记录（同一 flow 数据源，标题分叉） -->
+      <el-tab-pane v-if="showFlowTab" :label="t(flowTabLabelKey)" name="flow">
         <el-form :inline="true" class="mb-2">
           <el-form-item :label="t('product.flow.bizDate')">
             <el-date-picker
-              v-model="flowFilter.bizDate"
-              type="date"
+              v-model="flowFilter.bizDateRange"
+              type="daterange"
               value-format="YYYY-MM-DD"
-              :placeholder="t('product.flow.bizDatePlaceholder')"
+              range-separator="-"
+              :start-placeholder="t('product.flow.bizDateStart')"
+              :end-placeholder="t('product.flow.bizDateEnd')"
               clearable
-              style="width: 180px"
+              style="width: 260px"
             />
           </el-form-item>
           <el-form-item>
@@ -148,6 +151,7 @@
 import { getProduct, listProductFlowRecords, listProductionRecords } from '@/api/djs-warehouse/product';
 import type { ProductFlowRecordVO, ProductInfoVO, ProductionRecordVO } from '@/api/djs-warehouse/product/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
+import { lastMonthRange } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -172,15 +176,27 @@ const thumbUrl = ref<string>('');
 /** 外购商品（productType=2）详情里「产品X」文案改「商品X」；自产/礼盒仍「产品X」 */
 const isGoods = computed(() => data.value.productType === 2);
 
+/** row80：原材料（自产 productType=1 且 productAttr=2）不生产 → 详情显「出入库记录」而非「生产记录」 */
+const isRawMaterial = computed(() => data.value.productType === 1 && data.value.productAttr === 2);
+
+/** 生产记录 tab：自产成品 / 礼盒（非外购商品、非原材料）才显示 */
+const showProductionTab = computed(() => data.value.productType !== 2 && !isRawMaterial.value);
+
+/** 业务流水 / 出入库记录 tab：外购商品 或 原材料 都显示（同一 flow 数据源） */
+const showFlowTab = computed(() => data.value.productType === 2 || isRawMaterial.value);
+
+/** flow tab 标题：外购商品=业务流水；原材料=出入库记录 */
+const flowTabLabelKey = computed(() => (isRawMaterial.value ? 'product.title.inout' : 'product.title.flow'));
+
 // 生产记录子表（自产 / 礼盒）
 const productionList = ref<ProductionRecordVO[]>([]);
 const productionLoading = ref(false);
 const productionFilter = reactive<{ produceDate?: string; produceType?: string }>({ produceDate: undefined, produceType: undefined });
 
-// 业务流水子表（外购商品）
+// 业务流水 / 出入库记录子表（外购商品 / 原材料）。row67：业务日期由单日改区间，默认近一个月
 const flowList = ref<ProductFlowRecordVO[]>([]);
 const flowLoading = ref(false);
-const flowFilter = reactive<{ bizDate?: string }>({ bizDate: undefined });
+const flowFilter = reactive<{ bizDateRange: string[] }>({ bizDateRange: lastMonthRange() });
 
 const currentId = ref<number | string>('');
 
@@ -221,14 +237,18 @@ async function loadFlow() {
   if (!currentId.value) return;
   flowLoading.value = true;
   try {
-    const res = await listProductFlowRecords(currentId.value, { bizDate: flowFilter.bizDate || undefined });
+    const range = Array.isArray(flowFilter.bizDateRange) ? flowFilter.bizDateRange : [];
+    const res = await listProductFlowRecords(currentId.value, {
+      bizDateFrom: range[0] || undefined,
+      bizDateTo: range[1] || undefined
+    });
     flowList.value = (res.data ?? []) as ProductFlowRecordVO[];
   } finally {
     flowLoading.value = false;
   }
 }
 function resetFlowFilter() {
-  flowFilter.bizDate = undefined;
+  flowFilter.bizDateRange = lastMonthRange();
   loadFlow();
 }
 
@@ -238,14 +258,14 @@ const open = async (id: number | string, _productType?: number) => {
   flowList.value = [];
   productionFilter.produceDate = undefined;
   productionFilter.produceType = undefined;
-  flowFilter.bizDate = undefined;
+  flowFilter.bizDateRange = lastMonthRange();
   const res = await getProduct(id);
   data.value = res.data || {};
   thumbUrl.value = '';
   activeTab.value = 'info';
   visible.value = true;
-  // 子表按形态懒加载：外购→业务流水；自产/礼盒→生产记录
-  if (data.value.productType === 2) {
+  // 子表按形态懒加载：外购商品 / 原材料→业务流水(出入库记录)；自产成品/礼盒→生产记录
+  if (showFlowTab.value) {
     loadFlow();
   } else {
     loadProduction();

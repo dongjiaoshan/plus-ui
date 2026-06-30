@@ -2,118 +2,138 @@
   <!-- 新增需求多产品购物车：右抽屉、宽 80%、点蒙层可关（保留 Element Plus 默认 close-on-click-modal=true） -->
   <el-drawer v-model="visible" direction="rtl" size="80%" :title="t('storeDemand.cart.title')" destroy-on-close @closed="handleClosed">
     <div class="drawer-body">
-      <!-- 顶部：需求日期（默认明日；确认下单时整单按此日期落库） -->
-      <div class="demand-date-bar">
-        <span class="demand-date-label">{{ t('storeDemand.field.demandDate') }}</span>
-        <el-date-picker
-          v-model="demandDate"
-          type="date"
-          value-format="YYYY-MM-DD"
-          :clearable="false"
-          :placeholder="t('storeDemand.field.demandDate')"
-          style="width: 200px"
-        />
-      </div>
       <div class="cart-drawer">
-      <!-- 左主区：产品类型 tab + 候选产品表（按业态 tab 切列） -->
-      <div class="main-area">
-        <div class="area-title">{{ t('storeDemand.create.productType') }}</div>
+        <!-- 左主区：需求日期 + 产品类型 tab + 候选产品表（按业态 tab 切列） -->
+        <div class="main-area">
+          <!-- 顶部：产品需求日期（默认明日；确认下单时整单按此日期落库） -->
+          <div class="demand-date-bar">
+            <span class="demand-date-label">{{ t('storeDemand.field.productDemandDate') }}</span>
+            <el-date-picker
+              v-model="demandDate"
+              type="date"
+              value-format="YYYY-MM-DD"
+              :clearable="false"
+              :placeholder="t('storeDemand.field.productDemandDate')"
+              style="width: 200px"
+            />
+          </div>
 
-        <el-tabs v-model="activeTab" class="type-tabs">
-          <el-tab-pane v-for="tab in TABS" :key="tab.key" :label="t(`storeDemand.tab.${tab.key}`)" :name="tab.key" />
-        </el-tabs>
+          <div class="area-title">{{ t('storeDemand.create.productType') }}</div>
 
-        <el-table
-          v-loading="productLoading"
-          :data="tabProducts"
-          border
-          stripe
-          class="product-table"
-          height="100%"
-          :empty-text="t('storeDemand.create.emptyProducts')"
-        >
-          <!-- 产品图片（所有 tab 都显示，imageUrl 由后端 listProduct 回填） -->
-          <el-table-column :label="t('storeDemand.create.productImage')" width="90" align="center" header-align="center">
-            <template #default="{ row }">
-              <ImagePreview v-if="row.imageUrl" :width="48" :height="48" :src="row.imageUrl" :preview-src-list="[row.imageUrl]" />
-              <span v-else>{{ dash }}</span>
+          <el-tabs v-model="activeTab" class="type-tabs">
+            <el-tab-pane v-for="tab in TABS" :key="tab.key" :label="t(`storeDemand.tab.${tab.key}`)" :name="tab.key" />
+          </el-tabs>
+
+          <el-table
+            v-loading="productLoading"
+            :data="tabProducts"
+            border
+            stripe
+            class="product-table"
+            height="100%"
+            :empty-text="t('storeDemand.create.emptyProducts')"
+          >
+            <!-- 产品图片（所有 tab 都显示，imageUrl 由后端 listProduct 回填） -->
+            <el-table-column :label="t('storeDemand.create.productImage')" width="90" align="center" header-align="center">
+              <template #default="{ row }">
+                <ImagePreview v-if="row.imageUrl" :width="48" :height="48" :src="row.imageUrl" :preview-src-list="[row.imageUrl]" />
+                <span v-else>{{ dash }}</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column :label="t('storeDemand.create.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center">
+              <template #default="{ row }">{{ row.productName }}</template>
+            </el-table-column>
+
+            <!-- 白条：可出栏猪只头数 -->
+            <el-table-column
+              v-if="activeTab === 'white_bar'"
+              :label="t('storeDemand.create.availablePigs')"
+              width="140"
+              align="center"
+              header-align="center"
+            >
+              <template #default>{{ availablePigCount }}</template>
+            </el-table-column>
+
+            <!-- 规格（除白条外都有） -->
+            <el-table-column v-if="cols.spec" :label="t('storeDemand.create.spec')" width="100" align="center" header-align="center">
+              <template #default="{ row }">{{ row.productSpec || dash }}</template>
+            </el-table-column>
+
+            <!-- 单位（果蔬无单列：原型果蔬表无「单位」列） -->
+            <el-table-column v-if="cols.unit" :label="t('storeDemand.create.unit')" width="90" align="center" header-align="center">
+              <template #default="{ row }">{{ row.productUnit || dash }}</template>
+            </el-table-column>
+
+            <!-- 原材料库存（跨域字段，product 主数据无，占位 '—'） -->
+            <el-table-column v-if="cols.material" :label="t('storeDemand.create.materialStock')" width="120" align="center" header-align="center">
+              <template #default>{{ dash }}</template>
+            </el-table-column>
+
+            <!-- 果蔬专属：剩余地块 / 预计产量 / 最早可采摘 / 最晚可采摘（均跨域，占位 '—'） -->
+            <template v-if="activeTab === 'vegetable'">
+              <el-table-column :label="t('storeDemand.create.remainPlot')" width="100" align="center" header-align="center">
+                <template #default>{{ dash }}</template>
+              </el-table-column>
+              <el-table-column :label="t('storeDemand.create.expectYield')" width="110" align="center" header-align="center">
+                <template #default>{{ dash }}</template>
+              </el-table-column>
+              <el-table-column :label="t('storeDemand.create.earliestPick')" width="130" align="center" header-align="center">
+                <template #default>{{ dash }}</template>
+              </el-table-column>
+              <el-table-column :label="t('storeDemand.create.latestPick')" width="130" align="center" header-align="center">
+                <template #default>{{ dash }}</template>
+              </el-table-column>
             </template>
-          </el-table-column>
 
-          <el-table-column :label="t('storeDemand.create.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center">
-            <template #default="{ row }">{{ row.productName }}</template>
-          </el-table-column>
-
-          <!-- 白条：可出栏猪只头数 -->
-          <el-table-column v-if="activeTab === 'white_bar'" :label="t('storeDemand.create.availablePigs')" width="140" align="center" header-align="center">
-            <template #default>{{ availablePigCount }}</template>
-          </el-table-column>
-
-          <!-- 规格（除白条外都有） -->
-          <el-table-column v-if="cols.spec" :label="t('storeDemand.create.spec')" width="100" align="center" header-align="center">
-            <template #default="{ row }">{{ row.productSpec || dash }}</template>
-          </el-table-column>
-
-          <!-- 单位（果蔬无单列：原型果蔬表无「单位」列） -->
-          <el-table-column v-if="cols.unit" :label="t('storeDemand.create.unit')" width="90" align="center" header-align="center">
-            <template #default="{ row }">{{ row.productUnit || dash }}</template>
-          </el-table-column>
-
-          <!-- 原材料库存（跨域字段，product 主数据无，占位 '—'） -->
-          <el-table-column v-if="cols.material" :label="t('storeDemand.create.materialStock')" width="120" align="center" header-align="center">
-            <template #default>{{ dash }}</template>
-          </el-table-column>
-
-          <!-- 果蔬专属：剩余地块 / 预计产量 / 最早可采摘 / 最晚可采摘（均跨域，占位 '—'） -->
-          <template v-if="activeTab === 'vegetable'">
-            <el-table-column :label="t('storeDemand.create.remainPlot')" width="100" align="center" header-align="center">
-              <template #default>{{ dash }}</template>
+            <!-- 需求量 stepper -->
+            <el-table-column :label="t('storeDemand.create.demandQuantity')" width="180" align="center" header-align="center" fixed="right">
+              <template #default="{ row }">
+                <el-input-number
+                  :model-value="quantityOf(row)"
+                  :min="0"
+                  :step="1"
+                  :precision="0"
+                  size="small"
+                  @update:model-value="(v: number | undefined) => onQuantityChange(row, v)"
+                />
+              </template>
             </el-table-column>
-            <el-table-column :label="t('storeDemand.create.expectYield')" width="110" align="center" header-align="center">
-              <template #default>{{ dash }}</template>
-            </el-table-column>
-            <el-table-column :label="t('storeDemand.create.earliestPick')" width="130" align="center" header-align="center">
-              <template #default>{{ dash }}</template>
-            </el-table-column>
-            <el-table-column :label="t('storeDemand.create.latestPick')" width="130" align="center" header-align="center">
-              <template #default>{{ dash }}</template>
-            </el-table-column>
-          </template>
+          </el-table>
 
-          <!-- 需求量 stepper -->
-          <el-table-column :label="t('storeDemand.create.demandQuantity')" width="180" align="center" header-align="center" fixed="right">
-            <template #default="{ row }">
-              <el-input-number
-                :model-value="quantityOf(row)"
-                :min="0"
-                :step="1"
-                :precision="0"
-                size="small"
-                @update:model-value="(v: number | undefined) => onQuantityChange(row, v)"
-              />
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-
-      <!-- 右侧：需求产品购物车 + 需求确认 -->
-      <div class="cart-area">
-        <div class="area-title">{{ t('storeDemand.create.operation') }}</div>
-        <div class="cart-title">{{ t('storeDemand.create.cartTitle') }}</div>
-
-        <div v-if="cart.length === 0" class="cart-empty">{{ t('storeDemand.create.cartEmpty') }}</div>
-
-        <div class="cart-list">
-          <div v-for="item in cart" :key="item.productId" class="cart-item">
-            <el-icon class="cart-del" @click="removeFromCart(item.productId)"><CircleCloseFilled /></el-icon>
-            <div class="cart-item-main">
-              <span class="cart-item-name">{{ item.productName }}</span>
-              <span class="cart-item-qty">{{ item.demandQuantity }}{{ item.productUnit }}</span>
-            </div>
-            <!-- 个人邮寄 UI 隐藏（87-1 决策 #10-B：保后端 StoreDemandBatchBo.mailing 字段，提交载荷仍带 mailing=false） -->
+          <!-- 底部：按产品名称筛选当前 tab 的产品（切换业态 tab 时保留搜索值） -->
+          <div class="product-search-bar">
+            <el-input
+              v-model="searchKeyword"
+              :placeholder="t('storeDemand.create.productNamePh')"
+              clearable
+              style="width: 240px"
+              @keyup.enter="applySearch"
+              @clear="applySearch"
+            />
+            <el-button type="primary" icon="Search" @click="applySearch">{{ t('storeDemand.create.search') }}</el-button>
           </div>
         </div>
-      </div>
+
+        <!-- 右侧：需求产品购物车 + 需求确认 -->
+        <div class="cart-area">
+          <div class="area-title">{{ t('storeDemand.create.operation') }}</div>
+          <div class="cart-title">{{ t('storeDemand.create.cartTitle') }}</div>
+
+          <div v-if="cart.length === 0" class="cart-empty">{{ t('storeDemand.create.cartEmpty') }}</div>
+
+          <div class="cart-list">
+            <div v-for="item in cart" :key="item.productId" class="cart-item">
+              <el-icon class="cart-del" @click="removeFromCart(item.productId)"><CircleCloseFilled /></el-icon>
+              <div class="cart-item-main">
+                <span class="cart-item-name">{{ item.productName }}</span>
+                <span class="cart-item-qty">{{ item.demandQuantity }}{{ item.productUnit }}</span>
+              </div>
+              <!-- 个人邮寄 UI 隐藏（87-1 决策 #10-B：保后端 StoreDemandBatchBo.mailing 字段，提交载荷仍带 mailing=false） -->
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -125,12 +145,7 @@
           <!-- 门店由全局选择器锁定，新增需求自动绑当前门店、不可手改 -->
           <span class="footer-store-name">{{ currentStoreName || '—' }}</span>
           <span class="footer-label">{{ t('storeDemand.create.remark') }}</span>
-          <el-input
-            v-model="demandRemark"
-            :placeholder="t('storeDemand.create.remarkPh')"
-            :maxlength="500"
-            style="width: 280px"
-          />
+          <el-input v-model="demandRemark" :placeholder="t('storeDemand.create.remarkPh')" :maxlength="500" style="width: 280px" />
         </div>
         <el-button type="primary" :loading="submitting" :disabled="cart.length === 0" @click="submit">
           {{ t('storeDemand.create.confirm') }}
@@ -199,6 +214,13 @@ const allProducts = ref<ProductInfoVO[]>([]);
 const availablePigCount = ref(0);
 const demandRemark = ref('');
 const demandDate = ref<string>(tomorrowStr());
+/** 产品名称搜索：searchKeyword 为输入框实时值，appliedKeyword 为点「查询」后生效的过滤值（切 tab 保留）。 */
+const searchKeyword = ref('');
+const appliedKeyword = ref('');
+
+function applySearch() {
+  appliedKeyword.value = searchKeyword.value.trim();
+}
 
 /** 购物车项（含展示用 name/unit，提交时只取 productId/productType/demandQuantity/mailing）。 */
 interface CartLine extends StoreDemandBatchItem {
@@ -239,11 +261,18 @@ const tabProducts = computed<ProductInfoVO[]>(() => {
   // 白条业态：加载「产品类型=自产(productType=1) + 类别=白条产品(belongType=white_bar)」全部数据。
   // 白条(整只/半只)在仓库域建模为原材料(product_attr=2)，但门店订白条→现场分割，故不套用下方原料排除。
   if (def.key === 'white_bar') {
-    return list.filter((p) => Number(p.productType) === 1);
+    list = list.filter((p) => Number(p.productType) === 1);
+  } else {
+    // 其他业态：门店只下单可售成品，排除原材料(product_attr=2)；
+    // 原料是仓库内部流转(分割/毛菜处理产出→领用→打包成成品)，门店订成品不订原料(doc/14 §5)。
+    list = list.filter((p) => Number(p.productAttr) !== 2);
   }
-  // 其他业态：门店只下单可售成品，排除原材料(product_attr=2)；
-  // 原料是仓库内部流转(分割/毛菜处理产出→领用→打包成成品)，门店订成品不订原料(doc/14 §5)。
-  return list.filter((p) => Number(p.productAttr) !== 2);
+  // 产品名称过滤（点「查询」后生效，跨 tab 保留 appliedKeyword）
+  const kw = appliedKeyword.value.toLowerCase();
+  if (kw) {
+    list = list.filter((p) => (p.productName ?? '').toLowerCase().includes(kw));
+  }
+  return list;
 });
 
 function quantityOf(row: ProductInfoVO): number {
@@ -339,6 +368,8 @@ function reset() {
   cart.value = [];
   demandRemark.value = '';
   demandDate.value = tomorrowStr();
+  searchKeyword.value = '';
+  appliedKeyword.value = '';
 }
 
 function handleClosed() {
@@ -362,19 +393,6 @@ defineExpose({ open });
   height: 100%;
 }
 
-.demand-date-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
-  margin-bottom: 12px;
-
-  .demand-date-label {
-    font-size: 14px;
-    font-weight: 600;
-  }
-}
-
 .cart-drawer {
   display: flex;
   gap: 12px;
@@ -393,6 +411,19 @@ defineExpose({ open });
     display: flex;
     flex-direction: column;
 
+    .demand-date-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      margin-bottom: 12px;
+
+      .demand-date-label {
+        font-size: 14px;
+        font-weight: 600;
+      }
+    }
+
     .type-tabs {
       flex: 0 0 auto;
     }
@@ -400,6 +431,14 @@ defineExpose({ open });
     .product-table {
       flex: 1;
       min-height: 0;
+    }
+
+    .product-search-bar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
     }
   }
 

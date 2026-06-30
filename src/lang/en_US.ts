@@ -4,6 +4,63 @@ export default {
     dashboard: 'Dashboard',
     document: 'Document'
   },
+  // 定时任务重跑（DENGBO row7）
+  jobRerun: {
+    panel: {
+      title: 'Manual rerun',
+      tip: 'Failed jobs can be rerun; pick a date range to recompute day by day (dateless jobs run once without a range).'
+    },
+    field: {
+      jobName: 'Job',
+      dateRange: 'Date range',
+      status: 'Status',
+      triggerType: 'Trigger'
+    },
+    placeholder: {
+      jobName: 'Select a job',
+      begin: 'Start date',
+      end: 'End date',
+      status: 'Select status',
+      triggerType: 'Select trigger'
+    },
+    action: {
+      rerun: 'Rerun',
+      search: 'Search',
+      reset: 'Reset'
+    },
+    column: {
+      jobName: 'Job',
+      targetDate: 'Target date',
+      status: 'Status',
+      costMs: 'Cost',
+      triggerType: 'Trigger',
+      runTime: 'Run time',
+      errorMsg: 'Error'
+    },
+    jobName: {
+      'breed-aggregate': 'Breeding stats aggregate',
+      'warehouse-stat': 'Warehouse stats aggregate',
+      'organic-warning': 'Organic cert expiry warning'
+    },
+    status: {
+      running: 'Running',
+      success: 'Success',
+      fail: 'Failed'
+    },
+    trigger: {
+      schedule: 'Scheduled',
+      manual: 'Manual'
+    },
+    rule: {
+      jobName: 'Please select a job to rerun'
+    },
+    confirm: {
+      rerun: 'Rerun job "{job}"?'
+    },
+    message: {
+      rerunSuccess: 'Rerun triggered'
+    }
+  },
   // 功能选择页（首页）国际化
   home: {
     title: 'Dongjiaoshan Organic Farm System',
@@ -1209,6 +1266,7 @@ export default {
       baseInfo: 'Product info',
       production: 'Production Records',
       flow: 'Transaction Flow',
+      inout: 'Stock In/Out Records',
       goodsView: 'Goods detail',
       goodsBaseInfo: 'Goods info',
       productAdd: 'New product',
@@ -1232,7 +1290,12 @@ export default {
       updateTime: 'Updated',
       index: 'No.',
       goodsType: 'Goods type',
-      goodsAttr: 'Goods attribute'
+      goodsAttr: 'Goods attribute',
+      goodsId: 'Goods Code',
+      goodsName: 'Goods Name',
+      goodsThumb: 'Goods Image',
+      goodsBelongType: 'Goods Category',
+      supplierName: 'Supplier'
     },
     field: {
       productId: 'Product code',
@@ -1241,6 +1304,7 @@ export default {
       productUnit: 'Unit',
       productSpec: 'Spec',
       belongType: 'Category',
+      goodsBelongType: 'Goods Category',
       buyClass: 'Category',
       productAttr: 'Attribute',
       productWorkshop: 'Workshop',
@@ -1262,7 +1326,10 @@ export default {
       goodsId: 'Goods code',
       goodsName: 'Goods name',
       goodsType: 'Goods type',
-      goodsAttr: 'Goods attribute'
+      goodsAttr: 'Goods attribute',
+      goodsThumb: 'Goods Image',
+      goodsDesc: 'Goods Description',
+      supplierName: 'Supplier'
     },
     placeholder: {
       productId: 'e.g. P0001 / SP-PORK-001 (manual)',
@@ -1324,6 +1391,8 @@ export default {
     flow: {
       bizDate: 'Biz Date',
       bizDatePlaceholder: 'Select biz date',
+      bizDateStart: 'Start Date',
+      bizDateEnd: 'End Date',
       bizType: 'Biz Type',
       bizNum: 'Quantity',
       bizUnit: 'Unit',
@@ -2137,6 +2206,11 @@ export default {
       cropName: 'Crop',
       plotCount: 'Plots',
       todayPickWeight: 'Today Picked (kg)',
+      saleWeight: 'Sale (kg)',
+      vegFreshWeight: 'Veg Fresh Room (kg)',
+      platformWeight: 'Platform (kg)',
+      lossWeight: 'Loss (kg)',
+      feedWeight: 'Feed (kg)',
       expectedYield: 'Expected Yield (kg)',
       cumulativePickWeight: 'Cumulative Picked (kg)'
     }
@@ -2213,6 +2287,7 @@ export default {
       locationPlaceholder: 'Select location',
       search: 'Search',
       reset: 'Reset',
+      export: 'Export',
       image: 'Image',
       productCode: 'Product Code',
       productNameCol: 'Product Name',
@@ -2308,9 +2383,13 @@ export default {
   feedRecord: {
     action: {
       search: 'Search',
-      reset: 'Reset'
+      reset: 'Reset',
+      export: 'Export'
     },
     field: {
+      dateRange: 'Date Range',
+      startDate: 'Start Date',
+      endDate: 'End Date',
       cropName: 'Crop',
       cropNamePlaceholder: 'Enter crop name',
       feedType: 'Source',
@@ -2340,7 +2419,8 @@ export default {
       fileTooLarge: 'File exceeds the {max}MB limit',
       typeNotAllowed: 'File type not allowed; allowed: {types}',
       reachLimit: 'Limit reached: {limit} files',
-      preview: 'Preview'
+      preview: 'Preview',
+      uploadTip: 'Supports {types}; up to {max}MB each'
     },
     warehouse: {
       pigBurn: {
@@ -2668,7 +2748,7 @@ export default {
         deleteSuccess: 'Return deleted',
         confirmSuccess: 'Return confirmed',
         viewDetail: 'View Detail',
-        productKindCount: 'Kinds',
+        productKindCount: 'Return Kinds',
         returnWeightTotal: 'Return Weight',
         confirmWeightTotal: 'Confirmed Weight',
         weightDiffTotal: 'Weight Diff',
@@ -2681,8 +2761,8 @@ export default {
         checkDate: 'Check Date',
         checkStatus: 'Status',
         lineCount: 'Lines',
-        goodsCount: 'Goods',
-        abnormalCount: 'Abnormal',
+        goodsCount: 'Stock Products',
+        abnormalCount: 'Product Abnormal',
         diffSum: 'Net Diff',
         createTime: 'Created',
         detail: 'Detail',
@@ -2811,7 +2891,9 @@ export default {
           productSpec: 'Spec',
           productSort: 'Product Seq',
           productWeight: 'Product Weight',
-          materialConsume: 'Material Used',
+          productUnit: 'Product Unit',
+          materialConsume: 'Material Consumed',
+          materialConsumeQty: 'Material Consumed',
           materialUnit: 'Material Unit',
           itemCount: 'Items',
           damageCount: 'Damaged',
@@ -3176,7 +3258,9 @@ export default {
       earliestPick: 'Earliest Pick Date',
       latestPick: 'Latest Pick Date',
       demandStore: 'Demand Store',
-      demandStorePh: 'Select store'
+      demandStorePh: 'Select store',
+      productNamePh: 'Enter product name',
+      search: 'Search'
     },
     cart: {
       title: 'New Demand'
@@ -3193,6 +3277,7 @@ export default {
       demandNo: 'Demand No.',
       demandDate: 'Demand date',
       'demandDate.required': 'Demand date is required',
+      productDemandDate: 'Product Demand Date',
       storeId: 'Store',
       'storeId.required': 'Store is required',
       productId: 'Product',

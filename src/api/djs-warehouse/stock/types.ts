@@ -35,10 +35,14 @@ export interface LocationStockVO extends BaseEntity {
 
 export interface LocationStockQuery extends PageQuery {
   locationId?: number | string;
+  /** 库位多选（R70；非空时后端按 IN 过滤，优先于单值 locationId）。 */
+  locationIds?: (number | string)[];
   productId?: number | string;
   productName?: string;
   /** 归属类型（djs_belong_type）：row152-1 后端需关联 product 表按 belong_type 过滤 */
   belongType?: string;
+  /** 归属类型多选（R70；非空时后端先按 belong_type IN 反查 productId 再过滤库存，优先于单值 belongType）。 */
+  belongTypes?: string[];
   earNo?: string;
   plotId?: number | string;
   blockNo?: string;

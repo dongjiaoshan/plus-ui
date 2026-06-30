@@ -31,8 +31,12 @@ export interface ShipmentQuery {
   shipmentNo?: string;
   demandId?: string;
   productType?: string;
+  /** 业态多选（R70 产品类型下拉多选）。 */
+  productTypes?: string[];
   storeId?: string;
   shipmentStatus?: string;
+  /** 发货状态多选（R70 发货状态下拉多选）。 */
+  shipmentStatuses?: string[];
   shipDateFrom?: string;
   shipDateTo?: string;
   checkerId?: string;

@@ -1,9 +1,9 @@
 <template>
   <div class="trace-pork">
-    <el-row :gutter="16">
+    <el-row :gutter="16" class="trace-row">
       <!-- 左：追溯猪只 picker（chip）+ 5 张零售部位卡（带产品图） -->
-      <el-col :xs="24" :md="17">
-        <el-card shadow="never">
+      <el-col :xs="24" :md="17" class="trace-col">
+        <el-card shadow="never" class="left-card">
           <div v-loading="pigLoading" class="pig-chips">
             <el-tag
               v-for="p in pigs"
@@ -47,7 +47,7 @@
       </el-col>
 
       <!-- 右：操作面板（追溯猪只信息 + 追溯产品 + 重量 + 追溯码打印） -->
-      <el-col :xs="24" :md="7">
+      <el-col :xs="24" :md="7" class="trace-col">
         <el-card shadow="never" class="op-card">
           <template #header>
             <span class="title">{{ t('storeTrace.pork.opPanel') }}</span>
@@ -166,7 +166,9 @@ function isExhausted(p: TraceablePigVO): boolean {
   return remainingOf(p) <= 0;
 }
 function chipWeightText(p: TraceablePigVO): string {
-  return isExhausted(p) ? `（${t('storeTrace.pork.exhaustedTag')}）` : `（${t('storeTrace.pork.remainOf', { remain: fmtKg(p.remainingWeight), arrived: fmtKg(p.arrivedWeight) })}）`;
+  return isExhausted(p)
+    ? `（${t('storeTrace.pork.exhaustedTag')}）`
+    : `（${t('storeTrace.pork.remainOf', { remain: fmtKg(p.remainingWeight), arrived: fmtKg(p.arrivedWeight) })}）`;
 }
 
 async function loadPigs() {
@@ -273,6 +275,29 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .trace-pork {
+  // 让左右两版块铺满屏幕高度（内容少时也不留大片空白）
+  .trace-row {
+    align-items: stretch;
+    min-height: calc(100vh - 140px);
+  }
+
+  // el-col flex 拉伸，内部 card 撑满列高
+  .trace-col {
+    display: flex;
+  }
+
+  .left-card,
+  .op-card {
+    width: 100%;
+    min-height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+
+    :deep(.el-card__body) {
+      flex: 1;
+    }
+  }
+
   .title {
     font-weight: 600;
   }

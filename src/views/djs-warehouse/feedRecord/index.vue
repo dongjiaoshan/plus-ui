@@ -1,8 +1,18 @@
 <template>
   <div class="p-2">
-    <!-- 搜索区：作物名称模糊 + 提供位置（字典 djs_feed_type） -->
+    <!-- 搜索区：日期范围 + 作物名称模糊 + 提供位置（字典 djs_feed_type） -->
     <el-card shadow="never" class="mb-2">
       <el-form :inline="true" @submit.prevent>
+        <el-form-item :label="t('feedRecord.field.dateRange')">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            :start-placeholder="t('feedRecord.field.startDate')"
+            :end-placeholder="t('feedRecord.field.endDate')"
+            style="width: 260px"
+          />
+        </el-form-item>
         <el-form-item :label="t('feedRecord.field.cropName')">
           <el-input
             v-model="query.cropName"
@@ -20,16 +30,18 @@
         <el-form-item>
           <el-button type="primary" icon="Search" @click="handleSearch">{{ t('feedRecord.action.search') }}</el-button>
           <el-button icon="Refresh" @click="handleReset">{{ t('feedRecord.action.reset') }}</el-button>
+          <el-button type="warning" icon="Download" @click="handleExport">{{ t('feedRecord.action.export') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <el-card shadow="never">
+      <!-- row76：列等宽平均分布（各列同 min-width，el-table 按比例均分剩余宽度） -->
       <el-table v-loading="loading" :data="list" border>
-        <el-table-column :label="t('feedRecord.column.feedDate')" prop="feedDate" min-width="170" align="center" header-align="center">
+        <el-table-column :label="t('feedRecord.column.feedDate')" prop="feedDate" min-width="160" align="center" header-align="center">
           <template #default="{ row }">{{ formatDateTime(row.feedDate) }}</template>
         </el-table-column>
-        <el-table-column :label="t('feedRecord.column.cropImage')" prop="cropImageOssId" width="90" align="center" header-align="center">
+        <el-table-column :label="t('feedRecord.column.cropImage')" prop="cropImageOssId" min-width="160" align="center" header-align="center">
           <template #default="{ row }">
             <ImagePreview
               v-if="row.cropImageOssId && imageUrlMap[String(row.cropImageOssId)]"
@@ -41,16 +53,30 @@
             <el-icon v-else class="text-gray-300" :size="28"><Picture /></el-icon>
           </template>
         </el-table-column>
-        <el-table-column :label="t('feedRecord.column.cropName')" prop="cropName" min-width="140" align="center" header-align="center" show-overflow-tooltip>
+        <el-table-column
+          :label="t('feedRecord.column.cropName')"
+          prop="cropName"
+          min-width="160"
+          align="center"
+          header-align="center"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">{{ row.cropName || '—' }}</template>
         </el-table-column>
-        <el-table-column :label="t('feedRecord.column.feedWeight')" prop="feedWeight" min-width="120" align="center" header-align="center">
+        <el-table-column :label="t('feedRecord.column.feedWeight')" prop="feedWeight" min-width="160" align="center" header-align="center">
           <template #default="{ row }">{{ formatWeight(row.feedWeight) }}</template>
         </el-table-column>
-        <el-table-column :label="t('feedRecord.column.feedType')" prop="feedType" min-width="120" align="center" header-align="center">
+        <el-table-column :label="t('feedRecord.column.feedType')" prop="feedType" min-width="160" align="center" header-align="center">
           <template #default="{ row }"><dict-tag :options="djs_feed_type" :value="row.feedType" /></template>
         </el-table-column>
-        <el-table-column :label="t('feedRecord.column.operator')" prop="operatorName" min-width="120" align="center" header-align="center" show-overflow-tooltip>
+        <el-table-column
+          :label="t('feedRecord.column.operator')"
+          prop="operatorName"
+          min-width="160"
+          align="center"
+          header-align="center"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">{{ row.operatorName || '—' }}</template>
         </el-table-column>
       </el-table>
@@ -64,12 +90,15 @@
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import { listFeedRecord, type FeedRecordVO } from '@/api/djs-warehouse/feedRecord';
 import { listByIds as listOssByIds } from '@/api/system/oss';
-import { parseTime } from '@/utils/ruoyi';
+import { parseTime, lastMonthRange } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { djs_feed_type } = toRefs<Record<string, any>>(proxy?.useDict('djs_feed_type'));
+
+/** 日期范围（默认近一个月，'YYYY-MM-DD' 二元组）。 */
+const dateRange = ref<[string, string] | undefined>(lastMonthRange());
 
 const loading = ref(false);
 const list = ref<FeedRecordVO[]>([]);
@@ -85,12 +114,22 @@ const query = reactive<{ cropName?: string; feedType?: string }>({
   feedType: undefined
 });
 
+/** 构建查询参数（含日期范围拆 from/to）。 */
+function buildQuery() {
+  const range = dateRange.value ?? [];
+  return {
+    cropName: query.cropName || undefined,
+    feedType: query.feedType || undefined,
+    dateFrom: range[0] || undefined,
+    dateTo: range[1] || undefined
+  };
+}
+
 async function fetchList() {
   loading.value = true;
   try {
     const res = await listFeedRecord({
-      cropName: query.cropName || undefined,
-      feedType: query.feedType || undefined,
+      ...buildQuery(),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     });
@@ -127,8 +166,14 @@ function handleSearch() {
 function handleReset() {
   query.cropName = undefined;
   query.feedType = undefined;
+  dateRange.value = lastMonthRange();
   pageNum.value = 1;
   fetchList();
+}
+
+/** 导出（按当前搜索条件，含日期范围）。 */
+function handleExport() {
+  proxy?.download('djs/warehouse/feedRecord/export', buildQuery(), `有机饲喂记录_${Date.now()}.xlsx`);
 }
 
 function formatDateTime(v?: string): string {

@@ -82,8 +82,11 @@ export const listProductionRecords = (
   });
 };
 
-/** 商品详情「业务流水」子表：按 productId 查 stock_flow（入库 / 领用出库 / 后台出库；可选 bizDate 筛选） */
-export const listProductFlowRecords = (productId: number | string, params?: { bizDate?: string }): AxiosPromise<ProductFlowRecordVO[]> => {
+/** 商品详情「业务流水」子表：按 productId 查 stock_flow（入库 / 领用出库 / 后台出库；可选 bizDate 区间筛选） */
+export const listProductFlowRecords = (
+  productId: number | string,
+  params?: { bizDateFrom?: string; bizDateTo?: string }
+): AxiosPromise<ProductFlowRecordVO[]> => {
   return request({
     url: '/djs/warehouse/product/flow/' + productId,
     method: 'get',

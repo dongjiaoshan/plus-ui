@@ -23,7 +23,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_pack_status', 'djs_yes_no']"
+      :dict-types="['djs_yes_no']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -85,13 +85,11 @@ const pageSize = ref(10);
 const batch = ref<ProductProductionGroupVO | null>(null);
 
 const searchModel = reactive<Record<string, any>>({
-  productSort: undefined,
   storeName: undefined,
   isDamaged: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'productSort', label: t('djs.warehouse.production.column.productSort'), type: 'input' },
   { field: 'storeName', label: t('djs.warehouse.production.column.storeName'), type: 'input' },
   // 是否损坏（djs_yes_no，默认全部）—— 服务端过滤 isDamaged
   { field: 'isDamaged', label: t('djs.warehouse.production.column.isDamaged2'), type: 'select', dictType: 'djs_yes_no' }
@@ -117,8 +115,6 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => (row as ProductProductionVO).materialUnit || '-'
   },
-  // 主列表删掉的逐件字段下沉到此子页（VO 已全有）
-  { prop: 'packStatus', label: t('djs.warehouse.production.column.packStatus'), minWidth: 110, dictType: 'djs_pack_status' },
   // 是否损坏（djs_yes_no dict-tag）
   { prop: 'isDamaged', label: t('djs.warehouse.production.column.isDamaged2'), minWidth: 100, align: 'center', dictType: 'djs_yes_no' },
   {
@@ -180,12 +176,10 @@ async function loadList() {
     const params: ProductProductionQuery = {
       productId: batch.value.productId,
       produceDate: batch.value.produceDate,
-      // 产品序号改文本模糊搜索：原样透传字符串关键字，由后端 product_sort LIKE 匹配（row115-1 待后端）
-      productSort: searchModel.productSort === undefined || searchModel.productSort === '' ? undefined : String(searchModel.productSort).trim(),
       // 是否损坏（djs_yes_no，空=全部）：服务端按 is_damaged 过滤
       isDamaged: searchModel.isDamaged === undefined || searchModel.isDamaged === '' ? undefined : Number(searchModel.isDamaged),
       // storeName 是前端搜索字段，后端按 storeId 过滤；本子页未提供 store 选择器，
-      // storeName 模糊匹配交由前端在已加载行内不另发请求（仅按序号服务端筛）。
+      // storeName 模糊匹配交由前端在已加载行内本地过滤（不另发请求）。
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };

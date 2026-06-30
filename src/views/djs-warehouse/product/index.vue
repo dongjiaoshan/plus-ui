@@ -8,7 +8,15 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_product_type', 'djs_belong_type', 'djs_buy_class', 'djs_product_attr', 'djs_product_workshop', 'djs_yes_no', 'sys_normal_disable']"
+      :dict-types="[
+        'djs_product_type',
+        'djs_belong_type',
+        'djs_buy_class',
+        'djs_product_attr',
+        'djs_product_workshop',
+        'djs_yes_no',
+        'sys_normal_disable'
+      ]"
       :page-num="pageNum"
       :page-size="pageSize"
       :action-width="270"
@@ -95,8 +103,10 @@ const addLockType: number | undefined = presetType;
 const isGoods = presetType === 2;
 
 const tableRef = ref<BizTableExpose>();
-const formRef =
-  ref<{ openCreate: (presetType?: number, allowedTypes?: number[]) => void; openEdit: (id: number | string, allowedTypes?: number[]) => void }>();
+const formRef = ref<{
+  openCreate: (presetType?: number, allowedTypes?: number[]) => void;
+  openEdit: (id: number | string, allowedTypes?: number[]) => void;
+}>();
 const productViewRef = ref<{ open: (id: number | string, productType?: number) => void }>();
 
 /** 存储仓库筛选下拉项（库位列表） */
@@ -113,12 +123,12 @@ const thumbUrlMap = ref<Record<string, string>>({});
 const searchModel = reactive<Record<string, any>>({
   productId: undefined,
   productName: undefined,
-  productType: undefined,
-  belongType: undefined,
+  productType: [],
+  belongType: [],
   productAttr: undefined,
   isBuyOut: undefined,
-  productWorkshop: undefined,
-  storeLocationId: undefined,
+  productWorkshop: [],
+  storeLocationId: [],
   productStatus: undefined,
   updateBy: undefined,
   updateTime: undefined
@@ -128,61 +138,112 @@ const searchSchema = computed<SearchFieldSchema[]>(() => {
   const schema: SearchFieldSchema[] = [
     { field: 'productId', label: t(isGoods ? 'product.field.goodsId' : 'product.field.productId'), type: 'input' },
     { field: 'productName', label: t(isGoods ? 'product.field.goodsName' : 'product.field.productName'), type: 'input' },
-    { field: 'productType', label: t(isGoods ? 'product.field.goodsType' : 'product.field.productType'), type: 'select', dictType: 'djs_product_type' },
-    { field: 'belongType', label: t('product.field.belongType'), type: 'select', dictType: 'djs_belong_type' },
-    // row41：新增「产品属性」搜索条件
+    {
+      field: 'productType',
+      label: t(isGoods ? 'product.field.goodsType' : 'product.field.productType'),
+      type: 'select',
+      dictType: 'djs_product_type',
+      multiple: true
+    },
+    {
+      field: 'belongType',
+      label: t(isGoods ? 'product.field.goodsBelongType' : 'product.field.belongType'),
+      type: 'select',
+      dictType: 'djs_belong_type',
+      multiple: true
+    },
+    // row41：「产品属性」搜索（row81-4：商品配置去掉）
     { field: 'productAttr', label: t('product.field.productAttr'), type: 'select', dictType: 'djs_product_attr' },
-    // row30：去掉外购类搜索，改为「是否支持外购」筛选
+    // row30：「是否支持外购」筛选（row81-3：商品配置去掉）
     { field: 'isBuyOut', label: t('product.field.isBuyOutSupport'), type: 'select', dictType: 'djs_yes_no' },
-    // 原型新增筛选：生产车间 / 存储仓库 / 更新时间 / 更新人员
-    { field: 'productWorkshop', label: t('product.field.productWorkshop'), type: 'select', dictType: 'djs_product_workshop' },
-    { field: 'storeLocationId', label: t('product.field.storeLocation'), type: 'select', options: locationOptions.value },
+    // 「生产车间」搜索（row81-5：商品配置去掉）
+    { field: 'productWorkshop', label: t('product.field.productWorkshop'), type: 'select', dictType: 'djs_product_workshop', multiple: true },
+    { field: 'storeLocationId', label: t('product.field.storeLocation'), type: 'select', options: locationOptions.value, multiple: true },
     { field: 'productStatus', label: t('product.field.productStatus'), type: 'select', dictType: 'sys_normal_disable' },
     { field: 'updateTime', label: t('product.column.updateTime'), type: 'daterange' },
     { field: 'updateBy', label: t('product.field.updateBy'), type: 'input' }
   ];
+  // 商品配置入口（isGoods）去掉「产品属性 / 是否支持外购 / 生产车间」三个搜索条件（row81-3/4/5）
+  const goodsHiddenFields = isGoods ? ['productAttr', 'isBuyOut', 'productWorkshop'] : [];
   // 入口已锁定 productType（产品/商品入口），不让用户再选 → 剔除该搜索项
-  return presetTypes !== undefined ? schema.filter((f) => f.field !== 'productType') : schema;
+  return schema.filter((f) => {
+    if (presetTypes !== undefined && f.field === 'productType') return false;
+    if (goodsHiddenFields.includes(f.field)) return false;
+    return true;
+  });
 });
 
-// row30：产品配置列表全称列头（产品类型由菜单入口锁定恒为自产/外购，列冗余已去）
-// 产品图片/产品编码/产品名称/产品类别/产品属性/生产车间/单位/规格/存储仓库/是否支持外购/状态/更新时间/更新人员
-const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'productThumb', label: t('product.column.productThumb'), width: 80, align: 'center' },
-  { prop: 'productId', label: t('product.column.productId'), width: 140, showOverflowTooltip: true },
-  { prop: 'productName', label: t('product.column.productName'), minWidth: 160, showOverflowTooltip: true },
-  { prop: 'belongType', label: t('product.column.belongType'), width: 110, align: 'center', dictType: 'djs_belong_type' },
-  { prop: 'productAttr', label: t(isGoods ? 'product.column.goodsAttr' : 'product.column.productAttr'), width: 100, align: 'center', dictType: 'djs_product_attr' },
-  { prop: 'productWorkshop', label: t('product.column.productWorkshop'), width: 110, align: 'center', dictType: 'djs_product_workshop' },
-  { prop: 'productUnit', label: t('product.column.productUnit'), width: 90, align: 'center' },
-  { prop: 'productSpec', label: t('product.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true },
-  { prop: 'storeLocationName', label: t('product.column.storeLocation'), width: 130, align: 'center', showOverflowTooltip: true },
-  { prop: 'isBuyOut', label: t('product.field.isBuyOutSupport'), width: 120, align: 'center', dictType: 'djs_yes_no' },
-  { prop: 'productStatus', label: t('product.column.productStatus'), width: 90, align: 'center', dictType: 'sys_normal_disable' },
-  { prop: 'updateTime', label: t('product.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'updateByName', label: t('common.updateByName'), width: 100, align: 'center' }
-]);
+// row30/row81：列头按入口分叉（产品类型由菜单入口锁定恒为自产/外购，列冗余已去）。
+// 产品配置(productType=1)：产品图片/产品编码/产品名称/产品类别/产品属性/生产车间/单位/规格/存储仓库/是否支持外购/状态/更新时间/更新人员
+// 商品配置(isGoods)  ：商品图片/商品编码/商品名称/产品类别/单位/规格/存储仓库/供应商/状态/更新时间/更新人员
+//   —— 去掉「商品属性 / 生产车间 / 是否支持外购」三列，新增「供应商」列（row81-2/3/6）
+const columns = computed<BizTableColumn[]>(() => {
+  const cols: BizTableColumn[] = [
+    { prop: 'productThumb', label: t(isGoods ? 'product.column.goodsThumb' : 'product.column.productThumb'), width: 80, align: 'center' },
+    { prop: 'productId', label: t(isGoods ? 'product.column.goodsId' : 'product.column.productId'), width: 140, showOverflowTooltip: true },
+    { prop: 'productName', label: t(isGoods ? 'product.column.goodsName' : 'product.column.productName'), minWidth: 160, showOverflowTooltip: true },
+    {
+      prop: 'belongType',
+      label: t(isGoods ? 'product.column.goodsBelongType' : 'product.column.belongType'),
+      width: 110,
+      align: 'center',
+      dictType: 'djs_belong_type'
+    }
+  ];
+  if (!isGoods) {
+    // row81-2：商品配置去掉「商品属性 / 生产车间」两列
+    cols.push(
+      { prop: 'productAttr', label: t('product.column.productAttr'), width: 100, align: 'center', dictType: 'djs_product_attr' },
+      { prop: 'productWorkshop', label: t('product.column.productWorkshop'), width: 110, align: 'center', dictType: 'djs_product_workshop' }
+    );
+  }
+  cols.push(
+    { prop: 'productUnit', label: t('product.column.productUnit'), width: 90, align: 'center' },
+    { prop: 'productSpec', label: t('product.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true },
+    { prop: 'storeLocationName', label: t('product.column.storeLocation'), width: 130, align: 'center', showOverflowTooltip: true }
+  );
+  if (isGoods) {
+    // row81-6：商品配置新增「供应商」列
+    cols.push({ prop: 'supplierName', label: t('product.column.supplierName'), width: 140, align: 'center', showOverflowTooltip: true });
+  } else {
+    // row81-3：是否支持外购列仅产品配置保留
+    cols.push({ prop: 'isBuyOut', label: t('product.field.isBuyOutSupport'), width: 120, align: 'center', dictType: 'djs_yes_no' });
+  }
+  cols.push(
+    { prop: 'productStatus', label: t('product.column.productStatus'), width: 90, align: 'center', dictType: 'sys_normal_disable' },
+    { prop: 'updateTime', label: t('product.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' },
+    { prop: 'updateByName', label: t('common.updateByName'), width: 100, align: 'center' }
+  );
+  return cols;
+});
 
 /** 把搜索态拼成后端查询参数（fetch / export 共用），入口锁定走 presetTypes 集合。 */
 function buildQuery(): Omit<ProductInfoQuery, 'pageNum' | 'pageSize'> {
   const range = Array.isArray(searchModel.updateTime) ? searchModel.updateTime : [];
+  // R70 多选：productType / belongType / productWorkshop / storeLocationId 改复数 IN
+  // 入口锁定（presetTypes）优先，锁定时搜索区不显示 productType，用户多选 productType 走 productTypes
+  const userProductTypes =
+    Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType.map((v: any) => Number(v)) : undefined;
+  const belongTypes = Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType : undefined;
+  const productWorkshops =
+    Array.isArray(searchModel.productWorkshop) && searchModel.productWorkshop.length
+      ? searchModel.productWorkshop.map((v: any) => Number(v))
+      : undefined;
+  const storeLocationIds =
+    Array.isArray(searchModel.storeLocationId) && searchModel.storeLocationId.length
+      ? searchModel.storeLocationId.map((v: any) => String(v))
+      : undefined;
   return {
     productId: searchModel.productId || undefined,
     productName: searchModel.productName || undefined,
-    // 入口锁定时走 productTypes 集合（产品配置 {1}=自产含礼盒 / 商品配置 {2}=外购），不被搜索/重置覆盖
-    productTypes: presetTypes,
-    productType:
-      presetTypes !== undefined
-        ? undefined
-        : searchModel.productType === undefined || searchModel.productType === ''
-          ? undefined
-          : Number(searchModel.productType),
-    belongType: searchModel.belongType || undefined,
+    // 入口锁定时走 presetTypes（产品配置 {1}=自产含礼盒 / 商品配置 {2}=外购），不被搜索/重置覆盖；
+    // 否则走用户多选 productTypes
+    productTypes: presetTypes !== undefined ? presetTypes : userProductTypes,
+    belongTypes,
     productAttr: searchModel.productAttr === undefined || searchModel.productAttr === '' ? undefined : Number(searchModel.productAttr),
     isBuyOut: searchModel.isBuyOut === undefined || searchModel.isBuyOut === '' ? undefined : Number(searchModel.isBuyOut),
-    productWorkshop:
-      searchModel.productWorkshop === undefined || searchModel.productWorkshop === '' ? undefined : Number(searchModel.productWorkshop),
-    storeLocationId: searchModel.storeLocationId || undefined,
+    productWorkshops,
+    storeLocationIds,
     productStatus: searchModel.productStatus === undefined || searchModel.productStatus === '' ? undefined : Number(searchModel.productStatus),
     updateBy: searchModel.updateBy || undefined,
     updateBeginTime: range[0] || undefined,
@@ -235,6 +296,11 @@ function handleSearch(payload: Record<string, any>) {
 }
 function handleReset() {
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
+  // R70 多选字段重置成空数组（el-select multiple）
+  searchModel.productType = [];
+  searchModel.belongType = [];
+  searchModel.productWorkshop = [];
+  searchModel.storeLocationId = [];
   pageNum.value = 1;
   fetchList();
 }
@@ -269,10 +335,19 @@ async function handleToggleStatus(row: BizRow) {
 }
 function handleExport() {
   const q = buildQuery();
-  // 导出走 form-urlencoded，CSV 数组手动展开为字符串
+  // 导出走 form-urlencoded，CSV 数组手动展开为字符串（R70 多选 4 字段）
   const params: Record<string, any> = { ...q };
   if (q.productTypes && q.productTypes.length > 0) {
     params.productTypes = q.productTypes.join(',');
+  }
+  if (q.belongTypes && q.belongTypes.length > 0) {
+    params.belongTypes = q.belongTypes.join(',');
+  }
+  if (q.productWorkshops && q.productWorkshops.length > 0) {
+    params.productWorkshops = q.productWorkshops.join(',');
+  }
+  if (q.storeLocationIds && q.storeLocationIds.length > 0) {
+    params.storeLocationIds = q.storeLocationIds.join(',');
   }
   proxy?.download('djs/warehouse/product/export', params, `product_${new Date().getTime()}.xlsx`);
 }

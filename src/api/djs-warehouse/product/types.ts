@@ -35,6 +35,8 @@ export interface ProductInfoVO extends BaseEntity {
   materialNum?: number | string;
   isDelivery: number;
   supplierId?: number | string;
+  /** 供应商名称（row81：商品配置列表「供应商」列；后端按 supplierId 关联 t_md_supplier 回填） */
+  supplierName?: string;
   isBuyOut: number;
   remark?: string;
   /** 更新人姓名（后端 @Translation 回填） */
@@ -120,12 +122,16 @@ export interface ProductInfoQuery extends PageQuery {
   isBuyOut?: number;
   /** 生产车间（djs_product_workshop） */
   productWorkshop?: number;
+  /** 生产车间集合（R70 多选）；非空叠加 product_workshop IN (...) */
+  productWorkshops?: number[];
   /** 产品属性 djs_product_attr：1=生产产品（打包目标成品）/ 2=原材料（取数逻辑 doc#13） */
   productAttr?: number;
   /** 关联原材料（自引用 FK → product_info.id 雪花 id，超 JS Number 精度故用 string 精确匹配） */
   productMaterial?: string;
   /** 存储仓库（location_info.id 精确匹配） */
   storeLocationId?: string;
+  /** 存储仓库集合（R70 多选）；非空叠加 store_location_id IN (...) */
+  storeLocationIds?: string[];
   productStatus?: number;
   /** 更新人员（sys_user.user_id） */
   updateBy?: number | string;

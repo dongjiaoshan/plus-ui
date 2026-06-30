@@ -76,6 +76,7 @@ import ProductDetailDialog from './components/ProductDetailDialog.vue';
 import { listStoreDemand, removeStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
 import type { StoreDemandVO } from '@/api/djs-store/demand/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
+import { nextMonthRange } from '@/utils/ruoyi';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 
@@ -97,19 +98,12 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-// 默认查询「今天」的需求（格式 YYYY-MM-DD），不引新依赖
-const today = (() => {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-})();
+// 进页面默认：当前门店 + 产品需求日期=今天至未来一个月（demandDateRange → beginDate/endDate）+ 状态≠已删除（后端 @TableLogic 过滤）
+const searchModel = reactive<Record<string, unknown>>({ demandDateRange: nextMonthRange() });
 
-// 进页面默认：当前门店 + 需求日期=今天（beginDate=endDate=today）+ 状态≠已删除（后端 @TableLogic 过滤）
-const searchModel = reactive<Record<string, unknown>>({ beginDate: today, endDate: today });
-
-// 原型筛选：需求日期 + 产品名称
+// 原型筛选：产品需求日期（范围）+ 产品名称
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'beginDate', label: t('storeDemand.field.demandDate'), type: 'date' },
+  { field: 'demandDateRange', label: t('storeDemand.field.productDemandDate'), type: 'daterange' },
   { field: 'productName', label: t('storeDemand.field.productName'), type: 'input' }
 ]);
 
@@ -170,8 +164,13 @@ async function fetchList() {
   loading.value = true;
   try {
     // storeId 不再显式传：后端按请求头 Current-Store-Id 做行级过滤
+    // 产品需求日期范围（demandDateRange）拆成后端已支持的 beginDate / endDate，原始数组不下发
+    const { demandDateRange, ...rest } = searchModel;
+    const range = Array.isArray(demandDateRange) ? (demandDateRange as string[]) : [];
     const params = {
-      ...searchModel,
+      ...rest,
+      beginDate: range[0],
+      endDate: range[1],
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -185,19 +184,15 @@ async function fetchList() {
 }
 
 function handleSearch(payload: Record<string, unknown>) {
+  // demandDateRange 为 [beginDate, endDate]，清空时为 null → fetchList 兜底为空区间（不按日期过滤）
   Object.assign(searchModel, payload);
-  // 筛选区只有单个「需求日期」选择器（绑 beginDate）= 单日过滤；endDate 必须跟随 beginDate，
-  // 否则改日期后 endDate 仍卡在初始 today → 范围倒挂（begin>end）查空（选明天无数据的根因）。
-  // 清空日期时 beginDate=undefined → endDate 同步 undefined → 不按日期过滤。
-  searchModel.endDate = searchModel.beginDate;
   pageNum.value = 1;
   fetchList();
 }
 function handleReset() {
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
-  // 重置 = 回到「今天」，而非清空（保持默认查今天的需求）
-  searchModel.beginDate = today;
-  searchModel.endDate = today;
+  // 重置 = 回到「今天至未来一个月」，而非清空（保持默认范围）
+  searchModel.demandDateRange = nextMonthRange();
   pageNum.value = 1;
   fetchList();
 }

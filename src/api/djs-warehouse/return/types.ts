@@ -84,7 +84,11 @@ export interface ReturnProductQuery {
   pageSize?: number;
   returnNo?: string;
   storeId?: string;
+  /** 退回门店多选（R70 退回门店下拉多选）。 */
+  storeIds?: string[];
   productId?: string;
+  /** 退回产品多选（R70 退回产品下拉多选）。 */
+  productIds?: string[];
   /** 退货品类 belongType（djs_belong_type） */
   returnCategory?: string;
   isConfirm?: number;

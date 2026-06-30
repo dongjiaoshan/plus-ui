@@ -50,12 +50,18 @@ export interface OutsourcePigForm {
 
 /** 列表查询入参 */
 export interface OutsourcePigQuery extends PageQuery {
-  /** 购买日期（按天精确） yyyy-MM-dd */
-  purchaseDate?: string;
+  /** 采购日期范围下界（含） yyyy-MM-dd */
+  purchaseDateFrom?: string;
+  /** 采购日期范围上界（含） yyyy-MM-dd */
+  purchaseDateTo?: string;
   /** 到场时间（按天精确） yyyy-MM-dd */
   arriveTime?: string;
   /** 供应商 ID */
   supplierId?: number | string;
+  /** 供应商 ID 多选 */
+  supplierIds?: string[];
   /** 购买人 sys_user.user_id */
   buyer?: string;
+  /** 购买人 sys_user.user_id 多选 */
+  buyers?: string[];
 }

@@ -4,6 +4,63 @@ export default {
     dashboard: '首页',
     document: '项目文档'
   },
+  // 定时任务重跑（DENGBO row7）
+  jobRerun: {
+    panel: {
+      title: '手动重跑',
+      tip: '失败可重跑；选择日期范围则按日逐日重算（无日期任务不选日期，直接重跑一次）'
+    },
+    field: {
+      jobName: '任务',
+      dateRange: '日期范围',
+      status: '状态',
+      triggerType: '触发方式'
+    },
+    placeholder: {
+      jobName: '请选择任务',
+      begin: '开始日期',
+      end: '结束日期',
+      status: '请选择状态',
+      triggerType: '请选择触发方式'
+    },
+    action: {
+      rerun: '重跑',
+      search: '搜索',
+      reset: '重置'
+    },
+    column: {
+      jobName: '任务',
+      targetDate: '目标日',
+      status: '状态',
+      costMs: '耗时',
+      triggerType: '触发方式',
+      runTime: '触发时间',
+      errorMsg: '错误信息'
+    },
+    jobName: {
+      'breed-aggregate': '养殖统计聚合',
+      'warehouse-stat': '仓库统计聚合',
+      'organic-warning': '有机证书到期预警'
+    },
+    status: {
+      running: '执行中',
+      success: '成功',
+      fail: '失败'
+    },
+    trigger: {
+      schedule: '定时',
+      manual: '手动'
+    },
+    rule: {
+      jobName: '请选择要重跑的任务'
+    },
+    confirm: {
+      rerun: '确认重跑任务「{job}」？'
+    },
+    message: {
+      rerunSuccess: '重跑已触发'
+    }
+  },
   // 功能选择页（首页）国际化
   home: {
     title: '东角山有机生态农场系统',
@@ -1211,6 +1268,7 @@ export default {
       baseInfo: '产品属性',
       production: '生产记录',
       flow: '业务流水',
+      inout: '出入库记录',
       goodsView: '商品详情',
       goodsBaseInfo: '商品属性',
       productAdd: '新增产品',
@@ -1234,7 +1292,12 @@ export default {
       updateTime: '更新时间',
       index: '序号',
       goodsType: '商品类型',
-      goodsAttr: '商品属性'
+      goodsAttr: '商品属性',
+      goodsId: '商品编码',
+      goodsName: '商品名称',
+      goodsThumb: '商品图片',
+      goodsBelongType: '商品类别',
+      supplierName: '供应商'
     },
     field: {
       productId: '产品编码',
@@ -1243,6 +1306,7 @@ export default {
       productUnit: '单位',
       productSpec: '规格',
       belongType: '产品类别',
+      goodsBelongType: '商品类别',
       buyClass: '商品类别',
       productAttr: '产品属性',
       productWorkshop: '生产车间',
@@ -1264,7 +1328,10 @@ export default {
       goodsId: '商品编码',
       goodsName: '商品名称',
       goodsType: '商品类型',
-      goodsAttr: '商品属性'
+      goodsAttr: '商品属性',
+      goodsThumb: '商品图片',
+      goodsDesc: '商品描述',
+      supplierName: '供应商'
     },
     placeholder: {
       productId: '例 P0001 / SP-PORK-001（用户手填）',
@@ -1326,6 +1393,8 @@ export default {
     flow: {
       bizDate: '业务日期',
       bizDatePlaceholder: '请选择业务日期',
+      bizDateStart: '开始日期',
+      bizDateEnd: '结束日期',
       bizType: '业务类型',
       bizNum: '数量',
       bizUnit: '单位',
@@ -1345,11 +1414,11 @@ export default {
       productName: '产品名称',
       earNo: '耳号',
       blockNo: '地块编号',
-      locationName: '库位',
+      locationName: '存储库位',
       belongType: '产品类别'
     },
     column: {
-      locationName: '库位',
+      locationName: '存储库位',
       productName: '产品名称',
       productCode: '产品编码',
       productStock: '当前库存',
@@ -2140,6 +2209,11 @@ export default {
       cropName: '作物名称',
       plotCount: '活动地块数',
       todayPickWeight: '今日采摘重量',
+      saleWeight: '销售重量',
+      vegFreshWeight: '毛菜处理间量',
+      platformWeight: '果蔬月台量',
+      lossWeight: '损耗量',
+      feedWeight: '饲料饲喂量',
       expectedYield: '预计总产量',
       cumulativePickWeight: '累计已采重量'
     }
@@ -2157,7 +2231,7 @@ export default {
     },
     column: {
       productCode: '产品编码',
-      locationName: '库位',
+      locationName: '存储库位',
       productName: '产品名称',
       currentStock: '当前库存',
       productUnit: '单位',
@@ -2177,7 +2251,7 @@ export default {
     field: {
       keyword: '关键字',
       productName: '产品名称',
-      locationName: '库位',
+      locationName: '存储库位',
       currentStock: '当前库存',
       quantity: '数量',
       remark: '备注'
@@ -2212,15 +2286,16 @@ export default {
       title: '库存明细',
       productName: '产品名称',
       productNamePlaceholder: '请输入产品名称',
-      location: '库位',
-      locationPlaceholder: '请选择库位',
+      location: '存储库位',
+      locationPlaceholder: '请选择存储库位',
       search: '搜索',
       reset: '重置',
+      export: '导出',
       image: '产品图片',
       productCode: '产品编码',
       productNameCol: '产品名称',
       productUnit: '单位',
-      locationCol: '库位',
+      locationCol: '存储库位',
       beginStock: '期初库存',
       inboundQty: '入库量',
       outboundQty: '出库量',
@@ -2311,9 +2386,13 @@ export default {
   feedRecord: {
     action: {
       search: '查询',
-      reset: '重置'
+      reset: '重置',
+      export: '导出'
     },
     field: {
+      dateRange: '日期范围',
+      startDate: '开始日期',
+      endDate: '结束日期',
       cropName: '作物搜索',
       cropNamePlaceholder: '请输入作物名称',
       feedType: '提供位置',
@@ -2343,7 +2422,8 @@ export default {
       fileTooLarge: '文件大小超过 {max}MB 限制',
       typeNotAllowed: '不支持的文件类型，仅允许 {types}',
       reachLimit: '最多上传 {limit} 张',
-      preview: '预览'
+      preview: '预览',
+      uploadTip: '支持 {types} 格式，单张不超过 {max}MB'
     },
     warehouse: {
       pigBurn: {
@@ -2443,7 +2523,7 @@ export default {
         belongType: '产品类别',
         changeQuantity: '数量',
         productUnit: '单位',
-        location: '库位',
+        location: '存储库位',
         earNo: '耳号',
         plot: '地块',
         stockOutDest: '出库去向',
@@ -2460,7 +2540,7 @@ export default {
         title: '采购入库',
         productName: '商品名称',
         productCode: '商品编码',
-        buyClass: '商品分类',
+        buyClass: '商品类别',
         supplier: '供应商',
         storeLocation: '存储仓库',
         productThumb: '商品图片',
@@ -2504,8 +2584,8 @@ export default {
         productSpec: '规格',
         productSpecPlaceholder: '如 250g/包',
         location: '入库库位',
-        locationPlaceholder: '请选择库位',
-        locationRequired: '请选择库位',
+        locationPlaceholder: '请选择存储库位',
+        locationRequired: '请选择存储库位',
         store: '需求门店',
         storePlaceholder: '请选择需求门店',
         sendDest: '发送位置',
@@ -2671,7 +2751,7 @@ export default {
         deleteSuccess: '退货已删除',
         confirmSuccess: '退货已确认',
         viewDetail: '查看详情',
-        productKindCount: '品种数',
+        productKindCount: '退货品种数',
         returnWeightTotal: '退货重量',
         confirmWeightTotal: '确认重量',
         weightDiffTotal: '重量差异',
@@ -2684,8 +2764,8 @@ export default {
         checkDate: '盘点日期',
         checkStatus: '状态',
         lineCount: '明细数',
-        goodsCount: '商品数',
-        abnormalCount: '异常数',
+        goodsCount: '库存产品数',
+        abnormalCount: '产品异常数',
         diffSum: '盈亏计',
         createTime: '创建时间',
         detail: '详情',
@@ -2722,8 +2802,8 @@ export default {
         inMode: '入库方式',
         matType: '物资类型',
         productType: '产品类型',
-        productCode: '产品码',
-        productName: '产品',
+        productCode: '产品编码',
+        productName: '产品名称',
         blockNo: '地块编号',
         belongType: '产品类别',
         changeQuantity: '入库量',
@@ -2742,8 +2822,8 @@ export default {
         matType: '物资类型',
         productType: '产品类型',
         stockOutDest: '出库去向',
-        productCode: '产品码',
-        productName: '产品',
+        productCode: '产品编码',
+        productName: '产品名称',
         blockNo: '地块编号',
         belongType: '产品类别',
         changeQuantity: '出库量',
@@ -2810,11 +2890,13 @@ export default {
           produceDate: '生产日期',
           produceNo: '生产单号',
           productName: '产品名称',
-          belongType: '产品品类',
+          belongType: '产品类别',
           productSpec: '规格',
           productSort: '产品序号',
           productWeight: '产品重量',
-          materialConsume: '原材料使用量',
+          productUnit: '产品单位',
+          materialConsume: '原材料消耗量',
+          materialConsumeQty: '原材料消耗量',
           materialUnit: '原材料单位',
           itemCount: '件数',
           damageCount: '损坏量',
@@ -2912,7 +2994,7 @@ export default {
       noData: '暂无数据',
       // 库位概览
       locationOverview: '各库位概况（Top 20）',
-      colLocation: '库位',
+      colLocation: '存储库位',
       colType: '类型',
       colStock: '当前库存',
       colStatus: '状态',
@@ -3179,7 +3261,9 @@ export default {
       earliestPick: '最早可采摘日期',
       latestPick: '最晚可采摘日期',
       demandStore: '需求门店',
-      demandStorePh: '请选择门店'
+      demandStorePh: '请选择门店',
+      productNamePh: '请输入产品名称',
+      search: '查询'
     },
     cart: {
       title: '新增需求'
@@ -3196,6 +3280,7 @@ export default {
       demandNo: '需求单号',
       demandDate: '需求日期',
       'demandDate.required': '需求日期不能为空',
+      productDemandDate: '产品需求日期',
       storeId: '提单门店',
       'storeId.required': '提单门店不能为空',
       productId: '产品',

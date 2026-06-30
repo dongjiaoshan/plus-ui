@@ -102,6 +102,16 @@ export interface PickActivityVO {
   plotCount: number;
   /** 今日采摘重量（当日 SUM actual_yield，kg） */
   todayPickWeight?: number;
+  /** 销售重量（pick_dest=sale / 历史 NULL，kg） */
+  saleWeight?: number;
+  /** 毛菜处理间量（pick_dest=veg_fresh，kg） */
+  vegFreshWeight?: number;
+  /** 果蔬月台量（pick_dest=platform，kg） */
+  platformWeight?: number;
+  /** 损耗量（pick_dest=loss，kg） */
+  lossWeight?: number;
+  /** 饲料饲喂量（pick_dest=feed，kg） */
+  feedWeight?: number;
   /** 预计总产量（SUM expected_yield，kg） */
   expectedYield?: number;
   /** 累计已采重量（截至该日累计 SUM actual_yield，kg） */

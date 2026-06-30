@@ -84,14 +84,14 @@ const thumbUrlMap = ref<Record<string, string>>({});
 const searchModel = reactive<Record<string, any>>({
   locationCode: undefined,
   locationName: undefined,
-  locationType: undefined,
+  locationType: [],
   locationStatus: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'locationCode', label: t('location.field.locationCode'), type: 'input' },
   { field: 'locationName', label: t('location.field.locationName'), type: 'input' },
-  { field: 'locationType', label: t('location.field.locationType'), type: 'select', dictType: 'djs_location_type' },
+  { field: 'locationType', label: t('location.field.locationType'), type: 'select', dictType: 'djs_location_type', multiple: true },
   { field: 'locationStatus', label: t('location.field.locationStatus'), type: 'select', dictType: 'djs_location_status' }
 ]);
 
@@ -116,7 +116,7 @@ async function fetchList() {
       pageSize: pageSize.value,
       locationCode: searchModel.locationCode || undefined,
       locationName: searchModel.locationName || undefined,
-      locationType: searchModel.locationType || undefined,
+      locationTypes: Array.isArray(searchModel.locationType) && searchModel.locationType.length ? searchModel.locationType : undefined,
       locationStatus: searchModel.locationStatus === undefined || searchModel.locationStatus === '' ? undefined : Number(searchModel.locationStatus)
     };
     const res = await listLocation(query);
@@ -192,7 +192,7 @@ function handleExport() {
     {
       locationCode: searchModel.locationCode || undefined,
       locationName: searchModel.locationName || undefined,
-      locationType: searchModel.locationType || undefined,
+      locationTypes: Array.isArray(searchModel.locationType) && searchModel.locationType.length ? searchModel.locationType : undefined,
       locationStatus: searchModel.locationStatus === undefined || searchModel.locationStatus === '' ? undefined : Number(searchModel.locationStatus)
     },
     `location_${new Date().getTime()}.xlsx`

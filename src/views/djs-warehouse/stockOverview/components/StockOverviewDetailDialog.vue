@@ -1,6 +1,6 @@
 <template>
-  <el-dialog v-model="visible" :title="dialogTitle" width="1100px" append-to-body destroy-on-close :close-on-click-modal="true">
-    <!-- 搜索：产品名称模糊（支持输入） + 库位下拉 -->
+  <el-dialog v-model="visible" :title="dialogTitle" width="90%" append-to-body destroy-on-close :close-on-click-modal="true">
+    <!-- 搜索：产品名称模糊（支持输入） + 库位下拉 + 导出 -->
     <el-form :inline="true" class="mb-2" @submit.prevent>
       <el-form-item :label="t('stockOverview.detail.productName')">
         <el-input
@@ -12,19 +12,14 @@
         />
       </el-form-item>
       <el-form-item :label="t('stockOverview.detail.location')">
-        <el-select
-          v-model="query.locationId"
-          :placeholder="t('stockOverview.detail.locationPlaceholder')"
-          clearable
-          filterable
-          style="width: 180px"
-        >
+        <el-select v-model="query.locationId" :placeholder="t('stockOverview.detail.locationPlaceholder')" clearable filterable style="width: 180px">
           <el-option v-for="o in locationOptions" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="fetchDetail">{{ t('stockOverview.detail.search') }}</el-button>
         <el-button icon="Refresh" @click="handleReset">{{ t('stockOverview.detail.reset') }}</el-button>
+        <el-button type="warning" icon="Download" @click="handleExport">{{ t('stockOverview.detail.export') }}</el-button>
       </el-form-item>
     </el-form>
 
@@ -41,10 +36,31 @@
           <span v-else class="text-gray-400">—</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('stockOverview.detail.productCode')" prop="productCode" min-width="110" align="center" header-align="center" show-overflow-tooltip />
-      <el-table-column :label="t('stockOverview.detail.productNameCol')" prop="productName" min-width="130" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column
+        :label="t('stockOverview.detail.productCode')"
+        prop="productCode"
+        min-width="110"
+        align="center"
+        header-align="center"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        :label="t('stockOverview.detail.productNameCol')"
+        prop="productName"
+        min-width="130"
+        align="center"
+        header-align="center"
+        show-overflow-tooltip
+      />
       <el-table-column :label="t('stockOverview.detail.productUnit')" prop="productUnit" min-width="70" align="center" header-align="center" />
-      <el-table-column :label="t('stockOverview.detail.locationCol')" prop="locationName" min-width="110" align="center" header-align="center" show-overflow-tooltip />
+      <el-table-column
+        :label="t('stockOverview.detail.locationCol')"
+        prop="locationName"
+        min-width="110"
+        align="center"
+        header-align="center"
+        show-overflow-tooltip
+      />
       <el-table-column :label="t('stockOverview.detail.beginStock')" prop="beginStock" min-width="100" align="center" header-align="center">
         <template #default="{ row }">{{ fmt(row.beginStock) }}</template>
       </el-table-column>
@@ -77,6 +93,7 @@ import { useI18n } from 'vue-i18n';
 defineOptions({ name: 'StockOverviewDetailDialog' });
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const visible = ref(false);
 const loading = ref(false);
@@ -161,6 +178,20 @@ function handleReset() {
   query.productName = undefined;
   query.locationId = undefined;
   fetchDetail();
+}
+
+/** 导出当日库存明细（按当前搜索条件）。 */
+function handleExport() {
+  if (!currentDate.value) return;
+  proxy?.download(
+    'djs/warehouse/stockOverview/export',
+    {
+      date: currentDate.value,
+      productName: query.productName || undefined,
+      locationId: query.locationId || undefined
+    },
+    `库存明细_${currentDate.value}.xlsx`
+  );
 }
 
 /** 数量格式化：后端 BigDecimal 序列化为 string，统一 Number 强转保两位小数。 */

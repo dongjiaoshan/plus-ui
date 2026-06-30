@@ -57,8 +57,7 @@
     </el-upload>
 
     <div v-if="showTip" class="upload-tip">
-      <span>{{ t('djs.oss.fileTooLarge', { max: fileSize }) }} · </span>
-      <span>{{ t('djs.oss.typeNotAllowed', { types: fileTypes.join('/') }) }}</span>
+      {{ t('djs.oss.uploadTip', { types: fileTypes.join('/'), max: fileSize }) }}
     </div>
 
     <el-dialog v-model="previewVisible" :title="t('djs.oss.preview')" width="640px" append-to-body>

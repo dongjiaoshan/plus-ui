@@ -61,6 +61,8 @@ export interface StockCheckRecordVO extends BaseEntity {
 export interface StockCheckQuery extends PageQuery {
   checkId?: string;
   locationId?: number | string;
+  /** 盘点仓库多选（R70；非空时后端按 IN 过滤，优先于单值 locationId）。 */
+  locationIds?: (number | string)[];
   checkStatus?: string;
   /** 盘点人姓名（按发起人 nick_name 模糊筛选） */
   checkByName?: string;

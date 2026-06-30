@@ -60,25 +60,25 @@ const pageSize = ref(10);
 
 const searchModel = reactive<Record<string, any>>({
   flowNo: undefined,
-  flowType: undefined,
+  flowType: [],
   inoutType: undefined,
-  matType: undefined,
+  matType: [],
   productId: undefined,
   productCode: undefined,
   earNo: undefined,
-  stockOutDest: undefined,
+  stockOutDest: [],
   dateFrom: undefined,
   dateTo: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'flowNo', label: t('djs.warehouse.stockFlow.flowNo'), type: 'input' },
-  { field: 'flowType', label: t('djs.warehouse.stockFlow.flowType'), type: 'select', dictType: 'djs_flow_type' },
+  { field: 'flowType', label: t('djs.warehouse.stockFlow.flowType'), type: 'select', multiple: true, dictType: 'djs_flow_type' },
   { field: 'inoutType', label: t('djs.warehouse.stockFlow.inoutType'), type: 'select', dictType: 'djs_inout_type' },
-  { field: 'matType', label: t('djs.warehouse.stockFlow.matType'), type: 'select', dictType: 'djs_mat_type' },
+  { field: 'matType', label: t('djs.warehouse.stockFlow.matType'), type: 'select', multiple: true, dictType: 'djs_mat_type' },
   { field: 'productCode', label: t('djs.warehouse.stockFlow.productCode'), type: 'input' },
   { field: 'earNo', label: t('djs.warehouse.stockFlow.earNo'), type: 'input' },
-  { field: 'stockOutDest', label: t('djs.warehouse.stockFlow.stockOutDest'), type: 'select', dictType: 'djs_stock_out_dest' }
+  { field: 'stockOutDest', label: t('djs.warehouse.stockFlow.stockOutDest'), type: 'select', multiple: true, dictType: 'djs_stock_out_dest' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -97,11 +97,26 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'remark', label: t('djs.warehouse.stockFlow.remark'), minWidth: 160 }
 ]);
 
+/**
+ * searchModel → 后端 query。
+ * R70 多选字段（flowType / matType / stockOutDest）发复数 param（flowTypes / matTypes / stockOutDests），
+ * 删掉单值同名 key 避免单值+复数都发；其余字段透传。
+ */
+function buildQuery(): StockFlowQuery {
+  const { flowType, matType, stockOutDest, ...rest } = searchModel;
+  return {
+    ...rest,
+    flowTypes: Array.isArray(flowType) && flowType.length ? flowType : undefined,
+    matTypes: Array.isArray(matType) && matType.length ? matType : undefined,
+    stockOutDests: Array.isArray(stockOutDest) && stockOutDest.length ? stockOutDest : undefined
+  } as StockFlowQuery;
+}
+
 async function loadList() {
   loading.value = true;
   try {
     const params: StockFlowQuery = {
-      ...searchModel,
+      ...buildQuery(),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -133,7 +148,7 @@ function handlePageChange(pn: number, ps: number) {
 }
 
 function handleExport() {
-  proxy?.download('/djs/warehouse/stockFlow/export', { ...searchModel }, `出入库流水_${new Date().getTime()}.xlsx`);
+  proxy?.download('/djs/warehouse/stockFlow/export', buildQuery(), `出入库流水_${new Date().getTime()}.xlsx`);
 }
 
 function handleAdjust(row: StockFlowVO) {

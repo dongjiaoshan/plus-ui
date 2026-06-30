@@ -64,7 +64,7 @@ const { list, total, loading, pageNum, pageSize, searchModel, fetchList, handleS
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'demandNo', label: t('demand.field.demandNo'), type: 'input' },
-  { field: 'demandStatus', label: t('demand.field.demandStatus'), type: 'select', dictType: 'djs_demand_status' },
+  { field: 'demandStatus', label: t('demand.field.demandStatus'), type: 'select', multiple: true, dictType: 'djs_demand_status' },
   { field: 'beginDate', label: t('demand.field.beginDate'), type: 'date' },
   { field: 'endDate', label: t('demand.field.endDate'), type: 'date' }
 ]);
