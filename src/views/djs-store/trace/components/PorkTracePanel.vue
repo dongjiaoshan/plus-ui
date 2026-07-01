@@ -7,14 +7,15 @@
           <div v-loading="pigLoading" class="pig-chips">
             <el-tag
               v-for="p in pigs"
-              :key="p.earNo"
-              :effect="selectedEarNo === p.earNo ? 'dark' : 'plain'"
+              :key="pigKey(p)"
+              :effect="selectedKey === pigKey(p) ? 'dark' : 'plain'"
               class="pig-chip"
               :class="{ 'is-exhausted': isExhausted(p) }"
-              :type="selectedEarNo === p.earNo ? 'warning' : 'info'"
+              :type="selectedKey === pigKey(p) ? 'warning' : 'info'"
               @click="selectPig(p)"
             >
-              {{ p.earNo }}
+              {{ p.whiteBarNo ?? p.earNo }}
+              <text v-if="p.whiteBarNo" class="chip-ear">{{ p.earNo }}</text>
               <text class="chip-weight">{{ chipWeightText(p) }}</text>
             </el-tag>
             <el-empty v-if="!pigLoading && !pigs.length" :description="t('storeTrace.pork.noPig')" :image-size="60" />
@@ -125,7 +126,11 @@ const { djs_pig_sex, djs_pork_cut_product } = toRefs<Record<string, { label: str
 const pigs = ref<TraceablePigVO[]>([]);
 const pigLoading = ref(false);
 const genLoading = ref(false);
-const selectedEarNo = ref<string>();
+// 选中键 = 白条流水号（半只级）；旧数据无 white_bar_no 时回落耳号（整猪一条）。同猪两半只 earNo 相同、靠 white_bar_no 区分。
+const selectedKey = ref<string>();
+function pigKey(p: TraceablePigVO): string {
+  return p.whiteBarNo ?? p.earNo;
+}
 const labelDialogRef = ref<InstanceType<typeof TraceLabelDialog>>();
 // 门店猪肉打包产品（生产车间「门店打包间」workshop=5，邓博 2026-06-21 定调）；空则回退部位字典
 const packProducts = ref<StorePackProductVO[]>([]);
@@ -143,7 +148,7 @@ const cutImgMap = ref<Record<string, string>>({ ...LOCAL_CUT_IMG });
 
 const form = reactive<{ cutLabel?: string; weight?: number }>({ cutLabel: undefined, weight: undefined });
 
-const selectedPig = computed(() => pigs.value.find((p) => p.earNo === selectedEarNo.value) ?? null);
+const selectedPig = computed(() => pigs.value.find((p) => pigKey(p) === selectedKey.value) ?? null);
 // 产品卡数据源：优先「门店打包间(workshop=5)」产品（产品名做卡片标题 + 生码 cutLabel）；
 // 无 workshop=5 产品时回退旧部位字典 djs_pork_cut_product，保证功能不空。
 const cutOptions = computed<{ label: string; value: string }[]>(() => {
@@ -152,7 +157,7 @@ const cutOptions = computed<{ label: string; value: string }[]>(() => {
   }
   return (djs_pork_cut_product?.value ?? []) as { label: string; value: string }[];
 });
-const canGen = computed(() => !!selectedEarNo.value && !!form.cutLabel && (form.weight ?? 0) > 0);
+const canGen = computed(() => !!selectedKey.value && !!form.cutLabel && (form.weight ?? 0) > 0);
 
 // ---- 白条剩余可打包重量（到货 − 已现场打包；≤0 禁选） ----
 function fmtKg(v?: number): string {
@@ -224,7 +229,7 @@ function selectPig(p: TraceablePigVO) {
     proxy?.$modal.msgWarning(t('storeTrace.pork.exhausted'));
     return;
   }
-  selectedEarNo.value = p.earNo;
+  selectedKey.value = pigKey(p);
 }
 
 async function handleGen() {
@@ -237,7 +242,7 @@ async function handleGen() {
   }
   genLoading.value = true;
   try {
-    const res = await genStoreTraceCode({ earNo: selectedEarNo.value, cutLabel: form.cutLabel, weight: form.weight });
+    const res = await genStoreTraceCode({ earNo: selectedPig.value?.earNo, cutLabel: form.cutLabel, weight: form.weight });
     const code = (res.data as unknown as string) ?? '';
     proxy?.$modal.msgSuccess(t('storeTrace.pork.genOk', { code }));
     // 弹框录重量（默认本次生码重量）→ 结构化标签卡 + 二维码 → 打印
@@ -247,7 +252,7 @@ async function handleGen() {
         produceDate: todayYmd(),
         productName: form.cutLabel,
         sourceLabel: t('storeTrace.label.earNo'),
-        sourceValue: selectedEarNo.value,
+        sourceValue: selectedPig.value?.earNo,
         produceCode: code,
         traceType: 'pork'
       },
@@ -310,6 +315,12 @@ onMounted(async () => {
       margin: 0 8px 8px 0;
       cursor: pointer;
       font-size: 14px;
+
+      .chip-ear {
+        margin-left: 4px;
+        font-size: 11px;
+        opacity: 0.7;
+      }
 
       .chip-weight {
         margin-left: 4px;

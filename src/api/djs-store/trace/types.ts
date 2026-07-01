@@ -8,6 +8,8 @@
 export interface TraceablePigVO {
   /** 猪只ID（= 耳号简版，chip 主显 + 选中值） */
   earNo: string;
+  /** 白条流水号（半只/整只白条唯一标识，门店到货白条按半只一条；同猪两半只 earNo 相同、靠此区分） */
+  whiteBarNo?: string;
   /** 性别（字典 djs_pig_sex：F/M） */
   pigSex?: string;
   /** 品种品系 label（{品种}/{品系}） */

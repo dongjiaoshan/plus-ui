@@ -1424,6 +1424,7 @@ export default {
       productStock: '当前库存',
       productUnit: '单位',
       earNo: '耳号',
+      whiteBarNo: '白条流水号',
       blockNo: '地块编号',
       latestCheckTime: '最新盘点',
       checkResult: '盘点结果'
@@ -2645,6 +2646,7 @@ export default {
         confirmPickup: '确认出库',
         pickupSuccess: '白条已领用进分割车间',
         barCardTitle: '白条（整只）',
+        whiteBarNoLabel: '白条流水号',
         inTimeLabel: '入库时间',
         agingDurationLabel: '排酸时长',
         inWeightLabel: '入库重量',

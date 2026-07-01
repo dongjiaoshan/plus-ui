@@ -96,6 +96,7 @@ const columns = computed<BizTableColumn[]>(() => [
   },
   { prop: 'productUnit', label: t('stock.column.productUnit'), minWidth: 120, align: 'center' },
   { prop: 'earNo', label: t('stock.column.earNo'), minWidth: 120, align: 'center' },
+  { prop: 'whiteBarNo', label: t('stock.column.whiteBarNo'), minWidth: 130, align: 'center' },
   { prop: 'blockNo', label: t('stock.column.blockNo'), minWidth: 120, align: 'center' },
   { prop: 'latestCheckTime', label: t('stock.column.latestCheckTime'), minWidth: 170, align: 'center', formatter: 'datetime' },
   { prop: 'checkResult', label: t('stock.column.checkResult'), minWidth: 120, align: 'center', dictType: 'djs_check_result' }

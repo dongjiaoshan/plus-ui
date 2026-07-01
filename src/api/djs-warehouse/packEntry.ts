@@ -62,6 +62,8 @@ export interface BarInfoVO {
 export interface BarPickupItemVO {
   /** 燎毛产出行 id（缺省 = 整只兜底卡，提交走整猪路径） */
   inhouseId?: number | string;
+  /** 白条流水号（半只/整只白条唯一标识） */
+  whiteBarNo?: string;
   /** 白条 id */
   barInfoId: number | string;
   barId?: string;

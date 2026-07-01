@@ -1422,6 +1422,7 @@ export default {
       productStock: 'Stock',
       productUnit: 'Unit',
       earNo: 'Ear No.',
+      whiteBarNo: 'Bar Serial No.',
       blockNo: 'Plot No.',
       latestCheckTime: 'Last check',
       checkResult: 'Check result'
@@ -2642,6 +2643,7 @@ export default {
         confirmPickup: 'Confirm Out',
         pickupSuccess: 'Bar picked to cutting',
         barCardTitle: 'White Bar (Whole)',
+        whiteBarNoLabel: 'Bar Serial No.',
         inTimeLabel: 'Inbound Time',
         agingDurationLabel: 'Aging Duration',
         inWeightLabel: 'Inbound Weight',

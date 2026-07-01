@@ -23,6 +23,10 @@
                 </span>
               </div>
               <div class="bar-card-body">
+                <div v-if="it.whiteBarNo" class="bar-row">
+                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.whiteBarNoLabel') }}</span>
+                  <span class="bar-row-value bar-row-value--strong">{{ it.whiteBarNo }}</span>
+                </div>
                 <div class="bar-row">
                   <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inTimeLabel') }}</span>
                   <span class="bar-row-value">{{ it.inTime ?? '-' }}</span>
