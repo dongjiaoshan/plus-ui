@@ -81,14 +81,9 @@
       </div>
     </div>
 
-    <!-- 白条完成分割（滴水损失） -->
+    <!-- 白条完成分割：仅确认（滴水损耗后端自动计算，无需录入其他信息） -->
     <el-dialog v-model="cutDoneVisible" :title="t('djs.warehouse.packEntry.finishCut')" width="420px" append-to-body destroy-on-close>
-      <el-form ref="doneFormRef" :model="doneForm" label-width="110px">
-        <el-alert :title="t('djs.warehouse.packEntry.dripLossAutoHint')" type="info" :closable="false" show-icon class="mb-3" />
-        <el-form-item :label="t('djs.warehouse.packEntry.remark')" prop="remark">
-          <el-input v-model="doneForm.remark" type="textarea" :rows="2" maxlength="500" />
-        </el-form-item>
-      </el-form>
+      <div class="cut-done-confirm">{{ t('djs.warehouse.packEntry.finishCutConfirm') }}</div>
       <template #footer>
         <el-button type="primary" :loading="cutDoneSubmitting" @click="handleCutDone">{{ t('common.confirm') }}</el-button>
         <el-button @click="cutDoneVisible = false">{{ t('common.cancel') }}</el-button>
@@ -247,15 +242,12 @@ async function handleCutOut() {
 // ---- 白条完成分割 ----
 const cutDoneVisible = ref(false);
 const cutDoneSubmitting = ref(false);
-const doneFormRef = ref<any>();
-const doneForm = ref<{ remark: string | undefined }>({ remark: undefined });
 
 function openCutDone() {
   if (!form.value.cutRecordId) {
     notifyMissing(t('djs.warehouse.packEntry.cutRecordRequired'));
     return;
   }
-  doneForm.value = { remark: undefined };
   cutDoneVisible.value = true;
 }
 
@@ -263,10 +255,7 @@ async function handleCutDone() {
   // 滴水损耗由后端自动计算（白条入库重量 − 出库重量），前端不再录入
   cutDoneSubmitting.value = true;
   try {
-    await submitCutDone({
-      cutRecordId: form.value.cutRecordId as number | string,
-      remark: doneForm.value.remark
-    });
+    await submitCutDone({ cutRecordId: form.value.cutRecordId as number | string });
     ElMessage.success(t('djs.warehouse.packEntry.finishCutSuccess'));
     cutDoneVisible.value = false;
     form.value = { cutRecordId: '', locationId: '' };

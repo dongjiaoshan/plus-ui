@@ -2627,6 +2627,7 @@ export default {
         cutOutExceed: 'Cut-product weight exceeds the remaining cuttable weight ({remaining}kg left)',
         finishCut: 'Finish Cut',
         finishCutShort: 'Finish Cut',
+        finishCutConfirm: 'Confirm this white bar has finished cutting?',
         dripLoss: 'Drip Loss',
         dripLossRequired: 'Enter drip loss (0 if none)',
         dripLossAutoHint: 'Drip loss is auto-calculated (white-bar in-weight − out-weight); no manual entry needed',

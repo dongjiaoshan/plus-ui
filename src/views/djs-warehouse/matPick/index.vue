@@ -92,10 +92,9 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 type OpKind = 'pick' | 'return' | 'loss' | 'feed';
 
-/** 7 类业态 tab（与小程序一致；value = djs_belong_type 字典 value） */
+/** 业态 tab（白条不在此领用——白条生产领用只走「白条领用」专页，故此处不列白条）。value = djs_belong_type 字典 value */
 const belongTabs = computed(() => [
   { value: 'package', label: t('matPick.tab.package') },
-  { value: 'white_bar', label: t('matPick.tab.whiteBar') },
   { value: 'pork', label: t('matPick.tab.pork') },
   { value: 'vegetable', label: t('matPick.tab.vegetable') },
   { value: 'egg', label: t('matPick.tab.egg') },
@@ -142,7 +141,7 @@ const columns = computed<BizTableColumn[]>(() => {
     { prop: 'currentStock', label: t('matPick.column.currentStock'), minWidth: 100, align: 'center', formatter: (row: BizRow) => fmtNum(row.currentStock) },
     { prop: 'productUnit', label: t('matPick.column.productUnit'), minWidth: 70, align: 'center' }
   ];
-  if (tab === 'white_bar' || tab === 'pork') {
+  if (tab === 'pork') {
     cols.push({ prop: 'earNo', label: t('matPick.column.earNo'), minWidth: 110, align: 'center' });
   }
   if (tab === 'vegetable') {

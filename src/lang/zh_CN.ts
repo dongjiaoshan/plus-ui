@@ -2630,6 +2630,7 @@ export default {
         cutOutExceed: '分割产品重量超出剩余可分割重量（剩余 {remaining}kg）',
         finishCut: '白条完成分割',
         finishCutShort: '分割完成',
+        finishCutConfirm: '确认该白条已完成分割？',
         dripLoss: '滴水损失',
         dripLossRequired: '请填写滴水损失（无填 0）',
         dripLossAutoHint: '滴水损耗由系统自动计算（白条入库重量 − 出库重量），无需手动录入',

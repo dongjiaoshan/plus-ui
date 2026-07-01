@@ -18,6 +18,19 @@
             />
           </div>
 
+          <!-- 顶部：按产品名称筛选当前 tab 的产品（切换业态 tab 时保留搜索值；紧贴「新增需求」标题下方） -->
+          <div class="product-search-bar">
+            <el-input
+              v-model="searchKeyword"
+              :placeholder="t('storeDemand.create.productNamePh')"
+              clearable
+              style="width: 240px"
+              @keyup.enter="applySearch"
+              @clear="applySearch"
+            />
+            <el-button type="primary" icon="Search" @click="applySearch">{{ t('storeDemand.create.search') }}</el-button>
+          </div>
+
           <div class="area-title">{{ t('storeDemand.create.productType') }}</div>
 
           <el-tabs v-model="activeTab" class="type-tabs">
@@ -101,19 +114,6 @@
               </template>
             </el-table-column>
           </el-table>
-
-          <!-- 底部：按产品名称筛选当前 tab 的产品（切换业态 tab 时保留搜索值） -->
-          <div class="product-search-bar">
-            <el-input
-              v-model="searchKeyword"
-              :placeholder="t('storeDemand.create.productNamePh')"
-              clearable
-              style="width: 240px"
-              @keyup.enter="applySearch"
-              @clear="applySearch"
-            />
-            <el-button type="primary" icon="Search" @click="applySearch">{{ t('storeDemand.create.search') }}</el-button>
-          </div>
         </div>
 
         <!-- 右侧：需求产品购物车 + 需求确认 -->
@@ -438,7 +438,7 @@ defineExpose({ open });
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 12px;
+      margin-bottom: 12px;
     }
   }
 
