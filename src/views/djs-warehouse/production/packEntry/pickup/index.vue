@@ -70,7 +70,7 @@
             <WeightNumpad v-model="pickupForm.productWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
           </div>
 
-          <!-- 出库位置：固定两按钮（分割车间 / 发货月台） -->
+          <!-- 出库位置：固定三按钮（分割车间 / 发货月台 / 仓库出库） -->
           <div class="panel-section">
             <div class="panel-label">{{ t('djs.warehouse.packEntry.outLocation') }}</div>
             <DestToggle v-model="pickupForm.outDest" :options="outDestOptions" />
@@ -94,6 +94,23 @@
             </el-select>
           </div>
 
+          <!-- 仓库出库：选出库去向（复用系统字典 djs_stock_out_dest = 矿山/厨房/大冶门店/个人…，warehouse 分支必填） -->
+          <div v-if="pickupForm.outDest === 'warehouse'" class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.outDest') }}</div>
+            <el-select
+              v-model="pickupForm.warehouseOutDest"
+              :placeholder="t('djs.warehouse.packEntry.outDestPlaceholder')"
+              class="ship-store-select"
+            >
+              <el-option
+                v-for="d in djs_stock_out_dest"
+                :key="d.value"
+                :label="d.label"
+                :value="d.value"
+              />
+            </el-select>
+          </div>
+
           <div class="panel-actions">
             <el-button type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit">
               {{ t('djs.warehouse.packEntry.confirmPickup') }}
@@ -106,22 +123,26 @@
 </template>
 
 <script setup name="PackEntryPickup" lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, getCurrentInstance, onMounted, ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage, ElNotification } from 'element-plus';
 import { PriceTag } from '@element-plus/icons-vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
 import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
-import { listPickupItems, submitPickup, submitWhiteBarOut } from '@/api/djs-warehouse/packEntry';
+import { listPickupItems, submitPickup, submitWhiteBarOut, submitWarehouseOut } from '@/api/djs-warehouse/packEntry';
 import type { BarPickupItemVO } from '@/api/djs-warehouse/packEntry';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance()!;
+
+// 出库去向复用系统已有字典 djs_stock_out_dest（矿山/厨房/大冶门店/个人/发货月台…）；toRefs 解构保响应式（否则冷 store 挂载恒空）
+const { djs_stock_out_dest } = toRefs<any>(proxy?.useDict('djs_stock_out_dest'));
 
 const { sources, loadSources, stores, loadStores } = usePackEntryOptions();
 
-/** 出库位置枚举 → 后端两端点：cut=分割车间(submitPickup) / ship=发货月台(whiteBarOut)。 */
-type OutDest = 'cut' | 'ship';
+/** 出库位置枚举 → 后端三端点：cut=分割车间(submitPickup) / ship=发货月台(whiteBarOut) / warehouse=仓库出库(warehouseOut)。 */
+type OutDest = 'cut' | 'ship' | 'warehouse';
 
 // FIX-WMS-CUTPICKUP-SPLIT-001：按燎毛产出行出卡（半只/半扇各一张），取代原「整猪一张卡」
 const items = ref<BarPickupItemVO[]>([]);
@@ -133,7 +154,9 @@ const pickupDefault = () => ({
   productWeight: undefined as number | undefined,
   outDest: 'cut' as OutDest,
   // 发货月台关联门店（ship 分支必填，后端 WhiteBarOutBo.storeId @NotNull）
-  storeId: '' as number | string | ''
+  storeId: '' as number | string | '',
+  // 仓库出库去向（warehouse 分支必填，字典 djs_stock_out_dest，后端 WarehouseOutBo.outDest @NotBlank）
+  warehouseOutDest: '' as string
 });
 const pickupForm = ref(pickupDefault());
 
@@ -146,8 +169,17 @@ const selectedItem = computed(() => items.value.find((it) => itemKey(it) === sel
 
 const outDestOptions = computed<{ value: OutDest; label: string }[]>(() => [
   { value: 'cut', label: t('djs.warehouse.packEntry.outToCut') },
-  { value: 'ship', label: t('djs.warehouse.packEntry.outToShip') }
+  { value: 'ship', label: t('djs.warehouse.packEntry.outToShip') },
+  { value: 'warehouse', label: t('djs.warehouse.packEntry.outToWarehouse') }
 ]);
+
+/** 解析来源 inhouse id：优先取该产出行 inhouseId；整只兜底卡（inhouseId 缺省）回落按耳号匹配 whiteBar 来源。 */
+function resolveSourceInhouseId(it: BarPickupItemVO): number | string | undefined {
+  if (it.inhouseId != null) return it.inhouseId;
+  const earNo = it.earNo ?? it.barId;
+  const src = sources.value.find((s) => String(s.earNo ?? '') === String(earNo));
+  return src?.id;
+}
 
 /** 选中一张卡：高亮 + 把该产出行重量预填进过磅框（可改）。 */
 function selectItem(it: BarPickupItemVO) {
@@ -214,24 +246,32 @@ async function handleSubmit() {
       // 整只兜底卡 inhouseId 缺省 → 整猪路径。带现场过磅，后端再校验累计 ≤ 出栏重量。
       await submitPickup({ barInfoId: it.barInfoId, inhouseId: it.inhouseId, pickupWeight });
       ElMessage.success(t('djs.warehouse.packEntry.pickupSuccess'));
-    } else {
+    } else if (pickupForm.value.outDest === 'ship') {
       // 发货月台：白条/猪肉发货出库。来源 inhouse 优先取该产出行 id；整只兜底卡回落按耳号匹配 whiteBar 来源。
       if (!pickupForm.value.storeId) {
         notifyMissing(t('djs.warehouse.packEntry.shipStoreRequired'));
         return;
       }
-      let sourceInhouseId: number | string | undefined = it.inhouseId;
-      if (sourceInhouseId == null) {
-        const earNo = it.earNo ?? it.barId;
-        const src = sources.value.find((s) => String(s.earNo ?? '') === String(earNo));
-        sourceInhouseId = src?.id;
-      }
+      const sourceInhouseId = resolveSourceInhouseId(it);
       if (sourceInhouseId == null) {
         notifyMissing(t('djs.warehouse.packEntry.shipSourceNotFound'));
         return;
       }
       await submitWhiteBarOut({ sourceInhouseId, productWeight: pickupWeight, storeId: pickupForm.value.storeId });
       ElMessage.success(t('djs.warehouse.packEntry.shipOutSuccess'));
+    } else {
+      // 仓库出库：白条/猪肉出库到仓库（不发往门店），须选出库去向（字典 djs_stock_out_dest）。
+      if (!pickupForm.value.warehouseOutDest) {
+        notifyMissing(t('djs.warehouse.packEntry.outDestRequired'));
+        return;
+      }
+      const sourceInhouseId = resolveSourceInhouseId(it);
+      if (sourceInhouseId == null) {
+        notifyMissing(t('djs.warehouse.packEntry.shipSourceNotFound'));
+        return;
+      }
+      await submitWarehouseOut({ sourceInhouseId, productWeight: pickupWeight, outDest: pickupForm.value.warehouseOutDest });
+      ElMessage.success(t('djs.warehouse.packEntry.warehouseOutSuccess'));
     }
     pickupForm.value = pickupDefault();
     selectedKey.value = '';

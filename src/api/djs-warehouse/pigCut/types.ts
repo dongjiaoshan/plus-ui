@@ -8,6 +8,7 @@ export interface PigCutRecordVO {
   id: number;
   cutId: string;
   whiteBarId: number;
+  whiteBarNo?: string;
   barId: string;
   earNo?: string;
   pickupTime: string;

@@ -12,6 +12,8 @@ export interface ProductInfoVO extends BaseEntity {
   productType: number; // 1 自产 / 2 外购（已废弃 3 礼盒）
   productUnit: string;
   productSpec?: string;
+  /** 产品别名（非必填） */
+  productAlias?: string;
   belongType?: string;
   buyClass?: string;
   productThumb?: string;
@@ -87,6 +89,8 @@ export interface ProductInfoForm {
   productType: number;
   productUnit: string;
   productSpec?: string;
+  /** 产品别名（非必填） */
+  productAlias?: string;
   belongType?: string;
   buyClass?: string;
   productThumb?: string;

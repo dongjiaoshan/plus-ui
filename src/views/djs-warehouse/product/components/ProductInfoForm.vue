@@ -23,6 +23,17 @@
             <el-input v-model="form.productSpec" maxlength="64" :placeholder="t('product.placeholder.productSpec')" />
           </el-form-item>
         </el-col>
+        <!-- row15：产品别名（非必填），规格字段后 -->
+        <el-col :span="12">
+          <el-form-item :label="t('product.field.productAlias')" prop="productAlias">
+            <el-input
+              v-model="form.productAlias"
+              maxlength="128"
+              show-word-limit
+              :placeholder="t('product.placeholder.productAlias')"
+            />
+          </el-form-item>
+        </el-col>
       </el-row>
 
       <!-- 自产专属 -->
@@ -212,6 +223,7 @@ const defaultForm = (): ProductInfoForm => ({
   productType: 1,
   productUnit: '',
   productSpec: undefined,
+  productAlias: undefined,
   belongType: undefined,
   buyClass: undefined,
   productThumb: undefined,

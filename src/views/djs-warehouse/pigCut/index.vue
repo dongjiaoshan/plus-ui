@@ -252,6 +252,7 @@ function fmtMinutes(v: unknown): string {
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cutId', label: t('djs.warehouse.pigCut.cutId'), minWidth: 140 },
   { prop: 'barId', label: t('djs.warehouse.pigCut.barId'), minWidth: 140 },
+  { prop: 'whiteBarNo', label: t('djs.warehouse.pigCut.whiteBarNo'), minWidth: 150, formatter: (row) => row.whiteBarNo ?? '—' },
   { prop: 'earNo', label: t('djs.warehouse.pigCut.earNo'), minWidth: 140 },
   { prop: 'supplierName', label: t('djs.warehouse.pigCut.supplierName'), minWidth: 120, formatter: (row) => row.supplierName ?? '—' },
   { prop: 'pickupTime', label: t('djs.warehouse.pigCut.pickupTime'), minWidth: 160 },

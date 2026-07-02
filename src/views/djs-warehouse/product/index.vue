@@ -200,6 +200,7 @@ const columns = computed<BizTableColumn[]>(() => {
   cols.push(
     { prop: 'productUnit', label: t('product.column.productUnit'), width: 90, align: 'center' },
     { prop: 'productSpec', label: t('product.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true },
+    { prop: 'productAlias', label: t('product.column.productAlias'), width: 120, align: 'center', showOverflowTooltip: true },
     { prop: 'storeLocationName', label: t('product.column.storeLocation'), width: 130, align: 'center', showOverflowTooltip: true }
   );
   if (isGoods) {

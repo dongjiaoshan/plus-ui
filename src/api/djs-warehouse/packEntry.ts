@@ -228,6 +228,16 @@ export interface WhiteBarOutBo {
   remark?: string;
 }
 
+/** 白条/猪肉「仓库出库」BO（row17：出库位置=仓库出库，不发往门店，记出库去向 djs_bar_out_dest） */
+export interface WarehouseOutBo {
+  sourceInhouseId: number | string;
+  productWeight: number;
+  /** 出库去向（字典 djs_bar_out_dest 的 dict_value） */
+  outDest: string;
+  proofOssIds?: string;
+  remark?: string;
+}
+
 // ==================== 打包提交 ====================
 
 // 打包提交（dry/gift/veg）统一带 suppressErrorMsg：失败不走全局自动消失的 ElMessage，
@@ -295,6 +305,11 @@ export const submitPickup = (data: PigCutPickupBo): AxiosPromise<number> => {
 /** 白条/猪肉发货领用（出库到发货月台） → 返新 production.id */
 export const submitWhiteBarOut = (data: WhiteBarOutBo): AxiosPromise<number> => {
   return request({ url: '/djs/warehouse/packEntry/whiteBarOut', method: 'post', data });
+};
+
+/** 白条/猪肉仓库出库（row17，出库位置=仓库出库，记出库去向） → 返新 production.id */
+export const submitWarehouseOut = (data: WarehouseOutBo): AxiosPromise<number> => {
+  return request({ url: '/djs/warehouse/packEntry/warehouseOut', method: 'post', data });
 };
 
 /**
