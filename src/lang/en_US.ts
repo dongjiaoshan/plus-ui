@@ -3774,8 +3774,7 @@ export default {
       submit: 'Submit',
       submitConfirm: 'Submit {n} returns?',
       quantityPlaceholder: 'Enter return quantity',
-      vegBothRequired: 'Produce "{name}" requires both return quantity and return weight',
-      limitHint: 'Return amount cannot exceed the product\'s "opening stock + today\'s inbound" for the day; validated by the server on submit'
+      vegBothRequired: 'Produce "{name}" requires both return quantity and return weight'
     },
     placeholder: {
       returnDirection: 'Select direction',

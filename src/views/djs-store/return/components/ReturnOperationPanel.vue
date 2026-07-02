@@ -1,10 +1,5 @@
 <template>
   <div class="return-operation-panel">
-    <!-- 操作目标门店由顶部全局选择器统一控制 -->
-    <div class="op-toolbar">
-      <span class="store-name">{{ currentStoreName || '—' }}</span>
-    </div>
-
     <!-- 猪肉产品 / 果蔬产品 分段切换（对齐原型顶部段控） -->
     <div class="op-segment">
       <el-radio-group v-model="activeCat" size="large">
@@ -12,9 +7,6 @@
         <el-radio-button value="vegetable">{{ t('storeReturn.tab.vegetable') }}</el-radio-button>
       </el-radio-group>
     </div>
-
-    <!-- 退回上限软提示（后端按当日台账「期初库存 + 当日到货」校验，前端无独立上限接口故仅提示） -->
-    <el-alert class="op-limit-hint" :title="t('storeReturn.operation.limitHint')" type="info" :closable="false" show-icon />
 
     <!-- 猪肉产品：产品名称 / 退回产品重量(KG) -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
@@ -100,13 +92,12 @@ interface MatrixRow {
 
 const storeContext = useStoreContextStore();
 // 操作目标门店来自全局选择器（StoreSwitcher）；沿用 storeId 命名最小化改动
-const { currentStoreId: storeId, myStores } = storeToRefs(storeContext);
-const currentStoreName = computed(() => myStores.value.find((s) => String(s.id) === storeId.value)?.storeName ?? '');
+const { currentStoreId: storeId } = storeToRefs(storeContext);
 const activeCat = ref<'pork' | 'vegetable'>('pork');
 const loading = ref(false);
 const submitLoading = ref(false);
 
-/** 猪肉产品：固定候选（belong_type IN pork/white_bar，与门店关联无关，原型「字典固定展示」口径）。 */
+/** 猪肉产品：仅当该门店当日有白条到店时后端才返回字典项，否则空。 */
 const porkRows = ref<MatrixRow[]>([]);
 /** 果蔬产品：该门店当天已确认到店的需求产品（按 product_id 去重）。 */
 const vegRows = ref<MatrixRow[]>([]);
@@ -116,10 +107,14 @@ const filledCount = computed(
   () => [...porkRows.value, ...vegRows.value].filter((r) => (r.returnWeight ?? 0) > 0 || (r.returnQuantity ?? 0) > 0).length
 );
 
-/** 猪肉 tab：从后端固定候选拉取（与门店无关，进入页面即固定展示）。 */
+/** 猪肉 tab：后端按「该门店当日是否有白条到店」决定是否返回字典项候选（无到店 / 未选门店 → 空）。 */
 async function loadPorkCandidates() {
+  if (!storeId.value) {
+    porkRows.value = [];
+    return;
+  }
   try {
-    const res = await listPorkReturnCandidates();
+    const res = await listPorkReturnCandidates(storeId.value);
     const list = res.data ?? [];
     porkRows.value = list.map((p) => ({
       productId: String(p.productId),
@@ -156,8 +151,11 @@ async function loadVegRows() {
   }
 }
 
-// 全局门店切换 → 重拉该门店果蔬退回候选（navbar 切换会刷新页面，watch 兜底同页响应）
-watch(storeId, () => loadVegRows());
+// 全局门店切换 → 重拉该门店猪肉/果蔬退回候选（navbar 切换会刷新页面，watch 兜底同页响应）
+watch(storeId, () => {
+  loadPorkCandidates();
+  loadVegRows();
+});
 
 async function handleSubmit() {
   if (!storeId.value) {
@@ -199,27 +197,10 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .return-operation-panel {
-  .op-toolbar {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 12px;
-
-    .store-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--el-text-color-primary);
-    }
-  }
-
   .op-segment {
     display: flex;
     justify-content: center;
     margin-bottom: 16px;
-  }
-
-  .op-limit-hint {
-    max-width: 900px;
-    margin: 0 auto 16px;
   }
 
   .op-table {

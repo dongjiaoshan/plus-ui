@@ -3777,8 +3777,7 @@ export default {
       submit: '确认提交',
       submitConfirm: '确认提交 {n} 条退回？',
       quantityPlaceholder: '请输入退回量',
-      vegBothRequired: '果蔬「{name}」需同时填写退回量和退回产品重量',
-      limitHint: '退回量不能超过该产品当日「期初库存 + 当日到货」总量，提交时由后端校验'
+      vegBothRequired: '果蔬「{name}」需同时填写退回量和退回产品重量'
     },
     placeholder: {
       returnDirection: '请选择退回方向',

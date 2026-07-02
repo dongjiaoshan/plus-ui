@@ -61,11 +61,12 @@ export const batchCreateStoreReturn = (data: StoreReturnBatchForm) => {
   });
 };
 
-/** 退回操作「猪肉产品」tab 固定候选（belong_type IN pork/white_bar，固定展示与门店无关） */
-export const listPorkReturnCandidates = (): AxiosPromise<StoreReturnPorkCandidateVO[]> => {
+/** 退回操作「猪肉产品」tab 候选（仅当该门店当日有白条产品到店时才返回字典项，否则空） */
+export const listPorkReturnCandidates = (storeId: string): AxiosPromise<StoreReturnPorkCandidateVO[]> => {
   return request({
     url: '/djs/store/return/operation/pork-candidates',
-    method: 'get'
+    method: 'get',
+    params: { storeId }
   });
 };
 
