@@ -110,6 +110,51 @@ export interface ProductProductionQuery {
 }
 
 /**
+ * 白条发货记录行（WS12 row133）。
+ * 后端 WhiteBarShipmentVo：product_production 中 belong_type='white_bar' 的出库记录。
+ * outMethod（djs_bar_out_method 派生：1=发货月台 / 3=仓库出库）/ outDest（djs_stock_out_dest）。
+ */
+export interface WhiteBarShipmentVO {
+  id: number | string;
+  /** 发货日期（时分秒 = produce_time） */
+  produceTime: string;
+  /** 产品编码（product_info.product_id 业务码） */
+  productCode?: string;
+  productName?: string;
+  /** 猪只耳号 */
+  earNo?: string;
+  /** 出库方式（djs_bar_out_method 派生值 '1'/'3'） */
+  outMethod?: string;
+  /** 出库去向（djs_stock_out_dest 值） */
+  outDest?: string;
+  /** 出库量 */
+  productWeight?: number;
+  productUnit?: string;
+  createBy?: number;
+  /** 操作人昵称 */
+  operatorName?: string;
+}
+
+/**
+ * 白条发货记录查询参数（WS12 row133）。
+ * 与后端 WhiteBarShipmentQuery 对齐。
+ */
+export interface WhiteBarShipmentQuery {
+  /** 发货日期起 yyyy-MM-dd */
+  beginDate?: string;
+  /** 发货日期止 yyyy-MM-dd */
+  endDate?: string;
+  /** 猪只耳号模糊 */
+  earNo?: string;
+  /** 出库方式多选（djs_bar_out_method 派生值） */
+  outMethods?: string[];
+  /** 出库去向多选（djs_stock_out_dest） */
+  outDests?: string[];
+  pageNum?: number;
+  pageSize?: number;
+}
+
+/**
  * 标记/修改产品损坏表单（契约 b：POST /djs/warehouse/production/mark-damage）。
  *
  * id 是雪花（19 位 > 2^53），全链路 string 避免精度丢失（见 OssUpload 数据契约）。

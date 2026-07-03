@@ -1437,6 +1437,7 @@ export default {
       flowOut: '出库记录',
       checkRecord: '盘点记录',
       productOut: '产品出库',
+      pigTransfer: '猪肉转移',
       viewDetail: '查看详情'
     },
     outDialog: {
@@ -1454,6 +1455,23 @@ export default {
         outDate: '请选择出库日期',
         quantity: '请输入出库量',
         stockOutDest: '请选择出库去向'
+      }
+    },
+    transferDialog: {
+      title: '猪肉转移',
+      fromLocation: '源库位',
+      toLocation: '目标库位',
+      frozenLocation: '冻品库',
+      currentStock: '当前库存',
+      transferDate: '转移日期',
+      transferDatePlaceholder: '请选择转移日期',
+      quantity: '转移量',
+      quantityPlaceholder: '请输入转移量',
+      measureUnit: '计量单位',
+      confirm: '确定',
+      rule: {
+        transferDate: '请选择转移日期',
+        quantity: '请输入转移量'
       }
     },
     recordDialog: {
@@ -2848,6 +2866,17 @@ export default {
         operator: '操作人',
         createTime: '创建时间',
         remark: '备注'
+      },
+      whiteBarShipment: {
+        produceTime: '发货日期',
+        productCode: '产品编码',
+        productName: '产品名称',
+        earNo: '猪只耳号',
+        outMethod: '出库方式',
+        outDest: '出库去向',
+        productWeight: '出库量',
+        productUnit: '单位',
+        operator: '操作人'
       },
       outsourcePig: {
         title: {

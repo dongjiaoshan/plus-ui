@@ -64,3 +64,18 @@ export interface StockOutForm {
   stockOutDest: string;
   remark?: string;
 }
+
+/**
+ * 库存查询行「猪肉转移」入参（WS13 / row143）：猪肉鲜品库 → 冻品库。
+ *
+ * id = 源库存行主键（snowflake，全链路 string 防截断）；后端按此取 locationId + productId + 当前库存，
+ * 目标冻品库由后端按 location_type=frozen 解析。
+ */
+export interface StockTransferForm {
+  id: number | string;
+  /** 转移日期（默认当天，yyyy-MM-dd） */
+  transferDate: string;
+  /** 转移量（> 0，≤ 当前库存） */
+  quantity?: number;
+  remark?: string;
+}

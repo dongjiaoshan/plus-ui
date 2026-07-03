@@ -22,10 +22,20 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <!-- 操作列：产品出库 + 查看详情（入库/出库/盘点记录三 tab 合并进同一弹框） -->
+      <!-- 操作列：产品出库 +（猪肉鲜品库的猪肉行）猪肉转移 + 查看详情（入库/出库/盘点记录三 tab 合并进同一弹框） -->
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:warehouse:stock:out']" link type="primary" size="small" @click="handleProductOut(row as LocationStockVO)">
           {{ t('stock.action.productOut') }}
+        </el-button>
+        <el-button
+          v-if="canPigTransfer(row as LocationStockVO)"
+          v-hasPermi="['djs:warehouse:stock:out']"
+          link
+          type="primary"
+          size="small"
+          @click="handlePigTransfer(row as LocationStockVO)"
+        >
+          {{ t('stock.action.pigTransfer') }}
         </el-button>
         <el-button link type="primary" size="small" @click="drillTo('in', row as LocationStockVO)">
           {{ t('stock.action.viewDetail') }}
@@ -34,6 +44,7 @@
     </BizTable>
 
     <StockOutDialog ref="outDialogRef" @success="fetchList" />
+    <PigTransferDialog ref="transferDialogRef" @success="fetchList" />
     <StockRecordDialog ref="recordDialogRef" />
   </div>
 </template>
@@ -42,6 +53,7 @@
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import StockOutDialog from './components/StockOutDialog.vue';
+import PigTransferDialog from './components/PigTransferDialog.vue';
 import StockRecordDialog from './components/StockRecordDialog.vue';
 import { listStock } from '@/api/djs-warehouse/stock';
 import type { LocationStockQuery, LocationStockVO } from '@/api/djs-warehouse/stock/types';
@@ -53,7 +65,11 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const tableRef = ref<BizTableExpose>();
 const outDialogRef = ref<{ open: (row: LocationStockVO) => void }>();
+const transferDialogRef = ref<{ open: (row: LocationStockVO) => void }>();
 const recordDialogRef = ref<{ open: (row: LocationStockVO, kind: 'in' | 'out' | 'check') => void }>();
+
+/** 猪肉鲜品库库位名（猪肉转移按钮的库位判定；location_type=veg_fresh 被多个鲜品库共用，故按名精确判定，与后端一致）。 */
+const PORK_FRESH_LOCATION_NAME = '猪肉鲜品库';
 
 const list = ref<LocationStockVO[]>([]);
 const total = ref(0);
@@ -133,6 +149,19 @@ async function fetchList() {
 /** 行操作「产品出库」：打开出库弹窗（出库日期默认当天 / 出库量 / 出库方式）。 */
 function handleProductOut(row: LocationStockVO) {
   outDialogRef.value?.open(row);
+}
+
+/**
+ * 是否显示「猪肉转移」按钮（WS13 / row143）：产品业态为猪肉（belongType=pork）且库位为「猪肉鲜品库」。
+ * belongType 由后端 JOIN product_info 回填；locationName 由后端 JOIN location_info 回填。
+ */
+function canPigTransfer(row: LocationStockVO): boolean {
+  return row.belongType === 'pork' && row.locationName === PORK_FRESH_LOCATION_NAME;
+}
+
+/** 行操作「猪肉转移」：打开转移弹窗（猪肉鲜品库 → 冻品库；当前库存只读 / 转移日期默认当天 / 转移量 ≤ 当前库存）。 */
+function handlePigTransfer(row: LocationStockVO) {
+  transferDialogRef.value?.open(row);
 }
 
 /**

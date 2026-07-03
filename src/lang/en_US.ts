@@ -1435,6 +1435,7 @@ export default {
       flowOut: 'Outbound',
       checkRecord: 'Check log',
       productOut: 'Stock Out',
+      pigTransfer: 'Pork Transfer',
       viewDetail: 'View Detail'
     },
     outDialog: {
@@ -1452,6 +1453,23 @@ export default {
         outDate: 'Please select out date',
         quantity: 'Please enter out qty',
         stockOutDest: 'Please select destination'
+      }
+    },
+    transferDialog: {
+      title: 'Pork Transfer',
+      fromLocation: 'From Location',
+      toLocation: 'To Location',
+      frozenLocation: 'Frozen Warehouse',
+      currentStock: 'Current Stock',
+      transferDate: 'Transfer Date',
+      transferDatePlaceholder: 'Select transfer date',
+      quantity: 'Transfer Qty',
+      quantityPlaceholder: 'Enter transfer qty',
+      measureUnit: 'Unit',
+      confirm: 'Confirm',
+      rule: {
+        transferDate: 'Please select transfer date',
+        quantity: 'Please enter transfer qty'
       }
     },
     recordDialog: {
@@ -2845,6 +2863,17 @@ export default {
         operator: 'Operator',
         createTime: 'Created',
         remark: 'Remark'
+      },
+      whiteBarShipment: {
+        produceTime: 'Ship Date',
+        productCode: 'Product Code',
+        productName: 'Product',
+        earNo: 'Ear No.',
+        outMethod: 'Out Method',
+        outDest: 'Out Dest',
+        productWeight: 'Out Quantity',
+        productUnit: 'Unit',
+        operator: 'Operator'
       },
       outsourcePig: {
         title: {

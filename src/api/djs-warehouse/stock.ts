@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { LocationStockQuery, LocationStockVO, StockOutForm } from './stock/types';
+import type { LocationStockQuery, LocationStockVO, StockOutForm, StockTransferForm } from './stock/types';
 
 /**
  * 库存查询 API（WMS-MD-001）。
@@ -47,6 +47,19 @@ export const listStockEarNos = (locationId?: number | string): AxiosPromise<stri
 export const stockOut = (data: StockOutForm) => {
   return request({
     url: '/djs/warehouse/stock/out',
+    method: 'post',
+    data
+  });
+};
+
+/**
+ * 库存查询行「猪肉转移」（WS13 / row143）：猪肉鲜品库 → 冻品库。
+ *
+ * 后端按源库存行 id 取 locationId + productId，同事务扣源库存 + 加冻品库库存 + 双向流水。
+ */
+export const pigTransfer = (data: StockTransferForm) => {
+  return request({
+    url: '/djs/warehouse/stock/pigTransfer',
     method: 'post',
     data
   });

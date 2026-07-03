@@ -1136,9 +1136,9 @@ async function refreshAfterPack() {
 
 /**
  * 全量重新拉取页面数据（来源 / 成品 / 门店需求 / 原材料库存）——与 onMounted 初始加载等价。
- * 供父页「刷新」按钮（row130#2）+ 提交成功后自动刷新（row130#3）调用。
- * TODO(后端轨 WS2)：需求量「不减少」由后端处理；前端此处只保证 reload 会重新拉最新 demandMap /
- * loadStoreDemand，把后端修正后的最新需求量呈现出来。
+ * 供父页「刷新」按钮（row130#2）+ 提交成功后自动刷新（refreshAfterPack）调用。
+ * row125/128/130#5「打包后需求量不减」根因是前端不刷新：后端 fulfillDirectDemandOnPack/deductDemandOnPack
+ * 各打包路径均已扣 shipped_count（无需改后端），此处 reload 重拉最新 demandMap / loadStoreDemand 即呈现减后需求量。
  */
 async function reload() {
   await loadStores();

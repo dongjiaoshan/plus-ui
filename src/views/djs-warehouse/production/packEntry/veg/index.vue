@@ -38,7 +38,7 @@ function handleRefresh() {
 
 /**
  * 每次「确定生产产品」成功后页面自动刷新一次（row130#3）。
- * TODO(后端轨 WS2)：需求量「不减少」由后端处理；前端 reload 只负责把后端修正后的最新需求量重新拉回展示。
+ * row130#5「需求量不减」根因是前端不刷新：后端各打包路径已扣 shipped_count，reload 重拉即呈现减后需求量。
  */
 function handleSubmitted() {
   void packFormRef.value?.reload();
