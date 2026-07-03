@@ -64,7 +64,9 @@ export function useDemandProducts(productType: DemandProductType = 'white_bar') 
       //   white_bar→white_bar / pig→pork / vegetable→vegetable / dry→dry_good / egg→egg / gift_box→gift_box
       //   other 不限定 belongType（前端兜底「不在已知 6 类」的产品）
       const belongType = DEMAND_TYPE_TO_BELONG[tp];
-      const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0 });
+      // withDisplayName：果蔬候选按原材料作物有效有机证书解析展示名（有证=产品名 / 无证=别名），
+      // 与下单后定格（DemandManageServiceImpl.insertByBo）一致，避免选择器显示组织名而列表显别名。
+      const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0, withDisplayName: true });
       const rsp = res as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] };
       // 需求只能挂可售产品（自产成品 / 外购 / 礼盒），排除自产原料（type=1 & attr=2）：
       // 原料是仓库内部流转（分割/毛菜处理产出 → 领用 → 打包成成品），不可被门店下单（doc/14 §5）。
@@ -90,7 +92,8 @@ export function useDemandProducts(productType: DemandProductType = 'white_bar') 
     if (!p) return null;
     const material = (p as ProductInfoVO).productMaterial;
     return {
-      productName: p.productName,
+      // 展示名优先（果蔬无证=别名）；后端未回填则回落原始产品名。提交后 insertByBo 再定格，二者一致。
+      productName: p.displayName || p.productName,
       productUnit: p.productUnit ?? '',
       productSpec: p.productSpec ?? '',
       rawMaterial: material != null ? String(material) : undefined

@@ -17,7 +17,7 @@
         </el-input>
         <el-table :data="filteredProducts" height="100%" border class="cart-product-table" :empty-text="t('demand.cart.emptyProducts')">
           <el-table-column :label="t('demand.column.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center">
-            <template #default="{ row }">{{ row.productName }}</template>
+            <template #default="{ row }">{{ row.displayName || row.productName }}</template>
           </el-table-column>
           <el-table-column :label="t('demand.field.productSpec')" prop="productSpec" width="120" show-overflow-tooltip align="center" header-align="center" />
           <el-table-column :label="t('demand.field.productUnit')" prop="productUnit" width="80" align="center" header-align="center" />
@@ -159,7 +159,12 @@ const footerRules = computed(() => ({
 const filteredProducts = computed<ProductInfoVO[]>(() => {
   const kw = keyword.value.trim().toLowerCase();
   if (!kw) return productOptions.value;
-  return productOptions.value.filter((p) => p.productName.toLowerCase().includes(kw) || String(p.productId).toLowerCase().includes(kw));
+  return productOptions.value.filter(
+    (p) =>
+      (p.displayName || p.productName).toLowerCase().includes(kw) ||
+      p.productName.toLowerCase().includes(kw) ||
+      String(p.productId).toLowerCase().includes(kw)
+  );
 });
 
 const drawerTitle = computed(() => t('demand.cart.titleGeneric'));
@@ -194,7 +199,8 @@ function addToCart(row: ProductInfoVO): void {
     const material = (row as ProductInfoVO).productMaterial;
     cartItems.value.push({
       productId: pid,
-      productName: row.productName,
+      // 展示名优先（果蔬无证=别名），进购物车 + 提交都带解析名；提交后 insertByBo 再定格，一致。
+      productName: row.displayName || row.productName,
       productSpec: row.productSpec ?? '',
       productUnit: row.productUnit ?? '',
       rawMaterial: material != null ? String(material) : undefined,

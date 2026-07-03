@@ -38,7 +38,7 @@
               style="width: 100%"
               @change="onProductSelect"
             >
-              <el-option v-for="p in productOptions" :key="String(p.id)" :label="p.productName" :value="String(p.id)" />
+              <el-option v-for="p in productOptions" :key="String(p.id)" :label="p.displayName || p.productName" :value="String(p.id)" />
             </el-select>
           </el-form-item>
         </el-col>

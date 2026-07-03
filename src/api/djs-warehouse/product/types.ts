@@ -14,6 +14,8 @@ export interface ProductInfoVO extends BaseEntity {
   productSpec?: string;
   /** 产品别名（非必填） */
   productAlias?: string;
+  /** 展示名（DENGBO-R16）：果蔬按原材料作物有效有机证书解析（有证=产品名 / 无证=别名）。仅列表带 withDisplayName=true 时后端回填；否则 undefined，用方回落 productName。 */
+  displayName?: string;
   belongType?: string;
   buyClass?: string;
   productThumb?: string;
@@ -143,4 +145,6 @@ export interface ProductInfoQuery extends PageQuery {
   updateBeginTime?: string;
   /** 更新时间区间止 yyyy-MM-dd */
   updateEndTime?: string;
+  /** 解析展示名（DENGBO-R16）：true 时后端回填 displayName（果蔬按有机证书取名/别名）。下单选择器传 true；产品配置等不传。 */
+  withDisplayName?: boolean;
 }
