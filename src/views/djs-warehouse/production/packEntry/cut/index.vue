@@ -48,7 +48,7 @@
               <span>{{ selectedCut.earNo ?? selectedCut.markId ?? selectedCut.barId ?? selectedCut.cutId }}</span>
             </div>
             <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.cutRecordRequired') }}</span>
-            <el-button type="primary" size="large" :loading="cutDoneSubmitting" class="finish-cut-btn" @click="openCutDone">
+            <el-button type="primary" :loading="cutDoneSubmitting" class="finish-cut-btn" @click="openCutDone">
               {{ t('djs.warehouse.packEntry.finishCutShort') }}
             </el-button>
           </div>
@@ -67,7 +67,6 @@
             <DestToggle
               v-model="form.locationId"
               :options="locationOptions"
-              :disabled="locationLocked"
               :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')"
             />
           </div>
@@ -93,7 +92,7 @@
 </template>
 
 <script setup name="PackEntryCut" lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage, ElNotification } from 'element-plus';
 import { PriceTag } from '@element-plus/icons-vue';
@@ -110,15 +109,27 @@ const { t } = useI18n();
 
 const { locations, locationLoading, loadLocations } = usePackEntryOptions();
 
-// 分割入库库位仅展示「猪肉鲜品库」「冻品库」两类（按库位名称过滤；其它库位不作为分割产出入库目标）
+// row122①：全量展示库位（不再按名称过滤成「猪肉鲜品/冻品」两类，也不按所选产品存储库位过滤）。
+// row122②：把「猪肉鲜品库」排在「冻品库」之前，其余库位按原顺序追加在后。
+const FRESH_FIRST = '猪肉鲜品';
+const FROZEN_SECOND = '冻品';
+const rankLocation = (name: string): number => {
+  if (name.includes(FRESH_FIRST)) return 0; // 猪肉鲜品库置顶
+  if (name.includes(FROZEN_SECOND)) return 1; // 冻品库次之
+  return 2; // 其余库位在后
+};
 const locationOptions = computed<{ value: number | string; label: string }[]>(() =>
-  locations.value
-    .filter((l) => {
-      const name = l.locationName ?? '';
-      return name.includes('冻品') || name.includes('猪肉鲜品');
-    })
+  [...locations.value]
+    .sort((a, b) => rankLocation(a.locationName ?? '') - rankLocation(b.locationName ?? ''))
     .map((l) => ({ value: l.id, label: l.locationName }))
 );
+
+/** 入库位置默认选中「猪肉鲜品库」（row122②）；无该库位时回退到列表首项，仍无则留空。 */
+function defaultLocationId(): number | string | '' {
+  const fresh = locationOptions.value.find((o) => o.label?.includes(FRESH_FIRST));
+  if (fresh) return fresh.value;
+  return locationOptions.value[0]?.value ?? '';
+}
 
 // 可选分割产品：产品主数据 belong_type=pork + **原材料(attr=2)**（doc/14：分割只产原料，领用原料→打包成成品）
 const porkProducts = ref<ProductInfoVO[]>([]);
@@ -158,38 +169,7 @@ const form = ref<{ cutRecordId: number | string | ''; locationId: number | strin
 const selectedProductId = ref<number | string | ''>('');
 const curWeight = ref<number | undefined>(undefined);
 
-// row67：入库库位默认成所选产品配置的库位（store_location_id CSV 首个落在冻品/猪肉鲜品库范围内的项），且锁定不可改。
-// 仅当解析出有效库位才锁；产品未配 / 配的库位不在可选范围 → 不锁、保持可选（避免锁空导致无法提交，与后端 resolveCutLocationId 兜底一致）。
-function resolvePresetLocationId(product: ProductInfoVO | undefined): number | string | '' {
-  if (!product?.storeLocationId) return '';
-  // 雪花 id 全程按字符串比较：禁止 Number(trimmed)（19 位雪花会精度丢失 → 与选项 id 永不相等 → 锁不上）
-  for (const token of String(product.storeLocationId).split(',')) {
-    const trimmed = token.trim();
-    if (!trimmed) continue;
-    const match = locationOptions.value.find((o) => String(o.value) === trimmed);
-    if (match) return match.value; // 返回选项里的原值，不经 Number 转换
-  }
-  return '';
-}
-
-// 入库库位是否锁定（已按产品配置预填）。解析不到配置库位时为 false，保持自由选。
-const locationLocked = ref(false);
-
-watch(selectedProductId, (pid) => {
-  if (!pid) {
-    locationLocked.value = false;
-    return;
-  }
-  const product = porkProducts.value.find((p) => String(p.id) === String(pid));
-  const preset = resolvePresetLocationId(product);
-  if (preset !== '') {
-    form.value.locationId = preset; // 强制按产品配置填，覆盖此前选择
-    locationLocked.value = true; // 锁定不可改
-  } else {
-    locationLocked.value = false; // 未配 / 不在范围 → 自由选
-  }
-});
-
+// row122①：取消「按所选产品存储库位过滤/锁定入库库位」的逻辑 —— 入库库位始终全量可选、默认猪肉鲜品库、可自由改。
 const selectedCut = computed(() => cuttable.value.find((r) => String(r.id) === String(form.value.cutRecordId)));
 
 const cutOutSubmitting = ref(false);
@@ -258,7 +238,8 @@ async function handleCutDone() {
     await submitCutDone({ cutRecordId: form.value.cutRecordId as number | string });
     ElMessage.success(t('djs.warehouse.packEntry.finishCutSuccess'));
     cutDoneVisible.value = false;
-    form.value = { cutRecordId: '', locationId: '' };
+    // 完成后清分割单，入库位置回落默认（猪肉鲜品库），方便下一头连续录入
+    form.value = { cutRecordId: '', locationId: defaultLocationId() };
     selectedProductId.value = '';
     curWeight.value = undefined;
     await loadCuttable();
@@ -269,6 +250,10 @@ async function handleCutDone() {
 
 onMounted(async () => {
   await Promise.all([loadLocations(), loadCuttable(), loadPorkProducts()]);
+  // row122②：入库位置默认选中猪肉鲜品库（库位加载完成后再取默认值）
+  if (!form.value.locationId) {
+    form.value.locationId = defaultLocationId();
+  }
 });
 </script>
 
@@ -302,8 +287,12 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.12s ease;
 }
+/* row121③：选中白条卡片与未选中区分度加大（加粗边框 + 更深底色 + 外发光环） */
 .cut-chip.active {
-  box-shadow: 0 0 0 1px var(--el-color-warning);
+  border-width: 2px;
+  border-color: var(--el-color-warning-dark-2);
+  background: var(--el-color-warning-light-7);
+  box-shadow: 0 0 0 3px var(--el-color-warning-light-5);
 }
 .chip-line {
   font-size: 12px;
@@ -328,27 +317,28 @@ onMounted(async () => {
   flex: 1;
   min-width: 0;
 }
+/* row121①：右侧操作栏整体收紧（更小内边距 / 段间距 / 控件高度），对齐截图红框更紧凑的诉求 */
 .station-right {
-  flex: 0 0 440px;
-  width: 440px;
+  flex: 0 0 380px;
+  width: 380px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 24px;
+  padding: 16px;
   background: var(--el-bg-color);
 }
 .panel-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   color: var(--el-text-color-secondary);
 }
 .panel-section {
-  margin-bottom: 22px;
+  margin-bottom: 14px;
 }
 .panel-label {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--el-text-color-regular);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 .ear-row {
   display: flex;
@@ -363,39 +353,43 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 7px 14px;
   border-radius: 8px;
   background: var(--el-color-warning-light-9);
   color: var(--el-color-warning-dark-2);
   border: 1px solid var(--el-color-warning-light-5);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
 }
 .panel-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 10px;
+  margin-top: 14px;
 }
 .action-btn {
   width: 100%;
-  height: 56px;
-  font-size: 18px;
+  height: 46px;
+  font-size: 16px;
 }
-/* 触屏放大：数字键盘 / 入库位置按钮 */
+/* 触屏适度放大：数字键盘 / 入库位置按钮（比默认略大、但比原来更紧凑，对齐 row121 收紧诉求） */
 .station-right :deep(.numpad-display) {
-  height: 56px;
+  height: 46px;
+  margin-bottom: 8px;
 }
 .station-right :deep(.numpad-input) {
-  font-size: 22px;
+  font-size: 19px;
+}
+.station-right :deep(.numpad-keys) {
+  gap: 6px;
 }
 .station-right :deep(.numpad-key) {
-  height: 56px;
-  font-size: 22px;
+  height: 46px;
+  font-size: 19px;
 }
 .station-right :deep(.dest-btn) {
-  min-width: 96px;
-  height: 52px;
-  font-size: 16px;
+  min-width: 84px;
+  height: 44px;
+  font-size: 15px;
 }
 </style>

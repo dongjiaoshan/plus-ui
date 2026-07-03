@@ -37,6 +37,8 @@ import { listTrace } from '@/api/warehouse/trace';
 import type { TraceCodeVO, TraceCodeQuery } from '@/api/warehouse/trace/types';
 import TraceLabelDialog from './TraceLabelDialog.vue';
 import { useI18n } from 'vue-i18n';
+import { lastNDaysRange } from '@/utils/ruoyi';
+import { formatKgToG } from '@/utils/weight';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -48,23 +50,22 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-// 原型搜索：到店日期 / 序号 / 产品名称。默认不筛到店日期，进入即展示全部果蔬追溯码
-const searchModel = reactive<Record<string, unknown>>({ arrivalDate: undefined, serialNo: undefined, productName: undefined });
+// 搜索：到店日期范围（daterange，默认近 10 天）/ 产品名称。去掉「序号」搜索条件（row139 ②）
+const searchModel = reactive<Record<string, unknown>>({ arrivalDateRange: lastNDaysRange(10), productName: undefined });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), type: 'date' },
-  { field: 'serialNo', label: t('storeTrace.veg.serialNo'), type: 'input' },
+  { field: 'arrivalDateRange', label: t('storeTrace.veg.arrivalDate'), type: 'daterange', clearable: true },
   { field: 'productName', label: t('storeTrace.veg.productName'), type: 'input' }
 ]);
 
-// 原型「果蔬追溯码管理」列：到店日期/生产编号/序号/产品名称/产品规格/实际重量/来源地块/采摘时间/月台接收时间/发货时间
+// 原型「果蔬追溯码管理」列：到店日期/生产编号/产品名称/产品规格/实际重量(g)/来源地块/采摘时间/月台接收时间/发货时间
+// 去掉「序号」列（row139 ②）；实际重量转克显示（row139 ③）
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), width: 120, align: 'center' },
   { prop: 'produceNo', label: t('storeTrace.veg.produceNo'), width: 130, align: 'center', showOverflowTooltip: true },
-  { prop: 'serialNo', label: t('storeTrace.veg.serialNo'), width: 70, align: 'center' },
   { prop: 'productName', label: t('storeTrace.veg.productName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), width: 100, align: 'center' },
-  { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), width: 100, align: 'right' },
+  { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), width: 100, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
   { prop: 'plotName', label: t('storeTrace.veg.plotName'), width: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'pickTime', label: t('storeTrace.veg.pickTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'platformReceiveTime', label: t('storeTrace.veg.platformReceiveTime'), width: 160, align: 'center', formatter: 'datetime' },
@@ -74,19 +75,18 @@ const columns = computed<BizTableColumn[]>(() => [
 async function fetchList() {
   loading.value = true;
   try {
-    const arrival = (searchModel.arrivalDate as string) || undefined;
+    const range = (searchModel.arrivalDateRange as string[] | undefined) ?? [];
     const query: TraceCodeQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       codeType: 'veg',
       productName: (searchModel.productName as string) || undefined,
-      // 到店日期：单日 → arrivalBeginDate/arrivalEndDate 同日（后端按 trace_event arrival 到店事件过滤）
-      arrivalBeginDate: arrival ? `${arrival} 00:00:00` : undefined,
-      arrivalEndDate: arrival ? `${arrival} 23:59:59` : undefined
+      // 到店日期范围（row139 ①）：daterange [start, end] → arrivalBeginDate/arrivalEndDate（后端按 trace_event arrival 到店事件过滤）
+      arrivalBeginDate: range[0] ? `${range[0]} 00:00:00` : undefined,
+      arrivalEndDate: range[1] ? `${range[1]} 23:59:59` : undefined
+      // TODO(后端轨 WS6): row139 ④「只显示有发货时间的数据」需后端在 veg 追溯列表加 shipTime 非空过滤（默认 shipTimeNotNull=true 或独立参数），前端不 mock 过滤。
     };
-    // 序号精确查：后端 TraceCodeQuery 暂无 serialNo 过滤（backendGap），先随参带上，后端补后即生效
-    const serialNo = (searchModel.serialNo as string) || undefined;
-    const res = await listTrace({ ...query, serialNo } as TraceCodeQuery & { serialNo?: string });
+    const res = await listTrace(query);
     list.value = (res.rows ?? res.data ?? []) as TraceCodeVO[];
     total.value = res.total ?? 0;
   } finally {

@@ -14,6 +14,9 @@
       :show-source="false"
       :show-ear="false"
       wide
+      weight-in-gram
+      :hide-pack-no="true"
+      auto-select-first
       :title="t('djs.warehouse.packEntry.meatTitle')"
     />
   </div>

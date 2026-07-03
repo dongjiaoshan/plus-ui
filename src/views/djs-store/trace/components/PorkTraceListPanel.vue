@@ -37,6 +37,8 @@ import { listStorePorkTrace } from '@/api/djs-store/trace';
 import type { TraceCodeVO, TraceCodeQuery } from '@/api/warehouse/trace/types';
 import TraceLabelDialog from './TraceLabelDialog.vue';
 import { useI18n } from 'vue-i18n';
+import { lastNDaysRange } from '@/utils/ruoyi';
+import { formatKgToG } from '@/utils/weight';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -48,8 +50,8 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-// 搜索：生成来源（仓库/门店）/ 到店日期 / 产品名称（恒 codeType=pork，进入即展示全部猪肉追溯码——仓库发来 + 门店分割）
-const searchModel = reactive<Record<string, unknown>>({ source: undefined, arrivalDate: undefined, productName: undefined });
+// 搜索：生成来源（仓库/门店）/ 到店日期范围（daterange，默认近 10 天，row140 ①）/ 产品名称（恒 codeType=pork，进入即展示仓库发来 + 门店分割）
+const searchModel = reactive<Record<string, unknown>>({ source: undefined, arrivalDateRange: lastNDaysRange(10), productName: undefined });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   {
@@ -62,18 +64,19 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
       { label: t('storeTrace.pork.sourceStore'), value: 'store' }
     ]
   },
-  { field: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), type: 'date' },
+  { field: 'arrivalDateRange', label: t('storeTrace.veg.arrivalDate'), type: 'daterange', clearable: true },
   { field: 'productName', label: t('storeTrace.veg.productName'), type: 'input' }
 ]);
 
-// 猪肉追溯码列表：生成来源/到店日期/生产编号/产品名称/产品规格/实际重量/来源耳号/备注/生成时间
+// 猪肉追溯码列表：到店日期/生成来源/生产编号/产品名称/产品规格/实际重量(g)/来源耳号/备注/生成时间
+// row140 ②：「生成来源」列移到「到店日期」列右侧；row140 ④：「产品」文案改「产品名称」（codeProductName 已改值）；row140 ⑤：实际重量转克
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'sourceLabel', label: t('storeTrace.pork.sourceCol'), width: 90, align: 'center' },
   { prop: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), width: 110, align: 'center' },
+  { prop: 'sourceLabel', label: t('storeTrace.pork.sourceCol'), width: 90, align: 'center' },
   { prop: 'produceNo', label: t('storeTrace.veg.produceNo'), width: 140, align: 'center', showOverflowTooltip: true },
   { prop: 'productName', label: t('storeTrace.pork.codeProductName'), minWidth: 110, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), width: 90, align: 'center' },
-  { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), width: 90, align: 'right' },
+  { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), width: 90, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
   { prop: 'pigEarNo', label: t('storeTrace.pork.pigEarNo'), width: 150, align: 'center', showOverflowTooltip: true },
   { prop: 'remark', label: t('storeTrace.pork.remark'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'createTime', label: t('storeTrace.pork.createTime'), width: 160, align: 'center', formatter: 'datetime' }
@@ -82,15 +85,18 @@ const columns = computed<BizTableColumn[]>(() => [
 async function fetchList() {
   loading.value = true;
   try {
-    const arrival = (searchModel.arrivalDate as string) || undefined;
+    const range = (searchModel.arrivalDateRange as string[] | undefined) ?? [];
     const query: TraceCodeQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       codeType: 'pork',
       source: (searchModel.source as string) || undefined,
       productName: (searchModel.productName as string) || undefined,
-      arrivalBeginDate: arrival ? `${arrival} 00:00:00` : undefined,
-      arrivalEndDate: arrival ? `${arrival} 23:59:59` : undefined
+      // 到店日期范围（row140 ①）：daterange [start, end] → arrivalBeginDate/arrivalEndDate
+      arrivalBeginDate: range[0] ? `${range[0]} 00:00:00` : undefined,
+      arrivalEndDate: range[1] ? `${range[1]} 23:59:59` : undefined
+      // TODO(后端轨): row140 ③「列表不显示白条产品」需后端在 pork 追溯列表过滤掉 belong_type='white_bar' 的产品行。
+      // 前端不能过滤：TraceCodeVO 未返回 belongType/belong_type 字段（列表只有 codeType=pork），无判据；后端在 SQL 排除白条即可，前端零改。
     };
     const res = await listStorePorkTrace(query);
     const rows = (res.rows ?? res.data ?? []) as TraceCodeVO[];

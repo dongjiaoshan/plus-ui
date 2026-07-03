@@ -1,23 +1,13 @@
 <template>
   <div class="p-2">
-    <!-- 当日损耗条（V4，果疏产品全流程处理.docx）：compute-on-read 聚合果蔬流水，纯展示 -->
-    <div v-loading="lossLoading" class="veg-loss-bar">
-      <span class="loss-title">{{ t('djs.warehouse.packEntry.vegDailyLoss') }}</span>
-      <span class="loss-item">{{ t('djs.warehouse.packEntry.vegLossPicked') }} {{ fmt(loss?.pickedWeight) }}{{ t('djs.warehouse.packEntry.vegLossUnit') }}</span>
-      <span class="loss-sep">−</span>
-      <span class="loss-item">{{ t('djs.warehouse.packEntry.vegLossPacked') }} {{ fmt(loss?.packedWeight) }}{{ t('djs.warehouse.packEntry.vegLossUnit') }}</span>
-      <span class="loss-sep">−</span>
-      <span class="loss-item">{{ t('djs.warehouse.packEntry.vegLossReturned') }} {{ fmt(loss?.returnedWeight) }}{{ t('djs.warehouse.packEntry.vegLossUnit') }}</span>
-      <span class="loss-sep">−</span>
-      <span class="loss-item">{{ t('djs.warehouse.packEntry.vegLossFeed') }} {{ fmt(loss?.feedWeight) }}{{ t('djs.warehouse.packEntry.vegLossUnit') }}</span>
-      <span class="loss-value">{{ t('djs.warehouse.packEntry.vegLossValue') }} {{ fmt(loss?.lossWeight) }}{{ t('djs.warehouse.packEntry.vegLossUnit') }}</span>
-      <el-tooltip :content="t('djs.warehouse.packEntry.vegLossHint')" placement="top">
-        <el-icon class="loss-help"><QuestionFilled /></el-icon>
-      </el-tooltip>
+    <!-- 顶部工具条：右侧「刷新」按钮，点击重新拉页面数据（row130#2）。原「当日损耗」条已去掉（row130#1）。 -->
+    <div class="veg-toolbar">
+      <el-button :icon="Refresh" @click="handleRefresh">{{ t('common.refresh') }}</el-button>
     </div>
 
     <!-- 果蔬打包：发送位置仅「发货月台」（去掉邮寄/礼盒，row110）；plot-group 顶部地块来源选择 -->
     <SkuPackForm
+      ref="packFormRef"
       kind="veg"
       :product-type="1"
       belong-type="vegetable"
@@ -26,74 +16,39 @@
       plot-group
       :show-source="false"
       wide
-      @submitted="loadLoss"
+      @submitted="handleSubmitted"
     />
   </div>
 </template>
 
 <script setup name="PackEntryVeg" lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { QuestionFilled } from '@element-plus/icons-vue';
+import { Refresh } from '@element-plus/icons-vue';
 import SkuPackForm from '../SkuPackForm.vue';
-import { getVegDailyLoss } from '@/api/djs-warehouse/packEntry';
-import type { VegDailyLossVO } from '@/api/djs-warehouse/packEntry';
 
 const { t } = useI18n();
 
-const loss = ref<VegDailyLossVO>();
-const lossLoading = ref(false);
+const packFormRef = ref<InstanceType<typeof SkuPackForm>>();
 
-/** 数字保留 3 位（与后端 kg 精度一致），空兜 0。 */
-function fmt(v: number | undefined): string {
-  const n = Number(v);
-  return Number.isFinite(n) ? n.toFixed(3) : '0.000';
+/** 「刷新」按钮：重新拉打包台全部数据（来源 / 成品 / 门店需求 / 库存）。（row130#2） */
+function handleRefresh() {
+  void packFormRef.value?.reload();
 }
 
-/** 拉当日损耗（提交成功后由 SkuPackForm @submitted 触发刷新）。 */
-async function loadLoss() {
-  lossLoading.value = true;
-  try {
-    const res = await getVegDailyLoss();
-    loss.value = res.data;
-  } finally {
-    lossLoading.value = false;
-  }
+/**
+ * 每次「确定生产产品」成功后页面自动刷新一次（row130#3）。
+ * TODO(后端轨 WS2)：需求量「不减少」由后端处理；前端 reload 只负责把后端修正后的最新需求量重新拉回展示。
+ */
+function handleSubmitted() {
+  void packFormRef.value?.reload();
 }
-
-onMounted(loadLoss);
 </script>
 
 <style scoped>
-.veg-loss-bar {
+.veg-toolbar {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 8px 14px;
+  justify-content: flex-end;
   margin-bottom: 10px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 6px;
-  background: var(--el-fill-color-light);
-  font-size: 13px;
-}
-.loss-title {
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-}
-.loss-item {
-  color: var(--el-text-color-regular);
-}
-.loss-sep {
-  color: var(--el-text-color-placeholder);
-}
-.loss-value {
-  font-weight: 700;
-  color: var(--el-color-warning-dark-2);
-  margin-left: 4px;
-}
-.loss-help {
-  color: var(--el-text-color-placeholder);
-  cursor: help;
 }
 </style>

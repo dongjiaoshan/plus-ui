@@ -52,6 +52,12 @@ export interface StoreLedgerCandidateVO {
   productId: string;
   productName?: string;
   productUnit?: string;
+  /**
+   * 产品对应原材料单位（KG → 数据量按 kg 展示；其他 → 按产品单位换算成 g）。
+   * TODO(后端轨)：StoreDailyLedgerCandidateVo 目前未返回该字段，需后端补 materialUnit
+   *（取产品关联原材料的计量单位）；缺省时前端回落到 productUnit 口径。
+   */
+  materialUnit?: string;
   productSpec?: string;
   /** 候选类别：pork=猪肉 / inbound=新到货 / stock=昨日库存 */
   category: StoreLedgerCategory;

@@ -63,6 +63,7 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listProductionItems } from '@/api/djs-warehouse/production';
 import type { ProductProductionGroupVO, ProductProductionQuery, ProductProductionVO } from '@/api/djs-warehouse/production/types';
+import { formatWeightByBelong } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialog.vue';
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
@@ -95,9 +96,28 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'isDamaged', label: t('djs.warehouse.production.column.isDamaged2'), type: 'select', dictType: 'djs_yes_no' }
 ]);
 
+/** 当前下钻批次的产品归属类型（djs_belong_type）：果蔬(vegetable) / 肉品(pork) 时展示「产品重量」列 */
+const belongType = computed(() => batch.value?.belongType ?? '');
+/** 是否展示「产品重量」列：仅果蔬 / 肉品（白条按 kg 口径不加此列） */
+const showProductWeight = computed(() => belongType.value === 'vegetable' || belongType.value === 'pork');
+
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'produceNo', label: t('djs.warehouse.production.column.produceNo'), minWidth: 160 },
+  // 果蔬 / 肉品产品：生产单号后追加「产品重量」列，按 g 展示（KG→g，formatWeightByBelong 对 pork/vegetable 走克）
+  ...(showProductWeight.value
+    ? [
+        {
+          prop: 'productWeight',
+          label: t('djs.warehouse.production.column.productWeight'),
+          minWidth: 110,
+          align: 'center' as const,
+          formatter: (row: BizRow) => formatWeightByBelong((row as ProductProductionVO).productWeight, belongType.value)
+        }
+      ]
+    : []),
   // 「产品重量」标签改「原材料使用量」，绑 materialConsume + 右侧「原材料单位」列（materialUnit）
+  // TODO(后端轨 WS3): row132 —— 原材料名称/消耗量/单位 需后端按明细行聚合真实来源原材料回填
+  // （当前 materialConsume/materialUnit 逐件返回，缺「原材料名称」列 + 果蔬多料聚合），前端不拼后端聚合
   {
     prop: 'materialConsume',
     label: t('djs.warehouse.production.column.materialConsume'),

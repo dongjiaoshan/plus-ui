@@ -76,6 +76,7 @@ import ProductDetailDialog from './components/ProductDetailDialog.vue';
 import { listStoreDemand, removeStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
 import type { StoreDemandVO } from '@/api/djs-store/demand/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
+import { formatWeightByBelong } from '@/utils/weight';
 import { nextMonthRange } from '@/utils/ruoyi';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
@@ -126,17 +127,31 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productUnit', label: t('storeDemand.column.productUnit'), minWidth: 110, align: 'center' },
   { prop: 'demandType', label: t('storeDemand.column.demandType'), minWidth: 110, align: 'center', dictType: 'djs_demand_mailing_type' },
   { prop: 'demandRemark', label: t('storeDemand.column.demandRemark'), minWidth: 130, align: 'center', showOverflowTooltip: true },
-  { prop: 'expectedWeight', label: t('storeDemand.column.expectedWeight'), minWidth: 130, align: 'center' },
+  {
+    prop: 'expectedWeight',
+    label: t('storeDemand.column.expectedWeight'),
+    minWidth: 130,
+    align: 'center',
+    // 136#2：仅果蔬 / 猪肉产品显示总重量并按 g（KG→g）展示；白条产品保留 kg 不转换。
+    // belongType 取行 productType：'white_bar' → kg 不转；其余（vegetable / gift_box / other，猪肉产品落 other/非白条）→ g。
+    // 无值统一显 '—'（formatWeightByBelong 内部兜底）。
+    formatter: (row: BizRow) => {
+      const r = row as StoreDemandVO;
+      return formatWeightByBelong(r.expectedWeight, r.productType);
+    }
+  },
   { prop: 'storeDemandStatus', label: t('storeDemand.column.demandStatus'), minWidth: 110, align: 'center', dictType: 'djs_store_demand_status' },
   {
     prop: 'damagedCount',
     label: t('storeDemand.column.damagedCount'),
     minWidth: 100,
     align: 'center',
-    // 后端仅对「已发货」行回填损坏件数，其余行 null → '—'
+    // 136#1：确认收货后损坏数量一律按数量显示——有损坏显件数，无损坏（含后端未回填 null）显 0，不再显 '—'。
+    // TODO(后端轨)：需求「确认收货后」才有意义；后端应对已发货 / 已收货行统一回填 damagedCount（无损坏回填 0 而非 null），
+    // 未发货行本无「损坏」概念，前端此处一律归 0 展示。
     formatter: (row: BizRow) => {
       const v = (row as StoreDemandVO).damagedCount;
-      return v == null ? '—' : String(v);
+      return v == null ? '0' : String(v);
     }
   },
   { prop: 'confirmerTime', label: t('storeDemand.column.confirmerTime'), minWidth: 160, align: 'center', formatter: 'datetime' },

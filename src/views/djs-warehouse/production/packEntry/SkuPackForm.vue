@@ -16,11 +16,12 @@
             :items="displayProducts"
             :loading="productLoading || (earGroup && sourceLoading)"
             :demand-map="demandMap"
-            :stock-map="sourceFilterActive ? wipStockMap : (kind === 'veg' ? vegStockMap : stockMap)"
+            :stock-map="sourceFilterActive ? wipStockMap : kind === 'veg' ? vegStockMap : stockMap"
             :stock-unit="kind === 'veg' ? 'kg' : undefined"
             :stock-unit-map="sourceFilterActive ? wipStockUnitMap : undefined"
             :show-stock="showStock"
             :large="wide"
+            :weight-in-gram="weightInGram"
             @change="onProductChange"
           />
         </div>
@@ -52,7 +53,8 @@
       <div class="station-right" :class="{ 'station-right--wide': wide }">
         <div class="panel-head">
           <span class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</span>
-          <span class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
+          <!-- 124#5：肉品打包隐藏右上角「打包序号 NO.x」（hidePackNo=true）；其他打包页仍显示 -->
+          <span v-if="!hidePackNo" class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
         </div>
 
         <!-- 肉品打包：右台顶部回显选中猪只耳号 chip（对齐原型） -->
@@ -131,7 +133,7 @@
             v-model="form.productWeight"
             :placeholder="shouldUnitByCopies ? t('djs.warehouse.packEntry.packCopies') : t('djs.warehouse.packEntry.weightPlaceholder')"
             :unit="selectedUnit"
-            :precision="shouldUnitByCopies ? 0 : 3"
+            :precision="numpadPrecision"
           />
           <!-- 剩余可打包份数 = floor(剩余总量 / 该产品「其它产品打包计量规则」)；materialNum 为空/0 时不显示 -->
           <div v-if="kind !== 'gift' && remainingPackableCopies != null" class="remain-copies">
@@ -140,7 +142,8 @@
         </div>
 
         <!-- 发送位置 button-toggle（其他产品打包二选无礼盒；礼盒不显示） -->
-        <div v-if="sendDests.length > 0" class="panel-section">
+        <!-- 124#3：发送位置按钮（发货月台/礼盒）加大，触屏易点（send-dest-toggle 放大 dest-btn） -->
+        <div v-if="sendDests.length > 0" class="panel-section send-dest-toggle">
           <div class="panel-label">{{ t('djs.warehouse.packEntry.sendDest') }}</div>
           <DestToggle v-model="form.deliverDest" :options="sendDests" />
         </div>
@@ -173,7 +176,14 @@ import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialo
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
 import { parseTime } from '@/utils/ruoyi';
 import { usePackEntryOptions } from './useOptions';
-import { listMaterialStock, listStoreDemand, listStoreDemandBatch, submitDryPack, submitGiftPack, submitVegPack } from '@/api/djs-warehouse/packEntry';
+import {
+  listMaterialStock,
+  listStoreDemand,
+  listStoreDemandBatch,
+  submitDryPack,
+  submitGiftPack,
+  submitVegPack
+} from '@/api/djs-warehouse/packEntry';
 import type { DeliverDest, DryPackBo, GiftPackBo, PackSourceVO, StoreDemandCopiesVO, VegPackBo } from '@/api/djs-warehouse/packEntry';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 
@@ -227,6 +237,19 @@ const props = withDefaults(
     showEar?: boolean;
     /** 宽版布局（肉品打包：产品卡片放大 + 右操作台加宽，填充空白）；缺省紧凑版，其他打包页零影响 */
     wide?: boolean;
+    /**
+     * 录入/展示单位用「克(g)」（肉品打包 124#6）：numpad 单位显 g、整数录入，提交前 ÷1000 换算成 kg 落库
+     * （系统权威量纲=kg，与果蔬 g→kg 同口径）；卡片「领用剩余重量」用 formatKgToG 展示为克。
+     * 缺省 false，其他打包页录入仍按 kg，零影响。
+     */
+    weightInGram?: boolean;
+    /** 隐藏右上角「打包序号 NO.x」（肉品打包 124#5）；缺省显示，其他打包页零影响 */
+    hidePackNo?: boolean;
+    /**
+     * 挂载/刷新后自动选中第一个有门店需求的产品（肉品打包 124#1，减少选择）；
+     * 缺省 false，其他打包页零影响。同时自动选中第一个猪只耳号（124#4，仅 earGroup 生效）。
+     */
+    autoSelectFirst?: boolean;
   }>(),
   {
     productType: undefined,
@@ -242,7 +265,10 @@ const props = withDefaults(
     showSource: true,
     autoSource: false,
     showEar: undefined,
-    wide: false
+    wide: false,
+    weightInGram: false,
+    hidePackNo: false,
+    autoSelectFirst: false
   }
 );
 
@@ -264,9 +290,7 @@ const SEND_DEST_LABEL_KEY: Record<DeliverDest, string> = {
   mail: 'djs.warehouse.packEntry.sendDestMail',
   gift: 'djs.warehouse.packEntry.sendDestGift'
 };
-const sendDests = computed(() =>
-  (props.sendDestKinds ?? []).map((v) => ({ value: v as number | string, label: t(SEND_DEST_LABEL_KEY[v]) }))
-);
+const sendDests = computed(() => (props.sendDestKinds ?? []).map((v) => ({ value: v as number | string, label: t(SEND_DEST_LABEL_KEY[v]) })));
 
 const {
   products,
@@ -363,6 +387,16 @@ watch(
   }
 );
 
+// row130#4：点选产品后若有门店需求，默认选中其中一个门店（取第一个有未发货需求的门店）。
+// 仅在当前未选中有效门店时自动补选——已手选门店不覆盖；所选门店已打满（不在可见需求里）则改选第一个。
+watch(visibleStoreDemands, (list) => {
+  if (!form.value.productId || list.length === 0) return;
+  const stillValid = form.value.storeId && list.some((sd) => String(sd.storeId) === String(form.value.storeId));
+  if (!stillValid) {
+    form.value.storeId = list[0].storeId;
+  }
+});
+
 // 发送位置默认选第一项（发货月台 platform）；礼盒无 sendDests 时保持空
 watch(
   sendDests,
@@ -455,7 +489,12 @@ async function loadVegProducts() {
   // 今天领用过滤（doc/14 §5）：后端 listSourceForVeg 已按 DATE(produce_date)=今天 过滤，
   // 这里只从「今天领用」的 veg 来源推导本次领用原料 id。
   const materialIds = Array.from(
-    new Set(effectiveSources.value.map((s) => s.productId).filter((id): id is number => id != null).map((id) => String(id)))
+    new Set(
+      effectiveSources.value
+        .map((s) => s.productId)
+        .filter((id): id is number => id != null)
+        .map((id) => String(id))
+    )
   );
   // 今天没领用 → 直接空（须先 mp 领用才有料；不回退显示全部）
   if (materialIds.length === 0) {
@@ -577,12 +616,9 @@ function resolveAutoSource() {
 }
 
 // autoSource：目标产品或领用来源变化 → 重解析来源（覆盖选卡片 / 提交后刷新 / 来源加载完成各场景）。
-watch(
-  [() => form.value.productId, effectiveSources],
-  () => {
-    if (props.autoSource) resolveAutoSource();
-  }
-);
+watch([() => form.value.productId, effectiveSources], () => {
+  if (props.autoSource) resolveAutoSource();
+});
 
 // 左侧卡片：只显「今天有领用原料」的成品 —— 即其有效原材料出现在 sources（已领用原料 inhouse）。
 // 同一原材料的多个规格成品（猪皮原料 → 猪皮200/500）都会命中（一料多品共享池，doc/14 §5）。
@@ -596,9 +632,21 @@ const requisitionedProductIds = computed<Set<string>>(() => {
 });
 
 const displayProducts = computed<ProductInfoVO[]>(() =>
-  sourceFilterActive.value
-    ? products.value.filter((p) => requisitionedProductIds.value.has(effectiveMaterialId(p)))
-    : products.value
+  sourceFilterActive.value ? products.value.filter((p) => requisitionedProductIds.value.has(effectiveMaterialId(p))) : products.value
+);
+
+// 124#1：肉品打包挂载/刷新后，若尚未选产品，自动选中第一个「有门店需求」的产品（减少选择）。
+// 依赖 displayProducts + demandMap（各成品聚合门店需求份数）均已加载。产品或需求变化后重触发，
+// 但仅在「未选产品」时补选，不覆盖用户手选。缺省 autoSelectFirst=false，其他打包页零影响。
+watch(
+  [displayProducts, demandMap],
+  ([items, dmap]) => {
+    if (!props.autoSelectFirst) return;
+    if (form.value.productId) return;
+    const first = items.find((p) => Number(dmap[String(p.id)] || 0) > 0);
+    if (first) form.value.productId = first.id;
+  },
+  { immediate: true }
 );
 
 // 「领用剩余重量」= 今日领用待打包库存（doc/14 §5）：成品经有效原材料 id 聚合今日领用来源 inhouse 的 productWeight。
@@ -692,6 +740,21 @@ const earToggleOptions = computed<{ value: number | string; label: string }[]>((
   return Array.from(seen.values());
 });
 
+// 124#4：肉品打包耳号默认选中一个——耳号选项就绪且尚未选时，自动选第一个并解析来源（onEarChange）。
+// 换产品会清空 selectedEarNo（onProductChange），故新产品的耳号选项到位后会再次自动补选。
+// 缺省 autoSelectFirst=false，其他打包页零影响；仅 earGroup 生效。
+watch(
+  earToggleOptions,
+  (opts) => {
+    if (!props.autoSelectFirst || !props.earGroup) return;
+    if (opts.length > 0 && !selectedEarNo.value) {
+      selectedEarNo.value = opts[0].value;
+      onEarChange();
+    }
+  },
+  { immediate: true }
+);
+
 const displaySources = computed(() => {
   let list = effectiveSources.value;
   if (props.plotGroup && selectedPlotId.value) {
@@ -732,38 +795,28 @@ function onPlotChange() {
   const matId = materialIdOf(form.value.productId);
   const src = effectiveSources.value.find((x) => {
     const matchMat = !matId || String(x.productId) === matId;
-    const matchPlot =
-      selectedPlotId.value === NO_PLOT_SENTINEL ? x.plotId == null : String(x.plotId) === String(selectedPlotId.value);
+    const matchPlot = selectedPlotId.value === NO_PLOT_SENTINEL ? x.plotId == null : String(x.plotId) === String(selectedPlotId.value);
     return matchMat && matchPlot;
   });
   form.value.sourceInhouseId = src ? src.id : '';
 }
 
 // 地块/目标产品变化 → 重解析来源（覆盖单地块自动选中 watch 不触发 @change、以及换产品换原材料）。
-watch(
-  [selectedPlotId, () => form.value.productId],
-  () => {
-    if (props.plotGroup) onPlotChange();
-  }
-);
+watch([selectedPlotId, () => form.value.productId], () => {
+  if (props.plotGroup) onPlotChange();
+});
 
 // 肉品打包来源区已隐藏（showSource=false）：只按猪只耳号溯源（门店做溯源码）。
 // 选耳号后按「目标成品的有效原材料 + 耳号」唯一确定来源 inhouse（扣减 + 追溯绑该耳号）；
 // 成品→原材料(N:1) 或 成品即原材料，按有效原材料 id 匹配来源；无匹配则清空。
 function onEarChange() {
   const matId = materialIdOf(form.value.productId);
-  const earSrc = effectiveSources.value.find(
-    (x) =>
-      String(x.earNo) === String(selectedEarNo.value) &&
-      (!matId || String(x.productId) === matId)
-  );
+  const earSrc = effectiveSources.value.find((x) => String(x.earNo) === String(selectedEarNo.value) && (!matId || String(x.productId) === matId));
   form.value.sourceInhouseId = earSrc ? earSrc.id : '';
 }
 
 // 当前选中目标成品（份数判定 / 卡片展示 / 提交换算用）。
-const selectedProduct = computed<ProductInfoVO | undefined>(() =>
-  products.value.find((p) => String(p.id) === String(form.value.productId))
-);
+const selectedProduct = computed<ProductInfoVO | undefined>(() => products.value.find((p) => String(p.id) === String(form.value.productId)));
 
 /**
  * 其他产品打包「按份数计量」开关（req A）：成品配了 materialNum（>0，「其它产品打包计量规则」，
@@ -788,6 +841,8 @@ const shouldUnitByCopies = computed<boolean>(() => {
 // 其余业态（肉品等）按当前选中产品的 product_unit 显示（onProductChange 选卡片时已回填 form.productUnit）。
 const selectedUnit = computed<string>(() => {
   if (props.kind === 'veg') return 'g';
+  // 124#6：肉品打包录入单位显「g」（克），提交前 ÷1000 换算成 kg 落库（见 packWeightKg / handleSubmit）
+  if (props.weightInGram) return 'g';
   if (shouldUnitByCopies.value) return t('djs.warehouse.packEntry.copiesUnit');
   // 肉品打包(earGroup) + 其他产品打包(dryReqMode) 均按「领用来源原材料」单位显示（排骨原料=kg），
   // 而非成品自身单位（成品「份」会把按重量录入的肉品错标成「份」）。
@@ -796,13 +851,19 @@ const selectedUnit = computed<string>(() => {
 });
 
 /**
+ * numpad 小数位：份数计量整数（0）；克(g)录入整数（124#6，肉品按克整数录入）；其余重量按 3 位小数。
+ */
+const numpadPrecision = computed<number>(() => (shouldUnitByCopies.value || props.weightInGram ? 0 : 3));
+
+/**
  * 果蔬录入量 g → 系统权威量纲 kg（÷1000）。其余业态 numpad 录入本就是 kg，原样透传。
  * 提交（VegPackBo.productWeight）+ 前端超量校验 + 追溯标签重量均用此 kg 值，避免 g/kg 混用差 1000 倍。
  */
 function packWeightKg(): number | undefined {
   const raw = Number(form.value.productWeight);
   if (!Number.isFinite(raw) || raw <= 0) return undefined;
-  return props.kind === 'veg' ? raw / 1000 : raw;
+  // 果蔬 + 肉品打包（weightInGram，124#6）录入均为 g → ÷1000 换算成 kg；其余业态 numpad 录入本就是 kg。
+  return props.kind === 'veg' || props.weightInGram ? raw / 1000 : raw;
 }
 
 /**
@@ -849,8 +910,7 @@ function validate(): boolean {
     return false;
   }
   // req3：选中门店需求已打满（不在可见门店需求里）→ 不可再为其打包
-  if (!isGiftComponent && form.value.storeId
-    && !visibleStoreDemands.value.some((sd) => String(sd.storeId) === String(form.value.storeId))) {
+  if (!isGiftComponent && form.value.storeId && !visibleStoreDemands.value.some((sd) => String(sd.storeId) === String(form.value.storeId))) {
     notifyMissing(t('djs.warehouse.packEntry.storeDemandFulfilled'));
     return false;
   }
@@ -927,52 +987,60 @@ async function handleSubmit(printTrace: boolean) {
     // （API 已带 suppressErrorMsg 抑制拦截器 toast）。inner try 只包提交，成功后逻辑不受影响。
     try {
       if (props.kind === 'gift') {
-      // 礼盒提交（纯礼盒页 kind='gift'）：入库库位不再前端采集
-      // （locationId 省略；service 默认取产品配置库位/首个可用库位兜底）
-      const bo: GiftPackBo = {
-        giftBoxProductId: form.value.productId as number | string,
-        packBoxCount: form.value.packBoxCount as number,
-        storeId: form.value.storeId || undefined,
-        deliverDest: form.value.deliverDest,
-        remark: form.value.remark
-      };
-      res = await submitGiftPack(bo);
-    } else if (props.kind === 'veg') {
-      // 录入 g → 落库 kg（÷1000，row12 点3 量纲对齐）；packWeightKg 已在 validate 保证非空
-      const bo: VegPackBo = {
-        sourceInhouseId: form.value.sourceInhouseId as number | string,
-        productId: form.value.productId as number | string,
-        productWeight: packWeightKg() as number,
-        storeId: form.value.storeId || undefined,
-        deliverDest: form.value.deliverDest,
-        productSpec: form.value.productSpec,
-        remark: form.value.remark
-      };
-      res = await submitVegPack(bo);
-    } else {
-      // 份数计量（req A）：录入「份数」，提交前换算成 kg = 份数 × materialNum，productUnit 强制 'kg' 落库；
-      // 「份」仅是 UI 概念，后端零改。
-      // 重量模式（其他产品无 materialNum，如腊肉）：录入的就是「每份重量」，按原料重量单位落库（与录入/扣减一致，
-      // 不落成品计数单位「袋」）；点确定 = 打包一份，后端 resolveDemandDeductQty 计数单位+无计量→扣 1 份。
-      const copies = Number(form.value.productWeight);
-      const measure = Number(selectedProduct.value?.materialNum);
-      const dryWeight = shouldUnitByCopies.value ? copies * measure : (form.value.productWeight as number);
-      const dryUnit = shouldUnitByCopies.value
-        ? 'kg'
-        : sourceFilterActive.value
-          ? wipStockUnitMap.value[String(form.value.productId)] || 'kg'
-          : form.value.productUnit;
-      const bo: DryPackBo = {
-        sourceInhouseId: form.value.sourceInhouseId as number | string,
-        productId: form.value.productId as number | string,
-        productWeight: dryWeight,
-        productUnit: dryUnit,
-        storeId: form.value.storeId || undefined,
-        deliverDest: form.value.deliverDest,
-        productSpec: form.value.productSpec,
-        remark: form.value.remark
-      };
-      res = await submitDryPack(bo);
+        // 礼盒提交（纯礼盒页 kind='gift'）：入库库位不再前端采集
+        // （locationId 省略；service 默认取产品配置库位/首个可用库位兜底）
+        const bo: GiftPackBo = {
+          giftBoxProductId: form.value.productId as number | string,
+          packBoxCount: form.value.packBoxCount as number,
+          storeId: form.value.storeId || undefined,
+          deliverDest: form.value.deliverDest,
+          remark: form.value.remark
+        };
+        res = await submitGiftPack(bo);
+      } else if (props.kind === 'veg') {
+        // 录入 g → 落库 kg（÷1000，row12 点3 量纲对齐）；packWeightKg 已在 validate 保证非空
+        const bo: VegPackBo = {
+          sourceInhouseId: form.value.sourceInhouseId as number | string,
+          productId: form.value.productId as number | string,
+          productWeight: packWeightKg() as number,
+          storeId: form.value.storeId || undefined,
+          deliverDest: form.value.deliverDest,
+          productSpec: form.value.productSpec,
+          remark: form.value.remark
+        };
+        res = await submitVegPack(bo);
+      } else {
+        // 份数计量（req A）：录入「份数」，提交前换算成 kg = 份数 × materialNum，productUnit 强制 'kg' 落库；
+        // 「份」仅是 UI 概念，后端零改。
+        // 重量模式（其他产品无 materialNum，如腊肉）：录入的就是「每份重量」，按原料重量单位落库（与录入/扣减一致，
+        // 不落成品计数单位「袋」）；点确定 = 打包一份，后端 resolveDemandDeductQty 计数单位+无计量→扣 1 份。
+        const copies = Number(form.value.productWeight);
+        const measure = Number(selectedProduct.value?.materialNum);
+        // 124#6：肉品打包录入为 g → 提交前 ÷1000 换算成 kg（packWeightKg），单位强制 'kg' 落库；
+        // 份数计量按 copies×materialNum；其余重量模式原样透传（录入本就是 kg）。
+        const dryWeight = shouldUnitByCopies.value
+          ? copies * measure
+          : props.weightInGram
+            ? (packWeightKg() as number)
+            : (form.value.productWeight as number);
+        const dryUnit = shouldUnitByCopies.value
+          ? 'kg'
+          : props.weightInGram
+            ? 'kg'
+            : sourceFilterActive.value
+              ? wipStockUnitMap.value[String(form.value.productId)] || 'kg'
+              : form.value.productUnit;
+        const bo: DryPackBo = {
+          sourceInhouseId: form.value.sourceInhouseId as number | string,
+          productId: form.value.productId as number | string,
+          productWeight: dryWeight,
+          productUnit: dryUnit,
+          storeId: form.value.storeId || undefined,
+          deliverDest: form.value.deliverDest,
+          productSpec: form.value.productSpec,
+          remark: form.value.remark
+        };
+        res = await submitDryPack(bo);
       }
     } catch (submitErr: any) {
       // 提交失败：自动消失的 ElMessage 展示，message 取后端 reject 的 Error.message（如礼盒「组件不足…」长文案）；
@@ -1057,8 +1125,7 @@ async function refreshAfterPack() {
     // 从 chip 消失（不可再选）。保留产品时 productId 不变、watch 不触发，必须在此显式重拉。
     await loadStoreDemand(keepProductId);
     // 当前选中门店若已打满（不在可见 chip 里）→ 取消选中，避免继续为已满足门店打包
-    if (form.value.storeId
-      && !visibleStoreDemands.value.some((sd) => String(sd.storeId) === String(form.value.storeId))) {
+    if (form.value.storeId && !visibleStoreDemands.value.some((sd) => String(sd.storeId) === String(form.value.storeId))) {
       form.value.storeId = undefined;
     }
   } else {
@@ -1067,7 +1134,13 @@ async function refreshAfterPack() {
   }
 }
 
-onMounted(async () => {
+/**
+ * 全量重新拉取页面数据（来源 / 成品 / 门店需求 / 原材料库存）——与 onMounted 初始加载等价。
+ * 供父页「刷新」按钮（row130#2）+ 提交成功后自动刷新（row130#3）调用。
+ * TODO(后端轨 WS2)：需求量「不减少」由后端处理；前端此处只保证 reload 会重新拉最新 demandMap /
+ * loadStoreDemand，把后端修正后的最新需求量呈现出来。
+ */
+async function reload() {
   await loadStores();
   if (props.kind === 'veg') {
     // 果蔬打包：先拉来源（推导本次领用原料 id），再按 product_material 命中加载成品（doc#12）
@@ -1084,7 +1157,13 @@ onMounted(async () => {
   void loadDemandMap();
   // 卡片库存口径统一：成品 product_material 指向的原材料实时库存（与后端校验/扣减一致）
   void loadMaterialStock();
-});
+  // 当前已选产品时同步重拉其门店需求 chip（reload 后需求量随之刷新，衔接 row130#5）
+  if (form.value.productId) void loadStoreDemand(form.value.productId);
+}
+
+defineExpose({ reload });
+
+onMounted(reload);
 </script>
 
 <style scoped>
@@ -1159,6 +1238,14 @@ onMounted(async () => {
 .station-right .action-btn {
   height: 52px;
   font-size: 17px;
+}
+/* 124#3：发送位置按钮（发货月台/礼盒）加大，方便触屏点选 */
+.send-dest-toggle :deep(.dest-btn) {
+  min-width: 120px;
+  height: 52px;
+  padding: 0 24px;
+  font-size: 16px;
+  border-radius: 8px;
 }
 .panel-head {
   display: flex;

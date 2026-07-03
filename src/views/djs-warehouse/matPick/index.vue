@@ -143,6 +143,7 @@ const columns = computed<BizTableColumn[]>(() => {
   ];
   if (tab === 'pork') {
     cols.push({ prop: 'earNo', label: t('matPick.column.earNo'), minWidth: 110, align: 'center' });
+    cols.push({ prop: 'whiteBarNo', label: t('matPick.column.whiteBarNo'), minWidth: 130, align: 'center', showOverflowTooltip: true });
   }
   if (tab === 'vegetable') {
     cols.push({ prop: 'plotCode', label: t('matPick.column.plotCode'), minWidth: 110, align: 'center' });
@@ -249,10 +250,16 @@ async function submitOp() {
   const locationId = row.defaultLocationId;
   submitting.value = true;
   try {
+    // batchId = 该行 location_stock.id：猪肉行回传它 → 后端走 pickByBatch/returnByBatch/lossByBatch
+    // 按该篮精确扣减 + 写该篮 ear_no/white_bar_no，防「点耳号 A 的行却 FIFO 扣到耳号 B 篮」的串扣（row126）。
+    // 仅猪肉（耳号/白条建篮）需要精确篮：其余业态（包材/鸡蛋/干货/其他/外购果蔬）按 product 维度扣减且只有
+    // 可打包食品桥接 inhouse，改走 batchId 会给包材等无意义地产 inhouse，故不回传；自产果蔬走既有 plotId 地块路径。
+    const batchId = activeBelongType.value === 'pork' ? row.batchId || undefined : undefined;
     if (opKind.value === 'pick') {
       await pickMat({
         productId: row.plotId ? undefined : row.productId,
         plotId: row.plotId || undefined,
+        batchId,
         locationId,
         quantity: qty,
         stockOutDest: 'kitchen',
@@ -262,6 +269,7 @@ async function submitOp() {
     } else if (opKind.value === 'return') {
       await returnMat({
         productId: row.productId,
+        batchId,
         locationId,
         quantity: qty,
         sourceScene: 'warehouse',
@@ -270,6 +278,7 @@ async function submitOp() {
     } else if (opKind.value === 'loss') {
       await lossMat({
         productId: row.productId,
+        batchId,
         locationId: locationId as string,
         quantity: qty,
         remark: opForm.remark || undefined

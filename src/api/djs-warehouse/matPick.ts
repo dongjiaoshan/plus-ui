@@ -12,6 +12,8 @@ import { AxiosPromise } from 'axios';
 
 /** 行粒度待领产品行（VO = MatIssueItemVo） */
 export interface MatPickItemVO {
+  /** 领用篮子 ID（= location_stock.id，snowflake string；领用/退回/损耗提交时回传作 batchId，走精确篮扣减防串扣） */
+  batchId?: string;
   /** 产品主键（snowflake，string 防截断） */
   productId: string;
   /** 产品业务码 */
@@ -32,6 +34,8 @@ export interface MatPickItemVO {
   locationName?: string;
   /** 耳号（猪肉分割原料行非空） */
   earNo?: string;
+  /** 白条号（猪肉分割原料行非空） */
+  whiteBarNo?: string;
   /** 地块 ID（自产果蔬行非空，snowflake string） */
   plotId?: string;
   /** 地块编号 */

@@ -71,19 +71,24 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-// docx：盘点列表默认仅展示当日盘点数据（用户可手动改期/清空看历史）。
-const todayStr = () => {
-  const d = new Date();
+// 盘点日期改为日期范围搜索，默认近 10 天（含今天，共 10 天）。
+const fmtDate = (d: Date) => {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
+const defaultDateRange = (): [string, string] => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 9);
+  return [fmtDate(start), fmtDate(end)];
+};
 
 const searchModel = reactive<Record<string, unknown>>({
-  ledgerDate: todayStr()
+  ledgerRange: defaultDateRange()
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'ledgerDate', label: t('storeLedger.column.ledgerDate'), type: 'date' }
+  { field: 'ledgerRange', label: t('storeLedger.column.ledgerDate'), type: 'daterange' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -95,10 +100,13 @@ const columns = computed<BizTableColumn[]>(() => [
 async function fetchList() {
   loading.value = true;
   try {
+    // daterange 回写 [from, to]（YYYY-MM-DD），拆成后端已支持的 ledgerDateFrom / ledgerDateTo。
+    const range = searchModel.ledgerRange as [string, string] | undefined;
     const query: StoreLedgerQuery = {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
-      ledgerDate: (searchModel.ledgerDate as string) || undefined
+      ledgerDateFrom: range?.[0] || undefined,
+      ledgerDateTo: range?.[1] || undefined
     };
     const res = await listStoreLedger(query);
     const rows = (res.rows ?? res.data ?? []) as StoreLedgerHeaderVO[];

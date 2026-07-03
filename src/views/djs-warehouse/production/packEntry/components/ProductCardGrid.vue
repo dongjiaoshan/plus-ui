@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="loading" class="card-grid" :class="{ 'card-grid--large': large }">
+  <div v-loading="loading" class="card-grid" :class="{ 'card-grid--large': large, 'card-grid--empty': items.length === 0 }">
     <template v-if="items.length > 0">
       <div
         v-for="item in items"
@@ -14,15 +14,21 @@
         <div class="prod-thumb">
           <el-image v-if="imageOf(item)" :src="imageOf(item)" fit="cover" class="thumb-img">
             <template #error>
-              <div class="thumb-fallback"><el-icon><Goods /></el-icon></div>
+              <div class="thumb-fallback">
+                <el-icon><Goods /></el-icon>
+              </div>
             </template>
           </el-image>
-          <div v-else class="thumb-fallback"><el-icon><Goods /></el-icon></div>
+          <div v-else class="thumb-fallback">
+            <el-icon><Goods /></el-icon>
+          </div>
         </div>
         <div class="prod-meta">
           <div class="prod-name">{{ item.productName }}</div>
           <div v-if="item.productSpec" class="prod-row">{{ t('djs.warehouse.packEntry.specLabel') }}：{{ item.productSpec }}</div>
-          <div v-if="demandOf(item) != null" class="prod-row">{{ t('djs.warehouse.packEntry.demandLabel') }}：{{ demandOf(item) }} {{ t('djs.warehouse.packEntry.copiesUnit') }}</div>
+          <div v-if="demandOf(item) != null" class="prod-row">
+            {{ t('djs.warehouse.packEntry.demandLabel') }}：{{ demandOf(item) }} {{ t('djs.warehouse.packEntry.copiesUnit') }}
+          </div>
           <div v-if="showStock && hasStockEntry(item)" class="prod-row">
             {{ t('djs.warehouse.packEntry.materialStockLabel') }}：{{ stockDisplay(item) }}
           </div>
@@ -37,6 +43,7 @@
 import { useI18n } from 'vue-i18n';
 import { Goods } from '@element-plus/icons-vue';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import { formatKgToG } from '@/utils/weight';
 
 const { t } = useI18n();
 
@@ -71,6 +78,11 @@ const props = withDefaults(
      * 而非成品自身单位（鸡蛋10个装的「份」）——否则 200 枚被渲染成「200 份」（200 枚≠200 份）。
      */
     stockUnitMap?: Record<string, string>;
+    /**
+     * 「领用剩余重量」按克(g)展示（肉品打包 124#6）：stockMap 数值是 kg，用 formatKgToG（×1000 + ' g'）
+     * 渲染为克，忽略 stockUnitMap/stockUnit。缺省 false，其他打包页仍按 kg/原料单位展示，零影响。
+     */
+    weightInGram?: boolean;
   }>(),
   {
     loading: false,
@@ -79,7 +91,8 @@ const props = withDefaults(
     showStock: true,
     large: false,
     stockUnit: undefined,
-    stockUnitMap: () => ({})
+    stockUnitMap: () => ({}),
+    weightInGram: false
   }
 );
 
@@ -109,6 +122,8 @@ function hasStockEntry(item: ProductInfoVO): boolean {
 function stockDisplay(item: ProductInfoVO): string {
   const v = props.stockMap[String(item.id)];
   if (v == null) return '—';
+  // 124#6：肉品打包按克(g)展示（stockMap 值为 kg，×1000 转克）；formatKgToG 内部 Number 强转防 BigDecimal 字符串坑
+  if (props.weightInGram) return formatKgToG(v);
   // 单位优先级：per-product stockUnitMap（其他产品打包按原料单位）> stockUnit（果蔬固定 kg）> 产品自身单位
   const unit = props.stockUnitMap[String(item.id)] || props.stockUnit || item.productUnit || 'kg';
   return `${v} ${unit}`;
@@ -127,6 +142,14 @@ function select(id: number | string) {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 12px;
   min-height: 120px;
+}
+/* 空态（row129）：无产品时空态卡片在可用区域内水平垂直居中，而非停在左上角 */
+.card-grid--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 240px;
 }
 /* 大卡片版（肉品打包）：一排约 2 个 + 卡更大，填充空白 */
 .card-grid--large {
