@@ -55,7 +55,7 @@
             </el-table-column>
 
             <el-table-column :label="t('storeDemand.create.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center">
-              <template #default="{ row }">{{ row.productName }}</template>
+              <template #default="{ row }">{{ row.displayName || row.productName }}</template>
             </el-table-column>
 
             <!-- 白条：可出栏猪只头数 -->
@@ -270,7 +270,7 @@ const tabProducts = computed<ProductInfoVO[]>(() => {
   // 产品名称过滤（点「查询」后生效，跨 tab 保留 appliedKeyword）
   const kw = appliedKeyword.value.toLowerCase();
   if (kw) {
-    list = list.filter((p) => (p.productName ?? '').toLowerCase().includes(kw));
+    list = list.filter((p) => ((p.displayName || p.productName) ?? '').toLowerCase().includes(kw) || (p.productName ?? '').toLowerCase().includes(kw));
   }
   return list;
 });
@@ -296,7 +296,8 @@ function onQuantityChange(row: ProductInfoVO, value: number | undefined) {
       productType: currentTab.value.productType,
       demandQuantity: qty,
       mailing: false,
-      productName: row.productName,
+      // 展示名优先（果蔬无证=别名），进购物车 + 提交都带解析名；提交后 insertByBo 再定格，一致。
+      productName: row.displayName || row.productName,
       productUnit: row.productUnit
     });
   }
@@ -310,7 +311,8 @@ function removeFromCart(productId: string) {
 async function loadProducts() {
   productLoading.value = true;
   try {
-    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
+    // withDisplayName：果蔬候选按原材料作物有效有机证书解析展示名（有证=产品名 / 无证=别名），与下单定格一致。
+    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0, withDisplayName: true });
     const rows = ((res as unknown as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
     // 加载全部启用产品，原料排除按 tab 业态区分（见 tabProducts）：
     // 白条 tab 取自产白条(含原料态白条，门店订白条→现场分割)；其余业态排除原材料(product_attr=2)。

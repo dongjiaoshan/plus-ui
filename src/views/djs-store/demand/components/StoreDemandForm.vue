@@ -34,7 +34,7 @@
               style="width: 100%"
               @change="onProductSelect"
             >
-              <el-option v-for="p in productOptions" :key="String(p.id)" :label="p.productName" :value="String(p.id)" />
+              <el-option v-for="p in productOptions" :key="String(p.id)" :label="p.displayName || p.productName" :value="String(p.id)" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -126,7 +126,8 @@ const productOptions = ref<ProductInfoVO[]>([]);
 async function loadProductOptions() {
   try {
     const belongType = effectiveType.value === 'other' ? undefined : effectiveType.value;
-    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0 });
+    // withDisplayName：果蔬候选按原材料作物有效有机证书解析展示名（有证=产品名 / 无证=别名），与下单定格一致。
+    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0, withDisplayName: true });
     const rows = ((res as unknown as { rows?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
     // 门店只能下单「可售产品」（自产成品 / 外购 / 礼盒），排除所有原材料（product_attr=2）：
     // 原料是仓库内部流转（分割/毛菜处理产出 → 领用 → 打包成成品），门店订成品、不订原料。
@@ -141,7 +142,8 @@ async function loadProductOptions() {
 function onProductSelect(productSnowflakeId: string) {
   const p = productOptions.value.find((x) => String(x.id) === productSnowflakeId);
   if (!p) return;
-  form.productName = p.productName;
+  // 展示名优先（果蔬无证=别名）；提交后 insertByBo 再定格，一致。
+  form.productName = p.displayName || p.productName;
   form.productUnit = p.productUnit ?? '';
   form.productSpec = p.productSpec ?? '';
 }
