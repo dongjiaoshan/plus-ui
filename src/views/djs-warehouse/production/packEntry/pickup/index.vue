@@ -76,20 +76,21 @@
             <DestToggle v-model="pickupForm.outDest" :options="outDestOptions" />
           </div>
 
-          <!-- 发货月台：关联发货门店（ship 分支必填） -->
+          <!-- 发货月台：关联发货门店（ship 分支必填）。row153：只列当天有已确认白条需求的门店，名后带需求数。 -->
           <div v-if="pickupForm.outDest === 'ship'" class="panel-section">
             <div class="panel-label">{{ t('djs.warehouse.packEntry.shipStore') }}</div>
             <el-select
               v-model="pickupForm.storeId"
+              v-loading="shipStoreLoading"
               :placeholder="t('djs.warehouse.packEntry.shipStorePlaceholder')"
               filterable
               class="ship-store-select"
             >
               <el-option
-                v-for="s in stores"
-                :key="String(s.id)"
-                :label="s.storeName"
-                :value="s.id"
+                v-for="s in shipStores"
+                :key="String(s.storeId)"
+                :label="`${s.storeName}(${Number(s.demandQty)})`"
+                :value="s.storeId"
               />
             </el-select>
           </div>
@@ -132,6 +133,7 @@ import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
 import { listPickupItems, submitPickup, submitWhiteBarOut, submitWarehouseOut } from '@/api/djs-warehouse/packEntry';
 import type { BarPickupItemVO } from '@/api/djs-warehouse/packEntry';
+import request from '@/utils/request';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance()!;
@@ -139,7 +141,34 @@ const { proxy } = getCurrentInstance()!;
 // 出库去向复用系统已有字典 djs_stock_out_dest（矿山/厨房/大冶门店/个人/发货月台…）；toRefs 解构保响应式（否则冷 store 挂载恒空）
 const { djs_stock_out_dest } = toRefs<any>(proxy?.useDict('djs_stock_out_dest'));
 
-const { sources, loadSources, stores, loadStores } = usePackEntryOptions();
+const { sources, loadSources } = usePackEntryOptions();
+
+/**
+ * row153：发货月台门店下拉数据 —— 只列当天有已确认白条需求的门店，storeName 后带需求数。
+ * storeId 为雪花字符串（后端 CAST AS CHAR 防 JS 精度截断）。
+ */
+interface WhiteBarShipStore {
+  storeId: string;
+  storeName: string;
+  demandQty: number | string;
+}
+const shipStores = ref<WhiteBarShipStore[]>([]);
+const shipStoreLoading = ref(false);
+
+/** 加载当天有已确认白条需求的门店（发货月台专用，非发货月台分支不需要）。 */
+async function loadShipStores() {
+  shipStoreLoading.value = true;
+  try {
+    const res = await request({ url: '/djs/warehouse/packEntry/whiteBarShipStores', method: 'get' });
+    shipStores.value = ((res as any).data ?? []) as WhiteBarShipStore[];
+    // 当前所选门店已不在最新可选列表（需求已发完/已取消）→ 清空
+    if (pickupForm.value.storeId && !shipStores.value.some((s) => String(s.storeId) === String(pickupForm.value.storeId))) {
+      pickupForm.value.storeId = '';
+    }
+  } finally {
+    shipStoreLoading.value = false;
+  }
+}
 
 /** 出库位置枚举 → 后端三端点：cut=分割车间(submitPickup) / ship=发货月台(whiteBarOut) / warehouse=仓库出库(warehouseOut)。 */
 type OutDest = 'cut' | 'ship' | 'warehouse';
@@ -275,14 +304,14 @@ async function handleSubmit() {
     }
     pickupForm.value = pickupDefault();
     selectedKey.value = '';
-    await Promise.all([loadItems(), loadSources('whiteBar')]);
+    await Promise.all([loadItems(), loadSources('whiteBar'), loadShipStores()]);
   } finally {
     submitting.value = false;
   }
 }
 
 onMounted(async () => {
-  await Promise.all([loadItems(), loadSources('whiteBar'), loadStores()]);
+  await Promise.all([loadItems(), loadSources('whiteBar'), loadShipStores()]);
 });
 </script>
 

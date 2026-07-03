@@ -6,7 +6,7 @@
     <div v-loading="cuttableLoading" class="chip-row">
       <template v-if="cuttable.length > 0">
         <button
-          v-for="r in cuttable"
+          v-for="r in sortedCuttable"
           :key="String(r.id)"
           type="button"
           class="cut-chip"
@@ -109,22 +109,25 @@ const { t } = useI18n();
 
 const { locations, locationLoading, loadLocations } = usePackEntryOptions();
 
-// row122①：全量展示库位（不再按名称过滤成「猪肉鲜品/冻品」两类，也不按所选产品存储库位过滤）。
-// row122②：把「猪肉鲜品库」排在「冻品库」之前，其余库位按原顺序追加在后。
+// row152：入库位置只保留「猪肉鲜品库 / 冻品库」两类，按名称过滤。
+// 坑：猪肉鲜品库 location_type='veg_fresh'（名字对不上 type，与毛菜鲜品/蔬菜保鲜共享 veg_fresh），
+// 所以必须按名称包含关键字过滤，不能按 location_type。
 const FRESH_FIRST = '猪肉鲜品';
 const FROZEN_SECOND = '冻品';
+const ALLOWED_LOCATION_KEYWORDS = [FRESH_FIRST, FROZEN_SECOND];
 const rankLocation = (name: string): number => {
   if (name.includes(FRESH_FIRST)) return 0; // 猪肉鲜品库置顶
   if (name.includes(FROZEN_SECOND)) return 1; // 冻品库次之
-  return 2; // 其余库位在后
+  return 2;
 };
 const locationOptions = computed<{ value: number | string; label: string }[]>(() =>
   [...locations.value]
+    .filter((l) => ALLOWED_LOCATION_KEYWORDS.some((k) => (l.locationName ?? '').includes(k)))
     .sort((a, b) => rankLocation(a.locationName ?? '') - rankLocation(b.locationName ?? ''))
     .map((l) => ({ value: l.id, label: l.locationName }))
 );
 
-/** 入库位置默认选中「猪肉鲜品库」（row122②）；无该库位时回退到列表首项，仍无则留空。 */
+/** 入库位置默认选中「猪肉鲜品库」；无该库位时回退到列表首项（冻品库），仍无则留空。 */
 function defaultLocationId(): number | string | '' {
   const fresh = locationOptions.value.find((o) => o.label?.includes(FRESH_FIRST));
   if (fresh) return fresh.value;
@@ -149,6 +152,13 @@ async function loadPorkProducts() {
 
 const cuttable = ref<PigCutRecordVO[]>([]);
 const cuttableLoading = ref(false);
+
+// row156：白条 chip 按分割车间「从前到后」稳定升序展示（后端 picked 段 + cutting 段拼接、日期跳跃乱序）。
+// PigCutRecordVO 无 pickupTime 字段，用业务码 cutId 排序 —— cutId 与 pickup_time 单调同序（live 已核），
+// 回退 id 兜底空码，整体稳定升序。
+const sortedCuttable = computed<PigCutRecordVO[]>(() =>
+  [...cuttable.value].sort((a, b) => String(a.cutId ?? a.id ?? '').localeCompare(String(b.cutId ?? b.id ?? '')))
+);
 
 async function loadCuttable() {
   cuttableLoading.value = true;
