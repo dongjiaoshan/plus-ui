@@ -115,9 +115,15 @@ const columns = computed<BizTableColumn[]>(() => [
         }
       ]
     : []),
-  // 「产品重量」标签改「原材料使用量」，绑 materialConsume + 右侧「原材料单位」列（materialUnit）
-  // TODO(后端轨 WS3): row132 —— 原材料名称/消耗量/单位 需后端按明细行聚合真实来源原材料回填
-  // （当前 materialConsume/materialUnit 逐件返回，缺「原材料名称」列 + 果蔬多料聚合），前端不拼后端聚合
+  // 原材料名称：material_id → product_name（后端 fillJoinNames 回填；row168 产品重量后新增名称列）
+  {
+    prop: 'materialName',
+    label: t('djs.warehouse.production.column.materialName'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (row: BizRow) => (row as ProductProductionVO).materialName || '-'
+  },
+  // 原材料消耗量 + 右侧「原材料单位」列（materialUnit），均后端逐件回填
   {
     prop: 'materialConsume',
     label: t('djs.warehouse.production.column.materialConsume'),

@@ -86,7 +86,14 @@ const data = ref<TraceLabelData>({});
 const qrDataUrl = ref('');
 const labelRef = ref<HTMLElement>();
 
-const weightText = computed(() => (weight.value != null ? `${weight.value} ${t('storeTrace.label.weightUnit')}` : '-'));
+const weightText = computed(() => {
+  if (weight.value == null) return '-';
+  // 果蔬类产品重量按克展示（row146）：kg 值 × 1000，去浮点噪声；其余业态保持 kg
+  if (data.value.traceType === 'veg') {
+    return `${Math.round(weight.value * 1000 * 100) / 100} ${t('storeTrace.label.weightUnitGram')}`;
+  }
+  return `${weight.value} ${t('storeTrace.label.weightUnit')}`;
+});
 
 /** 二维码 encode URL：VITE_APP_TRACE_BASE 优先（内网/预览扫码可达），缺省 location.origin。 */
 function buildTraceUrl(type: string, code: string): string {

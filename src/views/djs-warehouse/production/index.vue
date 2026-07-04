@@ -105,6 +105,14 @@ const columns = computed<BizTableColumn[]>(() => [
   },
   // 损坏量：该组已标损坏件数（damageCount），>0 红色显示（走 cell-damageCount slot 上色）
   { prop: 'damageCount', label: t('djs.warehouse.production.column.damageCount'), minWidth: 100, align: 'center' },
+  // 原材料名称：material_id → product_name（后端聚合回填；row167 损坏量后新增名称列）
+  {
+    prop: 'materialName',
+    label: t('djs.warehouse.production.column.materialName'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (row: BizRow) => (row as ProductProductionGroupVO).materialName || '-'
+  },
   // 原材料消耗量：该组 SUM(material_consume)（无配料则 0/空）
   {
     prop: 'materialConsume',

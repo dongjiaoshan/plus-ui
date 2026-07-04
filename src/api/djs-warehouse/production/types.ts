@@ -28,6 +28,8 @@ export interface ProductProductionVO {
   whiteBarId?: number;
   materialId?: number;
   materialConsume?: number;
+  /** 原材料名称（materialId → product_name，后端 fillJoinNames 回填；row168 明细列）。 */
+  materialName?: string;
   /** 原材料单位（契约 a：随 materialConsume 返回，损坏明细「原材料量」列单位展示）。 */
   materialUnit?: string;
   /** 关联需求 id（契约 a：按需求下钻 production 明细用）。 */
@@ -69,6 +71,8 @@ export interface ProductProductionGroupVO {
   productType?: number;
   produceQty: number;
   itemCount: number;
+  /** 原材料名称：material_id → product_info.product_name（后端聚合回填；row167 列表列） */
+  materialName?: string;
   /** 原材料消耗量：该组 SUM(material_consume)（同产品当日累计消耗的来源原材料重量） */
   materialConsume?: number;
   /** 原材料单位：material_id → product_info.product_unit（后端聚合回填，无配料则空） */
