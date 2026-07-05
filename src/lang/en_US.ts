@@ -3723,7 +3723,7 @@ export default {
       ageDays: 'Age (days)',
       daysUnit: 'days',
       weight: 'Product Weight',
-      weightPlaceholder: 'Enter product weight (kg)',
+      weightPlaceholder: 'Enter product weight (g)',
       genPrint: 'Print Trace Code',
       genOk: 'Code generated: {code}',
       tracePig: 'Traced Pig',

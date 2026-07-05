@@ -3726,7 +3726,7 @@ export default {
       ageDays: '猪只日龄',
       daysUnit: '日龄',
       weight: '产品重量',
-      weightPlaceholder: '请输入产品重量(kg)',
+      weightPlaceholder: '请输入产品重量(g)',
       genPrint: '追溯码打印',
       genOk: '生码成功：{code}',
       tracePig: '追溯猪只',

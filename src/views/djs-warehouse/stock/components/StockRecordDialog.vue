@@ -19,6 +19,12 @@
             <template #default="{ row }"><dict-tag :options="djs_flow_type" :value="row.flowType" /></template>
           </el-table-column>
           <el-table-column prop="locationName" :label="t('djs.warehouse.flowIn.location')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="earNo" :label="t('djs.warehouse.flowIn.earNo')" min-width="150" align="center" header-align="center">
+            <template #default="{ row }">{{ row.earNo || '-' }}</template>
+          </el-table-column>
+          <el-table-column prop="blockNo" :label="t('djs.warehouse.flowIn.blockNo')" min-width="120" align="center" header-align="center">
+            <template #default="{ row }">{{ row.blockNo || '-' }}</template>
+          </el-table-column>
           <el-table-column prop="changeQuantity" :label="t('djs.warehouse.flowIn.changeQuantity')" min-width="110" align="center" header-align="center" />
           <el-table-column prop="productUnit" :label="t('djs.warehouse.flowIn.productUnit')" min-width="80" align="center" header-align="center" />
           <el-table-column prop="operatorName" :label="t('djs.warehouse.flowIn.operator')" min-width="100" align="center" header-align="center" />
@@ -39,6 +45,12 @@
             <template #default="{ row }"><dict-tag :options="djs_stock_out_dest" :value="row.stockOutDest" /></template>
           </el-table-column>
           <el-table-column prop="locationName" :label="t('djs.warehouse.flowOut.location')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="earNo" :label="t('djs.warehouse.flowOut.earNo')" min-width="150" align="center" header-align="center">
+            <template #default="{ row }">{{ row.earNo || '-' }}</template>
+          </el-table-column>
+          <el-table-column prop="blockNo" :label="t('djs.warehouse.flowOut.blockNo')" min-width="120" align="center" header-align="center">
+            <template #default="{ row }">{{ row.blockNo || '-' }}</template>
+          </el-table-column>
           <el-table-column prop="changeQuantity" :label="t('djs.warehouse.flowOut.changeQuantity')" min-width="110" align="center" header-align="center" />
           <el-table-column prop="productUnit" :label="t('djs.warehouse.flowOut.productUnit')" min-width="80" align="center" header-align="center" />
           <el-table-column prop="operatorName" :label="t('djs.warehouse.flowOut.operator')" min-width="100" align="center" header-align="center" />

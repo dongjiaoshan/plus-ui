@@ -21,7 +21,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_demand_product_type']"
+      :dict-types="['djs_demand_product_type', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="rowKey"

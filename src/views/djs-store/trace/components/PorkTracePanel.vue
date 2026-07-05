@@ -74,11 +74,12 @@
 
           <div class="weight-box">
             <div class="section-label">{{ t('storeTrace.pork.weight') }}</div>
+            <!-- DENGBO-R34：产品重量输入单位 g（零售部位按克，与列表实际重量 g 展示一致）；提交前 g→kg 换算给后端 -->
             <el-input-number
               v-model="form.weight"
-              :min="0.01"
-              :precision="2"
-              :step="1"
+              :min="1"
+              :precision="0"
+              :step="50"
               :placeholder="t('storeTrace.pork.weightPlaceholder')"
               style="width: 100%"
             />
@@ -234,18 +235,20 @@ function selectPig(p: TraceablePigVO) {
 
 async function handleGen() {
   if (!canGen.value) return;
-  // 本次打包重量不得超过该白条剩余可打包重量
+  // 输入单位 g（DENGBO-R34），后端/白条剩余/标签均按 kg → g÷1000 换算
+  const weightKg = (form.weight ?? 0) / 1000;
+  // 本次打包重量不得超过该白条剩余可打包重量（白条为 kg 口径）
   const remaining = remainingOf(selectedPig.value);
-  if (remaining > 0 && (form.weight ?? 0) > remaining) {
+  if (remaining > 0 && weightKg > remaining) {
     proxy?.$modal.msgWarning(t('storeTrace.pork.overWeight', { remain: fmtKg(remaining) }));
     return;
   }
   genLoading.value = true;
   try {
-    const res = await genStoreTraceCode({ earNo: selectedPig.value?.earNo, cutLabel: form.cutLabel, weight: form.weight });
+    const res = await genStoreTraceCode({ earNo: selectedPig.value?.earNo, cutLabel: form.cutLabel, weight: weightKg });
     const code = (res.data as unknown as string) ?? '';
     proxy?.$modal.msgSuccess(t('storeTrace.pork.genOk', { code }));
-    // 弹框录重量（默认本次生码重量）→ 结构化标签卡 + 二维码 → 打印
+    // 弹框录重量（默认本次生码重量 kg，弹框内按业态转 g 展示）→ 结构化标签卡 + 二维码 → 打印
     labelDialogRef.value?.open(
       {
         productCode: code,
@@ -256,7 +259,7 @@ async function handleGen() {
         produceCode: code,
         traceType: 'pork'
       },
-      form.weight
+      weightKg
     );
     form.weight = undefined;
     // 刷新白条剩余可打包重量（本次打包后该白条剩余减少，用完则禁选）

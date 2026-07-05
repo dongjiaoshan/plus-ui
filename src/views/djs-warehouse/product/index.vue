@@ -182,13 +182,11 @@ const columns = computed<BizTableColumn[]>(() => {
     { prop: 'productThumb', label: t(isGoods ? 'product.column.goodsThumb' : 'product.column.productThumb'), width: 80, align: 'center' },
     { prop: 'productId', label: t(isGoods ? 'product.column.goodsId' : 'product.column.productId'), width: 140, showOverflowTooltip: true },
     { prop: 'productName', label: t(isGoods ? 'product.column.goodsName' : 'product.column.productName'), minWidth: 160, showOverflowTooltip: true },
-    {
-      prop: 'belongType',
-      label: t(isGoods ? 'product.column.goodsBelongType' : 'product.column.belongType'),
-      width: 110,
-      align: 'center',
-      dictType: 'djs_belong_type'
-    }
+    // 商品配置(外购商品)「商品类别」取采购分类 buy_class（belong_type 仅自产产品有值、外购恒 NULL → 原绑 belongType 列全空 row190）；
+    // 产品配置(自产)保持 belong_type 归属类型。
+    isGoods
+      ? { prop: 'buyClass', label: t('product.column.goodsBelongType'), width: 110, align: 'center', dictType: 'djs_buy_class' }
+      : { prop: 'belongType', label: t('product.column.belongType'), width: 110, align: 'center', dictType: 'djs_belong_type' }
   ];
   if (!isGoods) {
     // row81-2：商品配置去掉「商品属性 / 生产车间」两列

@@ -170,7 +170,7 @@ const productionKpis = computed(() => {
   return [
     { label: t('warehouse.dashboard.kpiSlaughterPig'), unit: t('warehouse.dashboard.unitHead'), value: c?.todaySlaughterPigCount ?? 0 },
     { label: t('warehouse.dashboard.kpiWhiteBarWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayWhiteBarWeight) },
-    { label: t('warehouse.dashboard.kpiCutBar'), unit: t('warehouse.dashboard.unitHead'), value: c?.todayCutBarCount ?? 0 },
+    { label: t('warehouse.dashboard.kpiCutBar'), unit: t('warehouse.dashboard.unitHead'), value: fmtCount(c?.todayCutBarCount) },
     { label: t('warehouse.dashboard.kpiCutProductWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayCutProductWeight) },
     { label: t('warehouse.dashboard.kpiVegReceiveKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayVegReceiveKinds ?? 0 },
     { label: t('warehouse.dashboard.kpiVegReceiveWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayVegReceiveWeight) },
@@ -187,6 +187,13 @@ function fmt(v?: number | null): string {
 function fmtInt(v?: number | null): number {
   if (v == null) return 0;
   return Math.round(Number(v));
+}
+
+// 分割白条数：半只 0.5 计，值可为小数（后端 BigDecimal 序列化成字符串）。
+// 不四舍五入（fmtInt 会把 0.5→1 破坏口径），去掉整数的 .0 尾巴：3.0→"3"、1.5→"1.5"。
+function fmtCount(v?: number | string | null): string {
+  if (v == null) return '0';
+  return String(Number(v));
 }
 
 async function loadAll() {
