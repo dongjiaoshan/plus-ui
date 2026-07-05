@@ -135,4 +135,6 @@ export interface BizTableExpose {
   getSelected: () => BizRow[];
   /** 清空选中 */
   clearSelection: () => void;
+  /** 全选/取消全选当前页所有行 */
+  toggleAllSelection: () => void;
 }

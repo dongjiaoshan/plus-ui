@@ -67,6 +67,8 @@
       <el-table v-loading="loading" :data="list" border :empty-text="t('demand.confirmPage.empty')">
         <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="120" align="center" header-align="center" show-overflow-tooltip />
         <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" min-width="120" align="center" header-align="center" show-overflow-tooltip />
+        <!-- 需求日期列（row196）：本抽屉锁定单一需求日期，逐行显式展示 demand_date，避免把「需求最终确认时间」误读成需求日期（次日预约单常见：确认于前一天、需求日期为次日）。 -->
+        <el-table-column :label="t('demand.confirmPage.column.demandDate')" prop="demandDate" min-width="110" align="center" header-align="center" />
         <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center" header-align="center">
           <template #default="{ row }">{{ formatQty(row.demandQuantity) }}</template>
         </el-table-column>

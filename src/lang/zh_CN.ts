@@ -3139,7 +3139,9 @@ export default {
       assignPig: '指定猪只',
       history: '状态历史',
       detail: '详情',
-      viewDemand: '查看需求'
+      viewDemand: '查看需求',
+      selectAllPage: '全选本页',
+      batchConfirm: '批量确认需求'
     },
     detail: {
       title: '产品需求详情',
@@ -3153,7 +3155,12 @@ export default {
       del: '确认删除选中的 {count} 条需求？仅 DRAFT/CANCELLED 态可删',
       submit: '确认提交需求 {no} 到仓库审核？',
       confirm: '确认锁定需求 {no}？',
-      startProduction: '确认开始排产需求 {no}？开始后不可取消'
+      startProduction: '确认开始排产需求 {no}？开始后不可取消',
+      batchConfirm: '确认锁定选中的 {count} 条需求？将确认这些分组下所有待确认门店需求单'
+    },
+    message: {
+      batchConfirmSuccess: '已批量确认需求 {count} 条',
+      batchConfirmPartial: '批量确认完成：成功 {success} 条，失败 {failed} 条'
     },
     prompt: {
       cancelRemark: '请输入取消原因（可选）',
@@ -3247,6 +3254,7 @@ export default {
       column: {
         productName: '产品名称',
         productSpec: '产品规格',
+        demandDate: '需求日期',
         demandQuantity: '总需求量',
         productUnit: '单位',
         storeName: '需求门店',
@@ -3387,7 +3395,9 @@ export default {
       detail: '详情',
       del: '删除',
       viewList: '查看列表',
-      productDetail: '产品明细'
+      productDetail: '产品明细',
+      selectAllPage: '全选本页',
+      batchReceive: '批量确认到店'
     },
     damage: {
       detailTitle: '产品明细',
@@ -3396,6 +3406,7 @@ export default {
       markAction: '记为损坏',
       editAction: '修改',
       produceNo: '生产单号',
+      materialName: '原材料名称',
       materialConsume: '原材料量',
       materialUnit: '原材料单位',
       isDamaged: '是否损坏',
@@ -3408,7 +3419,12 @@ export default {
     },
     confirm: {
       del: '确认删除选中的 {count} 条需求？仅未确认需求可删',
-      receive: '确认已收到「{name}」的货物？'
+      receive: '确认已收到「{name}」的货物？',
+      batchReceive: '确认将选中的 {count} 条已发货需求确认到店？'
+    },
+    message: {
+      batchReceiveSuccess: '已批量确认到店 {count} 条',
+      batchReceivePartial: '批量确认完成：成功 {success} 条，失败 {failed} 条'
     },
     prompt: {
       cancelRemark: '请输入撤回原因（可选）',

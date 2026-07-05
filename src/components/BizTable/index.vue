@@ -283,7 +283,8 @@ const exposed: BizTableExpose = {
   refresh: () => handleSearch(),
   reset: () => handleReset(),
   getSelected: () => [...selection.value],
-  clearSelection: () => tableRef.value?.clearSelection()
+  clearSelection: () => tableRef.value?.clearSelection(),
+  toggleAllSelection: () => tableRef.value?.toggleAllSelection()
 };
 
 defineExpose(exposed);

@@ -75,13 +75,12 @@
           <div class="weight-box">
             <div class="section-label">{{ t('storeTrace.pork.weight') }}</div>
             <!-- DENGBO-R34：产品重量输入单位 g（零售部位按克，与列表实际重量 g 展示一致）；提交前 g→kg 换算给后端 -->
-            <el-input-number
+            <!-- row200-2：录重形式改为与仓库肉品打包一致的触屏数字键盘（WeightNumpad，g 整数 precision=0）。 -->
+            <WeightNumpad
               v-model="form.weight"
-              :min="1"
+              unit="g"
               :precision="0"
-              :step="50"
               :placeholder="t('storeTrace.pork.weightPlaceholder')"
-              style="width: 100%"
             />
           </div>
 
@@ -111,6 +110,8 @@ import type { TraceablePigVO, StorePackProductVO } from '@/api/djs-store/trace/t
 import { listImage } from '@/api/djs-common/image';
 import type { ImageLibraryVO } from '@/api/djs-common/image/types';
 import TraceLabelDialog from './TraceLabelDialog.vue';
+import WeightNumpad from '@/views/djs-warehouse/production/packEntry/components/WeightNumpad.vue';
+import { useStoreContextStore } from '@/store/modules/storeContext';
 import frontLeg from '@/assets/images/pork-cut/front-leg.png';
 import porkBelly from '@/assets/images/pork-cut/pork-belly.png';
 import ribsImg from '@/assets/images/pork-cut/ribs.png';
@@ -120,6 +121,11 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const storeCtx = useStoreContextStore();
+// 当前所选门店名（追溯码打印弹框「销售门店」= 当前门店；未选/超管跨店时 undefined → 弹框显 '-'）
+function currentStoreName(): string | undefined {
+  return storeCtx.myStores.find((s) => String(s.id) === String(storeCtx.currentStoreId))?.storeName;
+}
 const { djs_pig_sex, djs_pork_cut_product } = toRefs<Record<string, { label: string; value: string }[]>>(
   proxy?.useDict('djs_pig_sex', 'djs_pork_cut_product')
 );
@@ -252,10 +258,14 @@ async function handleGen() {
     labelDialogRef.value?.open(
       {
         productCode: code,
+        // row201-1：门店现场码无 product_production 生产编号，「生产编码」取追溯码本身（与已生成追溯码列表口径一致，不留空）
+        serialNo: code,
         produceDate: todayYmd(),
         productName: form.cutLabel,
         sourceLabel: t('storeTrace.label.earNo'),
         sourceValue: selectedPig.value?.earNo,
+        // row201-2：销售门店取当前所选门店（对齐仓库肉品打包 SkuPackForm 本地解析写法）
+        storeName: currentStoreName(),
         produceCode: code,
         traceType: 'pork'
       },

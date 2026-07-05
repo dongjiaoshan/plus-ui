@@ -3136,7 +3136,9 @@ export default {
       assignPig: 'Assign Pig',
       history: 'History',
       detail: 'Detail',
-      viewDemand: 'View Demand'
+      viewDemand: 'View Demand',
+      selectAllPage: 'Select all (page)',
+      batchConfirm: 'Batch confirm demand'
     },
     detail: {
       title: 'Product Demand Detail',
@@ -3150,7 +3152,12 @@ export default {
       del: 'Delete {count} demand(s)? Only DRAFT/CANCELLED allowed',
       submit: 'Submit demand {no} to warehouse review?',
       confirm: 'Lock demand {no}?',
-      startProduction: 'Start production for demand {no}? Cannot cancel after.'
+      startProduction: 'Start production for demand {no}? Cannot cancel after.',
+      batchConfirm: 'Lock {count} selected demand group(s)? Confirms all pending store demands under them'
+    },
+    message: {
+      batchConfirmSuccess: 'Batch confirmed {count} demand(s)',
+      batchConfirmPartial: 'Batch confirm done: {success} succeeded, {failed} failed'
     },
     prompt: {
       cancelRemark: 'Cancel reason (optional)',
@@ -3244,6 +3251,7 @@ export default {
       column: {
         productName: 'Product Name',
         productSpec: 'Spec',
+        demandDate: 'Demand Date',
         demandQuantity: 'Total Quantity',
         productUnit: 'Unit',
         storeName: 'Store',
@@ -3384,7 +3392,9 @@ export default {
       detail: 'Detail',
       del: 'Delete',
       viewList: 'View List',
-      productDetail: 'Product detail'
+      productDetail: 'Product detail',
+      selectAllPage: 'Select all (page)',
+      batchReceive: 'Batch confirm arrival'
     },
     damage: {
       detailTitle: 'Product detail',
@@ -3393,6 +3403,7 @@ export default {
       markAction: 'Mark damaged',
       editAction: 'Edit',
       produceNo: 'Produce No.',
+      materialName: 'Material name',
       materialConsume: 'Material qty',
       materialUnit: 'Material unit',
       isDamaged: 'Damaged',
@@ -3405,7 +3416,12 @@ export default {
     },
     confirm: {
       del: 'Delete {count} selected demand(s)? Only unconfirmed demands can be deleted',
-      receive: 'Confirm receipt of "{name}"?'
+      receive: 'Confirm receipt of "{name}"?',
+      batchReceive: 'Confirm arrival for {count} selected shipped demand(s)?'
+    },
+    message: {
+      batchReceiveSuccess: 'Batch confirmed arrival for {count} demand(s)',
+      batchReceivePartial: 'Batch confirm done: {success} succeeded, {failed} failed'
     },
     prompt: {
       cancelRemark: 'Enter withdraw reason (optional)',

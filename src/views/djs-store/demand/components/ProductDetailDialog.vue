@@ -62,8 +62,16 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-/** 当前下钻的需求 id（雪花 string，按 demandId 拉产品明细） */
-const demandId = ref<string>('');
+/**
+ * 当前下钻范围（row40）：按「同一日期 + 当前门店 + 该产品」拉生产明细，而非按 demandId。
+ * demandId 在生产记录上是门店级松散关联（一个门店多日期多产品都挂同一 demand_id），
+ * 按 demandId 过滤会拉出该门店的全部产品；改用 produceDate+productId+storeId 精确锁定该需求当日该产品。
+ */
+const scope = reactive<{ produceDate: string; productId: string; storeId: string }>({
+  produceDate: '',
+  productId: '',
+  storeId: ''
+});
 
 // 「是否损坏」搜索条（全部 = undefined / 是 = 1 / 否 = 0），select 走 dict djs_yes_no
 const searchModel = reactive<Record<string, unknown>>({ isDamaged: undefined });
@@ -74,6 +82,14 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'produceNo', label: t('storeDemand.damage.produceNo'), minWidth: 160, align: 'center', showOverflowTooltip: true },
+  {
+    prop: 'materialName',
+    label: t('storeDemand.damage.materialName'),
+    minWidth: 120,
+    align: 'center',
+    showOverflowTooltip: true,
+    formatter: (row: BizRow) => (row as ProductProductionVO).materialName || '—'
+  },
   {
     prop: 'materialConsume',
     label: t('storeDemand.damage.materialConsume'),
@@ -111,11 +127,14 @@ const columns = computed<BizTableColumn[]>(() => [
 ]);
 
 async function loadList() {
-  if (!demandId.value) return;
+  if (!scope.productId || !scope.produceDate) return;
   loading.value = true;
   try {
     const params: ProductProductionQuery = {
-      demandId: demandId.value,
+      // row40：按 生产日期 + 产品 + 门店 精确锁定（走后端 byBatch 分支）
+      produceDate: scope.produceDate,
+      productId: scope.productId,
+      storeId: scope.storeId || undefined,
       // 「是否损坏」筛选：undefined=全部；0/1 透传后端 is_damaged 精确过滤
       isDamaged: searchModel.isDamaged === undefined || searchModel.isDamaged === '' ? undefined : Number(searchModel.isDamaged),
       pageNum: pageNum.value,
@@ -153,17 +172,21 @@ function onDamage(row: BizRow) {
 }
 
 function onClosed() {
-  demandId.value = '';
+  scope.produceDate = '';
+  scope.productId = '';
+  scope.storeId = '';
   list.value = [];
   total.value = 0;
 }
 
 /**
- * 打开「产品明细」弹框。
- * @param id 已发货需求 id（雪花 string）
+ * 打开「产品明细」弹框（row40：按需求的 日期 + 门店 + 产品 拉当日该产品生产明细）。
+ * @param params 需求行的 demandDate / productId / storeId
  */
-function open(id: string) {
-  demandId.value = String(id);
+function open(params: { produceDate: string; productId: string; storeId?: string }) {
+  scope.produceDate = String(params.produceDate ?? '');
+  scope.productId = String(params.productId ?? '');
+  scope.storeId = String(params.storeId ?? '');
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
   pageNum.value = 1;
   pageSize.value = 10;

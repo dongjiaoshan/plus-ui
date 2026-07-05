@@ -63,6 +63,13 @@ export const submitDemand = (id: string | number, remark?: string) =>
 export const confirmDemand = (id: string | number, remark?: string) =>
   request({ url: `/djs/warehouse/demand/${id}/confirm`, method: 'post', params: { remark } });
 
+/**
+ * 批量确认需求（row41）：确认选中分组（需求日期+产品）下所有 SUBMITTED 态需求单。
+ * @param groups 选中分组的 { demandDate, productId }
+ */
+export const batchConfirmDemand = (groups: { demandDate: string; productId: string }[], remark?: string) =>
+  request({ url: '/djs/warehouse/demand/batch-confirm', method: 'post', data: { groups, remark } });
+
 export const cancelDemand = (id: string | number, remark?: string) =>
   request({ url: `/djs/warehouse/demand/${id}/cancel`, method: 'post', params: { remark } });
 

@@ -22,7 +22,23 @@
       @add="handleAdd"
       @del="handleDel"
       @page-change="handlePageChange"
+      @selection-change="onSelectionChange"
     >
+      <!-- row39：全选本页 + 批量确认到店（仅对可确认到店的已发货未收货行生效） -->
+      <template #toolbar-extra>
+        <el-button plain @click="onToggleAllSelection">
+          {{ t('storeDemand.action.selectAllPage') }}
+        </el-button>
+        <el-button
+          v-hasPermi="['djs:store:demand:receive']"
+          type="success"
+          plain
+          :disabled="receivableSelectedCount === 0"
+          @click="onBatchReceive"
+        >
+          {{ t('storeDemand.action.batchReceive') }}<template v-if="receivableSelectedCount > 0"> ({{ receivableSelectedCount }})</template>
+        </el-button>
+      </template>
       <template #cell-actions="{ row }">
         <!-- 待确认（SUBMITTED）：修改 / 删除 -->
         <template v-if="isPending(row)">
@@ -246,9 +262,37 @@ async function onReceive(row: BizRow) {
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
 }
+
+// row39：批量确认到店 —— 选中行里只对「可确认到店」的行（已发货未收货）逐条 receive
+const selection = ref<StoreDemandVO[]>([]);
+const receivableSelected = computed(() => selection.value.filter((r) => canReceive(r)));
+const receivableSelectedCount = computed(() => receivableSelected.value.length);
+
+function onSelectionChange(rows: BizRow[]) {
+  selection.value = rows as StoreDemandVO[];
+}
+function onToggleAllSelection() {
+  tableRef.value?.toggleAllSelection();
+}
+async function onBatchReceive() {
+  const rows = receivableSelected.value;
+  if (rows.length === 0) return;
+  await proxy?.$modal.confirm(t('storeDemand.confirm.batchReceive', { count: rows.length }));
+  // 逐条确认到店（每条各自触发「到店」追溯事件），容忍单条失败
+  const results = await Promise.allSettled(rows.map((r) => receiveStoreDemand(r.id)));
+  const failed = results.filter((x) => x.status === 'rejected').length;
+  if (failed === 0) {
+    proxy?.$modal.msgSuccess(t('storeDemand.message.batchReceiveSuccess', { count: rows.length }));
+  } else {
+    proxy?.$modal.msgWarning(t('storeDemand.message.batchReceivePartial', { success: rows.length - failed, failed }));
+  }
+  tableRef.value?.clearSelection();
+  fetchList();
+}
 function onViewDetail(row: BizRow) {
-  // 打开「产品明细」弹框，按需求 id 拉该需求下逐件产品（含损坏标记）
-  detailDialogRef.value?.open(String(row.id));
+  // 打开「产品明细」弹框（row40：按 需求日期 + 门店 + 产品 拉当日该产品逐件生产明细，含损坏标记）
+  const r = row as StoreDemandVO;
+  detailDialogRef.value?.open({ produceDate: r.demandDate, productId: r.productId, storeId: r.storeId });
 }
 
 onMounted(() => {

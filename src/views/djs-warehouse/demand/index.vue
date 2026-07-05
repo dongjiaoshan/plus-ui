@@ -25,6 +25,7 @@
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="rowKey"
+      selectable
       :show-row-edit="false"
       :show-row-del="false"
       :show-batch-del="false"
@@ -33,7 +34,24 @@
       @reset="handleReset"
       @add="handleAdd"
       @page-change="handlePageChange"
+      @selection-change="onSelectionChange"
     >
+      <!-- row41：全选本页 + 批量确认需求（确认选中分组下所有待确认门店需求单） -->
+      <template #toolbar-extra>
+        <el-button plain @click="onToggleAllSelection">
+          {{ t('demand.action.selectAllPage') }}
+        </el-button>
+        <el-button
+          v-hasPermi="['djs:warehouse:demand:confirm']"
+          type="success"
+          plain
+          :disabled="confirmableSelectedCount === 0"
+          @click="onBatchConfirm"
+        >
+          {{ t('demand.action.batchConfirm') }}<template v-if="confirmableSelectedCount > 0"> ({{ confirmableSelectedCount }})</template>
+        </el-button>
+      </template>
+
       <template #cell-demandStatus="{ row }">
         <el-tag :type="groupStatusTagType((row as unknown as DemandGroupVO).demandStatus)" effect="light">
           {{ groupStatusLabel((row as unknown as DemandGroupVO).demandStatus) }}
@@ -60,13 +78,14 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import DemandCart from './components/DemandCart.vue';
 import DemandConfirmDrawer from './components/DemandConfirmDrawer.vue';
 import DemandKpiBar from './components/DemandKpiBar.vue';
-import { listDemandGroup } from '@/api/djs-warehouse/demand';
+import { batchConfirmDemand, listDemandGroup } from '@/api/djs-warehouse/demand';
 import type { DemandGroupStatusCode, DemandGroupVO, DemandManageQuery, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 /** 需求门店下拉 options（按门店过滤汇总列表）。 */
 const storeOptions = ref<{ label: string; value: number | string }[]>([]);
@@ -255,6 +274,33 @@ function handleAdd() {
 /** 点「查看需求」→ 右侧抽屉下钻该日该产品各门店明细（每次打开重拉，无缓存）。 */
 function onViewDemand(row: DemandGroupVO) {
   confirmDrawerRef.value?.open(row);
+}
+
+// row41：批量确认需求 —— 选中分组行里只统计仍有待确认门店单的（非「已全部确认」）
+const selection = ref<DemandGroupVO[]>([]);
+const confirmableSelected = computed(() => selection.value.filter((r) => r.demandStatus !== 'ALL_CONFIRMED'));
+const confirmableSelectedCount = computed(() => confirmableSelected.value.length);
+
+function onSelectionChange(rows: BizRow[]) {
+  selection.value = rows as unknown as DemandGroupVO[];
+}
+function onToggleAllSelection() {
+  tableRef.value?.toggleAllSelection();
+}
+async function onBatchConfirm() {
+  const rows = confirmableSelected.value;
+  if (rows.length === 0) return;
+  await proxy?.$modal.confirm(t('demand.confirm.batchConfirm', { count: rows.length }));
+  const groups = rows.map((r) => ({ demandDate: r.demandDate, productId: String(r.productId) }));
+  const res: any = await batchConfirmDemand(groups);
+  const data = (res.data ?? res) as { confirmed: number; failed: number; failReasons?: string[] };
+  if (!data.failed) {
+    proxy?.$modal.msgSuccess(t('demand.message.batchConfirmSuccess', { count: data.confirmed }));
+  } else {
+    proxy?.$modal.msgWarning(t('demand.message.batchConfirmPartial', { success: data.confirmed, failed: data.failed }));
+  }
+  tableRef.value?.clearSelection();
+  reloadAll();
 }
 
 /** keep-alive 下首帧 onMounted + onActivated 都会触发，用此标记跳过 onActivated 的首次重复拉取。 */
