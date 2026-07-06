@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_bar_status', 'djs_pig_cut_part', 'djs_pig_cut_status']"
+      :dict-types="['djs_bar_status', 'djs_pig_cut_part', 'djs_pig_cut_status', 'djs_pig_cut_out_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -269,6 +269,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'dripLoss', label: t('djs.warehouse.pigCut.dripLoss'), minWidth: 100 },
   { prop: 'acidRemoveMinutes', label: t('djs.warehouse.pigCut.acidRemoveMinutes'), minWidth: 100 },
   { prop: 'cutStatus', label: t('djs.warehouse.pigCut.cutStatus'), minWidth: 100, dictType: 'djs_pig_cut_status' },
+  { prop: 'outType', label: t('djs.warehouse.pigCut.outType'), minWidth: 100, dictType: 'djs_pig_cut_out_type' },
   { prop: 'operatorName', label: t('djs.warehouse.pigCut.operator'), minWidth: 100 },
   { prop: 'locationName', label: t('djs.warehouse.pigCut.location'), minWidth: 120 },
   { prop: 'remark', label: t('djs.warehouse.pigCut.remark'), minWidth: 160 }
@@ -310,7 +311,7 @@ function handlePageChange(p: { pageNum: number; pageSize: number }) {
 }
 
 function handleExport() {
-  proxy?.download('/djs/warehouse/pigCut/export', buildQuery(), `分割记录_${new Date().getTime()}.xlsx`);
+  proxy?.download('/djs/warehouse/pigCut/export', buildQuery(), `白条领用记录_${new Date().getTime()}.xlsx`);
 }
 
 // ============ 写动作共享数据源 ============

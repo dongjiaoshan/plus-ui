@@ -2473,6 +2473,7 @@ export default {
         dripLoss: 'Drip Loss (kg)',
         acidRemoveMinutes: 'Acid-Remove (min)',
         cutStatus: 'Status',
+        outType: 'Out Type',
         operator: 'Operator',
         location: 'Frozen Location',
         isHalf: 'Half Bar?',

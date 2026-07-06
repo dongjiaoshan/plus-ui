@@ -210,10 +210,10 @@ function resolveSourceInhouseId(it: BarPickupItemVO): number | string | undefine
   return src?.id;
 }
 
-/** 选中一张卡：高亮 + 把该产出行重量预填进过磅框（可改）。 */
+/** 选中一张卡：仅高亮。row203：产品重量不自动预填，由用户现场过磅手工输入。 */
 function selectItem(it: BarPickupItemVO) {
   selectedKey.value = itemKey(it);
-  pickupForm.value.productWeight = it.productWeight != null ? Number(it.productWeight) : undefined;
+  pickupForm.value.productWeight = undefined;
 }
 
 /** 排酸时长：now - inTime，前端按入库时间算（无后端字段）。 */

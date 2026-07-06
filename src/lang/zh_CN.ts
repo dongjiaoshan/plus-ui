@@ -2476,6 +2476,7 @@ export default {
         dripLoss: '滴水损失 (kg)',
         acidRemoveMinutes: '排酸时长 (分钟)',
         cutStatus: '状态',
+        outType: '出库类型',
         operator: '操作人',
         location: '入冻品库位',
         isHalf: '是否半扇',
