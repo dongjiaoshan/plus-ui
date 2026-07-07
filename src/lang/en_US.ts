@@ -2678,7 +2678,7 @@ export default {
         remainWeightLabel: 'Remaining Weight',
         burnProductsLabel: 'Singe Output',
         noEarSource: 'No pork source ear No. available for packing',
-        pickupWeightExceed: 'Pickup weight must not exceed the carcass marketing weight ({weight}kg)',
+        pickupWeightExceed: 'Pickup weight must not exceed the white-bar inbound weight ({weight}kg)',
         vegWeightExceed: 'Pack weight exceeds requisition remaining weight ({remain}kg), please re-weigh',
         pigAssignLabel: 'Pig Assignment',
         noBars: 'No bars available',

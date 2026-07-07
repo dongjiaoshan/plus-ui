@@ -2681,7 +2681,7 @@ export default {
         remainWeightLabel: '剩余重量',
         burnProductsLabel: '燎毛产出',
         noEarSource: '当前无可打包的猪肉来源耳号',
-        pickupWeightExceed: '领用称重不应大于该白条出栏重量（{weight}kg）',
+        pickupWeightExceed: '领用称重不应大于该白条入库重量（{weight}kg）',
         vegWeightExceed: '打包重量超过领用剩余重量（{remain}kg），请重新称重',
         pigAssignLabel: '猪只指定',
         noBars: '暂无待领用白条',

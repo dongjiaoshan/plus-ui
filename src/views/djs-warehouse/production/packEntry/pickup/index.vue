@@ -258,14 +258,16 @@ async function handleSubmit() {
     notifyMissing(t('djs.warehouse.packEntry.outLocationRequired'));
     return;
   }
-  // 领用称重校验：必填且不应大于该白条出栏重量（marketing_weight；后端再做累计口径校验）
+  // 领用称重校验：必填 + 不超过该白条入库重量（product_weight = 该产出行白条入库重量）。
+  // 上限用入库重量而非整猪出栏重量（marketing_weight）——半只白条入库重量 << 整猪出栏重量，
+  // 用出栏重量做上限会放行超量领用（领满=相等仍放行，后端再做累计口径校验）。
   const pickupWeight = pickupForm.value.productWeight;
   if (!pickupWeight || pickupWeight <= 0) {
     notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
     return;
   }
-  if (it.marketingWeight != null && pickupWeight > Number(it.marketingWeight)) {
-    notifyMissing(t('djs.warehouse.packEntry.pickupWeightExceed', { weight: Number(it.marketingWeight) }));
+  if (it.productWeight != null && pickupWeight > Number(it.productWeight)) {
+    notifyMissing(t('djs.warehouse.packEntry.pickupWeightExceed', { weight: Number(it.productWeight) }));
     return;
   }
   submitting.value = true;
