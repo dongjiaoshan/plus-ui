@@ -2356,7 +2356,6 @@ export default {
       transportLossRate: '路损率(%)',
       prodPickWeight: '果蔬生产领用总重',
       prodLossWeight: '果蔬生产损耗总重',
-      prodConsumeWeight: '果蔬生产消耗总重',
       netVegLossRate: '净菜损耗率(%)'
     },
     crop: {

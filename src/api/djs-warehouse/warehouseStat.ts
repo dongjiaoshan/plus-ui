@@ -34,7 +34,6 @@ export interface WarehouseDailyVO {
   transportLossRate?: number | string;
   prodPickWeight?: number | string;
   prodLossWeight?: number | string;
-  prodConsumeWeight?: number | string;
   netVegLossRate?: number | string;
 }
 

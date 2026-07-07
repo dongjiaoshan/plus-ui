@@ -2353,7 +2353,6 @@ export default {
       transportLossRate: 'Transport Loss Rate(%)',
       prodPickWeight: 'Prod Pick Weight',
       prodLossWeight: 'Prod Loss Weight',
-      prodConsumeWeight: 'Prod Consume Weight',
       netVegLossRate: 'Net Veg Loss Rate(%)'
     },
     crop: {

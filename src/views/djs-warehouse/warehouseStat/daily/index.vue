@@ -65,7 +65,6 @@ const columns = computed<BizTableColumn[]>(() => [
   col('transportLossRate'),
   col('prodPickWeight'),
   col('prodLossWeight'),
-  col('prodConsumeWeight'),
   col('netVegLossRate')
 ]);
 
