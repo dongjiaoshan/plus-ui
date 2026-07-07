@@ -292,7 +292,7 @@ async function onBatchReceive() {
 function onViewDetail(row: BizRow) {
   // 打开「产品明细」弹框（row40：按 需求日期 + 门店 + 产品 拉当日该产品逐件生产明细，含损坏标记）
   const r = row as StoreDemandVO;
-  detailDialogRef.value?.open({ produceDate: r.demandDate, productId: r.productId, storeId: r.storeId });
+  detailDialogRef.value?.open({ produceDate: r.demandDate, productId: r.productId, storeId: r.storeId, productType: r.productType });
 }
 
 onMounted(() => {

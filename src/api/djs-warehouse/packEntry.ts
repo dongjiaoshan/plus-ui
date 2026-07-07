@@ -228,11 +228,11 @@ export interface WhiteBarOutBo {
   remark?: string;
 }
 
-/** 白条/猪肉「仓库出库」BO（row17：出库位置=仓库出库，不发往门店，记出库去向 djs_bar_out_dest） */
+/** 白条/猪肉「仓库出库」BO（row17：出库位置=仓库出库，不发往门店，记出库去向 djs_stock_out_dest） */
 export interface WarehouseOutBo {
   sourceInhouseId: number | string;
   productWeight: number;
-  /** 出库去向（字典 djs_bar_out_dest 的 dict_value） */
+  /** 出库去向（字典 djs_stock_out_dest 的 dict_value；admin row2 落 cut_record.out_dest） */
   outDest: string;
   proofOssIds?: string;
   remark?: string;

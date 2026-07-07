@@ -159,6 +159,12 @@ function isKgUnit(unit?: string): boolean {
   return u === 'kg' || u === '公斤';
 }
 
+/** 是否 g（克）单位：g / G / 克 视为克重量单位（admin row7：原材料单位 g 时各项数据量带 g 展示）。 */
+function isGramUnit(unit?: string): boolean {
+  const u = (unit ?? '').trim().toLowerCase();
+  return u === 'g' || u === '克';
+}
+
 /**
  * 数据量口径依据「产品对应原材料单位」（materialUnit）判定：
  * - 原材料单位 = KG → 按重量列处理（kg，保留 3 位）；
@@ -180,13 +186,20 @@ function fmtQty(value: number | string | null | undefined, row: { materialUnit?:
   if (isWeightRow(row)) {
     return formatKg(value);
   }
+  // admin row7：原材料单位为 g（克）→ 各项数据量带 g 单位展示（保留原数值小数，如 3.95 g）
+  if (isGramUnit(row.materialUnit || row.productUnit)) {
+    return `${Number(value)} g`;
+  }
   // 计件（份 / 盒等）原样展示
   return String(value);
 }
 
-/** 可编辑量输入框小数位：原材料单位为 KG → 3 位（kg），否则 0 位（整数件数）。 */
+/** 可编辑量输入框小数位：原材料单位为 KG / g（克，如 3.95）→ 3 位小数，否则 0 位（整数件数）。 */
 function kgPrecision(row: { materialUnit?: string; productUnit?: string }): number {
-  return isWeightRow(row) ? 3 : 0;
+  if (isWeightRow(row) || isGramUnit(row.materialUnit || row.productUnit)) {
+    return 3;
+  }
+  return 0;
 }
 
 function categoryLabel(c: StoreLedgerCategory): string {

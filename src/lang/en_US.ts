@@ -2673,7 +2673,7 @@ export default {
         agingDurationLabel: 'Aging Duration',
         inWeightLabel: 'Inbound Weight',
         marketingWeightLabel: 'Marketing Weight',
-        outputWeightLabel: 'Output Weight',
+        outputWeightLabel: 'White Bar Inbound Weight',
         whiteBarWeightShort: 'Carcass wt ',
         remainWeightLabel: 'Remaining Weight',
         burnProductsLabel: 'Singe Output',

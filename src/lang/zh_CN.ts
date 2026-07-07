@@ -2676,7 +2676,7 @@ export default {
         agingDurationLabel: '排酸时长',
         inWeightLabel: '入库重量',
         marketingWeightLabel: '出栏重量',
-        outputWeightLabel: '产出重量',
+        outputWeightLabel: '白条入库重量',
         whiteBarWeightShort: '白条重量',
         remainWeightLabel: '剩余重量',
         burnProductsLabel: '燎毛产出',
