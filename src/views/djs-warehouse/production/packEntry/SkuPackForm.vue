@@ -666,7 +666,9 @@ const wipStockMap = computed<Record<string, number | null>>(() => {
   products.value.forEach((p) => {
     const w = byMaterial[effectiveMaterialId(p)];
     if (w == null) return;
-    m[String(p.id)] = Math.round(w * 100) / 100;
+    // admin row20：按 3 位小数(1g)舍入，不能按 2 位(0.01kg=10g)——否则 4.498kg 被舍成 4.50kg、
+    // g 展示成 4500g 丢掉 2g（领用5000g打包502g应剩4498g，原显4500g）。
+    m[String(p.id)] = Math.round(w * 1000) / 1000;
   });
   return m;
 });
@@ -726,12 +728,14 @@ const selectedEarNo = ref<number | string | ''>('');
 
 const earToggleOptions = computed<{ value: number | string; label: string }[]>(() => {
   if (!props.earGroup) return [];
-  const seen = new Map<string, { value: number | string; label: string }>();
   const matId = materialIdOf(form.value.productId);
+  // admin row18：未选左侧产品（无 matId）时右侧不显示任何猪只耳号——两边都应空，选了产品才按其原材料列耳号。
+  if (!matId) return [];
+  const seen = new Map<string, { value: number | string; label: string }>();
   effectiveSources.value.forEach((s) => {
     if (!s.earNo) return;
     // 已选目标产品时，耳号只列该产品有效原材料的来源（成品→原材料 / 成品即原材料），避免来源歧义
-    if (matId && String(s.productId) !== matId) return;
+    if (String(s.productId) !== matId) return;
     const key = String(s.earNo);
     if (!seen.has(key)) {
       seen.set(key, { value: s.earNo, label: s.earNo });

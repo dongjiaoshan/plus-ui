@@ -122,11 +122,16 @@ async function loadBound(storeId: number | string) {
 async function searchUsers() {
   searching.value = true;
   try {
+    // admin row13：后端 listUser 把 nickName + userName 做 AND 过滤（ruoyi 自带，不改），
+    // 同时传两者会把「账号匹配但姓名不匹配」的账号(如账号 wangwei / 姓名 王尉)排除→搜不出。
+    // 按关键词类型分流：纯 ASCII（账号）搜 userName、含中文（姓名）搜 nickName，只传一个避免 AND。
+    const kw = keyword.value?.trim() || '';
+    const byAccount = kw !== '' && /^[\x00-\x7f]+$/.test(kw);
     const res = await listUser({
       pageNum: 1,
       pageSize: 50,
-      nickName: keyword.value || undefined,
-      userName: keyword.value || undefined
+      nickName: kw !== '' && !byAccount ? kw : undefined,
+      userName: byAccount ? kw : undefined
     } as Parameters<typeof listUser>[0]);
     const rows = (res.rows ?? res.data ?? []) as UserVO[];
     candidates.value = rows.map((u) => ({

@@ -104,6 +104,8 @@ export interface ProductProductionQuery {
   isDamaged?: number;
   /** 是否存在损坏（作用于聚合 row50：0=组内无损坏 / 1=有；空=全部）。 */
   hasDamage?: number;
+  /** 门店需求「产品明细」下钻置 true：排除礼盒组件产出（deliver_dest='gift'，不履约门店直接需求）。生产记录概览不传。 */
+  excludeGiftDeliver?: boolean;
   produceDate?: string;
   produceDateFrom?: string;
   produceDateTo?: string;

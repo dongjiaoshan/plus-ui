@@ -503,7 +503,9 @@ const loadLocationOptions = async () => {
  */
 const loadProductCandidates = async (excludeId?: number | string) => {
   try {
-    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0 });
+    // admin row19：产品总数 >500，原「拉前 500 混合再客户端筛 attr=2」会把排在 500 之后的 pork 原材料
+    // （分割间精瘦肉/排骨等）截断，导致原材料下拉只剩少数。改为服务端 productAttr=2 过滤只拉原材料（≤500 一页装下）。
+    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0, productAttr: 2 });
     const rows = (res.rows ?? res.data ?? []) as ProductInfoVO[];
     rawMaterialPool.value = rows.filter((r) => r.productAttr === 2 && (excludeId == null || String(r.id) !== String(excludeId)));
   } catch (e) {

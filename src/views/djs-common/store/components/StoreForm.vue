@@ -43,13 +43,15 @@
           </el-form-item>
         </el-col>
         <el-col v-if="isEdit" :span="12">
+          <!-- admin row16：店长姓名只反显不可改（店长由门店人员绑定维护，非门店表单编辑） -->
           <el-form-item :label="t('store.field.managerName')" prop="managerName">
-            <el-input v-model="form.managerName" :placeholder="t('store.placeholder.managerName')" maxlength="32" />
+            <el-input v-model="form.managerName" :placeholder="t('store.placeholder.managerName')" maxlength="32" disabled />
           </el-form-item>
         </el-col>
         <el-col v-if="isEdit" :span="12">
+          <!-- admin row16：店长电话只反显不可改 -->
           <el-form-item :label="t('store.field.managerPhone')" prop="managerPhone">
-            <el-input v-model="form.managerPhone" :placeholder="t('store.placeholder.managerPhone')" maxlength="11" />
+            <el-input v-model="form.managerPhone" :placeholder="t('store.placeholder.managerPhone')" maxlength="11" disabled />
           </el-form-item>
         </el-col>
         <el-col :span="24">

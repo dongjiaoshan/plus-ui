@@ -143,6 +143,8 @@ async function loadList() {
       produceDate: scope.produceDate,
       productId: scope.productId,
       storeId: scope.storeId || undefined,
+      // 门店需求产品明细：排除礼盒组件产出（deliver_dest='gift'），否则明细行数比需求量多出礼盒打包行
+      excludeGiftDeliver: true,
       // 「是否损坏」筛选：undefined=全部；0/1 透传后端 is_damaged 精确过滤
       isDamaged: searchModel.isDamaged === undefined || searchModel.isDamaged === '' ? undefined : Number(searchModel.isDamaged),
       pageNum: pageNum.value,
