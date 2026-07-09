@@ -3698,6 +3698,7 @@ export default {
     // 追溯码打印弹框（录重量 + 结构化标签卡 + 二维码）
     label: {
       dialogTitle: '追溯码打印',
+      preview: '预览',
       weight: '产品重量(kg)',
       weightPlaceholder: '请输入产品重量(kg)',
       confirmPrint: '确认并打印',

@@ -20,6 +20,9 @@
     @page-change="handlePageChange"
   >
     <template #action="{ row }">
+      <el-button v-hasPermi="['djs:warehouse:trace:print']" link type="primary" icon="View" @click="handlePreview(row)">
+        {{ t('storeTrace.label.preview') }}
+      </el-button>
       <el-button v-hasPermi="['djs:warehouse:trace:print']" link type="primary" icon="Printer" @click="handlePrint(row)">
         {{ t('storeTrace.veg.print') }}
       </el-button>
@@ -35,7 +38,7 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
 import { listTrace } from '@/api/warehouse/trace';
 import type { TraceCodeVO, TraceCodeQuery } from '@/api/warehouse/trace/types';
-import TraceLabelDialog from './TraceLabelDialog.vue';
+import TraceLabelDialog, { type TraceLabelData } from './TraceLabelDialog.vue';
 import { useI18n } from 'vue-i18n';
 import { lastNDaysRange } from '@/utils/ruoyi';
 import { formatKgToG } from '@/utils/weight';
@@ -110,16 +113,16 @@ function handlePageChange(p: number, s: number) {
   fetchList();
 }
 
-// 追溯码打印：弹框录重量（默认 row.actualWeight）→ 结构化 8 字段标签卡 + 二维码 → 打印
-function handlePrint(row: BizRow) {
+// 标签 8 字段 payload（预览 / 打印共用）。无追溯码返回 null。
+function buildLabel(row: BizRow): { payload: TraceLabelData; weight?: number } | null {
   const r = row as unknown as TraceCodeVO;
   const code = String(r.produceCode ?? '');
   if (!code) {
     proxy?.$modal.msgWarning(t('storeTrace.veg.noCode'));
-    return;
+    return null;
   }
-  labelDialogRef.value?.open(
-    {
+  return {
+    payload: {
       productCode: r.produceCode,
       // 生产序号展示生产编号（produceNo）值
       serialNo: r.produceNo,
@@ -132,8 +135,20 @@ function handlePrint(row: BizRow) {
       produceCode: r.produceCode,
       traceType: 'veg'
     },
-    r.actualWeight
-  );
+    weight: r.actualWeight
+  };
+}
+
+// 预览：弹出追溯码标签卡（二维码 + 8 字段），可再点「确认并打印」
+function handlePreview(row: BizRow) {
+  const l = buildLabel(row);
+  if (l) labelDialogRef.value?.open(l.payload, l.weight);
+}
+
+// 追溯码打印：不弹预览框，直接送打印（浏览器 kiosk-printing 模式下无原生对话框，静默打印）
+function handlePrint(row: BizRow) {
+  const l = buildLabel(row);
+  if (l) labelDialogRef.value?.printDirect(l.payload, l.weight);
 }
 
 onMounted(() => fetchList());

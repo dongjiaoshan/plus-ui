@@ -1,54 +1,26 @@
 <template>
   <el-dialog v-model="visible" :title="t('storeTrace.label.dialogTitle')" width="420px" append-to-body @closed="onClosed">
-    <!-- 结构化标签卡：顶部 生产编码 + 生产日期，下方 左大二维码 + 右字段。产品重量只读展示（本次打包实重，不可修改） -->
-    <div ref="labelRef" class="trace-label">
-      <div class="trace-label__top">
-        <div class="trace-label__top-item">
-          <span class="k">{{ t('storeTrace.label.serialNo') }}</span>
-          <span class="v">{{ data.serialNo || '-' }}</span>
-        </div>
-        <div class="trace-label__top-item">
-          <span class="k">{{ t('storeTrace.label.produceDate') }}</span>
-          <span class="v">{{ data.produceDate || '-' }}</span>
-        </div>
-      </div>
-      <div class="trace-label__body">
-        <div class="trace-label__qr">
-          <img v-if="qrDataUrl" :src="qrDataUrl" alt="qr" class="qr-img" />
-          <div class="qr-hint">{{ t('storeTrace.label.traceCaption') }}</div>
-        </div>
-        <div class="trace-label__fields">
-          <div class="trace-label__row">
-            <span class="k">{{ t('storeTrace.label.productName') }}</span>
-            <span class="v">{{ data.productName || '-' }}</span>
-          </div>
-          <div class="trace-label__row">
-            <span class="k">{{ t('storeTrace.label.productWeight') }}</span>
-            <span class="v">{{ weightText }}</span>
-          </div>
-          <div class="trace-label__row">
-            <span class="k">{{ data.sourceLabel || (data.earNo ? t('storeTrace.label.earNo') : t('storeTrace.label.plotNo')) }}</span>
-            <span class="v">{{ data.sourceValue || '-' }}</span>
-          </div>
-          <div class="trace-label__row">
-            <span class="k">{{ t('storeTrace.label.storeName') }}</span>
-            <span class="v">{{ data.storeName || '-' }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- 预览：结构化标签卡 + 二维码（产品重量只读展示） -->
+    <TraceLabelCard :data="data" :weight-text="weightText" :qr-data-url="qrDataUrl" />
 
     <template #footer>
       <el-button @click="visible = false">{{ t('storeTrace.label.cancel') }}</el-button>
       <el-button type="primary" :loading="printing" @click="handlePrint">{{ t('storeTrace.label.confirmPrint') }}</el-button>
     </template>
   </el-dialog>
+
+  <!-- 离屏打印源：始终挂载、定位到可视区外，供 html2canvas 快照（预览与直接打印共用同一份内容）。
+       不能用 display:none / visibility:hidden，否则 html2canvas 拿不到尺寸会渲染空白。 -->
+  <div ref="printHostRef" class="trace-label-print-host" aria-hidden="true">
+    <TraceLabelCard :data="data" :weight-text="weightText" :qr-data-url="qrDataUrl" />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import QRCode from 'qrcode';
 import html2canvas from 'html2canvas';
+import TraceLabelCard from './TraceLabelCard.vue';
 
 /** 标签 8 字段数据（调用方按业态填充）。 */
 export interface TraceLabelData {
@@ -84,7 +56,7 @@ const printing = ref(false);
 const weight = ref<number | undefined>(undefined);
 const data = ref<TraceLabelData>({});
 const qrDataUrl = ref('');
-const labelRef = ref<HTMLElement>();
+const printHostRef = ref<HTMLElement>();
 
 const weightText = computed(() => {
   if (weight.value == null) return '-';
@@ -101,13 +73,25 @@ function buildTraceUrl(type: string, code: string): string {
   return `${base.replace(/\/$/, '')}/trace/${type}/${code}`;
 }
 
-/** 打开弹框：传入标签数据 + 默认重量（row.actualWeight）。 */
+/** 预览：打开弹框展示标签卡（传入标签数据 + 默认重量 row.actualWeight）。 */
 async function open(payload: TraceLabelData, defaultWeight?: number) {
+  await applyData(payload, defaultWeight);
+  visible.value = true;
+}
+
+/** 直接打印：不弹预览框，渲染标签后直接送打印（浏览器开启 kiosk-printing 时无原生弹框，静默打印默认打印机）。 */
+async function printDirect(payload: TraceLabelData, defaultWeight?: number) {
+  await applyData(payload, defaultWeight);
+  await runPrint();
+}
+
+/** 填充数据 + 生成二维码，并等离屏卡片按最新数据渲染完成。 */
+async function applyData(payload: TraceLabelData, defaultWeight?: number) {
   data.value = { ...payload };
   weight.value = defaultWeight != null ? defaultWeight : undefined;
   qrDataUrl.value = '';
-  visible.value = true;
   await genQr();
+  await nextTick();
 }
 
 async function genQr() {
@@ -124,28 +108,19 @@ async function genQr() {
   }
 }
 
+/** 弹框内「确认并打印」。 */
 async function handlePrint() {
-  if (!labelRef.value) return;
+  await runPrint();
+}
+
+async function runPrint() {
+  if (!printHostRef.value) return;
   printing.value = true;
   try {
-    // 渲染标签卡为图片后用浏览器打印窗口输出（结构化 + 二维码完整保留）
-    const canvas = await html2canvas(labelRef.value, { backgroundColor: '#ffffff', scale: 2 });
+    // 渲染离屏标签卡为图片（结构化 + 二维码完整保留）后经隐藏 iframe 打印
+    const canvas = await html2canvas(printHostRef.value, { backgroundColor: '#ffffff', scale: 2 });
     const imgData = canvas.toDataURL('image/png');
-    const w = window.open('', '_blank', 'width=480,height=640');
-    if (!w) return;
-    w.document.write(
-      `<html><head><title>${data.value.productCode ?? ''}</title></head>` +
-        `<body style="margin:0;text-align:center"><img src="${imgData}" style="max-width:100%"/></body></html>`
-    );
-    w.document.close();
-    w.focus();
-    // 等图片加载后打印
-    const img = w.document.querySelector('img');
-    if (img) {
-      img.onload = () => w.print();
-    } else {
-      w.print();
-    }
+    await printImageViaIframe(imgData, data.value.productCode ?? '');
   } catch {
     proxy?.$modal.msgError(t('storeTrace.label.printFailed'));
   } finally {
@@ -153,84 +128,68 @@ async function handlePrint() {
   }
 }
 
+/**
+ * 用隐藏 iframe 打印标签图（替代 window.open 弹窗）。
+ * 浏览器以 --kiosk-printing 启动时，print() 不弹原生对话框，直接送默认打印机；
+ * 普通浏览器仍会弹一次系统打印框（受浏览器安全限制，JS 无法绕过）。
+ */
+function printImageViaIframe(imgData: string, title: string): Promise<void> {
+  return new Promise((resolve) => {
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    Object.assign(iframe.style, { position: 'fixed', right: '0', bottom: '0', width: '0', height: '0', border: '0' });
+    document.body.appendChild(iframe);
+    const cw = iframe.contentWindow;
+    if (!cw) {
+      iframe.remove();
+      resolve();
+      return;
+    }
+    const finish = () => {
+      // 延迟移除，确保打印任务已提交给系统
+      setTimeout(() => iframe.remove(), 1000);
+      resolve();
+    };
+    const doPrint = () => {
+      try {
+        cw.focus();
+        cw.print();
+      } finally {
+        finish();
+      }
+    };
+    const doc = cw.document;
+    doc.open();
+    doc.write(
+      `<html><head><title>${title}</title>` +
+        `<style>@page{margin:0}html,body{margin:0;padding:0;text-align:center}img{max-width:100%}</style>` +
+        `</head><body><img src="${imgData}" alt="label"/></body></html>`
+    );
+    doc.close();
+    const img = doc.querySelector('img');
+    if (img && !img.complete) {
+      img.onload = doPrint;
+      img.onerror = doPrint;
+    } else {
+      doPrint();
+    }
+  });
+}
+
 function onClosed() {
   qrDataUrl.value = '';
 }
 
-defineExpose({ open });
+defineExpose({ open, printDirect });
 </script>
 
 <style lang="scss" scoped>
-.trace-label {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 1px dashed #c0c4cc;
-  border-radius: 8px;
-  background: #fff;
-}
-/* 顶部：生产编码 + 生产日期 一行两列 */
-.trace-label__top {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
-  font-size: 13px;
-}
-.trace-label__top-item {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-.trace-label__top-item .k {
-  color: #909399;
-}
-.trace-label__top-item .v {
-  color: #303133;
-  font-weight: 600;
-}
-/* 下方：左大二维码 + 右字段 */
-.trace-label__body {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-.trace-label__qr {
-  flex: 0 0 130px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.qr-img {
-  width: 130px;
-  height: 130px;
-}
-.qr-hint {
-  margin-top: 6px;
-  font-size: 11px;
-  color: #909399;
-  text-align: center;
-}
-.trace-label__fields {
-  flex: 1;
-  min-width: 0;
-}
-.trace-label__row {
-  display: flex;
-  font-size: 13px;
-  line-height: 2;
-}
-.trace-label__row .k {
-  flex: 0 0 72px;
-  color: #909399;
-}
-.trace-label__row .v {
-  flex: 1;
-  color: #303133;
-  word-break: break-all;
-  font-weight: 500;
+.trace-label-print-host {
+  position: fixed;
+  left: -100000px;
+  top: 0;
+  width: 380px;
+  pointer-events: none;
+  z-index: -1;
 }
 </style>

@@ -3695,6 +3695,7 @@ export default {
     },
     label: {
       dialogTitle: 'Print Trace Label',
+      preview: 'Preview',
       weight: 'Product Weight (kg)',
       weightPlaceholder: 'Enter product weight (kg)',
       confirmPrint: 'Confirm & Print',
