@@ -42,7 +42,8 @@
 <script setup name="Index" lang="ts">
 import { ArrowRightBold } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
-import { useUserStore } from '@/store/modules/user';
+import type { RouteRecordRaw } from 'vue-router';
+import { usePermissionStore } from '@/store/modules/permission';
 import breedImg from '@/assets/images/boards/breed.svg';
 import plantImg from '@/assets/images/boards/plant.svg';
 import warehouseImg from '@/assets/images/boards/warehouse.svg';
@@ -56,46 +57,58 @@ interface BoardCard {
   labelKey: string;
   /** 卡片配图（URL，占位 SVG，实景图到位后替换 assets/images/boards/* 不改逻辑） */
   img: string;
-  /** 点击跳转的板块首页路由 */
-  route: string;
-  /** 可见角色 role_key（命中其一即展示该卡） */
-  roles: string[];
+  /** 对应的顶级菜单 path（去前导斜杠）。用户菜单里有该顶级菜单即展示该板块——
+   *  角色配置驱动（ADR-0020），不再硬编码 role_key，worker / admin 一视同仁。 */
+  menuPath: string;
 }
 
-/** 5 板块卡片定义：后续新增板块在此追加一项即可（admin 端角色过滤范式） */
+/** 板块卡片定义：可见性由「用户是否拥有对应顶级菜单」决定。
+ *  新增板块在此追加一项 + 对齐后端顶级菜单 path 即可。 */
 const BOARD_CARDS: BoardCard[] = [
-  { key: 'breed', labelKey: 'home.board.breed', img: breedImg, route: '/djs-breed/pig', roles: ['breed_admin'] },
-  { key: 'plant', labelKey: 'home.board.plant', img: plantImg, route: '/djs-plant/dashboard', roles: ['plant_admin'] },
-  { key: 'warehouse', labelKey: 'home.board.warehouse', img: warehouseImg, route: '/djs-warehouse/dashboard', roles: ['warehouse_admin'] },
-  { key: 'store', labelKey: 'home.board.store', img: storeImg, route: '/djs-store/dashboard', roles: ['store_admin'] },
-  { key: 'dashboard', labelKey: 'home.board.system', img: dashboardImg, route: '/system/user', roles: ['system_admin'] }
+  { key: 'breed', labelKey: 'home.board.breed', img: breedImg, menuPath: 'djs-breed' },
+  { key: 'plant', labelKey: 'home.board.plant', img: plantImg, menuPath: 'djs-plant' },
+  { key: 'warehouse', labelKey: 'home.board.warehouse', img: warehouseImg, menuPath: 'djs-warehouse' },
+  { key: 'store', labelKey: 'home.board.store', img: storeImg, menuPath: 'djs-store' },
+  { key: 'dashboard', labelKey: 'home.board.system', img: dashboardImg, menuPath: 'system' }
 ];
-
-/** boss / 超管 / manager 类角色：看到全部板块（对齐 mp BoardPicker 全展示逻辑） */
-const FULL_ACCESS_ROLES = ['superadmin', 'admin', 'boss', 'manager'];
 
 const { t } = useI18n();
 const router = useRouter();
-const userStore = useUserStore();
+const permissionStore = usePermissionStore();
 
-function hasFullAccess(roles: string[]): boolean {
-  return roles.some((role) => FULL_ACCESS_ROLES.some((full) => role.includes(full)));
+interface VisibleCard extends BoardCard {
+  /** 点击进入的路由 = 该板块第一个可见子菜单 */
+  route: string;
 }
 
-function filterByRoles(cards: BoardCard[], roles: string[]): BoardCard[] {
-  if (hasFullAccess(roles)) {
-    return cards;
+/** 顶级菜单 → 第一个可见子菜单的完整路由（进板块直接落到第一个菜单） */
+function firstMenuRoute(top: RouteRecordRaw & { hidden?: boolean }): string {
+  const base = top.path?.startsWith('/') ? top.path : `/${top.path}`;
+  const children = ((top.children as (RouteRecordRaw & { hidden?: boolean })[]) || []).filter((c) => !c.hidden);
+  if (!children.length) return base;
+  const first = children[0];
+  if (first.path?.startsWith('/')) return first.path;
+  return `${base.replace(/\/$/, '')}/${first.path}`;
+}
+
+/** 从用户实际下发的菜单（sidebarRouters）推导可见板块 */
+const visibleCards = computed<VisibleCard[]>(() => {
+  const routers = (permissionStore.sidebarRouters || []) as (RouteRecordRaw & { hidden?: boolean })[];
+  const result: VisibleCard[] = [];
+  for (const card of BOARD_CARDS) {
+    const top = routers.find((r) => (r.path || '').replace(/^\//, '') === card.menuPath && !r.hidden);
+    if (top) {
+      result.push({ ...card, route: firstMenuRoute(top) });
+    }
   }
-  return cards.filter((card) => card.roles.some((r) => roles.includes(r)));
-}
+  return result;
+});
 
-const visibleCards = computed<BoardCard[]>(() => filterByRoles(BOARD_CARDS, userStore.roles));
-
-function goBoard(card: BoardCard) {
+function goBoard(card: VisibleCard) {
   router.push(card.route);
 }
 
-// 单板块用户直接进入唯一板块（不停首页，对齐 mp BoardPicker 单板块直入）
+// 单板块用户直接进入唯一板块的第一个菜单（不停首页）
 onMounted(() => {
   if (visibleCards.value.length === 1) {
     router.replace(visibleCards.value[0].route);

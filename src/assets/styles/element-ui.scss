@@ -238,6 +238,21 @@
   overflow: hidden;
   box-shadow: var(--app-shadow-sm);
   border: 1px solid var(--el-border-color-lighter);
+
+  // ── 全局表格规则（Kevin 2026-07-09）：不省略号、每格整行显示、宽度不够横向滚动 ──
+  // el-table 默认 table-layout:fixed 把无宽度列等分压缩 → 省略号截断（如"东角..."）。
+  // 改 auto 让列按内容自适应，撑不下时由 body-wrapper 横向滚动；单元格单行不换行不省略。
+  .cell {
+    white-space: nowrap;
+    text-overflow: clip;
+  }
+
+  .el-table__header,
+  .el-table__body,
+  .el-table__footer {
+    table-layout: auto;
+    min-width: 100%;
+  }
 }
 
 .el-table__header-wrapper,
