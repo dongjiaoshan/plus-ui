@@ -189,13 +189,10 @@ const logout = async () => {
     type: 'warning'
   } as ElMessageBoxOptions);
   userStore.logout().then(() => {
-    router.replace({
-      path: '/login',
-      query: {
-        redirect: encodeURIComponent(router.currentRoute.value.fullPath || '/')
-      }
-    });
+    // 退出不携带 redirect：换角色/重登都落到首页板块选择器，由它按新角色菜单正确落地，
+    // 避免"退出养殖→登录门店"时跳回上个会话残留的旧路由（新角色无权 → 404 / 没权限）。
     proxy?.$tab.closeAllPage();
+    router.replace({ path: '/login' });
   });
 };
 
