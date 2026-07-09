@@ -70,7 +70,8 @@
           >
           <div ref="mortalityGaugeEl" class="chart-canvas"></div>
           <el-descriptions :column="1" size="small" border class="annual-desc">
-            <el-descriptions-item label="引种数">{{ annual?.introduceCount ?? 0 }}</el-descriptions-item>
+            <el-descriptions-item label="引种母猪数">{{ annual?.introduceCount ?? 0 }}</el-descriptions-item>
+            <el-descriptions-item label="引种公猪数">{{ annual?.introduceBoarCount ?? 0 }}</el-descriptions-item>
             <el-descriptions-item label="产仔数">{{ annual?.bornCount ?? 0 }}</el-descriptions-item>
             <el-descriptions-item label="断奶数">{{ annual?.weanedCount ?? 0 }}</el-descriptions-item>
             <el-descriptions-item label="出栏数">{{ annual?.marketingCount ?? 0 }}</el-descriptions-item>

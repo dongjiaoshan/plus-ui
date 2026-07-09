@@ -58,11 +58,29 @@
         <el-form-item :label="t('matPick.field.productName')">
           <span>{{ opRow?.productName }}</span>
         </el-form-item>
-        <el-form-item :label="t('matPick.field.locationName')">
+        <!-- 猪肉产品行：一产品一行（row24），篮明细在此选源（耳号/白条源篮），选中篮后走该篮 batchId 精确扣减 -->
+        <el-form-item v-if="isPorkOp" :label="t('matPick.field.basket')" prop="batchId">
+          <el-select
+            v-model="opForm.batchId"
+            :loading="basketsLoading"
+            :placeholder="t('matPick.placeholder.basket')"
+            class="w-full"
+            @change="handleBasketChange"
+          >
+            <el-option
+              v-for="b in baskets"
+              :key="b.batchId"
+              :label="t('matPick.basketOption', { code: b.batchCode, stock: fmtNum(b.currentStock), unit: b.productUnit })"
+              :value="b.batchId"
+            />
+          </el-select>
+        </el-form-item>
+        <!-- 非猪肉行粒度：库位到行 -->
+        <el-form-item v-else :label="t('matPick.field.locationName')">
           <span>{{ opRow?.locationName || '-' }}</span>
         </el-form-item>
         <el-form-item :label="t('matPick.field.currentStock')">
-          <span>{{ opRow?.currentStock }} {{ opRow?.productUnit }}</span>
+          <span>{{ fmtNum(opStock) }} {{ opRow?.productUnit }}</span>
         </el-form-item>
         <el-form-item :label="t('matPick.field.quantity')" prop="quantity">
           <el-input-number v-model="opForm.quantity" :min="0.001" :precision="3" :step="1" controls-position="right" class="w-full" />
@@ -82,8 +100,8 @@
 <script setup name="MatPick" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listMatPick, pickMat, returnMat, lossMat, feedMat } from '@/api/djs-warehouse/matPick';
-import type { MatPickItemVO } from '@/api/djs-warehouse/matPick';
+import { listMatPick, listPorkBaskets, pickMat, returnMat, lossMat, feedMat } from '@/api/djs-warehouse/matPick';
+import type { MatPickItemVO, MatBasketVO } from '@/api/djs-warehouse/matPick';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
 
@@ -127,24 +145,27 @@ const pagedList = computed(() => {
 });
 
 /**
- * 列随业态 tab 动态拼装（口径 row5）：
- *  - 耳号 earNo：仅白条/猪肉业态显示（猪只有耳号、无地块）
- *  - 地块编号 plotCode：仅果蔬业态显示（蔬菜来自地块、无耳号）
- *  - 包材/鸡蛋/干货/其他：两列都不显示
+ * 列随业态 tab 动态拼装（口径 row5 / row24）：
+ *  - 猪肉 pork：一产品一行（row24 收敛），不再平铺篮，故<b>不显示</b>库位 / 耳号 / 白条号（那是篮级信息，
+ *    下沉到领用弹框选源）；只显产品编码 / 产品名 / 当前库存（该产品所有篮 SUM） / 单位 + 今日四量。
+ *  - 地块编号 plotCode：仅果蔬业态显示（蔬菜来自地块、无耳号）。
+ *  - 包材/鸡蛋/干货/其他：库位到行（行粒度），不显示耳号 / 地块。
  */
 const columns = computed<BizTableColumn[]>(() => {
   const tab = activeBelongType.value;
+  const isPork = tab === 'pork';
   const cols: BizTableColumn[] = [
-    { prop: 'productCode', label: t('matPick.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-    { prop: 'locationName', label: t('matPick.column.locationName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+    { prop: 'productCode', label: t('matPick.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true }
+  ];
+  // 猪肉产品行无单一库位（跨篮聚合），不显库位列；其余业态行粒度显库位
+  if (!isPork) {
+    cols.push({ prop: 'locationName', label: t('matPick.column.locationName'), minWidth: 120, align: 'center', showOverflowTooltip: true });
+  }
+  cols.push(
     { prop: 'productName', label: t('matPick.column.productName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
     { prop: 'currentStock', label: t('matPick.column.currentStock'), minWidth: 100, align: 'center', formatter: (row: BizRow) => fmtNum(row.currentStock) },
     { prop: 'productUnit', label: t('matPick.column.productUnit'), minWidth: 70, align: 'center' }
-  ];
-  if (tab === 'pork') {
-    cols.push({ prop: 'earNo', label: t('matPick.column.earNo'), minWidth: 110, align: 'center' });
-    cols.push({ prop: 'whiteBarNo', label: t('matPick.column.whiteBarNo'), minWidth: 130, align: 'center', showOverflowTooltip: true });
-  }
+  );
   if (tab === 'vegetable') {
     cols.push({ prop: 'plotCode', label: t('matPick.column.plotCode'), minWidth: 110, align: 'center' });
   }
@@ -175,7 +196,7 @@ async function fetchList() {
       keyword: searchModel.keyword || undefined
     });
     const rows = (res.data ?? []) as MatPickItemVO[];
-    // 行唯一 key（同产品多库位 / 多耳号 / 多地块需区分）
+    // 行唯一 key：猪肉一产品一行（row24），其余业态同产品多库位 / 多地块需区分
     allRows.value = rows.map((r, i) => ({
       ...r,
       rowKey: `${r.productId}-${r.defaultLocationId ?? ''}-${r.earNo ?? ''}-${r.plotId ?? ''}-${i}`
@@ -218,11 +239,32 @@ const submitting = ref(false);
 const opKind = ref<OpKind>('pick');
 const opRow = ref<MatPickItemVO | null>(null);
 const opFormRef = ref<FormInstance>();
-const opForm = reactive<{ quantity: number | undefined; remark: string }>({ quantity: undefined, remark: '' });
+const opForm = reactive<{ batchId: string | undefined; quantity: number | undefined; remark: string }>({
+  batchId: undefined,
+  quantity: undefined,
+  remark: ''
+});
 
-const opRules: FormRules = {
+/** 猪肉产品行操作：一产品一行（row24），需在弹框里先选源篮（耳号/白条篮）再领用/退回/损耗 */
+const isPorkOp = computed(() => activeBelongType.value === 'pork');
+
+/** 该产品的篮明细（弹框选源；含 null-ear 白条整只篮，与 admin 现口径一致） */
+const baskets = ref<MatBasketVO[]>([]);
+const basketsLoading = ref(false);
+
+/** 弹框展示的「当前库存」：猪肉选中篮后显该篮余量，未选显产品总库存；非猪肉显行库存 */
+const opStock = computed(() => {
+  if (isPorkOp.value && opForm.batchId) {
+    const b = baskets.value.find((x) => x.batchId === opForm.batchId);
+    if (b) return b.currentStock;
+  }
+  return opRow.value?.currentStock ?? '0';
+});
+
+const opRules = computed<FormRules>(() => ({
+  batchId: isPorkOp.value ? [{ required: true, message: t('matPick.rule.basketRequired'), trigger: 'change' }] : [],
   quantity: [{ required: true, message: t('matPick.rule.quantityRequired'), trigger: 'blur' }]
-};
+}));
 
 const opTitle = computed(() => {
   const map: Record<OpKind, string> = {
@@ -234,12 +276,29 @@ const opTitle = computed(() => {
   return map[opKind.value];
 });
 
-function openOp(kind: OpKind, row: MatPickItemVO) {
+async function openOp(kind: OpKind, row: MatPickItemVO) {
   opKind.value = kind;
   opRow.value = row;
+  opForm.batchId = undefined;
   opForm.quantity = undefined;
   opForm.remark = '';
+  baskets.value = [];
   opVisible.value = true;
+  // 猪肉产品行：拉该产品篮明细供选源（含 null-ear 白条整只篮）
+  if (isPorkOp.value) {
+    basketsLoading.value = true;
+    try {
+      const res = await listPorkBaskets({ productId: row.productId });
+      baskets.value = (res.data ?? []) as MatBasketVO[];
+    } finally {
+      basketsLoading.value = false;
+    }
+  }
+}
+
+/** 选中篮后清空数量（避免残留上一篮的量超新篮余量），当前库存由 opStock 自动切到该篮余量 */
+function handleBasketChange() {
+  opForm.quantity = undefined;
 }
 
 async function submitOp() {
@@ -247,14 +306,17 @@ async function submitOp() {
   const row = opRow.value;
   if (!row || opForm.quantity === undefined) return;
   const qty = opForm.quantity;
-  const locationId = row.defaultLocationId;
+  // 猪肉产品行（row24）：粒度收敛为一产品一行，篮级 batchId / locationId 从弹框选中篮取；
+  // 非猪肉行粒度：库位取该行 defaultLocationId。
+  const pickedBasket = isPorkOp.value ? baskets.value.find((b) => b.batchId === opForm.batchId) : undefined;
+  const locationId = isPorkOp.value ? pickedBasket?.locationId : row.defaultLocationId;
   submitting.value = true;
   try {
-    // batchId = 该行 location_stock.id：猪肉行回传它 → 后端走 pickByBatch/returnByBatch/lossByBatch
-    // 按该篮精确扣减 + 写该篮 ear_no/white_bar_no，防「点耳号 A 的行却 FIFO 扣到耳号 B 篮」的串扣（row126）。
+    // batchId = 选中篮 location_stock.id：猪肉回传它 → 后端走 pickByBatch/returnByBatch/lossByBatch
+    // 按该篮精确扣减 + 写该篮 ear_no/white_bar_no，防「点耳号 A 却 FIFO 扣到耳号 B 篮」的串扣（row126）。
     // 仅猪肉（耳号/白条建篮）需要精确篮：其余业态（包材/鸡蛋/干货/其他/外购果蔬）按 product 维度扣减且只有
     // 可打包食品桥接 inhouse，改走 batchId 会给包材等无意义地产 inhouse，故不回传；自产果蔬走既有 plotId 地块路径。
-    const batchId = activeBelongType.value === 'pork' ? row.batchId || undefined : undefined;
+    const batchId = isPorkOp.value ? pickedBasket?.batchId || undefined : undefined;
     if (opKind.value === 'pick') {
       await pickMat({
         productId: row.plotId ? undefined : row.productId,

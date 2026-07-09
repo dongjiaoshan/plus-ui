@@ -2275,18 +2275,22 @@ export default {
       locationName: 'Location',
       currentStock: 'Current Stock',
       quantity: 'Quantity',
-      remark: 'Remark'
+      remark: 'Remark',
+      basket: 'Source Basket'
     },
     placeholder: {
       keyword: 'Product name / location / ear no. / plot no.',
-      remark: 'Enter remark'
+      remark: 'Enter remark',
+      basket: 'Select the ear-no / white-bar source basket'
     },
+    basketOption: '{code} (rem. {stock} {unit})',
     button: {
       cancel: 'Cancel',
       confirm: 'Confirm'
     },
     rule: {
-      quantityRequired: 'Quantity is required'
+      quantityRequired: 'Quantity is required',
+      basketRequired: 'Please select a source basket'
     },
     message: {
       success: 'Operation succeeded'

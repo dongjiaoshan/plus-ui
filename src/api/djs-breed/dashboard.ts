@@ -72,7 +72,10 @@ export interface Activity7dVO {
 /** 年度指标返回结构 */
 export interface AnnualIndicatorVO {
   statYear: number;
+  /** 年度引种母猪数 */
   introduceCount: number;
+  /** 年度引种公猪数 */
+  introduceBoarCount: number;
   bornCount: number;
   weanedCount: number;
   deathCount: number;

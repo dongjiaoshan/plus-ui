@@ -50,6 +50,35 @@ export interface MatPickItemVO {
   todayLoss?: string;
 }
 
+/**
+ * 猪肉篮明细（VO = MatIssueBasketVo，row24 弹框选源）。
+ *
+ * admin 猪肉列表收敛为一产品一行后，篮级信息（耳号 / 白条号 / 库位 / 各篮余量）下沉到弹框：
+ * 用户手选一篮 + 填数量 → 用该篮 batchId 走既有 pickByBatch 精确扣减（防串扣）。
+ */
+export interface MatBasketVO {
+  /** 篮子 ID（= location_stock.id，snowflake string；提交回传作 batchId 走精确篮扣减） */
+  batchId: string;
+  /** 业务码（篮次标题）：耳号，无耳号回退白条号 / 库位标识 */
+  batchCode: string;
+  /** 产品 ID（snowflake string） */
+  productId: string;
+  /** 产品名称 */
+  productName: string;
+  /** 单位 */
+  productUnit: string;
+  /** 该篮当前余量（BigDecimal→string） */
+  currentStock: string;
+  /** 该篮今日已领（全部人，BigDecimal→string） */
+  todayPicked?: string;
+  /** 该篮今日退回（全部人，BigDecimal→string） */
+  todayReturned?: string;
+  /** 该篮今日损耗（全部人，BigDecimal→string） */
+  todayLoss?: string;
+  /** 该篮所属库位 ID（snowflake string；提交回传作 locationId） */
+  locationId?: string;
+}
+
 /** 领用出库入参 */
 export interface MatPickBody {
   productId?: string;
@@ -93,10 +122,28 @@ export interface MatFeedBody {
   remark?: string;
 }
 
-/** 行粒度列表（按业态 tab + 关键字过滤；今日四量按全部人） */
+/**
+ * 列表（按业态 tab + 关键字过滤；今日四量按全部人）。
+ *
+ * 猪肉 tab 一产品一行（后端 selectAdminMatPorkProducts 聚合，篮明细进弹框选源）；
+ * 其余业态维持行粒度。
+ */
 export const listMatPick = (params: { belongType: string; keyword?: string }): AxiosPromise<MatPickItemVO[]> => {
   return request({
     url: '/djs/warehouse/matPick/list',
+    method: 'get',
+    params
+  });
+};
+
+/**
+ * 猪肉产品行的篮明细（row24 弹框选源）。
+ *
+ * 含 ear_no IS NULL 的白条整只篮（放宽约束，保 admin 现在能领的 null-ear 篮）。
+ */
+export const listPorkBaskets = (params: { productId: string; keyword?: string }): AxiosPromise<MatBasketVO[]> => {
+  return request({
+    url: '/djs/warehouse/matPick/porkBaskets',
     method: 'get',
     params
   });

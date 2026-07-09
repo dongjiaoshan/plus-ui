@@ -2278,18 +2278,22 @@ export default {
       locationName: '存储库位',
       currentStock: '当前库存',
       quantity: '数量',
-      remark: '备注'
+      remark: '备注',
+      basket: '源篮子'
     },
     placeholder: {
       keyword: '产品名称/库位/耳号/地块编号',
-      remark: '请输入备注'
+      remark: '请输入备注',
+      basket: '请选择领用的耳号/白条源篮子'
     },
+    basketOption: '{code}（余 {stock} {unit}）',
     button: {
       cancel: '取消',
       confirm: '确定'
     },
     rule: {
-      quantityRequired: '请输入数量'
+      quantityRequired: '请输入数量',
+      basketRequired: '请选择源篮子'
     },
     message: {
       success: '操作成功'
