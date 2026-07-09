@@ -81,14 +81,23 @@ interface VisibleCard extends BoardCard {
   route: string;
 }
 
-/** 顶级菜单 → 第一个可见子菜单的完整路由（进板块直接落到第一个菜单） */
+/**
+ * 顶级菜单 → 第一个可导航叶子页的完整路由。
+ *
+ * 逐层取第一个可见子菜单，**递归钻过 ParentView 目录**直到叶子（无子菜单）——
+ * 否则会落在无页面组件的目录路由上（如 /djs-breed/breeding-config 育种配置目录）导致 404。
+ */
 function firstMenuRoute(top: RouteRecordRaw & { hidden?: boolean }): string {
-  const base = top.path?.startsWith('/') ? top.path : `/${top.path}`;
-  const children = ((top.children as (RouteRecordRaw & { hidden?: boolean })[]) || []).filter((c) => !c.hidden);
-  if (!children.length) return base;
-  const first = children[0];
-  if (first.path?.startsWith('/')) return first.path;
-  return `${base.replace(/\/$/, '')}/${first.path}`;
+  let path = top.path?.startsWith('/') ? top.path : `/${top.path}`;
+  let node: RouteRecordRaw & { hidden?: boolean } = top;
+  while (true) {
+    const children = ((node.children as (RouteRecordRaw & { hidden?: boolean })[]) || []).filter((c) => !c.hidden);
+    if (!children.length) break;
+    const first = children[0];
+    path = first.path?.startsWith('/') ? first.path : `${path.replace(/\/$/, '')}/${first.path}`;
+    node = first;
+  }
+  return path;
 }
 
 /** 从用户实际下发的菜单（sidebarRouters）推导可见板块 */
