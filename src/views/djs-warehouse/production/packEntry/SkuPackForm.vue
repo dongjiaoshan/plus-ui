@@ -1168,6 +1168,19 @@ async function reload() {
 defineExpose({ reload });
 
 onMounted(reload);
+
+// keep-alive 缓存：切走再切回本 tab 时 onMounted 不重跑，靠 onActivated 兜底重拉，
+// 使小程序领用猪肉 / 采摘果蔬后回到打包台能看到最新可打包来源与成品。
+// reload() 只刷新选项列表、不动 form.value，半途输入（已选产品 + 已输入重量）不丢。
+// 首次进入 onMounted 已 reload，firstActivate 跳过一次避免双拉（同 demand/index.vue）。
+let firstActivate = true;
+onActivated(() => {
+  if (firstActivate) {
+    firstActivate = false;
+    return;
+  }
+  void reload();
+});
 </script>
 
 <style scoped>

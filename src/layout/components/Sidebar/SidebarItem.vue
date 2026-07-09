@@ -3,7 +3,8 @@
     <template v-if="hasOneShowingChild(item, item.children) && (!onlyOneChild.children || onlyOneChild.noShowingChildren) && !item.alwaysShow">
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path, onlyOneChild.query)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{ 'submenu-title-noDropdown': !isNest }">
-          <svg-icon :icon-class="onlyOneChild.meta.icon || (item.meta && item.meta.icon)" />
+          <!-- 图标只保留到 2 级：1/2 级菜单显示图标，3 级及以下不显示 -->
+          <svg-icon v-if="depth <= 2" :icon-class="onlyOneChild.meta.icon || (item.meta && item.meta.icon)" />
           <template #title>
             <span class="menu-title" :title="hasTitle(onlyOneChild.meta.title)">{{ onlyOneChild.meta.title }}</span>
           </template>
@@ -13,7 +14,8 @@
 
     <el-sub-menu v-else ref="subMenu" :index="resolvePath(item.path)" teleported>
       <template v-if="item.meta" #title>
-        <svg-icon :icon-class="item.meta ? item.meta.icon : ''" />
+        <!-- 图标只保留到 2 级：1/2 级菜单显示图标，3 级及以下不显示 -->
+        <svg-icon v-if="depth <= 2" :icon-class="item.meta ? item.meta.icon : ''" />
         <span class="menu-title" :title="hasTitle(item.meta?.title)">{{ item.meta?.title }}</span>
       </template>
 
@@ -22,6 +24,7 @@
         :key="child.path + index"
         :is-nest="true"
         :item="child"
+        :depth="depth + 1"
         :base-path="resolvePath(child.path)"
         class="nest-menu"
       />
@@ -43,6 +46,11 @@ const props = defineProps({
   isNest: {
     type: Boolean,
     default: false
+  },
+  // 菜单层级（顶层从 1 起算，每递归一层 +1），用于「3 级菜单不显示图标」的判定
+  depth: {
+    type: Number,
+    default: 1
   },
   basePath: {
     type: String,

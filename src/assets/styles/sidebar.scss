@@ -167,6 +167,15 @@
         background-color: rgba(0, 0, 0, 0.04) !important;
       }
     }
+
+    // 三级菜单（叶子，无图标）左缩进明显大于二级：二级项有图标把文字顶右，三级无图标反而显得更靠左、
+    // 看不出层级。在 EP 每层 padding 基础上再 +30px（越过二级图标宽度 + 一个清晰步长）。
+    // 选择器 = 有 2 层 sub-menu 祖先的叶子，即三级菜单（本项目最深 3 级，精准命中）。仅展开态生效。
+    & .el-sub-menu .el-sub-menu .el-menu-item {
+      padding-left: calc(
+        var(--el-menu-base-level-padding) + var(--el-menu-level) * var(--el-menu-level-padding) + 30px
+      ) !important;
+    }
   }
 
   // 收起菜单后的样式

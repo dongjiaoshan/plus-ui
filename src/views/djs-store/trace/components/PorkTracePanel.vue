@@ -107,8 +107,6 @@
 import { Food } from '@element-plus/icons-vue';
 import { listTraceablePig, genStoreTraceCode, listStorePackProducts } from '@/api/djs-store/trace';
 import type { TraceablePigVO, StorePackProductVO } from '@/api/djs-store/trace/types';
-import { listImage } from '@/api/djs-common/image';
-import type { ImageLibraryVO } from '@/api/djs-common/image/types';
 import TraceLabelDialog from './TraceLabelDialog.vue';
 import WeightNumpad from '@/views/djs-warehouse/production/packEntry/components/WeightNumpad.vue';
 import { useStoreContextStore } from '@/store/modules/storeContext';
@@ -150,7 +148,7 @@ const LOCAL_CUT_IMG: Record<string, string> = {
   肘子: elbowImg,
   大排: porkChop
 };
-// 部位中文名 → imageUrl：ADR-0014 公共图库按 imageName 精确/别名命中则用图库图，否则用本地兜底图
+// 部位中文名 → imageUrl：用本地原型抠图（前腿肉/五花肉/排骨/肘子/大排）
 const cutImgMap = ref<Record<string, string>>({ ...LOCAL_CUT_IMG });
 
 const form = reactive<{ cutLabel?: string; weight?: number }>({ cutLabel: undefined, weight: undefined });
@@ -201,33 +199,6 @@ async function loadPackProducts() {
   } catch (e) {
     console.warn('[PorkTracePanel] loadPackProducts failed', e);
     packProducts.value = [];
-  }
-}
-
-// 从公共图库按部位名拉图（前腿肉/五花肉/排骨/肘子/大排），命中 imageUrl 用真实图，未命中保持占位
-async function loadCutImages() {
-  const labels = cutOptions.value.map((c) => c.label).filter(Boolean);
-  if (!labels.length) return;
-  try {
-    const res = await listImage({ pageNum: 1, pageSize: 500, status: '0' });
-    const rows = ((res as unknown as { rows?: ImageLibraryVO[]; data?: ImageLibraryVO[] }).rows ?? []) as ImageLibraryVO[];
-    const map: Record<string, string> = { ...LOCAL_CUT_IMG };
-    labels.forEach((label) => {
-      const hit = rows.find(
-        (r) =>
-          r.imageUrl &&
-          (r.imageName === label ||
-            (r.aliases ?? '')
-              .split(',')
-              .map((a) => a.trim())
-              .includes(label))
-      );
-      if (hit?.imageUrl) map[label] = hit.imageUrl;
-    });
-    cutImgMap.value = map;
-  } catch (e) {
-    console.warn('[PorkTracePanel] loadCutImages failed', e);
-    cutImgMap.value = { ...LOCAL_CUT_IMG };
   }
 }
 
@@ -287,7 +258,6 @@ function todayYmd(): string {
 onMounted(async () => {
   await loadPigs();
   await loadPackProducts();
-  loadCutImages();
 });
 </script>
 
