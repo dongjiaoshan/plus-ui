@@ -18,6 +18,16 @@
       </div>
     </el-card>
 
+    <!-- 空态引导：无数据时提示先选月份生成结算（避免误判为无数据 bug） -->
+    <el-alert
+      v-if="!loading && total === 0"
+      :title="t('plantPerformance.emptyHint')"
+      type="info"
+      :closable="false"
+      show-icon
+      class="mb-2"
+    />
+
     <BizTable
       ref="tableRef"
       :data="list"

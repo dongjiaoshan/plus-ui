@@ -4059,6 +4059,7 @@ export default {
       monthRequired: 'Please select a settle month first',
       generateSuccess: 'Settlement generated, {count} rows'
     },
+    emptyHint: 'No performance data yet. Pick a settle month above and click “Generate” — the system computes each team’s amount from monthly harvest weight × crop unit-price snapshot.',
     detail: {
       title: 'Performance Detail',
       tabYield: 'Yield Performance',

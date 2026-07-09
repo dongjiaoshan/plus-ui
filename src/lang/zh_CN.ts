@@ -4062,6 +4062,7 @@ export default {
       monthRequired: '请先选择结算月份',
       generateSuccess: '结算生成成功，共 {count} 条'
     },
+    emptyHint: '还没有绩效数据。请在上方选择结算月份点「生成结算」，系统按当月各班组采摘量 × 作物单价快照自动计算后即会显示。',
     detail: {
       title: '绩效详情',
       tabYield: '产量绩效',
