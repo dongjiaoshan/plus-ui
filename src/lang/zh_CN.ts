@@ -2327,6 +2327,7 @@ export default {
       beginStock: '期初库存',
       inboundQty: '入库量',
       outboundQty: '出库量',
+      shippedQty: '已发货',
       lossQty: '损耗量',
       feedQty: '饲料饲喂量',
       endStock: '期末库存'
@@ -3716,7 +3717,7 @@ export default {
       weightUnitGram: 'g',
       noCode: '该行无追溯码可打印',
       scanHint: '扫码查看溯源',
-      traceCaption: '东角山产品追溯码',
+      traceCaption: '东角山有机追溯码',
       printFailed: '生成打印文件失败，请重试'
     },
     veg: {

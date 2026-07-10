@@ -2324,6 +2324,7 @@ export default {
       beginStock: 'Begin Stock',
       inboundQty: 'Inbound',
       outboundQty: 'Outbound',
+      shippedQty: 'Shipped',
       lossQty: 'Loss',
       feedQty: 'Feed',
       endStock: 'End Stock'
@@ -3713,7 +3714,7 @@ export default {
       weightUnitGram: 'g',
       noCode: 'No trace code to print for this row',
       scanHint: 'Scan to view traceability',
-      traceCaption: 'Dongjiaoshan Product Trace Code',
+      traceCaption: 'Dongjiaoshan Organic Trace Code',
       printFailed: 'Failed to generate print file, please retry'
     },
     veg: {

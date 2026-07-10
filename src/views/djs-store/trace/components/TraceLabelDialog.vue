@@ -1,7 +1,10 @@
 <template>
   <el-dialog v-model="visible" :title="t('storeTrace.label.dialogTitle')" width="420px" append-to-body @closed="onClosed">
-    <!-- 预览：结构化标签卡 + 二维码（产品重量只读展示） -->
-    <TraceLabelCard :data="data" :weight-text="weightText" :qr-data-url="qrDataUrl" />
+    <!-- 预览：3cm×3cm 追溯码贴纸（居中，按实际打印尺寸展示） -->
+    <div class="trace-label-preview">
+      <TraceLabelCard :data="data" :weight-text="weightText" :qr-data-url="qrDataUrl" />
+      <div class="trace-label-preview__hint">{{ t('storeTrace.label.sizeHint') }}</div>
+    </div>
 
     <template #footer>
       <el-button @click="visible = false">{{ t('storeTrace.label.cancel') }}</el-button>
@@ -162,7 +165,7 @@ function printImageViaIframe(imgData: string, title: string): Promise<void> {
     doc.open();
     doc.write(
       `<html><head><title>${title}</title>` +
-        `<style>@page{margin:0}html,body{margin:0;padding:0;text-align:center}img{max-width:100%}</style>` +
+        `<style>@page{size:30mm 30mm;margin:0}html,body{margin:0;padding:0;text-align:center}img{width:30mm;height:30mm;display:block}</style>` +
         `</head><body><img src="${imgData}" alt="label"/></body></html>`
     );
     doc.close();

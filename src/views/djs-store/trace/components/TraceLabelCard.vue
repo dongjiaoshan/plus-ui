@@ -1,130 +1,77 @@
 <template>
-  <!-- 结构化标签卡：顶部 生产编码 + 生产日期，下方 左大二维码 + 右字段。预览与打印共用同一份标签结构。 -->
+  <!-- 追溯码贴纸：3cm×3cm 定尺，顶「东角山有机追溯码」+ 二维码 + 底「生产编码-门店名称」。预览与打印共用同一份结构。 -->
   <div class="trace-label">
-    <div class="trace-label__top">
-      <div class="trace-label__top-item">
-        <span class="k">{{ t('storeTrace.label.serialNo') }}</span>
-        <span class="v">{{ data.serialNo || '-' }}</span>
-      </div>
-      <div class="trace-label__top-item">
-        <span class="k">{{ t('storeTrace.label.produceDate') }}</span>
-        <span class="v">{{ data.produceDate || '-' }}</span>
-      </div>
-    </div>
-    <div class="trace-label__body">
-      <div class="trace-label__qr">
-        <img v-if="qrDataUrl" :src="qrDataUrl" alt="qr" class="qr-img" />
-        <div class="qr-hint">{{ t('storeTrace.label.traceCaption') }}</div>
-      </div>
-      <div class="trace-label__fields">
-        <div class="trace-label__row">
-          <span class="k">{{ t('storeTrace.label.productName') }}</span>
-          <span class="v">{{ data.productName || '-' }}</span>
-        </div>
-        <div class="trace-label__row">
-          <span class="k">{{ t('storeTrace.label.productWeight') }}</span>
-          <span class="v">{{ weightText }}</span>
-        </div>
-        <div class="trace-label__row">
-          <span class="k">{{ data.sourceLabel || (data.earNo ? t('storeTrace.label.earNo') : t('storeTrace.label.plotNo')) }}</span>
-          <span class="v">{{ data.sourceValue || '-' }}</span>
-        </div>
-        <div class="trace-label__row">
-          <span class="k">{{ t('storeTrace.label.storeName') }}</span>
-          <span class="v">{{ data.storeName || '-' }}</span>
-        </div>
-      </div>
-    </div>
+    <div class="trace-label__title">{{ t('storeTrace.label.traceCaption') }}</div>
+    <img v-if="qrDataUrl" :src="qrDataUrl" alt="qr" class="trace-label__qr" />
+    <div v-else class="trace-label__qr trace-label__qr--empty">-</div>
+    <div class="trace-label__foot">{{ footText }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { TraceLabelData } from './TraceLabelDialog.vue';
 
-defineProps<{
-  /** 标签 8 字段数据 */
+const props = defineProps<{
+  /** 标签数据 */
   data: TraceLabelData;
-  /** 已按业态换算好的重量文案（kg / g） */
+  /** 已按业态换算好的重量文案（紧凑贴纸不展示，保留 prop 兼容调用方） */
   weightText: string;
   /** 二维码 dataURL */
   qrDataUrl: string;
 }>();
 
 const { t } = useI18n();
+
+/** 底部单行「生产编码-门店名称」；无门店只显生产编码。 */
+const footText = computed(() => {
+  const serial = props.data.serialNo != null ? String(props.data.serialNo) : '';
+  const store = props.data.storeName || '';
+  return store ? `${serial}-${store}` : serial;
+});
 </script>
 
 <style lang="scss" scoped>
+/* 3cm×3cm 追溯码贴纸（顶标题 + 二维码 + 底 生产编码-门店），row33 */
 .trace-label {
+  box-sizing: border-box;
+  width: 30mm;
+  height: 30mm;
+  padding: 1mm;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 1px dashed #c0c4cc;
-  border-radius: 8px;
-  background: #fff;
-}
-/* 顶部：生产编码 + 生产日期 一行两列 */
-.trace-label__top {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
-  font-size: 13px;
-}
-.trace-label__top-item {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-.trace-label__top-item .k {
-  color: #909399;
-}
-.trace-label__top-item .v {
-  color: #303133;
-  font-weight: 600;
-}
-/* 下方：左大二维码 + 右字段 */
-.trace-label__body {
-  display: flex;
-  gap: 16px;
   align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  color: #000;
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+.trace-label__title {
+  width: 100%;
+  font-size: 2.5mm;
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
+  letter-spacing: 0.1mm;
 }
 .trace-label__qr {
-  flex: 0 0 130px;
+  width: 19mm;
+  height: 19mm;
+  display: block;
+}
+.trace-label__qr--empty {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  color: #999;
+  border: 0.2mm dashed #ccc;
 }
-.qr-img {
-  width: 130px;
-  height: 130px;
-}
-.qr-hint {
-  margin-top: 6px;
-  font-size: 11px;
-  color: #909399;
+.trace-label__foot {
+  width: 100%;
+  font-size: 2.1mm;
+  line-height: 1.05;
   text-align: center;
-}
-.trace-label__fields {
-  flex: 1;
-  min-width: 0;
-}
-.trace-label__row {
-  display: flex;
-  font-size: 13px;
-  line-height: 2;
-}
-.trace-label__row .k {
-  flex: 0 0 72px;
-  color: #909399;
-}
-.trace-label__row .v {
-  flex: 1;
-  color: #303133;
   word-break: break-all;
-  font-weight: 500;
 }
 </style>

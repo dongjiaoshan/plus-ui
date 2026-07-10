@@ -16,7 +16,7 @@
           <el-input-number
             v-model="row.returnWeight"
             :min="0"
-            :precision="2"
+            :precision="3"
             :step="1"
             :placeholder="t('storeReturn.operation.weightPlaceholder')"
             controls-position="right"
@@ -50,7 +50,7 @@
           <el-input-number
             v-model="row.returnWeight"
             :min="0"
-            :precision="2"
+            :precision="3"
             :step="1"
             :placeholder="t('storeReturn.operation.weightPlaceholder')"
             controls-position="right"

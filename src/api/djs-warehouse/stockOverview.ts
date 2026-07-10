@@ -38,8 +38,10 @@ export interface StockOverviewDetailVO {
   beginStock?: number | string;
   /** 入库量 */
   inboundQty?: number | string;
-  /** 出库量 */
+  /** 出库量（不含 ship_out） */
   outboundQty?: number | string;
+  /** 已发货（当日 ship_out 流水合计；生产产品不入库 → 信息列，不计期初/出库/期末） */
+  shippedQty?: number | string;
   /** 损耗量（信息列，期末不二次扣） */
   lossQty?: number | string;
   /** 饲料饲喂量（仅果蔬原材料有值） */

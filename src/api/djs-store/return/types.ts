@@ -16,6 +16,14 @@ export interface StoreReturnVO {
   productId: string;
   /** 产品名称（后端内存聚合填） */
   productName?: string;
+  /** 产品归属类型 djs_belong_type（后端内存聚合填）：pork/white_bar=猪肉 tab，其余=果蔬 tab */
+  belongType?: string;
+  /** 产品业务编码 product_info.product_id（后端内存聚合填，「产品代码」列） */
+  productCode?: string;
+  /** 产品规格（后端内存聚合填） */
+  productSpec?: string;
+  /** 产品单位（后端内存聚合填，「单位」列） */
+  productUnit?: string;
   /** 退回入库库位（K4 联动外购入库目标库位） */
   locationId?: string;
   /** 库位名称（后端内存聚合填） */

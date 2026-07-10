@@ -717,7 +717,9 @@ const vegStockMap = computed<Record<string, number | null>>(() => {
     if (p.productMaterial == null) return;
     const picked = byMaterial[String(p.productMaterial)];
     if (picked == null) return;
-    m[String(p.id)] = Math.round(Math.max(0, picked) * 100) / 100;
+    // 保留 3 位小数（kg 精度=1g，与 wipStockMap / fmtCopies 一致）：领用剩余重量按克(g)展示（×1000），
+    // 若在此按 2 位小数取整（×100/100）会把第 3 位=1g 精度截掉（9.701kg→9.70→9700g，row35）。
+    m[String(p.id)] = Math.round(Math.max(0, picked) * 1000) / 1000;
   });
   return m;
 });

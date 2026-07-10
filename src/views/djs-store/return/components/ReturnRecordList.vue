@@ -37,8 +37,6 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listStoreReturn, exportStoreReturn } from '@/api/djs-store/return';
 import type { StoreReturnQuery, StoreReturnVO } from '@/api/djs-store/return/types';
-import { listProduct } from '@/api/djs-warehouse/product';
-import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { blobValidate } from '@/utils/ruoyi';
 import { formatNum3 } from '@/utils/weight';
 import FileSaver from 'file-saver';
@@ -53,34 +51,23 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const productOptions = ref<ProductInfoVO[]>([]);
 
 const activeTab = ref<'pork' | 'vegetable'>('pork');
 const PORK_BELONG_TYPES = ['pork', 'white_bar'];
-
-// 产品 snowflake id → { belongType, productCode(业务码), productSpec, productUnit }
-const productMetaMap = computed(() => {
-  const m = new Map<string, { belongType?: string; productCode?: string; productSpec?: string; productUnit?: string }>();
-  productOptions.value.forEach((p) => {
-    m.set(String(p.id), { belongType: p.belongType, productCode: p.productId, productSpec: p.productSpec, productUnit: p.productUnit });
-  });
-  return m;
-});
 
 function categoryOf(belongType?: string): 'pork' | 'vegetable' {
   return belongType && PORK_BELONG_TYPES.includes(belongType) ? 'pork' : 'vegetable';
 }
 
-// 列表行补充 产品类型/代码/单位（从产品主数据 join），并按当前 tab 过滤
+// 归属类型/代码/单位由后端 VO 直接回填（belongType/productCode/productUnit），按当前 tab 过滤。
+// 不再靠前端 listProduct 分页 join —— 产品数超单页容量时 join 会丢失，把猪肉退回默认归到果蔬 tab。
 const displayList = computed<StoreReturnVO[]>(() => {
   return list.value
     .map((row) => {
-      const meta = productMetaMap.value.get(String(row.productId));
-      const cat = categoryOf(meta?.belongType);
+      const cat = categoryOf(row.belongType);
       return {
         ...row,
-        productCode: meta?.productCode,
-        unit: meta?.productUnit,
+        unit: row.productUnit,
         productCategory: cat,
         productTypeLabel: cat === 'pork' ? t('storeReturn.tab.pork') : t('storeReturn.tab.vegetable')
       } as StoreReturnVO & { productCategory: 'pork' | 'vegetable'; productTypeLabel: string; unit?: string };
@@ -116,16 +103,6 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), width: 110, align: 'right', formatter: (row) => formatNum3(row.receivedWeight) },
   { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), width: 110, align: 'center', dictType: 'djs_store_return_status' }
 ]);
-
-async function loadProductOptions() {
-  try {
-    const res = await listProduct({ pageNum: 1, pageSize: 500 });
-    productOptions.value = ((res as unknown as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
-  } catch (e) {
-    console.warn('[ReturnRecordList] loadProductOptions failed', e);
-    productOptions.value = [];
-  }
-}
 
 async function fetchList() {
   loading.value = true;
@@ -187,8 +164,7 @@ async function handleExport() {
   }
 }
 
-onMounted(async () => {
-  await loadProductOptions();
+onMounted(() => {
   fetchList();
 });
 </script>
