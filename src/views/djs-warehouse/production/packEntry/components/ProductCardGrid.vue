@@ -126,6 +126,9 @@ function stockDisplay(item: ProductInfoVO): string {
   if (props.weightInGram) return formatKgToG(v);
   // 单位优先级：per-product stockUnitMap（其他产品打包按原料单位）> stockUnit（果蔬固定 kg）> 产品自身单位
   const unit = props.stockUnitMap[String(item.id)] || props.stockUnit || item.productUnit || 'kg';
+  // row28/row29：重量单位(kg)产品「领用剩余重量」一律按克(g)展示（与肉品/果蔬录入单位 g 统一，stockMap 值为 kg）；
+  // 枚/份等计数单位原样显示（如鸡蛋 985 枚不转）。
+  if (unit === 'kg') return formatKgToG(v);
   return `${v} ${unit}`;
 }
 

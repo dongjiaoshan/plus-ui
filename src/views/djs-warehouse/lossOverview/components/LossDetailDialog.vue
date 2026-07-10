@@ -132,11 +132,11 @@ function formatDateTime(v?: string): string {
   return parseTime(v, '{y}-{m}-{d} {h}:{i}:{s}') as string;
 }
 
-/** 损耗量格式化：后端 BigDecimal 序列化为 string，统一 Number 强转保两位小数。 */
+/** 损耗量格式化：后端 BigDecimal 序列化为 string，统一 Number 强转保三位小数（第4位四舍五入，row33）。 */
 function formatWeight(v: number | string | undefined | null): string {
   if (v === undefined || v === null || v === '') return '';
   const n = typeof v === 'number' ? v : Number(v);
-  return Number.isNaN(n) ? String(v) : n.toFixed(2);
+  return Number.isNaN(n) ? String(v) : n.toFixed(3);
 }
 
 defineExpose({ open });

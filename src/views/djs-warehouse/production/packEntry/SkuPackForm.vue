@@ -843,10 +843,20 @@ const shouldUnitByCopies = computed<boolean>(() => {
 // （如 kg），不用成品的计数单位（腊肉「袋」会把「录入重量」错配成「录入袋数」）。邓博 2026-06-25：
 // 重量模式录入的就是重量、扣的就是原材料的重量；点确定 = 打包一份。
 // 其余业态（肉品等）按当前选中产品的 product_unit 显示（onProductChange 选卡片时已回填 form.productUnit）。
+// row29：其他产品打包中「重量模式（非份数计量）且原料单位=kg」的产品，录入/展示按克(g)，
+// 提交前 ÷1000 换算成 kg 落库（与肉品 weightInGram、果蔬 kind=veg 同口径）；枚/份计量产品（如鸡蛋）不受影响。
+const dryWeightInGram = computed<boolean>(() =>
+  props.kind === 'dry'
+  && !shouldUnitByCopies.value
+  && (wipStockUnitMap.value[String(form.value.productId)] || form.value.productUnit) === 'kg'
+);
+/** 有效「按克录入」标志：显式 weightInGram（肉品）或 其他产品 kg 重量模式（row29）。 */
+const effWeightInGram = computed<boolean>(() => props.weightInGram || dryWeightInGram.value);
+
 const selectedUnit = computed<string>(() => {
   if (props.kind === 'veg') return 'g';
-  // 124#6：肉品打包录入单位显「g」（克），提交前 ÷1000 换算成 kg 落库（见 packWeightKg / handleSubmit）
-  if (props.weightInGram) return 'g';
+  // 124#6 / row29：肉品打包 + 其他产品 kg 重量模式录入单位显「g」（克），提交前 ÷1000 换算成 kg 落库（见 packWeightKg）
+  if (effWeightInGram.value) return 'g';
   if (shouldUnitByCopies.value) return t('djs.warehouse.packEntry.copiesUnit');
   // 肉品打包(earGroup) + 其他产品打包(dryReqMode) 均按「领用来源原材料」单位显示（排骨原料=kg），
   // 而非成品自身单位（成品「份」会把按重量录入的肉品错标成「份」）。
@@ -857,7 +867,7 @@ const selectedUnit = computed<string>(() => {
 /**
  * numpad 小数位：份数计量整数（0）；克(g)录入整数（124#6，肉品按克整数录入）；其余重量按 3 位小数。
  */
-const numpadPrecision = computed<number>(() => (shouldUnitByCopies.value || props.weightInGram ? 0 : 3));
+const numpadPrecision = computed<number>(() => (shouldUnitByCopies.value || effWeightInGram.value ? 0 : 3));
 
 /**
  * 果蔬录入量 g → 系统权威量纲 kg（÷1000）。其余业态 numpad 录入本就是 kg，原样透传。
@@ -866,8 +876,8 @@ const numpadPrecision = computed<number>(() => (shouldUnitByCopies.value || prop
 function packWeightKg(): number | undefined {
   const raw = Number(form.value.productWeight);
   if (!Number.isFinite(raw) || raw <= 0) return undefined;
-  // 果蔬 + 肉品打包（weightInGram，124#6）录入均为 g → ÷1000 换算成 kg；其余业态 numpad 录入本就是 kg。
-  return props.kind === 'veg' || props.weightInGram ? raw / 1000 : raw;
+  // 果蔬 + 肉品打包 + 其他产品 kg 重量模式（effWeightInGram，124#6/row29）录入均为 g → ÷1000 换算成 kg；其余业态 numpad 录入本就是 kg。
+  return props.kind === 'veg' || effWeightInGram.value ? raw / 1000 : raw;
 }
 
 /**
@@ -1020,16 +1030,16 @@ async function handleSubmit(printTrace: boolean) {
         // 不落成品计数单位「袋」）；点确定 = 打包一份，后端 resolveDemandDeductQty 计数单位+无计量→扣 1 份。
         const copies = Number(form.value.productWeight);
         const measure = Number(selectedProduct.value?.materialNum);
-        // 124#6：肉品打包录入为 g → 提交前 ÷1000 换算成 kg（packWeightKg），单位强制 'kg' 落库；
+        // 124#6/row29：肉品打包 + 其他产品 kg 重量模式录入为 g → 提交前 ÷1000 换算成 kg（packWeightKg），单位强制 'kg' 落库；
         // 份数计量按 copies×materialNum；其余重量模式原样透传（录入本就是 kg）。
         const dryWeight = shouldUnitByCopies.value
           ? copies * measure
-          : props.weightInGram
+          : effWeightInGram.value
             ? (packWeightKg() as number)
             : (form.value.productWeight as number);
         const dryUnit = shouldUnitByCopies.value
           ? 'kg'
-          : props.weightInGram
+          : effWeightInGram.value
             ? 'kg'
             : sourceFilterActive.value
               ? wipStockUnitMap.value[String(form.value.productId)] || 'kg'

@@ -40,6 +40,7 @@ import type { StoreReturnQuery, StoreReturnVO } from '@/api/djs-store/return/typ
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { blobValidate } from '@/utils/ruoyi';
+import { formatNum3 } from '@/utils/weight';
 import FileSaver from 'file-saver';
 import { useI18n } from 'vue-i18n';
 
@@ -110,9 +111,9 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'returnQuantity', label: t('storeReturn.column.returnQuantity'), width: 90, align: 'right' },
   { prop: 'unit', label: t('storeReturn.column.unit'), width: 70, align: 'center' },
-  { prop: 'goodsWeight', label: t('storeReturn.column.goodsWeight'), width: 100, align: 'right' },
+  { prop: 'goodsWeight', label: t('storeReturn.column.goodsWeight'), width: 100, align: 'right', formatter: (row) => formatNum3(row.goodsWeight) },
   { prop: 'receivedQty', label: t('storeReturn.column.receivedQty'), width: 100, align: 'right' },
-  { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), width: 110, align: 'right' },
+  { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), width: 110, align: 'right', formatter: (row) => formatNum3(row.receivedWeight) },
   { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), width: 110, align: 'center', dictType: 'djs_store_return_status' }
 ]);
 

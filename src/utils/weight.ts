@@ -41,6 +41,18 @@ export function formatKg(value: number | string | null | undefined): string {
 }
 
 /**
+ * 数值 → 保留三位小数的纯数字文本（不带单位）。用于「重量列另有独立单位列」的表格：
+ * 后端 BigDecimal 序列化可能丢尾零（0.700→"0.7"），统一 toFixed(3) 保证 3 位小数展示。
+ * @example formatNum3(0.701) // '0.701'   formatNum3(0.7) // '0.700'
+ * @returns `${n.toFixed(3)}`，无效值返回 ''（表格留空）。
+ */
+export function formatNum3(value: number | string | null | undefined): string {
+  const n = toNumber(value);
+  if (n === null) return '';
+  return n.toFixed(3);
+}
+
+/**
  * 按业务归属类型选择单位口径。
  * @param belongType 业务归属类型；'white_bar'（白条）→ 保留 kg，其余 → 转克。
  * @example formatWeightByBelong(1.2, 'white_bar') // '1.20 kg'
