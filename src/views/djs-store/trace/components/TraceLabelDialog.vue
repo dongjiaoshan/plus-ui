@@ -187,11 +187,26 @@ defineExpose({ open, printDirect });
 </script>
 
 <style lang="scss" scoped>
+/* 预览：3cm 贴纸居中，外加浅框标示贴纸边界（仅预览，不进打印快照） */
+.trace-label-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+}
+.trace-label-preview :deep(.trace-label) {
+  border: 1px dashed #dcdfe6;
+}
+.trace-label-preview__hint {
+  font-size: 12px;
+  color: #909399;
+}
 .trace-label-print-host {
   position: fixed;
   left: -100000px;
   top: 0;
-  width: 380px;
+  width: 30mm;
   pointer-events: none;
   z-index: -1;
 }

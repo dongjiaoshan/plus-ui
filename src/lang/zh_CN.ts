@@ -3718,6 +3718,7 @@ export default {
       noCode: '该行无追溯码可打印',
       scanHint: '扫码查看溯源',
       traceCaption: '东角山有机追溯码',
+      sizeHint: '实际打印尺寸 3cm × 3cm',
       printFailed: '生成打印文件失败，请重试'
     },
     veg: {
