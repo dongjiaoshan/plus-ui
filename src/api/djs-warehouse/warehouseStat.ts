@@ -20,7 +20,8 @@ export interface WarehouseDailyVO {
   barTotalWeight?: number | string;
   avgBarWeight?: number | string;
   barYieldRate?: number | string;
-  cutBarCount?: number;
+  /** 分割白条数（0.5 加权，后端 BigDecimal，运行时为字符串） */
+  cutBarCount?: number | string;
   precoolLoss?: number | string;
   cutProductWeight?: number | string;
   cutBarWeight?: number | string;

@@ -1320,13 +1320,20 @@ onActivated(() => {
 }
 .panel-actions {
   display: flex;
-  flex-direction: column;
+  /* row33 #1：两个按钮（确认并打印追溯码 / 确定）横向并排，不再纵向堆叠 */
+  flex-direction: row;
   gap: 10px;
   margin-top: auto;
   padding-top: 20px;
 }
+/* 横排下用 gap 控距，去掉 Element 相邻 el-button 默认 margin-left（否则间距翻倍） */
+.panel-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
 .action-btn {
-  width: 100%;
+  /* 等分行宽（仅一个按钮时占满整行，如其他/礼盒打包无「打印追溯码」按钮） */
+  flex: 1;
+  min-width: 0;
 }
 .demand-bar {
   display: flex;
