@@ -177,6 +177,18 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.actualYield != null ? `${Number(r.actualYield).toFixed(3)} kg` : '-')
   },
   {
+    // 产量达标率 = 实际产量 / 预计产量 × 100%（row46）；预计产量为空/0 时显 '-' 防除零
+    prop: 'yieldRate',
+    label: t('plantPlan.column.yieldRate'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (r: BizRow) => {
+      const expected = Number(r.expectedYield ?? 0);
+      if (r.actualYield == null || expected <= 0) return '-';
+      return `${((Number(r.actualYield) / expected) * 100).toFixed(1)}%`;
+    }
+  },
+  {
     prop: 'finishedPlot',
     label: t('plantPlan.column.finishedPlot'),
     minWidth: 150,

@@ -2003,6 +2003,7 @@ export default {
       lastHarvestdate: '最晚采摘',
       expectedYield: '预计产量(kg)',
       actualYield: '实际产量(kg)',
+      yieldRate: '产量达标率',
       finishedPlot: '已完成种植地块数量',
       completionRate: '计划完成率(%)',
       plantStatus: '种植计划状态',
@@ -2027,7 +2028,7 @@ export default {
     unit: { mu: '亩', month: '月' },
     kpi: {
       idlePlot: '当前空地块数',
-      plantedPlot: '当年已种植地块数',
+      plantedPlot: '当年已开始种植地块数',
       plannedPlot: '当年计划种植地块数',
       plotUsageFreq: '当年计划地块使用频次',
       cropVarietyCount: '当年计划种植作物品种数'

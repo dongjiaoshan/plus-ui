@@ -32,7 +32,9 @@
             </el-col>
             <el-col :span="12">
               <el-form-item :label="t('plantCrop.field.cropFamily')" prop="cropFamily">
-                <el-input v-model="form.cropFamily" :placeholder="t('plantCrop.placeholder.cropFamily')" clearable maxlength="64" />
+                <el-select v-model="form.cropFamily" :placeholder="t('plantCrop.placeholder.cropFamily')" clearable filterable style="width: 100%">
+                  <el-option v-for="d in djs_crop_family" :key="d.value" :label="d.label" :value="d.value" />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -139,7 +141,7 @@ import { useOssBridge } from '@/composables/useOssBridge';
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-const { djs_planting_season } = toRefs<any>(proxy?.useDict('djs_planting_season'));
+const { djs_planting_season, djs_crop_family } = toRefs<any>(proxy?.useDict('djs_planting_season', 'djs_crop_family'));
 
 const visible = ref(false);
 const submitting = ref(false);

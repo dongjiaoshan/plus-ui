@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_planting_season']"
+      :dict-types="['djs_planting_season', 'djs_crop_family']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -25,11 +25,11 @@
     >
       <template #cell-cropImagePreview="{ row }">
         <ImagePreview
-          v-if="row.cropImagePreview && thumbUrlMap[String(row.cropImagePreview)]"
+          v-if="effImgId(row) && thumbUrlMap[String(effImgId(row))]"
           :width="40"
           :height="40"
-          :src="thumbUrlMap[String(row.cropImagePreview)]"
-          :preview-src-list="[thumbUrlMap[String(row.cropImagePreview)]]"
+          :src="thumbUrlMap[String(effImgId(row))]"
+          :preview-src-list="[thumbUrlMap[String(effImgId(row))]]"
         />
         <span v-else class="text-gray-400">—</span>
       </template>
@@ -130,13 +130,13 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropImagePreview', label: t('plantCrop.column.cropImage'), width: 80, align: 'center' },
   { prop: 'cropName', label: t('plantCrop.column.cropName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'cropCode', label: t('plantCrop.column.cropCode'), width: 100, showOverflowTooltip: true },
-  { prop: 'cropFamily', label: t('plantCrop.column.cropFamily'), width: 100, align: 'center', showOverflowTooltip: true },
+  { prop: 'cropFamily', label: t('plantCrop.column.cropFamily'), width: 110, align: 'center', dictType: 'djs_crop_family', showOverflowTooltip: true },
   { prop: 'varietyName', label: t('plantCrop.column.varietyName'), width: 130, showOverflowTooltip: true },
   { prop: 'varietyOrigin', label: t('plantCrop.label.varietyOrigin'), width: 140, showOverflowTooltip: true },
   {
     prop: 'plantingSeason',
     label: t('plantCrop.column.plantingSeason'),
-    width: 130,
+    width: 240,
     align: 'center',
     dictType: 'djs_planting_season',
     showOverflowTooltip: true
@@ -218,8 +218,15 @@ async function fetchList() {
   }
 }
 
+// 作物图片列取值兜底：优先 cropImagePreview（新口径），回落 imageOssId / cropImageUrl 首图
+// （老作物数据只有 image_oss_id、crop_image_preview 为 NULL，与编辑弹框回填口径一致）
+function effImgId(row: CropInfoVO | BizRow): string | undefined {
+  const r = row as CropInfoVO;
+  return r.cropImagePreview || r.imageOssId || (r.cropImageUrl ? String(r.cropImageUrl).split(',')[0] : undefined) || undefined;
+}
+
 async function loadThumbUrls() {
-  const ids = Array.from(new Set(list.value.map((r) => r.cropImagePreview).filter((v): v is string => !!v)));
+  const ids = Array.from(new Set(list.value.map((r) => effImgId(r)).filter((v): v is string => !!v)));
   if (ids.length === 0) {
     thumbUrlMap.value = {};
     return;

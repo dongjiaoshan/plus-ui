@@ -2000,6 +2000,7 @@ export default {
       lastHarvestdate: 'Last Harvest',
       expectedYield: 'Expected Yield (kg)',
       actualYield: 'Actual Yield (kg)',
+      yieldRate: 'Yield Rate',
       finishedPlot: 'Finished Plots',
       completionRate: 'Completion Rate (%)',
       plantStatus: 'Planting Plan Status',
@@ -2024,7 +2025,7 @@ export default {
     unit: { mu: 'mu', month: 'Mo.' },
     kpi: {
       idlePlot: 'Idle Plots (Now)',
-      plantedPlot: 'Planted Plots (This Year)',
+      plantedPlot: 'Started Planting Plots (This Year)',
       plannedPlot: 'Planned Plots (This Year)',
       plotUsageFreq: 'Plot Usage Freq (This Year)',
       cropVarietyCount: 'Crop Varieties (This Year)'

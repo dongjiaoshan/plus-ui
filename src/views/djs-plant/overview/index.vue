@@ -33,7 +33,7 @@
     <!-- 作物卡片网格（el-row/el-col，每作物一卡，整卡可点击下钻） -->
     <el-empty v-if="!loading && crops.length === 0" :description="t('plantOverview.empty')" />
     <el-row v-else :gutter="12">
-      <el-col v-for="c in crops" :key="c.cropId" :xs="24" :sm="12" :md="8" :lg="6" :xl="6" class="crop-col">
+      <el-col v-for="c in sortedCrops" :key="c.cropId" :xs="24" :sm="12" :md="8" :lg="6" :xl="6" class="crop-col">
         <div class="crop-card" @click="goCropDetail(c)">
           <!-- 缩略图 + 作物名 + 当前已种 -->
           <div class="crop-head">
@@ -131,6 +131,11 @@ function completionRate(c: CropOverviewCardVO): string {
   const done = Number(c.donePlotCount ?? 0);
   return ((done / plan) * 100).toFixed(2);
 }
+
+/** 作物卡片按计划完成率升序（从左到右由低到高）排列（row44）；同率保持后端返回相对顺序（稳定排序）。 */
+const sortedCrops = computed<CropOverviewCardVO[]>(() =>
+  [...crops.value].sort((a, b) => Number(completionRate(a)) - Number(completionRate(b)))
+);
 
 /** 整卡点击下钻：打开作物详情抽屉（携 cropId + cropName 回填标题）。 */
 function goCropDetail(c: CropOverviewCardVO) {

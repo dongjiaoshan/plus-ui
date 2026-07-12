@@ -246,7 +246,11 @@ function renderGantt(type: 'plant' | 'pick') {
     if (type === 'plant') plantGanttChart = chart;
     else pickGanttChart = chart;
   }
-  const segs = gantt.value.filter((g) => g.type === type);
+  // 只显示未来/进行中的时间条：过滤掉已结束（endDate 早于今天）的历史已完成段，避免全年历史数据铺满（row42）
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayTs = todayStart.getTime();
+  const segs = gantt.value.filter((g) => g.type === type && new Date(g.endDate).getTime() >= todayTs);
   const currentYear = new Date().getFullYear();
   // y 轴类目 = 去重的甘特条文本
   const categories = Array.from(new Set(segs.map((s) => s.text)));
