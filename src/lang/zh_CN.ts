@@ -3821,6 +3821,10 @@ export default {
       pork: '猪肉产品',
       vegetable: '果蔬产品'
     },
+    subCategory: {
+      pork: '猪肉产品',
+      white_bar: '白条产品'
+    },
     mainTab: {
       operation: '退回操作',
       record: '退回记录'

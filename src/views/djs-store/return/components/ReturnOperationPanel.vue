@@ -8,10 +8,33 @@
       </el-radio-group>
     </div>
 
-    <!-- 猪肉产品：产品名称 / 退回产品重量(KG) -->
+    <!-- 猪肉产品：产品名称 / 退回量 / 单位 / 退回产品重量(KG)（DENGBO-R11：与果蔬一致；猪肉产品按份录退回量，白条产品仅按重量） -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
-      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="200" show-overflow-tooltip align="center" header-align="center" />
-      <el-table-column :label="t('storeReturn.operation.returnWeight')" width="320" align="center" header-align="center">
+      <el-table-column :label="t('storeReturn.column.productName')" min-width="180" show-overflow-tooltip align="center" header-align="center">
+        <template #default="{ row }">
+          {{ row.productName }}
+          <el-tag v-if="row.subCategory === 'white_bar'" size="small" type="warning" class="sub-tag" disable-transitions>{{ t('storeReturn.subCategory.white_bar') }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('storeReturn.column.returnQuantity')" width="200" align="center" header-align="center">
+        <template #default="{ row }">
+          <el-input-number
+            v-if="row.subCategory !== 'white_bar'"
+            v-model="row.returnQuantity"
+            :min="0"
+            :precision="2"
+            :step="1"
+            :placeholder="t('storeReturn.operation.quantityPlaceholder')"
+            controls-position="right"
+            style="width: 160px"
+          />
+          <span v-else class="text-muted">—</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
+        <template #default="{ row }">{{ row.productUnit || '—' }}</template>
+      </el-table-column>
+      <el-table-column :label="t('storeReturn.operation.returnWeight')" width="260" align="center" header-align="center">
         <template #default="{ row }">
           <el-input-number
             v-model="row.returnWeight"
@@ -20,7 +43,7 @@
             :step="1"
             :placeholder="t('storeReturn.operation.weightPlaceholder')"
             controls-position="right"
-            style="width: 260px"
+            style="width: 220px"
           />
         </template>
       </el-table-column>
@@ -72,7 +95,7 @@
 
 <script setup name="StoreReturnOperationPanel" lang="ts">
 import { batchCreateStoreReturn, listPorkReturnCandidates, listVegReturnCandidates } from '@/api/djs-store/return';
-import type { StoreReturnBatchItem } from '@/api/djs-store/return/types';
+import type { StoreReturnBatchItem, StoreReturnPorkSubCategory } from '@/api/djs-store/return/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
@@ -84,7 +107,9 @@ interface MatrixRow {
   productId: string;
   productName: string;
   productUnit?: string;
-  /** 退回量（果蔬录入，份/把/盒等） */
+  /** 猪肉 tab 子类（DENGBO-R11）：pork=猪肉产品(按份) / white_bar=白条产品(按重量)；果蔬 tab 行不设 */
+  subCategory?: StoreReturnPorkSubCategory;
+  /** 退回量（果蔬/猪肉产品录入，份/把/盒等；白条产品不录） */
   returnQuantity?: number;
   /** 退回产品重量(kg) */
   returnWeight?: number;
@@ -120,6 +145,7 @@ async function loadPorkCandidates() {
       productId: String(p.productId),
       productName: p.productName ?? '',
       productUnit: p.productUnit,
+      subCategory: p.subCategory ?? 'pork',
       returnQuantity: undefined,
       returnWeight: undefined
     }));
@@ -161,12 +187,14 @@ async function handleSubmit() {
   if (!storeId.value) {
     return;
   }
-  // 果蔬行：退回量 + 退回产品重量两值都必填（原型「果蔬同时录入退回量和对应重量」口径）
-  const vegPartial = vegRows.value.find(
+  // 果蔬行 + 猪肉产品行（subCategory=pork）：退回量 + 退回产品重量两值都必填（DENGBO-R11 猪肉与果蔬一致）。
+  // 白条产品行（subCategory=white_bar）：仅按重量退货，不校验退回量。
+  const bothRequiredRows = [...vegRows.value, ...porkRows.value.filter((r) => r.subCategory !== 'white_bar')];
+  const partial = bothRequiredRows.find(
     (r) => ((r.returnQuantity ?? 0) > 0 || (r.returnWeight ?? 0) > 0) && !((r.returnQuantity ?? 0) > 0 && (r.returnWeight ?? 0) > 0)
   );
-  if (vegPartial) {
-    proxy?.$modal.msgWarning(t('storeReturn.operation.vegBothRequired', { name: vegPartial.productName }));
+  if (partial) {
+    proxy?.$modal.msgWarning(t('storeReturn.operation.vegBothRequired', { name: partial.productName }));
     return;
   }
   const items: StoreReturnBatchItem[] = [...porkRows.value, ...vegRows.value]
@@ -211,6 +239,14 @@ onMounted(async () => {
   .op-footer {
     margin-top: 24px;
     text-align: center;
+  }
+
+  .sub-tag {
+    margin-left: 6px;
+  }
+
+  .text-muted {
+    color: #909399;
   }
 }
 </style>

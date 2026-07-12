@@ -3818,6 +3818,10 @@ export default {
       pork: 'Pork Products',
       vegetable: 'Produce Products'
     },
+    subCategory: {
+      pork: 'Pork Product',
+      white_bar: 'White-strip Product'
+    },
     mainTab: {
       operation: 'Return Entry',
       record: 'Return Records'

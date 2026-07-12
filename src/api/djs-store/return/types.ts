@@ -52,12 +52,18 @@ export interface StoreReturnVO {
   createTime?: string;
 }
 
-/** 退回操作「猪肉产品」tab 固定候选行（belong_type IN pork/white_bar，与门店关联无关） */
+/** 退回操作「猪肉产品」tab 子类（DENGBO-R11）：pork=猪肉产品(到店成品,按份) / white_bar=白条产品(字典,按重量) */
+export type StoreReturnPorkSubCategory = 'pork' | 'white_bar';
+
+/** 退回操作「猪肉产品」tab 候选行（猪肉产品=到店成品原材料 / 白条产品=djs_white_bar_return_product 字典） */
 export interface StoreReturnPorkCandidateVO {
   /** 产品雪花 ID（提交退回时作 productId） */
   productId: string;
   productName: string;
+  /** 单位：猪肉产品=产品自身单位(份)；白条产品=对应产品原材料单位 */
   productUnit?: string;
+  /** 子类（DENGBO-R11）：pork=猪肉产品(按份,退回量+单位+重量) / white_bar=白条产品(按重量) */
+  subCategory?: StoreReturnPorkSubCategory;
 }
 
 /** 退回操作「果蔬产品」tab 候选行（= 该门店当天已确认到店的果蔬需求产品，按 product_id 去重） */
