@@ -14,6 +14,7 @@
       row-key="id"
       selectable
       show-export
+      :action-width="220"
       perm-prefix="djs:common:store"
       @search="handleSearch"
       @reset="handleReset"

@@ -437,9 +437,10 @@ onUnmounted(() => {
 .inner-divider {
   margin: 14px 0;
 }
-/* 分隔线 + 「今日工作」段整体下沉到卡片底部，与右侧证书卡底部对齐（row29） */
+/* 分隔线在两段 KPI 之间的空白里垂直居中：上下等距（横线与上下卡片间距一致），
+   同时借上下 auto 外边距把「今日工作」段推向卡片底部、仍与右侧证书卡底部大致对齐。 */
 .kpi-card :deep(.el-card__body) > .inner-divider {
-  margin-top: auto;
+  margin: auto 0;
 }
 .cert-item {
   text-align: center;

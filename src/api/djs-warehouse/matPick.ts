@@ -149,6 +149,15 @@ export const listPorkBaskets = (params: { productId: string; keyword?: string })
   });
 };
 
+/** 领用软校验（row40.2#2）：原材料是否有对应生产成品（false=无对应成品应拦截，与 mp 同口径） */
+export const canIssueMaterial = (params: { productId?: string; plotId?: string }): AxiosPromise<boolean> => {
+  return request({
+    url: '/djs/warehouse/matPick/canIssueMaterial',
+    method: 'get',
+    params
+  });
+};
+
 /** 领用出库 */
 export const pickMat = (data: MatPickBody): AxiosPromise<number> => {
   return request({

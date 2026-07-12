@@ -100,7 +100,7 @@
 <script setup name="MatPick" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listMatPick, listPorkBaskets, pickMat, returnMat, lossMat, feedMat } from '@/api/djs-warehouse/matPick';
+import { listMatPick, listPorkBaskets, pickMat, returnMat, lossMat, feedMat, canIssueMaterial } from '@/api/djs-warehouse/matPick';
 import type { MatPickItemVO, MatBasketVO } from '@/api/djs-warehouse/matPick';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
@@ -163,17 +163,17 @@ const columns = computed<BizTableColumn[]>(() => {
   }
   cols.push(
     { prop: 'productName', label: t('matPick.column.productName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-    { prop: 'currentStock', label: t('matPick.column.currentStock'), minWidth: 100, align: 'center', formatter: (row: BizRow) => fmtNum(row.currentStock) },
+    { prop: 'currentStock', label: t('matPick.column.currentStock'), minWidth: 100, align: 'center', formatter: (row: BizRow) => fmtNum(row.currentStock, row.productUnit as string) },
     { prop: 'productUnit', label: t('matPick.column.productUnit'), minWidth: 70, align: 'center' }
   );
   if (tab === 'vegetable') {
     cols.push({ prop: 'plotCode', label: t('matPick.column.plotCode'), minWidth: 110, align: 'center' });
   }
   cols.push(
-    { prop: 'todayPicked', label: t('matPick.column.todayPicked'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayPicked) },
-    { prop: 'todayReturned', label: t('matPick.column.todayReturned'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayReturned) },
-    { prop: 'todayLoss', label: t('matPick.column.todayLoss'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayLoss) },
-    { prop: 'todayFeed', label: t('matPick.column.todayFeed'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayFeed) }
+    { prop: 'todayPicked', label: t('matPick.column.todayPicked'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayPicked, row.productUnit as string) },
+    { prop: 'todayReturned', label: t('matPick.column.todayReturned'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayReturned, row.productUnit as string) },
+    { prop: 'todayLoss', label: t('matPick.column.todayLoss'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayLoss, row.productUnit as string) },
+    { prop: 'todayFeed', label: t('matPick.column.todayFeed'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayFeed, row.productUnit as string) }
   );
   return cols;
 });
@@ -181,11 +181,16 @@ const columns = computed<BizTableColumn[]>(() => {
 /** 果蔬业态操作区多一个「饲料饲喂」按钮（4 个×4 字），加宽到 400 防换行；其余 3 个按钮 240 足够 */
 const actionColWidth = computed(() => (activeBelongType.value === 'vegetable' ? 400 : 240));
 
-/** BigDecimal→string 防 NaN 兜底，最多 3 位小数 */
-function fmtNum(v: number | string | undefined | null): string {
+/**
+ * BigDecimal→string 防 NaN 兜底。row40.2#4：kg 单位恒 3 位小数补零（对齐 mp + row30/31/33 精度约定，
+ * 如 620→620.000、119.7→119.700）；非 kg（枚/份/盒等计数单位）去尾零（避免 985 枚显 985.000）。
+ */
+function fmtNum(v: number | string | undefined | null, unit?: string): string {
   if (v === undefined || v === null || v === '') return '0';
   const n = Number(v);
-  return Number.isNaN(n) ? String(v) : n.toLocaleString('en-US', { maximumFractionDigits: 3 });
+  if (Number.isNaN(n)) return String(v);
+  const minDigits = unit === 'kg' ? 3 : 0;
+  return n.toLocaleString('en-US', { minimumFractionDigits: minDigits, maximumFractionDigits: 3 });
 }
 
 async function fetchList() {
@@ -306,6 +311,27 @@ async function submitOp() {
   const row = opRow.value;
   if (!row || opForm.quantity === undefined) return;
   const qty = opForm.quantity;
+  // row40.2#1：领用/饲喂前置校验——消耗量不能超过当前库存（对齐 mp「库存不足」；后端行锁仍是最终权威）。
+  //   opStock 猪肉取选中篮余量、其余取行库存。退回/损耗不在此校验（后端 row38 按篮 today 领用剩余保底）。
+  if ((opKind.value === 'pick' || opKind.value === 'feed') && qty > Number(opStock.value || 0)) {
+    proxy?.$modal.msgWarning(t('matPick.message.stockInsufficient'));
+    return;
+  }
+  // row40.2#2：领用前置软校验——原材料无对应生产成品则阻断（对齐 mp 友好提示；后端 row40.1 已硬拦兜底）。
+  if (opKind.value === 'pick') {
+    try {
+      const res = await canIssueMaterial({
+        productId: row.plotId ? undefined : row.productId,
+        plotId: row.plotId || undefined
+      });
+      if (res.data === false) {
+        proxy?.$modal.msgWarning(t('matPick.message.noFinishedProduct'));
+        return;
+      }
+    } catch {
+      // 校验端点异常不阻断领用（后端 pick 会硬拦），优雅降级
+    }
+  }
   // 猪肉产品行（row24）：粒度收敛为一产品一行，篮级 batchId / locationId 从弹框选中篮取；
   // 非猪肉行粒度：库位取该行 defaultLocationId。
   const pickedBasket = isPorkOp.value ? baskets.value.find((b) => b.batchId === opForm.batchId) : undefined;

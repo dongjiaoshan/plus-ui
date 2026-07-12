@@ -617,6 +617,10 @@ onMounted(() => {
 .dict-grid {
   row-gap: 16px;
 }
+/* 左右两卡等高：flex 行已拉伸两列，卡片填满列高即左右齐平（UI问题 row41） */
+.dict-card {
+  height: 100%;
+}
 
 .dict-card__header {
   display: flex;

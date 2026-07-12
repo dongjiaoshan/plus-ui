@@ -14,7 +14,12 @@
         />
       </div>
 
-      <el-table v-loading="loading" :data="rows" border stripe class="entry-table">
+      <!-- 品类切换：猪肉产品 / 果蔬产品 / 其他产品（DENGBO-R10）。切换只过滤视图，提交保存全部行。 -->
+      <el-tabs v-model="activeTab" class="belong-tabs">
+        <el-tab-pane v-for="tab in TABS" :key="tab" :name="tab" :label="`${t(`storeLedger.belongTab.${tab}`)} (${tabCount[tab]})`" />
+      </el-tabs>
+
+      <el-table v-loading="loading" :data="filteredRows" border stripe class="entry-table">
         <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
         <el-table-column :label="t('storeLedger.column.category')" width="100" align="center" header-align="center">
           <template #default="{ row }">
@@ -81,7 +86,7 @@
         </el-table-column>
       </el-table>
 
-      <el-empty v-if="!loading && !rows.length" :description="t('storeLedger.entry.emptyCandidates')" />
+      <el-empty v-if="!loading && !filteredRows.length" :description="t('storeLedger.entry.emptyCandidates')" />
     </div>
 
     <template #footer>
@@ -95,7 +100,7 @@
 
 <script setup name="StoreCheckEntryDrawer" lang="ts">
 import { listStoreLedgerCandidates, batchSaveStoreLedger } from '@/api/djs-store/ledger';
-import type { StoreLedgerBatchItem, StoreLedgerCandidateVO, StoreLedgerCategory } from '@/api/djs-store/ledger/types';
+import type { StoreLedgerBatchItem, StoreLedgerBelongTab, StoreLedgerCandidateVO, StoreLedgerCategory } from '@/api/djs-store/ledger/types';
 import { formatKg } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
@@ -114,6 +119,8 @@ interface EntryRow {
   /** 产品对应原材料单位：KG → 数据量按 kg 展示；其他 → 按产品单位换算成 g。空时回落 productUnit 口径。 */
   materialUnit: string;
   category: StoreLedgerCategory;
+  /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
+  belongTab: StoreLedgerBelongTab;
   /** 期初库存（只读） */
   openingQty: number;
   /** 当日入库量（新到货只读 / 猪肉手动） */
@@ -147,6 +154,18 @@ const ledgerDate = ref<string>(todayStr());
 const loading = ref(false);
 const submitLoading = ref(false);
 const rows = ref<EntryRow[]>([]);
+
+/** 产品品类页签（DENGBO-R10）：猪肉 / 果蔬 / 其他。切换只过滤视图，提交仍保存全部行。 */
+const TABS: StoreLedgerBelongTab[] = ['pork', 'veg', 'other'];
+const activeTab = ref<StoreLedgerBelongTab>('pork');
+/** 各 tab 行数（页签标题带计数） */
+const tabCount = computed<Record<StoreLedgerBelongTab, number>>(() => {
+  const c: Record<StoreLedgerBelongTab, number> = { pork: 0, veg: 0, other: 0 };
+  for (const r of rows.value) c[r.belongTab] = (c[r.belongTab] ?? 0) + 1;
+  return c;
+});
+/** 当前 tab 过滤后的行（表格 :data 绑这个） */
+const filteredRows = computed<EntryRow[]>(() => rows.value.filter((r) => r.belongTab === activeTab.value));
 
 function nz(v: number | string | undefined): number {
   const n = Number(v ?? 0);
@@ -190,8 +209,8 @@ function fmtQty(value: number | string | null | undefined, row: { materialUnit?:
   if (isGramUnit(row.materialUnit || row.productUnit)) {
     return `${Number(value)} g`;
   }
-  // 计件（份 / 盒等）原样展示
-  return String(value);
+  // 计件（份 / 盒等）：去尾零显整数（DENGBO-R10：到店量按份显示，如 demand 3.000 → 3）
+  return String(Number(value));
 }
 
 /** 可编辑量输入框小数位：原材料单位为 KG / g（克，如 3.95）→ 3 位小数，否则 0 位（整数件数）。 */
@@ -246,6 +265,7 @@ async function loadCandidates() {
         // TODO(后端轨)：候选 VO 补 materialUnit 后，数据量口径按原材料单位（KG→kg / 其他→产品单位）判定；缺省回落 productUnit。
         materialUnit: c.materialUnit ?? '',
         category: c.category,
+        belongTab: c.belongTab ?? 'other',
         openingQty: nz(c.openingQty),
         inboundQty: nz(c.inboundQty),
         inboundReadonly,
@@ -259,6 +279,8 @@ async function loadCandidates() {
       recalc(r);
       return r;
     });
+    // 默认落在第一个有数据的 tab（猪肉→果蔬→其他），避免开在空页签
+    activeTab.value = TABS.find((tab) => rows.value.some((r) => r.belongTab === tab)) ?? 'pork';
   } finally {
     loading.value = false;
   }

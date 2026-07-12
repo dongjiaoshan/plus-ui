@@ -3,7 +3,8 @@
     <el-row :gutter="20">
       <!-- 部门树 -->
       <el-col :lg="4" :xs="24" style="">
-        <el-card shadow="hover">
+        <!-- h-full：部门树卡延伸到底部，与右侧列表卡底对齐（UI问题 row40） -->
+        <el-card shadow="hover" class="h-full">
           <el-input v-model="deptName" placeholder="请输入部门名称" prefix-icon="Search" clearable />
           <el-tree
             ref="deptTreeRef"

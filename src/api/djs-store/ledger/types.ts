@@ -28,6 +28,8 @@ export interface StoreLedgerLineVO {
   productId: string;
   productName?: string;
   productUnit?: string;
+  /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
+  belongTab?: StoreLedgerBelongTab;
   ledgerDate: string;
   openingQty: number | string;
   inboundQty: number | string;
@@ -44,8 +46,11 @@ export interface StoreLedgerLineVO {
   createTime?: string;
 }
 
-/** 候选类别：pork=猪肉 / inbound=新到货 / stock=昨日库存。 */
+/** 候选类别（来源）：pork=猪肉 / inbound=新到货 / stock=昨日库存。 */
 export type StoreLedgerCategory = 'pork' | 'inbound' | 'stock';
+
+/** 产品品类页签（DENGBO-R10）：pork=猪肉产品 / veg=果蔬产品 / other=其他产品。 */
+export type StoreLedgerBelongTab = 'pork' | 'veg' | 'other';
 
 /** 当日盘点候选行（新增当日盘点 GET：三类产品并集 + 预填量）。 */
 export interface StoreLedgerCandidateVO {
@@ -59,8 +64,10 @@ export interface StoreLedgerCandidateVO {
    */
   materialUnit?: string;
   productSpec?: string;
-  /** 候选类别：pork=猪肉 / inbound=新到货 / stock=昨日库存 */
+  /** 候选类别（来源）：pork=猪肉 / inbound=新到货 / stock=昨日库存 */
   category: StoreLedgerCategory;
+  /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
+  belongTab?: StoreLedgerBelongTab;
   /** 期初库存（库存表当前结存，只读） */
   openingQty: number | string;
   /** 预填入库量（新到货=发货量；猪肉可手动编辑） */

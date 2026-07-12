@@ -752,7 +752,7 @@ export default {
       breedingEmpty: 'No breeding / farrow / wean records',
       medEmpty: 'No medication / treatment records',
       breedingCol: {
-        changeTime: 'Time',
+        changeTime: 'Date',
         eventType: 'Event',
         transition: 'State change',
         relatedEventId: 'Related ID',
@@ -1886,7 +1886,7 @@ export default {
       cropCode: 'Enter crop code (e.g. C001)',
       cropName: 'Enter crop name',
       varietyName: 'Variety name',
-      varietyOrigin: 'Origin / supplier (free text in V1)',
+      varietyOrigin: 'Enter origin / supplier',
       cropFamily: 'Select family',
       relatedProduct: 'Select related product',
       plantingSeason: 'Select seasons',
@@ -2293,7 +2293,9 @@ export default {
       basketRequired: 'Please select a source basket'
     },
     message: {
-      success: 'Operation succeeded'
+      success: 'Operation succeeded',
+      stockInsufficient: 'Insufficient stock: quantity cannot exceed current stock',
+      noFinishedProduct: 'This material has no corresponding production product and cannot be issued; please create one first'
     }
   },
   stockOverview: {
@@ -3895,6 +3897,11 @@ export default {
       pork: 'Pork',
       inbound: 'New Arrival',
       stock: 'Yesterday Stock'
+    },
+    belongTab: {
+      pork: 'Pork Products',
+      veg: 'Vegetable Products',
+      other: 'Other Products'
     },
     action: {
       newEntry: 'New Daily Check',

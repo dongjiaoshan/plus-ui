@@ -752,7 +752,7 @@ export default {
       breedingEmpty: '暂无配种 / 分娩 / 断奶记录',
       medEmpty: '暂无用药 / 治疗记录',
       breedingCol: {
-        changeTime: '发生时间',
+        changeTime: '发生日期',
         eventType: '事件',
         transition: '状态变化',
         relatedEventId: '关联业务 ID',
@@ -1889,7 +1889,7 @@ export default {
       cropCode: '请输入作物编码（如 C001）',
       cropName: '请输入作物名称（如 白菜）',
       varietyName: '品种名（如 京白菜 4 号）',
-      varietyOrigin: '品种来源/供应商（V1 自由文本）',
+      varietyOrigin: '请输入品种来源/供应商',
       cropFamily: '请选择作物科属',
       relatedProduct: '请选择关联产品',
       plantingSeason: '多选种植季节',
@@ -2296,7 +2296,9 @@ export default {
       basketRequired: '请选择源篮子'
     },
     message: {
-      success: '操作成功'
+      success: '操作成功',
+      stockInsufficient: '库存不足，数量不能超过当前库存',
+      noFinishedProduct: '该原材料没有对应的生产产品，无法领用，请先创建对应的生产产品'
     }
   },
   stockOverview: {
@@ -3898,6 +3900,11 @@ export default {
       pork: '猪肉',
       inbound: '新到货',
       stock: '昨日库存'
+    },
+    belongTab: {
+      pork: '猪肉产品',
+      veg: '果蔬产品',
+      other: '其他产品'
     },
     action: {
       newEntry: '新增当日盘点',

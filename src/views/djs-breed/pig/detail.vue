@@ -68,14 +68,14 @@
       <el-tab-pane v-if="detail.pigType === 'sow'" :label="t('pig.detail.tab.performance')" name="performance" lazy>
         <div v-if="perfLoading" v-loading="perfLoading" class="loading-box" />
         <el-empty v-else-if="!performance.length" :description="t('pig.detail.performanceEmpty')" />
-        <el-table v-else :data="performance" border size="small">
-          <el-table-column prop="parity" :label="t('pig.column.parity')" width="80" align="center" header-align="center" />
-          <el-table-column prop="totalBorn" :label="t('pig.perf.totalBorn')" width="100" align="center" header-align="center" />
-          <el-table-column prop="totalLiveBorn" :label="t('pig.perf.totalLiveBorn')" width="100" align="center" header-align="center" />
-          <el-table-column prop="totalWeaned" :label="t('pig.perf.totalWeaned')" width="100" align="center" header-align="center" />
-          <el-table-column prop="avgBornWeight" :label="t('pig.perf.avgBornWeight')" width="120" align="center" header-align="center" />
-          <el-table-column prop="avgWeanedWeight" :label="t('pig.perf.avgWeanedWeight')" width="120" align="center" header-align="center" />
-          <el-table-column prop="lastUpdateDate" :label="t('pig.perf.lastUpdateDate')" width="120" align="center" header-align="center" />
+        <el-table v-else :data="performance" border size="small" style="width: 100%">
+          <el-table-column prop="parity" :label="t('pig.column.parity')" min-width="80" align="center" header-align="center" />
+          <el-table-column prop="totalBorn" :label="t('pig.perf.totalBorn')" min-width="100" align="center" header-align="center" />
+          <el-table-column prop="totalLiveBorn" :label="t('pig.perf.totalLiveBorn')" min-width="100" align="center" header-align="center" />
+          <el-table-column prop="totalWeaned" :label="t('pig.perf.totalWeaned')" min-width="100" align="center" header-align="center" />
+          <el-table-column prop="avgBornWeight" :label="t('pig.perf.avgBornWeight')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="avgWeanedWeight" :label="t('pig.perf.avgWeanedWeight')" min-width="120" align="center" header-align="center" />
+          <el-table-column prop="lastUpdateDate" :label="t('pig.perf.lastUpdateDate')" min-width="120" align="center" header-align="center" />
         </el-table>
         <div class="hint mt-2">
           {{ t('pig.detail.performanceDataHint') }}
@@ -87,7 +87,7 @@
         <div v-if="historyLoading" v-loading="historyLoading" class="loading-box" />
         <el-empty v-else-if="!history.length" :description="t('pig.detail.historyEmpty')" />
         <el-table v-else :data="history" border size="small">
-          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" header-align="center" />
+          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" header-align="center" :formatter="dateOnly" />
           <el-table-column :label="t('pig.detail.breedingCol.eventType')" width="110" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="eventDict" :value="row.eventType" />
@@ -116,7 +116,7 @@
         <div v-if="historyLoading" v-loading="historyLoading" class="loading-box" />
         <el-empty v-else-if="!breedingRows.length" :description="t('pig.detail.breedingEmpty')" />
         <el-table v-else :data="breedingRows" border size="small">
-          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" header-align="center" />
+          <el-table-column prop="changeTime" :label="t('pig.detail.breedingCol.changeTime')" width="170" align="center" header-align="center" :formatter="dateOnly" />
           <el-table-column :label="t('pig.detail.breedingCol.eventType')" width="110" align="center" header-align="center">
             <template #default="{ row }">
               <dict-tag :options="eventDict" :value="row.eventType" />
@@ -141,7 +141,7 @@
         <div v-if="medLoading" v-loading="medLoading" class="loading-box" />
         <el-empty v-else-if="!medRows.length" :description="t('pig.detail.medEmpty')" />
         <el-table v-else :data="medRows" border size="small">
-          <el-table-column prop="useDate" :label="t('pig.detail.medCol.useDate')" width="120" align="center" header-align="center" />
+          <el-table-column prop="useDate" :label="t('pig.detail.medCol.useDate')" width="120" align="center" header-align="center" :formatter="dateOnly" />
           <el-table-column prop="medicineName" :label="t('pig.detail.medCol.medicineName')" min-width="120" align="center" header-align="center" />
           <el-table-column :label="t('pig.detail.medCol.medicineType')" width="100" align="center" header-align="center">
             <template #default="{ row }">
@@ -214,6 +214,12 @@ const {
 );
 
 const pigId = computed(() => String(route.params.id ?? ''));
+
+// 日期列只显示到日（后端返回 datetime，如 2026-07-09 12:00:00 → 2026-07-09）
+function dateOnly(_row: any, _col: any, val: any): string {
+  if (!val) return '—';
+  return String(val).slice(0, 10);
+}
 
 const detail = ref<PigDetailVO | null>(null);
 const loading = ref(false);
