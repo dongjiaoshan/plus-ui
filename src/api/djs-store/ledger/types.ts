@@ -28,6 +28,10 @@ export interface StoreLedgerLineVO {
   productId: string;
   productName?: string;
   productUnit?: string;
+  /**
+   * 白条产品（DENGBO-R12）对应原材料单位（KG → 按重量展示，保留 3 位）；仅白条产品行有值，其余回落 productUnit。
+   */
+  materialUnit?: string;
   /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
   belongTab?: StoreLedgerBelongTab;
   ledgerDate: string;
@@ -46,8 +50,8 @@ export interface StoreLedgerLineVO {
   createTime?: string;
 }
 
-/** 候选类别（来源）：pork=猪肉 / inbound=新到货 / stock=昨日库存。 */
-export type StoreLedgerCategory = 'pork' | 'inbound' | 'stock';
+/** 候选类别（来源）：pork=猪肉成品 / white_bar=白条产品(DENGBO-R12) / inbound=新到货 / stock=昨日库存。 */
+export type StoreLedgerCategory = 'pork' | 'white_bar' | 'inbound' | 'stock';
 
 /** 产品品类页签（DENGBO-R10）：pork=猪肉产品 / veg=果蔬产品 / other=其他产品。 */
 export type StoreLedgerBelongTab = 'pork' | 'veg' | 'other';
@@ -64,7 +68,7 @@ export interface StoreLedgerCandidateVO {
    */
   materialUnit?: string;
   productSpec?: string;
-  /** 候选类别（来源）：pork=猪肉 / inbound=新到货 / stock=昨日库存 */
+  /** 候选类别（来源）：pork=猪肉成品 / white_bar=白条产品 / inbound=新到货 / stock=昨日库存 */
   category: StoreLedgerCategory;
   /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
   belongTab?: StoreLedgerBelongTab;

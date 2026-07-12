@@ -2296,7 +2296,9 @@ export default {
     message: {
       success: 'Operation succeeded',
       stockInsufficient: 'Insufficient stock: quantity cannot exceed current stock',
-      noFinishedProduct: 'This material has no corresponding production product and cannot be issued; please create one first'
+      noFinishedProduct: 'This material has no corresponding production product and cannot be issued; please create one first',
+      noPickedRemaining: 'No picked remaining for this plot/ear today; loss cannot be recorded',
+      lossExceedRemaining: 'Loss quantity cannot exceed today picked remaining ({remaining})'
     }
   },
   stockOverview: {
@@ -3112,6 +3114,7 @@ export default {
       shippedCount: 'Shipped',
       storeCount: 'Stores',
       materialQty: 'Material Qty',
+      materialUnit: 'Material Unit',
       confirmRate: 'Confirm Rate',
       lastConfirmTime: 'Last Confirm Time',
       expectedArriveDate: 'Expected',
@@ -3900,6 +3903,7 @@ export default {
     },
     category: {
       pork: 'Pork',
+      white_bar: 'White-strip Product',
       inbound: 'New Arrival',
       stock: 'Yesterday Stock'
     },

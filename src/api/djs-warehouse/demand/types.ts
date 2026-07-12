@@ -108,6 +108,8 @@ export interface DemandGroupVO {
   demandQuantity: number | string;
   materialQty?: number | string;
   productUnit?: string;
+  /** 原材料单位（原材料产品 product_unit；未配原材料时为空）。row54。 */
+  materialUnit?: string;
   storeCount: number;
   confirmedStoreCount: number;
   /** 三态：PENDING 待确认 / ALL_CONFIRMED 已全部确认 / PARTIAL 部分确认。 */

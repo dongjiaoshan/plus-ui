@@ -17,7 +17,7 @@
       <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center" :formatter="qtyFormatter" />
       <el-table-column prop="closingQty" :label="t('storeLedger.column.closingQty')" width="110" align="center" header-align="center" fixed="right">
         <template #default="{ row }">
-          <span class="closing">{{ fmtQty(row.closingQty, row.productUnit) }}</span>
+          <span class="closing">{{ fmtQty(row.closingQty, row.materialUnit || row.productUnit) }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -66,9 +66,9 @@ function fmtQty(value: number | string | null | undefined, unit?: string): strin
   return Number.isNaN(n) ? '-' : n.toFixed(3);
 }
 
-/** el-table 列 formatter 适配（row / column / cellValue / index）。 */
+/** el-table 列 formatter 适配（row / column / cellValue / index）。白条产品行按原材料单位（materialUnit）判重量口径。 */
 function qtyFormatter(row: StoreLedgerLineVO, _column: unknown, cellValue: number | string | null | undefined): string {
-  return fmtQty(cellValue, row.productUnit);
+  return fmtQty(cellValue, row.materialUnit || row.productUnit);
 }
 
 const title = computed(() => t('storeLedger.detail.titleByDate', { date: currentDate.value || '-' }));

@@ -225,8 +225,9 @@ function categoryLabel(c: StoreLedgerCategory): string {
   return t(`storeLedger.category.${c}`);
 }
 
-function categoryTagType(c: StoreLedgerCategory): 'success' | 'warning' | 'info' {
+function categoryTagType(c: StoreLedgerCategory): 'success' | 'warning' | 'info' | 'primary' {
   if (c === 'pork') return 'success';
+  if (c === 'white_bar') return 'primary';
   if (c === 'inbound') return 'warning';
   return 'info';
 }
@@ -256,8 +257,8 @@ async function loadCandidates() {
     const res = await listStoreLedgerCandidates(storeId.value, ledgerDate.value);
     const candidates = (res.data ?? []) as StoreLedgerCandidateVO[];
     rows.value = candidates.map((c) => {
-      // 入库只读：后端 inboundReadonly 为准；猪肉行（category=pork）可手动编辑。
-      const inboundReadonly = c.inboundReadonly !== false && c.category !== 'pork';
+      // 入库只读：后端 inboundReadonly 为准；猪肉成品 / 白条产品行（DENGBO-R12）可手动编辑。
+      const inboundReadonly = c.inboundReadonly !== false && c.category !== 'pork' && c.category !== 'white_bar';
       const r: EntryRow = {
         productId: String(c.productId),
         productName: c.productName ?? '',

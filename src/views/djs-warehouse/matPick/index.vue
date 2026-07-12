@@ -317,6 +317,21 @@ async function submitOp() {
     proxy?.$modal.msgWarning(t('matPick.message.stockInsufficient'));
     return;
   }
+  // row50：损耗前置校验——损耗扣的是「今日领用剩余量」（今日出库−退回−损耗−饲喂，与列表展示口径一致），
+  //   非仓库库存。对应地块/耳号今日无领用剩余量时禁止录损耗，且损耗量不超过今日领用剩余
+  //   （猪肉按篮的最终权威仍是后端 lossPorkEar，此为行级前置软校验）。
+  if (opKind.value === 'loss') {
+    const remaining =
+      Number(row.todayPicked || 0) - Number(row.todayReturned || 0) - Number(row.todayLoss || 0) - Number(row.todayFeed || 0);
+    if (remaining <= 0) {
+      proxy?.$modal.msgWarning(t('matPick.message.noPickedRemaining'));
+      return;
+    }
+    if (qty > remaining) {
+      proxy?.$modal.msgWarning(t('matPick.message.lossExceedRemaining', { remaining: Number(remaining.toFixed(3)) }));
+      return;
+    }
+  }
   // row40.2#2：领用前置软校验——原材料无对应生产成品则阻断（对齐 mp 友好提示；后端 row40.1 已硬拦兜底）。
   if (opKind.value === 'pick') {
     try {

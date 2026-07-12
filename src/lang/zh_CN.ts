@@ -2299,7 +2299,9 @@ export default {
     message: {
       success: '操作成功',
       stockInsufficient: '库存不足，数量不能超过当前库存',
-      noFinishedProduct: '该原材料没有对应的生产产品，无法领用，请先创建对应的生产产品'
+      noFinishedProduct: '该原材料没有对应的生产产品，无法领用，请先创建对应的生产产品',
+      noPickedRemaining: '对应地块/耳号今日无领用剩余量，无法录入损耗',
+      lossExceedRemaining: '损耗数量不能超过今日领用剩余（{remaining}）'
     }
   },
   stockOverview: {
@@ -3115,6 +3117,7 @@ export default {
       shippedCount: '已发货',
       storeCount: '需求门店数量',
       materialQty: '原材料计算量',
+      materialUnit: '原材料单位',
       confirmRate: '需求确认率',
       lastConfirmTime: '需求最终确认时间',
       expectedArriveDate: '期望到货',
@@ -3903,6 +3906,7 @@ export default {
     },
     category: {
       pork: '猪肉',
+      white_bar: '白条产品',
       inbound: '新到货',
       stock: '昨日库存'
     },

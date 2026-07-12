@@ -154,6 +154,13 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => formatInt((row as unknown as DemandGroupVO).demandQuantity)
   },
+  {
+    prop: 'productUnit',
+    label: t('demand.column.productUnit'),
+    minWidth: 100,
+    align: 'center',
+    formatter: (row: BizRow) => (row as unknown as DemandGroupVO).productUnit || '-'
+  },
   { prop: 'belongType', label: t('demand.column.productType'), minWidth: 120, align: 'center', dictType: 'djs_belong_type' },
   { prop: 'rawMaterial', label: t('demand.column.rawMaterial'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   {
@@ -162,6 +169,13 @@ const columns = computed<BizTableColumn[]>(() => [
     minWidth: 120,
     align: 'center',
     formatter: (row: BizRow) => formatNumber((row as unknown as DemandGroupVO).materialQty)
+  },
+  {
+    prop: 'materialUnit',
+    label: t('demand.column.materialUnit'),
+    minWidth: 100,
+    align: 'center',
+    formatter: (row: BizRow) => (row as unknown as DemandGroupVO).materialUnit || '-'
   },
   {
     prop: 'storeCount',
