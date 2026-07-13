@@ -670,6 +670,18 @@ const wipStockMap = computed<Record<string, number | null>>(() => {
     // g 展示成 4500g 丢掉 2g（领用5000g打包502g应剩4498g，原显4500g）。
     m[String(p.id)] = Math.round(w * 1000) / 1000;
   });
+  // admin row57：肉品打包(earGroup) 选中耳号后，当前选中产品卡「领用剩余重量」应显该耳号的领用剩余(per-ear)，
+  // 而非跨耳号合计——同一原料从多个猪只耳号领用时，切换耳号剩余重量随之变化。仅覆盖选中产品，其余卡仍显合计。
+  if (props.earGroup && selectedEarNo.value && selectedProduct.value) {
+    const matId = effectiveMaterialId(selectedProduct.value);
+    let earWeight = 0;
+    effectiveSources.value.forEach((s) => {
+      if (String(s.productId) !== matId) return;
+      if (String(s.earNo) !== String(selectedEarNo.value)) return;
+      earWeight += Number(s.productWeight) || 0;
+    });
+    m[String(selectedProduct.value.id)] = Math.round(earWeight * 1000) / 1000;
+  }
   return m;
 });
 

@@ -2276,6 +2276,7 @@ export default {
       locationName: 'Location',
       currentStock: 'Current Stock',
       quantity: 'Quantity',
+      pickQuantity: 'Pick Quantity',
       remark: 'Remark',
       basket: 'Source Basket'
     },
@@ -2882,6 +2883,7 @@ export default {
         earNo: 'Ear No.',
         outMethod: 'Out Method',
         outDest: 'Out Dest',
+        storeName: 'Store',
         productWeight: 'Out Quantity',
         productUnit: 'Unit',
         operator: 'Operator'

@@ -14,8 +14,7 @@
               :type="selectedKey === pigKey(p) ? 'warning' : 'info'"
               @click="selectPig(p)"
             >
-              {{ p.whiteBarNo ?? p.earNo }}
-              <text v-if="p.whiteBarNo" class="chip-ear">{{ p.earNo }}</text>
+              {{ p.earNo || p.whiteBarNo }}
               <text class="chip-weight">{{ chipWeightText(p) }}</text>
             </el-tag>
             <el-empty v-if="!pigLoading && !pigs.length" :description="t('storeTrace.pork.noPig')" :image-size="60" />
@@ -30,7 +29,7 @@
               @click="form.cutLabel = c.value"
             >
               <div class="cut-img-wrap">
-                <el-image v-if="cutImgMap[c.label]" :src="cutImgMap[c.label]" fit="cover" class="cut-img" :preview-disabled="true">
+                <el-image v-if="cardImg(c)" :src="cardImg(c)" fit="cover" class="cut-img" :preview-disabled="true">
                   <template #error>
                     <div class="cut-img-ph">
                       <el-icon><Food /></el-icon>
@@ -107,6 +106,7 @@
 import { Food } from '@element-plus/icons-vue';
 import { listTraceablePig, genStoreTraceCode, listStorePackProducts } from '@/api/djs-store/trace';
 import type { TraceablePigVO, StorePackProductVO } from '@/api/djs-store/trace/types';
+import { listByIds as listOssByIds } from '@/api/system/oss';
 import TraceLabelDialog from './TraceLabelDialog.vue';
 import WeightNumpad from '@/views/djs-warehouse/production/packEntry/components/WeightNumpad.vue';
 import { useStoreContextStore } from '@/store/modules/storeContext';
@@ -150,24 +150,39 @@ const LOCAL_CUT_IMG: Record<string, string> = {
 };
 // 部位中文名 → imageUrl：用本地原型抠图（前腿肉/五花肉/排骨/肘子/大排）
 const cutImgMap = ref<Record<string, string>>({ ...LOCAL_CUT_IMG });
+// admin row62：门店打包产品配置图 ossId → url（product_thumb 优先、回落 image_oss_id）
+const ossUrlMap = ref<Record<string, string>>({});
 
 const form = reactive<{ cutLabel?: string; weight?: number }>({ cutLabel: undefined, weight: undefined });
 
 const selectedPig = computed(() => pigs.value.find((p) => pigKey(p) === selectedKey.value) ?? null);
 // 产品卡数据源：优先「门店打包间(workshop=5)」产品（产品名做卡片标题 + 生码 cutLabel）；
 // 无 workshop=5 产品时回退旧部位字典 djs_pork_cut_product，保证功能不空。
-const cutOptions = computed<{ label: string; value: string }[]>(() => {
+const cutOptions = computed<{ label: string; value: string; productThumb?: string; imageOssId?: string }[]>(() => {
   if (packProducts.value.length) {
-    return packProducts.value.map((p) => ({ label: p.productName, value: p.productName }));
+    return packProducts.value.map((p) => ({
+      label: p.productName,
+      value: p.productName,
+      productThumb: p.productThumb,
+      imageOssId: p.imageOssId
+    }));
   }
   return (djs_pork_cut_product?.value ?? []) as { label: string; value: string }[];
 });
+// admin row62：产品卡图优先取产品配置图（COALESCE(product_thumb, image_oss_id) → oss url）；
+// 回退部位字典分支无图字段则走本地部位抠图；都没有则模板占位。
+function cardImg(c: { label: string; productThumb?: string; imageOssId?: string }): string | undefined {
+  const ossId = c.productThumb || c.imageOssId;
+  if (ossId && ossUrlMap.value[String(ossId)]) return ossUrlMap.value[String(ossId)];
+  return cutImgMap.value[c.label];
+}
 const canGen = computed(() => !!selectedKey.value && !!form.cutLabel && (form.weight ?? 0) > 0);
 
 // ---- 白条剩余可打包重量（到货 − 已现场打包；≤0 禁选） ----
 function fmtKg(v?: number): string {
+  // admin row63：白条 chip 重量（剩余/到货）显示 3 位小数（如 4.600/4.800kg）
   const n = Number(v ?? 0);
-  return Number.isFinite(n) ? String(n) : '0';
+  return Number.isFinite(n) ? n.toFixed(3) : '0.000';
 }
 function remainingOf(p?: TraceablePigVO | null): number {
   return Number(p?.remainingWeight ?? 0);
@@ -186,6 +201,11 @@ async function loadPigs() {
   try {
     const res = await listTraceablePig({ pageNum: 1, pageSize: 200 });
     pigs.value = (res.rows ?? res.data ?? []) as TraceablePigVO[];
+    // admin row61：进页自动选中第一个可用(未打包完)白条，无需用户手点；全用完则不选。
+    if (!selectedKey.value) {
+      const first = pigs.value.find((p) => !isExhausted(p));
+      if (first) selectedKey.value = pigKey(first);
+    }
   } finally {
     pigLoading.value = false;
   }
@@ -199,6 +219,27 @@ async function loadPackProducts() {
   } catch (e) {
     console.warn('[PorkTracePanel] loadPackProducts failed', e);
     packProducts.value = [];
+  }
+}
+
+// admin row62：批量取门店打包产品配置图 url（product_thumb 优先、回落 image_oss_id）。
+// listByIds 走 /resource/oss/listByIds 需 system:oss:query；djs 角色若 403 静默降级（不阻断卡片渲染）。
+async function loadProductImages() {
+  const ids = Array.from(new Set(packProducts.value.map((p) => p.productThumb || p.imageOssId).filter((v): v is string => !!v)));
+  if (!ids.length) {
+    ossUrlMap.value = {};
+    return;
+  }
+  try {
+    const res = await listOssByIds(ids.join(','));
+    const map: Record<string, string> = {};
+    (res.data ?? []).forEach((o: any) => {
+      if (o?.ossId != null && o?.url) map[String(o.ossId)] = o.url;
+    });
+    ossUrlMap.value = map;
+  } catch (e) {
+    console.warn('[PorkTracePanel] loadProductImages failed', e);
+    ossUrlMap.value = {};
   }
 }
 
@@ -258,6 +299,7 @@ function todayYmd(): string {
 onMounted(async () => {
   await loadPigs();
   await loadPackProducts();
+  await loadProductImages();
 });
 </script>
 
@@ -298,12 +340,6 @@ onMounted(async () => {
       margin: 0 8px 8px 0;
       cursor: pointer;
       font-size: 14px;
-
-      .chip-ear {
-        margin-left: 4px;
-        font-size: 11px;
-        opacity: 0.7;
-      }
 
       .chip-weight {
         margin-left: 4px;

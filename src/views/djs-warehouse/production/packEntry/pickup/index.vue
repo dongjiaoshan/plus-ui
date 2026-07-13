@@ -393,8 +393,10 @@ onMounted(async () => {
   font-size: 13px;
 }
 .bar-row-label {
-  width: 76px;
-  flex: 0 0 76px;
+  /* r80：加宽到容纳最长 6 字 label「白条入库重量」单行不折 */
+  width: 88px;
+  flex: 0 0 88px;
+  white-space: nowrap;
   color: var(--el-text-color-secondary);
 }
 .bar-row-value {

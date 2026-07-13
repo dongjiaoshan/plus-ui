@@ -2279,6 +2279,7 @@ export default {
       locationName: '存储库位',
       currentStock: '当前库存',
       quantity: '数量',
+      pickQuantity: '领用量',
       remark: '备注',
       basket: '源篮子'
     },
@@ -2885,6 +2886,7 @@ export default {
         earNo: '猪只耳号',
         outMethod: '出库方式',
         outDest: '出库去向',
+        storeName: '门店',
         productWeight: '出库量',
         productUnit: '单位',
         operator: '操作人'

@@ -94,14 +94,15 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'returnDate', label: t('storeReturn.column.returnDate'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'productTypeLabel', label: t('storeReturn.column.productType'), width: 110, align: 'center' },
-  { prop: 'productCode', label: t('storeReturn.column.productCode'), width: 110, align: 'center', showOverflowTooltip: true },
-  { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 130, showOverflowTooltip: true },
+  // r85：多列用 minWidth 让 el-table 把富余宽度按比例分摊，避免 productName 单列独吞成大片空白
+  { prop: 'productCode', label: t('storeReturn.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 180, showOverflowTooltip: true },
   { prop: 'returnQuantity', label: t('storeReturn.column.returnQuantity'), width: 90, align: 'right' },
   { prop: 'unit', label: t('storeReturn.column.unit'), width: 70, align: 'center' },
   { prop: 'goodsWeight', label: t('storeReturn.column.goodsWeight'), width: 100, align: 'right', formatter: (row) => formatNum3(row.goodsWeight) },
   { prop: 'receivedQty', label: t('storeReturn.column.receivedQty'), width: 100, align: 'right' },
   { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), width: 110, align: 'right', formatter: (row) => formatNum3(row.receivedWeight) },
-  { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), width: 110, align: 'center', dictType: 'djs_store_return_status' }
+  { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), minWidth: 120, align: 'center', dictType: 'djs_store_return_status' }
 ]);
 
 async function fetchList() {

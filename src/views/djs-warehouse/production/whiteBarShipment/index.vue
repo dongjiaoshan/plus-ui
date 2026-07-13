@@ -90,6 +90,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'earNo', label: t('djs.warehouse.whiteBarShipment.earNo'), minWidth: 150, align: 'center' },
   { prop: 'outMethod', label: t('djs.warehouse.whiteBarShipment.outMethod'), minWidth: 100, align: 'center' },
   { prop: 'outDest', label: t('djs.warehouse.whiteBarShipment.outDest'), dictType: 'djs_stock_out_dest', minWidth: 100, align: 'center' },
+  { prop: 'storeName', label: t('djs.warehouse.whiteBarShipment.storeName'), minWidth: 120, align: 'center' },
   { prop: 'productWeight', label: t('djs.warehouse.whiteBarShipment.productWeight'), minWidth: 100, align: 'center' },
   { prop: 'productUnit', label: t('djs.warehouse.whiteBarShipment.productUnit'), minWidth: 70, align: 'center' },
   { prop: 'operatorName', label: t('djs.warehouse.whiteBarShipment.operator'), minWidth: 100, align: 'center' }

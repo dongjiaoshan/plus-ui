@@ -328,25 +328,26 @@ onMounted(async () => {
   min-width: 0;
 }
 /* row121①：右侧操作栏整体收紧（更小内边距 / 段间距 / 控件高度），对齐截图红框更紧凑的诉求 */
+/* r81：面板过于紧凑（上一轮收紧过头），放大回 pickup 页那档，控件与左侧产品卡成比例 */
 .station-right {
-  flex: 0 0 380px;
-  width: 380px;
+  flex: 0 0 440px;
+  width: 440px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 16px;
+  padding: 24px;
   background: var(--el-bg-color);
 }
 .panel-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 18px;
   color: var(--el-text-color-secondary);
 }
 .panel-section {
-  margin-bottom: 14px;
+  margin-bottom: 22px;
 }
 .panel-label {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--el-text-color-regular);
   margin-bottom: 6px;
 }
@@ -363,43 +364,43 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 14px;
+  padding: 9px 16px;
   border-radius: 8px;
   background: var(--el-color-warning-light-9);
   color: var(--el-color-warning-dark-2);
   border: 1px solid var(--el-color-warning-light-5);
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;
 }
 .panel-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 22px;
 }
 .action-btn {
   width: 100%;
-  height: 46px;
-  font-size: 16px;
+  height: 56px;
+  font-size: 18px;
 }
-/* 触屏适度放大：数字键盘 / 入库位置按钮（比默认略大、但比原来更紧凑，对齐 row121 收紧诉求） */
+/* r81：触屏数字键盘 / 入库位置按钮放大到 pickup 页那档，不再过度紧凑 */
 .station-right :deep(.numpad-display) {
-  height: 46px;
-  margin-bottom: 8px;
+  height: 56px;
+  margin-bottom: 10px;
 }
 .station-right :deep(.numpad-input) {
-  font-size: 19px;
+  font-size: 22px;
 }
 .station-right :deep(.numpad-keys) {
-  gap: 6px;
+  gap: 8px;
 }
 .station-right :deep(.numpad-key) {
-  height: 46px;
-  font-size: 19px;
+  height: 56px;
+  font-size: 22px;
 }
 .station-right :deep(.dest-btn) {
-  min-width: 84px;
-  height: 44px;
-  font-size: 15px;
+  min-width: 96px;
+  height: 52px;
+  font-size: 16px;
 }
 </style>

@@ -133,6 +133,8 @@ export interface WhiteBarShipmentVO {
   outMethod?: string;
   /** 出库去向（djs_stock_out_dest 值） */
   outDest?: string;
+  /** 发货门店名（store_id→store_name，发货月台到门店有值；非到门店为空） */
+  storeName?: string;
   /** 出库量 */
   productWeight?: number;
   productUnit?: string;
