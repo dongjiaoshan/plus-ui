@@ -24,16 +24,6 @@
       @export="handleExportPlot"
       @page-change="handlePlotPageChange"
     >
-      <template #cell-plotImagePreview="{ row }">
-        <ImagePreview
-          v-if="row.plotImagePreview && thumbUrlMap[String(row.plotImagePreview)]"
-          :width="40"
-          :height="40"
-          :src="thumbUrlMap[String(row.plotImagePreview)]"
-          :preview-src-list="[thumbUrlMap[String(row.plotImagePreview)]]"
-        />
-        <span v-else class="text-gray-400">—</span>
-      </template>
       <template #action="{ row }">
         <el-tooltip :content="t('biz.table.action.view')" placement="top">
           <el-button v-hasPermi="['djs:plant:plot:list']" link type="primary" icon="View" @click="handleViewPlot(row)" />
@@ -63,7 +53,6 @@
  * 片区列表迁至独立 djs-plant/zone/index.vue。
  */
 import BizTable from '@/components/BizTable/index.vue';
-import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import PlotForm from './components/PlotForm.vue';
 import PlotView from './components/PlotView.vue';
@@ -71,7 +60,6 @@ import { listAllZone } from '@/api/djs-plant/zone';
 import { listPlot, delPlot } from '@/api/djs-plant/plot';
 import type { PlotZoneVO } from '@/api/djs-plant/zone/types';
 import type { PlotInfoQuery, PlotInfoVO } from '@/api/djs-plant/plot/types';
-import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -89,7 +77,6 @@ const plotTotal = ref(0);
 const plotLoading = ref(false);
 const plotPageNum = ref(1);
 const plotPageSize = ref(10);
-const thumbUrlMap = ref<Record<string, string>>({});
 
 const plotSearchModel = reactive<Record<string, any>>({
   zoneId: undefined,
@@ -115,7 +102,6 @@ const plotSearchSchema = computed<SearchFieldSchema[]>(() => [
 
 const plotColumns = computed<BizTableColumn[]>(() => [
   { prop: 'plotCode', label: t('plantPlot.column.plotCode'), width: 180, showOverflowTooltip: true },
-  { prop: 'plotImagePreview', label: t('plantPlot.column.plotImage'), width: 80, align: 'center' },
   { prop: 'plotName', label: t('plantPlot.column.plotName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'plotStatus', label: t('plantPlot.column.plotStatus'), width: 90, align: 'center', dictType: 'djs_plot_status' },
   { prop: 'zoneBelong', label: t('plantPlot.column.zoneBelong'), width: 110, align: 'center', dictType: 'djs_zone_belong' },
@@ -180,28 +166,8 @@ async function fetchPlots() {
     const res = await listPlot(buildQuery());
     plotList.value = (res.rows ?? res.data ?? []) as PlotInfoVO[];
     plotTotal.value = res.total ?? 0;
-    await loadThumbUrls();
   } finally {
     plotLoading.value = false;
-  }
-}
-
-async function loadThumbUrls() {
-  const ids = Array.from(new Set(plotList.value.map((r) => r.plotImagePreview).filter((v): v is string => !!v)));
-  if (ids.length === 0) {
-    thumbUrlMap.value = {};
-    return;
-  }
-  try {
-    const res = await listOssByIds(ids.join(','));
-    const map: Record<string, string> = {};
-    (res.data ?? []).forEach((o: any) => {
-      if (o?.ossId != null && o?.url) map[String(o.ossId)] = o.url;
-    });
-    thumbUrlMap.value = map;
-  } catch (e) {
-    console.warn('[Plot] listOssByIds failed', e);
-    thumbUrlMap.value = {};
   }
 }
 

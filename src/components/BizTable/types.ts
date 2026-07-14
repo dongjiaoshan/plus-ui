@@ -106,6 +106,8 @@ export interface BizTableProps {
   showRowDel?: boolean;
   /** 行操作列宽度（px）；`#action` slot 放多个按钮时可调宽，默认 160 */
   actionWidth?: number;
+  /** 行操作列最小宽度（px）；设置后操作列改用 min-width 参与等宽分配（列少时让操作列与数据列同宽），优先于 actionWidth */
+  actionMinWidth?: number;
   /** 表格高度 */
   height?: string | number;
   /** 表格自定义 style */

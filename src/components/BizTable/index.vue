@@ -79,9 +79,10 @@
         <el-table-column
           v-if="$slots.action || showRowEdit || showRowDel"
           :label="t('biz.table.column.action')"
-          :width="actionWidth"
+          :width="actionMinWidth ? undefined : actionWidth"
+          :min-width="actionMinWidth"
           align="center"
-          fixed="right"
+          :fixed="actionMinWidth ? false : 'right'"
         >
           <template #default="scope">
             <slot name="action" :row="scope.row" :index="scope.$index">
@@ -152,6 +153,7 @@ const { t } = useI18n();
 const showRowEdit = computed(() => props.showRowEdit);
 const showRowDel = computed(() => props.showRowDel);
 const actionWidth = computed(() => props.actionWidth);
+const actionMinWidth = computed(() => props.actionMinWidth);
 
 /* ---------- 查询表单 model ---------- */
 const innerSearchModel = ref<Record<string, any>>({ ...props.searchModel });

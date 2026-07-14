@@ -24,18 +24,6 @@
     </el-form>
 
     <el-table v-loading="loading" :data="list" border max-height="540">
-      <el-table-column :label="t('stockOverview.detail.image')" prop="imageOssId" width="80" align="center" header-align="center">
-        <template #default="{ row }">
-          <ImagePreview
-            v-if="row.imageOssId && imageUrlMap[String(row.imageOssId)]"
-            :width="40"
-            :height="40"
-            :src="imageUrlMap[String(row.imageOssId)]"
-            :preview-src-list="[imageUrlMap[String(row.imageOssId)]]"
-          />
-          <span v-else class="text-gray-400">—</span>
-        </template>
-      </el-table-column>
       <el-table-column
         :label="t('stockOverview.detail.productCode')"
         prop="productCode"
@@ -87,10 +75,8 @@
 </template>
 
 <script setup lang="ts">
-import ImagePreview from '@/components/ImagePreview/index.vue';
 import { getStockOverviewDetail, type StockOverviewDetailVO } from '@/api/djs-warehouse/stockOverview';
 import { listLocation } from '@/api/djs-warehouse/location';
-import { listByIds as listOssByIds } from '@/api/system/oss';
 import { useI18n } from 'vue-i18n';
 
 defineOptions({ name: 'StockOverviewDetailDialog' });
@@ -102,8 +88,6 @@ const visible = ref(false);
 const loading = ref(false);
 const currentDate = ref('');
 const list = ref<StockOverviewDetailVO[]>([]);
-/** ossId(string) → url */
-const imageUrlMap = ref<Record<string, string>>({});
 /** 库位下拉选项 */
 const locationOptions = ref<Array<{ label: string; value: string | number }>>([]);
 
@@ -119,7 +103,6 @@ async function open(date: string) {
   query.productName = undefined;
   query.locationId = undefined;
   list.value = [];
-  imageUrlMap.value = {};
   visible.value = true;
   if (locationOptions.value.length === 0) {
     await loadLocationOptions();
@@ -137,7 +120,6 @@ async function fetchDetail() {
       locationId: query.locationId || undefined
     });
     list.value = (res.data ?? []) as StockOverviewDetailVO[];
-    await loadImageUrls();
   } finally {
     loading.value = false;
   }
@@ -152,28 +134,6 @@ async function loadLocationOptions() {
   } catch (e) {
     console.warn('[StockOverview] listLocation failed', e);
     locationOptions.value = [];
-  }
-}
-
-/** 批量把 imageOssId 解析成可预览的 url（一次 listByIds 拉全量，去重）。 */
-async function loadImageUrls() {
-  const ossIds = Array.from(new Set(list.value.map((r) => r.imageOssId).filter((id): id is string => !!id)));
-  if (ossIds.length === 0) {
-    imageUrlMap.value = {};
-    return;
-  }
-  try {
-    const res = await listOssByIds(ossIds.join(','));
-    const map: Record<string, string> = {};
-    (res.data ?? []).forEach((o: any) => {
-      if (o?.ossId != null && o?.url) {
-        map[String(o.ossId)] = o.url;
-      }
-    });
-    imageUrlMap.value = map;
-  } catch (e) {
-    console.warn('[StockOverview] listOssByIds failed', e);
-    imageUrlMap.value = {};
   }
 }
 

@@ -27,7 +27,7 @@
       <el-table-column :label="t('djs.warehouse.check.checkStock')" prop="checkStock" width="120" align="center" header-align="center" />
       <el-table-column :label="t('djs.warehouse.check.diffStock')" width="90" align="center" header-align="center">
         <template #default="{ row }">
-          <span :class="diffClass(abnormalDiff(row))">{{ abnormalDiff(row) }}</span>
+          <span :class="diffClass(diffQty(row))">{{ diffQty(row) }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="t('djs.warehouse.check.createTime')" prop="createTime" width="160" align="center" header-align="center" />
@@ -55,21 +55,20 @@ const props = defineProps<{ header: StockCheckHeaderVO | null }>();
 const lines = ref<StockCheckRecordVO[]>([]);
 const loading = ref(false);
 
+/** diff = 盘点前库存 − 实盘量：正数为盘亏（实盘少于账面，标红）、负数为盘盈（标绿）。 */
 function diffClass(diff: number | string): string {
   const n = Number(diff);
-  if (n > 0) return 'diff-surplus';
-  if (n < 0) return 'diff-deficit';
+  if (n > 0) return 'diff-deficit';
+  if (n < 0) return 'diff-surplus';
   return '';
 }
 
 /**
- * 差异列 = 异常差额：结果为异常（djs_check_result=2）时取 |系统量 - 实盘量|，否则 0
- * （正常差额计入「盘点计损量」列，对齐原型「计损 / 差异」二分）。
+ * 差异量 = 盘点前库存 − 实盘量（sysStock − checkStock，带符号）。
+ * 正数为盘盈、负数为盘亏；对所有盘点结果统一按此口径展示。
  */
-function abnormalDiff(row: StockCheckRecordVO): number {
-  const RESULT_ABNORMAL = 2;
-  if (Number(row.checkResultType) !== RESULT_ABNORMAL) return 0;
-  return Math.abs(Number(row.sysStock ?? 0) - Number(row.checkStock ?? 0));
+function diffQty(row: StockCheckRecordVO): number {
+  return Number(row.sysStock ?? 0) - Number(row.checkStock ?? 0);
 }
 
 async function loadLines() {

@@ -10,7 +10,7 @@
       :search-model="searchModel"
       :page-num="pageNum"
       :page-size="pageSize"
-      :action-width="120"
+      :action-min-width="160"
       row-key="statDate"
       perm-prefix="djs:warehouse:stockOverview"
       :show-add="false"

@@ -24,17 +24,6 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <template #cell-locationThumb="{ row }">
-        <ImagePreview
-          v-if="row.locationThumb && thumbUrlMap[String(row.locationThumb)]"
-          :width="40"
-          :height="40"
-          :src="thumbUrlMap[String(row.locationThumb)]"
-          :preview-src-list="[thumbUrlMap[String(row.locationThumb)]]"
-        />
-        <span v-else class="text-gray-400">—</span>
-      </template>
-
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:warehouse:location:edit']" link type="primary" icon="Edit" @click="handleEdit(row)">
           {{ t('common.edit') }}
@@ -59,11 +48,9 @@
 
 <script setup name="Location" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
-import ImagePreview from '@/components/ImagePreview/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import LocationForm from './components/LocationForm.vue';
 import { changeLocationStatus, delLocation, listLocation } from '@/api/djs-warehouse/location';
-import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { LocationInfoQuery, LocationInfoVO } from '@/api/djs-warehouse/location/types';
 import { useI18n } from 'vue-i18n';
 
@@ -78,8 +65,6 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
-/** ossId(string) → url；列表渲染时按 row.locationThumb 查 */
-const thumbUrlMap = ref<Record<string, string>>({});
 
 const searchModel = reactive<Record<string, any>>({
   locationCode: undefined,
@@ -97,12 +82,11 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'locationCode', label: t('location.column.locationCode'), width: 140, showOverflowTooltip: true },
-  { prop: 'locationThumb', label: t('location.column.locationThumb'), width: 90, align: 'center' },
   { prop: 'locationName', label: t('location.column.locationName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'locationSort', label: t('location.column.locationSort'), width: 90, align: 'center' },
-  { prop: 'locationDesc', label: t('location.column.locationDesc'), minWidth: 180, showOverflowTooltip: true },
   { prop: 'locationType', label: t('location.column.locationType'), width: 110, align: 'center', dictType: 'djs_location_type' },
   { prop: 'locationStatus', label: t('location.column.locationStatus'), width: 90, align: 'center', dictType: 'djs_location_status' },
+  { prop: 'locationDesc', label: t('location.column.locationDesc'), minWidth: 180, showOverflowTooltip: true },
   { prop: 'createTime', label: t('location.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'updateTime', label: t('location.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'updateByName', label: t('common.updateByName'), width: 100, align: 'center' }
@@ -122,32 +106,8 @@ async function fetchList() {
     const res = await listLocation(query);
     list.value = (res.rows ?? res.data ?? []) as LocationInfoVO[];
     total.value = res.total ?? 0;
-    await loadThumbUrls();
   } finally {
     loading.value = false;
-  }
-}
-
-/**
- * 批量拉本页所有 locationThumb 对应的 OSS url。
- * 后端 `/resource/oss/listByIds/{ids}` 支持逗号分隔，一次拉完避免 N+1。
- */
-async function loadThumbUrls() {
-  const ids = Array.from(new Set(list.value.map((r) => r.locationThumb).filter((v): v is string => !!v)));
-  if (ids.length === 0) {
-    thumbUrlMap.value = {};
-    return;
-  }
-  try {
-    const res = await listOssByIds(ids.join(','));
-    const map: Record<string, string> = {};
-    (res.data ?? []).forEach((o: any) => {
-      if (o?.ossId != null && o?.url) map[String(o.ossId)] = o.url;
-    });
-    thumbUrlMap.value = map;
-  } catch (e) {
-    console.warn('[Location] listOssByIds failed', e);
-    thumbUrlMap.value = {};
   }
 }
 

@@ -10,7 +10,7 @@
       :search-model="searchModel"
       :page-num="pageNum"
       :page-size="pageSize"
-      :action-width="120"
+      :action-min-width="160"
       row-key="lossDate"
       perm-prefix="djs:warehouse:loss:overview"
       :show-add="false"

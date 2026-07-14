@@ -106,7 +106,6 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'flowDate', label: t('djs.warehouse.flowIn.flowDate'), minWidth: 160, formatter: 'datetime', align: 'center' },
-  { prop: 'flowNo', label: t('djs.warehouse.flowIn.flowNo'), minWidth: 160, align: 'center' },
   { prop: 'productType', label: t('djs.warehouse.flowIn.productType'), dictType: 'djs_product_type', minWidth: 100, align: 'center' },
   { prop: 'productCode', label: t('djs.warehouse.flowIn.productCode'), minWidth: 110, align: 'center' },
   { prop: 'productName', label: t('djs.warehouse.flowIn.productName'), minWidth: 160, align: 'center' },

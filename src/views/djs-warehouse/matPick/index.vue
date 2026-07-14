@@ -28,15 +28,30 @@
       @export="handleExport"
       @page-change="handlePageChange"
     >
-      <!-- 行操作：领用出库 / 退回入库 / 当日损耗（果蔬业态多一个饲料饲喂） -->
+      <!-- 行操作：领用出库 / 退回入库 / 当日损耗（果蔬业态多一个饲料饲喂）。
+           row123：本行今日出库剩余（今日出库−退回−损耗−饲喂）≤0 时禁用退回/损耗/饲喂（今日未领用出库不能操作这三项）。 -->
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:warehouse:matPick:pick']" link type="primary" size="small" @click="openOp('pick', row as MatPickItemVO)">
           {{ t('matPick.action.pick') }}
         </el-button>
-        <el-button v-hasPermi="['djs:warehouse:matPick:return']" link type="primary" size="small" @click="openOp('return', row as MatPickItemVO)">
+        <el-button
+          v-hasPermi="['djs:warehouse:matPick:return']"
+          link
+          type="primary"
+          size="small"
+          :disabled="rowRemaining(row as MatPickItemVO) <= 0"
+          @click="openOp('return', row as MatPickItemVO)"
+        >
           {{ t('matPick.action.return') }}
         </el-button>
-        <el-button v-hasPermi="['djs:warehouse:matPick:loss']" link type="warning" size="small" @click="openOp('loss', row as MatPickItemVO)">
+        <el-button
+          v-hasPermi="['djs:warehouse:matPick:loss']"
+          link
+          type="warning"
+          size="small"
+          :disabled="rowRemaining(row as MatPickItemVO) <= 0"
+          @click="openOp('loss', row as MatPickItemVO)"
+        >
           {{ t('matPick.action.loss') }}
         </el-button>
         <el-button
@@ -45,6 +60,7 @@
           link
           type="success"
           size="small"
+          :disabled="rowRemaining(row as MatPickItemVO) <= 0"
           @click="openOp('feed', row as MatPickItemVO)"
         >
           {{ t('matPick.action.feed') }}
@@ -191,6 +207,16 @@ function fmtNum(v: number | string | undefined | null, unit?: string): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: minDigits, maximumFractionDigits: 3 });
 }
 
+/**
+ * row123：本行「今日出库剩余」= 今日出库 − 退回 − 损耗 − 饲喂（与列表四量口径一致）。
+ * ≤0 表示该行今日未领用出库（或已退/损/喂完），退回入库/当日损耗/饲料饲喂三项均应禁用。
+ */
+function rowRemaining(row: MatPickItemVO): number {
+  return (
+    Number(row.todayPicked || 0) - Number(row.todayReturned || 0) - Number(row.todayLoss || 0) - Number(row.todayFeed || 0)
+  );
+}
+
 async function fetchList() {
   loading.value = true;
   try {
@@ -296,8 +322,7 @@ async function submitOp() {
   //   ③ 三项联动：某项录入后 remaining 随列表刷新自动减少，其他项可录量同步收窄。
   //   （猪肉按篮 / 果蔬按地块的最终权威仍是后端 ensureTodayCapacity，此为行级前置软校验友好提示。）
   if (opKind.value === 'return' || opKind.value === 'loss' || opKind.value === 'feed') {
-    const remaining =
-      Number(row.todayPicked || 0) - Number(row.todayReturned || 0) - Number(row.todayLoss || 0) - Number(row.todayFeed || 0);
+    const remaining = rowRemaining(row);
     if (remaining <= 0) {
       proxy?.$modal.msgWarning(t('matPick.message.noPickedRemaining'));
       return;

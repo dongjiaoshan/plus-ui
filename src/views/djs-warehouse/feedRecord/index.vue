@@ -41,18 +41,6 @@
         <el-table-column :label="t('feedRecord.column.feedDate')" prop="feedDate" min-width="160" align="center" header-align="center">
           <template #default="{ row }">{{ formatDateTime(row.feedDate) }}</template>
         </el-table-column>
-        <el-table-column :label="t('feedRecord.column.cropImage')" prop="cropImageOssId" min-width="160" align="center" header-align="center">
-          <template #default="{ row }">
-            <ImagePreview
-              v-if="row.cropImageOssId && imageUrlMap[String(row.cropImageOssId)]"
-              :width="40"
-              :height="40"
-              :src="imageUrlMap[String(row.cropImageOssId)]"
-              :preview-src-list="[imageUrlMap[String(row.cropImageOssId)]]"
-            />
-            <el-icon v-else class="text-gray-300" :size="28"><Picture /></el-icon>
-          </template>
-        </el-table-column>
         <el-table-column
           :label="t('feedRecord.column.cropName')"
           prop="cropName"
@@ -87,9 +75,7 @@
 </template>
 
 <script setup name="FeedRecord" lang="ts">
-import ImagePreview from '@/components/ImagePreview/index.vue';
 import { listFeedRecord, type FeedRecordVO } from '@/api/djs-warehouse/feedRecord';
-import { listByIds as listOssByIds } from '@/api/system/oss';
 import { parseTime, lastMonthRange } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
@@ -105,9 +91,6 @@ const list = ref<FeedRecordVO[]>([]);
 const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(10);
-
-/** ossId(string) → url（作物图批量解析，仓库来源行无图） */
-const imageUrlMap = ref<Record<string, string>>({});
 
 const query = reactive<{ cropName?: string; feedType?: string }>({
   cropName: undefined,
@@ -135,27 +118,9 @@ async function fetchList() {
     });
     list.value = (res.rows ?? res.data ?? []) as FeedRecordVO[];
     total.value = res.total ?? 0;
-    await loadImageUrls();
   } finally {
     loading.value = false;
   }
-}
-
-/** 批量把 cropImageOssId 解析成可预览 url（一次 listByIds 拉全量、去重）。 */
-async function loadImageUrls() {
-  const ossIds = Array.from(new Set(list.value.map((r) => r.cropImageOssId).filter((id): id is string => !!id)));
-  if (ossIds.length === 0) {
-    imageUrlMap.value = {};
-    return;
-  }
-  const res = await listOssByIds(ossIds.join(','));
-  const map: Record<string, string> = {};
-  (res.data ?? []).forEach((o: any) => {
-    if (o?.ossId != null && o?.url) {
-      map[String(o.ossId)] = o.url;
-    }
-  });
-  imageUrlMap.value = map;
 }
 
 function handleSearch() {

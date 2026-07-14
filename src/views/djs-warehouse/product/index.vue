@@ -34,13 +34,13 @@
     >
       <template #cell-productThumb="{ row }">
         <ImagePreview
-          v-if="row.productThumb && thumbUrlMap[String(row.productThumb)]"
+          v-if="resolveThumbUrl(row)"
           :width="40"
           :height="40"
-          :src="thumbUrlMap[String(row.productThumb)]"
-          :preview-src-list="[thumbUrlMap[String(row.productThumb)]]"
+          :src="resolveThumbUrl(row)!"
+          :preview-src-list="[resolveThumbUrl(row)!]"
         />
-        <span v-else class="text-gray-400">—</span>
+        <img v-else :src="productPlaceholder" class="w-40px h-40px rounded object-cover" alt="暂无图片" />
       </template>
 
       <template #action="{ row }">
@@ -81,6 +81,7 @@ import { listLocation } from '@/api/djs-warehouse/location';
 import type { ProductInfoQuery, ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import productPlaceholder from '@/assets/images/product-placeholder.svg';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -197,10 +198,13 @@ const columns = computed<BizTableColumn[]>(() => {
   }
   cols.push(
     { prop: 'productUnit', label: t('product.column.productUnit'), width: 90, align: 'center' },
-    { prop: 'productSpec', label: t('product.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true },
-    { prop: 'productAlias', label: t('product.column.productAlias'), width: 120, align: 'center', showOverflowTooltip: true },
-    { prop: 'storeLocationName', label: t('product.column.storeLocation'), width: 130, align: 'center', showOverflowTooltip: true }
+    { prop: 'productSpec', label: t('product.column.productSpec'), width: 100, align: 'center', showOverflowTooltip: true }
   );
+  // row119-2：商品配置去掉「产品别名」列（外购商品无别名语义）；产品配置保留。
+  if (!isGoods) {
+    cols.push({ prop: 'productAlias', label: t('product.column.productAlias'), width: 120, align: 'center', showOverflowTooltip: true });
+  }
+  cols.push({ prop: 'storeLocationName', label: t('product.column.storeLocation'), width: 130, align: 'center', showOverflowTooltip: true });
   if (isGoods) {
     // row81-6：商品配置新增「供应商」列
     cols.push({ prop: 'supplierName', label: t('product.column.supplierName'), width: 140, align: 'center', showOverflowTooltip: true });
@@ -267,8 +271,24 @@ async function fetchList() {
   }
 }
 
+/**
+ * 取图列回落：产品图片优先 productThumb，其次 mp 端写入的 imageOssId（COALESCE 语义），
+ * 两者都取不到 OSS url 时返回 undefined → 模板渲染统一静态占位图。
+ */
+function resolveThumbUrl(row: ProductInfoVO): string | undefined {
+  if (row.productThumb && thumbUrlMap.value[String(row.productThumb)]) {
+    return thumbUrlMap.value[String(row.productThumb)];
+  }
+  if (row.imageOssId && thumbUrlMap.value[String(row.imageOssId)]) {
+    return thumbUrlMap.value[String(row.imageOssId)];
+  }
+  return undefined;
+}
+
 async function loadThumbUrls() {
-  const ids = Array.from(new Set(list.value.map((r) => r.productThumb).filter((v): v is string => !!v)));
+  const ids = Array.from(
+    new Set(list.value.flatMap((r) => [r.productThumb, r.imageOssId]).filter((v): v is string => !!v))
+  );
   if (ids.length === 0) {
     thumbUrlMap.value = {};
     return;

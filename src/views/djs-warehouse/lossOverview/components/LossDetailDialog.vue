@@ -26,35 +26,21 @@
       <el-table-column :label="t('lossOverview.detail.lossDate')" prop="lossDate" min-width="160" align="center" header-align="center">
         <template #default="{ row }">{{ formatDateTime(row.lossDate) }}</template>
       </el-table-column>
-      <el-table-column :label="t('lossOverview.detail.image')" prop="imageOssId" width="90" align="center" header-align="center">
-        <template #default="{ row }">
-          <ImagePreview
-            v-if="row.imageOssId && imageUrlMap[String(row.imageOssId)]"
-            :width="40"
-            :height="40"
-            :src="imageUrlMap[String(row.imageOssId)]"
-            :preview-src-list="[imageUrlMap[String(row.imageOssId)]]"
-          />
-          <span v-else class="text-gray-400">—</span>
-        </template>
-      </el-table-column>
       <el-table-column :label="t('lossOverview.detail.productCode')" prop="productCode" min-width="120" align="center" header-align="center" show-overflow-tooltip />
       <el-table-column :label="t('lossOverview.detail.productNameCol')" prop="productName" min-width="140" align="center" header-align="center" show-overflow-tooltip />
-      <el-table-column :label="t('lossOverview.detail.productUnit')" prop="productUnit" min-width="80" align="center" header-align="center" />
       <el-table-column :label="t('lossOverview.detail.lossTypeCol')" prop="lossType" min-width="120" align="center" header-align="center">
         <template #default="{ row }"><dict-tag :options="djs_loss_type" :value="row.lossType" /></template>
       </el-table-column>
       <el-table-column :label="t('lossOverview.detail.lossWeight')" prop="lossWeight" min-width="110" align="center" header-align="center">
         <template #default="{ row }">{{ formatWeight(row.lossWeight) }}</template>
       </el-table-column>
+      <el-table-column :label="t('lossOverview.detail.productUnit')" prop="productUnit" min-width="80" align="center" header-align="center" />
     </el-table>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import ImagePreview from '@/components/ImagePreview/index.vue';
 import { getLossDetail, type LossOverviewDetailVO } from '@/api/djs-warehouse/lossOverview';
-import { listByIds as listOssByIds } from '@/api/system/oss';
 import { parseTime } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
@@ -68,8 +54,6 @@ const visible = ref(false);
 const loading = ref(false);
 const currentDate = ref('');
 const list = ref<LossOverviewDetailVO[]>([]);
-/** ossId(string) → url */
-const imageUrlMap = ref<Record<string, string>>({});
 
 const query = reactive<{ productName?: string; lossType?: string }>({
   productName: undefined,
@@ -83,7 +67,6 @@ function open(date: string) {
   query.productName = undefined;
   query.lossType = undefined;
   list.value = [];
-  imageUrlMap.value = {};
   visible.value = true;
   fetchDetail();
 }
@@ -98,27 +81,9 @@ async function fetchDetail() {
       lossType: query.lossType || undefined
     });
     list.value = (res.data ?? []) as LossOverviewDetailVO[];
-    await loadImageUrls();
   } finally {
     loading.value = false;
   }
-}
-
-/** 批量把 imageOssId 解析成可预览的 url（一次 listByIds 拉全量，去重）。 */
-async function loadImageUrls() {
-  const ossIds = Array.from(new Set(list.value.map((r) => r.imageOssId).filter((id): id is string => !!id)));
-  if (ossIds.length === 0) {
-    imageUrlMap.value = {};
-    return;
-  }
-  const res = await listOssByIds(ossIds.join(','));
-  const map: Record<string, string> = {};
-  (res.data ?? []).forEach((o: any) => {
-    if (o?.ossId != null && o?.url) {
-      map[String(o.ossId)] = o.url;
-    }
-  });
-  imageUrlMap.value = map;
 }
 
 function handleReset() {
