@@ -2025,7 +2025,7 @@ export default {
     unit: { mu: 'mu', month: 'Mo.' },
     kpi: {
       idlePlot: 'Idle Plots (Now)',
-      plantedPlot: 'Started Planting Plots (This Year)',
+      plantedPlot: 'Completed Planting Plots (This Year)',
       plannedPlot: 'Planned Plots (This Year)',
       plotUsageFreq: 'Plot Usage Freq (This Year)',
       cropVarietyCount: 'Crop Varieties (This Year)'
@@ -3916,7 +3916,9 @@ export default {
     },
     action: {
       newEntry: 'New Daily Check',
-      detail: 'Detail'
+      detail: 'Detail',
+      edit: 'Edit',
+      todayExists: "Today's check already exists. Use \"Edit\" in the list to correct it."
     },
     detail: {
       title: '{store} {date} Check Detail',
@@ -3924,11 +3926,13 @@ export default {
     },
     entry: {
       title: 'New Daily Check',
+      editTitle: 'Edit Check - {date}',
       storePlaceholder: 'Select store',
       datePlaceholder: 'Select date',
       emptyCandidates: "No products to check for this store today (only products with remaining stock from yesterday's check, and products from confirmed-received demands).",
       submit: 'Finish Check',
-      submitConfirm: 'Submit check data for {n} products?'
+      submitConfirm: 'Submit check data for {n} products?',
+      editConfirm: 'Correct check data for {n} products?'
     }
   },
   // Store product management (STORE-LEDGER-001, store domain entry)

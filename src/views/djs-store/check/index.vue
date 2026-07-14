@@ -31,6 +31,9 @@
         <el-button v-hasPermi="['djs:store:check:query']" link type="primary" icon="View" @click="openDetail(row)">
           {{ t('storeLedger.action.detail') }}
         </el-button>
+        <el-button v-hasPermi="['djs:store:check:add']" link type="primary" icon="Edit" @click="openEdit(row)">
+          {{ t('storeLedger.action.edit') }}
+        </el-button>
       </template>
     </BizTable>
 
@@ -52,6 +55,7 @@ import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const storeContext = useStoreContextStore();
 // 当前门店来自顶部全局选择器（StoreSwitcher），切换由 navbar 统一控制
@@ -62,7 +66,7 @@ interface LedgerRow extends StoreLedgerHeaderVO {
 }
 
 const tableRef = ref<BizTableExpose>();
-const entryRef = ref<{ open: () => void }>();
+const entryRef = ref<{ open: (editCtx?: { ledgerDate: string }) => void }>();
 const detailRef = ref<{ open: (storeId: string, ledgerDate: string) => void }>();
 
 const list = ref<LedgerRow[]>([]);
@@ -132,12 +136,33 @@ function handlePageChange(p: number, s: number) {
   pageSize.value = s;
   fetchList();
 }
-function handleAddEntry() {
+// 新增当日盘点前先校验：当前门店今天已有盘点记录则拦截（DENGBO-R13：同一天不能重复盘点，改用「修改」更正）。
+async function handleAddEntry() {
+  if (currentStoreId.value) {
+    const today = fmtDate(new Date());
+    const res = await listStoreLedger({
+      storeId: currentStoreId.value,
+      ledgerDateFrom: today,
+      ledgerDateTo: today,
+      pageNum: 1,
+      pageSize: 1
+    });
+    const existRows = (res.rows ?? res.data ?? []) as StoreLedgerHeaderVO[];
+    if ((res.total ?? existRows.length) > 0) {
+      proxy?.$modal.msgWarning(t('storeLedger.action.todayExists'));
+      return;
+    }
+  }
   entryRef.value?.open();
 }
 function openDetail(row: BizRow) {
   const r = row as unknown as LedgerRow;
   detailRef.value?.open(String(r.storeId), String(r.ledgerDate));
+}
+// 修改：对已盘记录更正（DENGBO-R13），开抽屉锁定该盘点日期、叠加已保存值。
+function openEdit(row: BizRow) {
+  const r = row as unknown as LedgerRow;
+  entryRef.value?.open({ ledgerDate: String(r.ledgerDate) });
 }
 
 onMounted(() => {

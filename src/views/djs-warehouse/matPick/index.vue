@@ -324,16 +324,21 @@ async function submitOp() {
   const locationId = row.defaultLocationId;
   submitting.value = true;
   try {
-    // batchId = 该行耳号篮 location_stock.id：猪肉回传它 → 后端走 pickByBatch/returnByBatch/lossByBatch
-    // 按该篮精确扣减 + 写该篮 ear_no/white_bar_no，防「点耳号 A 却 FIFO 扣到耳号 B 篮」的串扣（row126）。
-    // 仅猪肉（耳号/白条建篮）需要精确篮：其余业态（包材/鸡蛋/干货/其他/外购果蔬）按 product 维度扣减且只有
-    // 可打包食品桥接 inhouse，改走 batchId 会给包材等无意义地产 inhouse，故不回传；自产果蔬走既有 plotId 地块路径。
-    const batchId = isPorkOp.value ? row.batchId || undefined : undefined;
+    // batchId = 该行篮 location_stock.id → 后端走 pickByBatch/returnByBatch/lossByBatch 精确篮扣减：
+    //  · 猪肉（耳号/白条篮）：写该篮 ear_no/white_bar_no，防「点耳号 A 却 FIFO 扣到耳号 B 篮」的串扣（row126）。
+    //  · 自产果蔬（地块篮，row.plotId 非空）：退回/损耗回传本地块篮 batchId → 后端 isVegPlotBasket 命中走
+    //    returnVegPlot/lossVegPlot（流水写 plot_id + 按地块校验/扣今日领用剩余），防同库位多地块互相 leak
+    //    退回/损耗、防 B 地块无领用剩余却退回扣到 A 地块（row67/68/69）。
+    //  · 其余业态（包材/鸡蛋/干货/其他/外购果蔬无地块）按 product 维度扣减，不回传 batchId（避免无意义产 inhouse）。
+    // pick 领用：猪肉走 batchId、自产果蔬走既有 plotId 地块路径（productId 置空），二者互斥。
+    const isVegPlotRow = !!row.plotId;
+    const pickBatchId = isPorkOp.value ? row.batchId || undefined : undefined;
+    const returnLossBatchId = isPorkOp.value || isVegPlotRow ? row.batchId || undefined : undefined;
     if (opKind.value === 'pick') {
       await pickMat({
         productId: row.plotId ? undefined : row.productId,
         plotId: row.plotId || undefined,
-        batchId,
+        batchId: pickBatchId,
         locationId,
         quantity: qty,
         stockOutDest: 'kitchen',
@@ -343,7 +348,7 @@ async function submitOp() {
     } else if (opKind.value === 'return') {
       await returnMat({
         productId: row.productId,
-        batchId,
+        batchId: returnLossBatchId,
         locationId,
         quantity: qty,
         sourceScene: 'warehouse',
@@ -352,7 +357,7 @@ async function submitOp() {
     } else if (opKind.value === 'loss') {
       await lossMat({
         productId: row.productId,
-        batchId,
+        batchId: returnLossBatchId,
         locationId: locationId as string,
         quantity: qty,
         remark: opForm.remark || undefined

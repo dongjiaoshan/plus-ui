@@ -110,6 +110,8 @@ export interface StoreLedgerBatchForm {
   storeId: string;
   /** 盘点日期 yyyy-MM-dd（缺省后端今天） */
   ledgerDate?: string;
+  /** 是否更正已盘记录（DENGBO-R13）：缺省/false=新增（当日已有记录则后端拒绝）；true=「修改」更正，允许覆盖 */
+  edit?: boolean;
   remark?: string;
   items: StoreLedgerBatchItem[];
 }

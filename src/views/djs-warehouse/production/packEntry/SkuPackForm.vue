@@ -135,10 +135,8 @@
             :unit="selectedUnit"
             :precision="numpadPrecision"
           />
-          <!-- 剩余可打包份数 = floor(剩余总量 / 该产品「其它产品打包计量规则」)；materialNum 为空/0 时不显示 -->
-          <div v-if="kind !== 'gift' && remainingPackableCopies != null" class="remain-copies">
-            {{ t('djs.warehouse.packEntry.remainingCopiesLabel') }}：{{ remainingPackableCopies }} {{ t('djs.warehouse.packEntry.copiesUnit') }}
-          </div>
+          <!-- row74（Kevin 2026-07-14）：所有打包一律不展示「剩余可打包份数」提示。
+               remainingPackableCopies computed 仍保留，供份数模式提交前的 copiesExceed 前端软校验用（见 submit 校验）。 -->
         </div>
 
         <!-- 发送位置 button-toggle（其他产品打包二选无礼盒；礼盒不显示） -->
@@ -1317,13 +1315,6 @@ onActivated(() => {
 }
 .panel-section {
   margin-bottom: 16px;
-}
-/* 剩余可打包份数提示（录重 numpad 下方角标） */
-.remain-copies {
-  margin-top: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--el-color-primary);
 }
 .panel-label {
   font-size: 13px;

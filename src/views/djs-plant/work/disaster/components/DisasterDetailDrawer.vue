@@ -46,7 +46,7 @@ import { useDict } from '@/utils/dict';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_disaster_type } = useDict('djs_disaster_type');
+const { djs_disaster_type } = toRefs(useDict('djs_disaster_type'));
 
 const props = defineProps<{
   visible: boolean;

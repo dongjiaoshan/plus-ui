@@ -17,7 +17,13 @@
         @click="select(c)"
       >
         <div class="flex items-center gap-3">
-          <el-image v-if="c.cropImagePreview" :src="String(c.cropImagePreview)" fit="cover" class="h-14 w-14 rounded" />
+          <el-image v-if="c.imageUrl" :src="c.imageUrl" fit="cover" class="h-14 w-14 rounded">
+            <template #error>
+              <div class="flex h-14 w-14 items-center justify-center rounded bg-gray-100 text-gray-400">
+                {{ c.cropName?.slice(0, 1) }}
+              </div>
+            </template>
+          </el-image>
           <div v-else class="flex h-14 w-14 items-center justify-center rounded bg-gray-100 text-gray-400">
             {{ c.cropName?.slice(0, 1) }}
           </div>

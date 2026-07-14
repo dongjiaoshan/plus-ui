@@ -2028,7 +2028,7 @@ export default {
     unit: { mu: '亩', month: '月' },
     kpi: {
       idlePlot: '当前空地块数',
-      plantedPlot: '当年已开始种植地块数',
+      plantedPlot: '当年已完成种植地块数',
       plannedPlot: '当年计划种植地块数',
       plotUsageFreq: '当年计划地块使用频次',
       cropVarietyCount: '当年计划种植作物品种数'
@@ -3919,7 +3919,9 @@ export default {
     },
     action: {
       newEntry: '新增当日盘点',
-      detail: '查看详情'
+      detail: '查看详情',
+      edit: '修改',
+      todayExists: '今日已有盘点记录，如需更正请点击列表中的「修改」'
     },
     detail: {
       title: '{store} {date} 盘点明细',
@@ -3927,11 +3929,13 @@ export default {
     },
     entry: {
       title: '新增当日盘点',
+      editTitle: '修改盘点 - {date}',
       storePlaceholder: '请选择门店',
       datePlaceholder: '请选择盘点日期',
       emptyCandidates: '该门店当日暂无可盘产品（仅显示昨日盘点尚有库存的产品，以及已确认收货的需求产品）',
       submit: '盘点完成',
-      submitConfirm: '确认提交 {n} 个产品的盘点数据？'
+      submitConfirm: '确认提交 {n} 个产品的盘点数据？',
+      editConfirm: '确认更正 {n} 个产品的盘点数据？'
     }
   },
   // 门店产品管理（STORE-LEDGER-001，门店域入口）

@@ -75,8 +75,9 @@
             </el-table-column>
 
             <!-- 单位（果蔬无单列：原型果蔬表无「单位」列） -->
+            <!-- 白条下单按「份/半只」计数口径展示单位（product_unit=kg 仅供分割/盘点按重量用），仅展示层覆盖，不改落库单位 -->
             <el-table-column v-if="cols.unit" :label="t('storeDemand.create.unit')" width="90" align="center" header-align="center">
-              <template #default="{ row }">{{ row.productUnit || dash }}</template>
+              <template #default="{ row }">{{ activeTab === 'white_bar' ? WHITE_BAR_DEMAND_UNIT : row.productUnit || dash }}</template>
             </el-table-column>
 
             <!-- 原材料库存（跨域字段，product 主数据无，占位 '—'） -->
@@ -128,7 +129,7 @@
               <el-icon class="cart-del" @click="removeFromCart(item.productId)"><CircleCloseFilled /></el-icon>
               <div class="cart-item-main">
                 <span class="cart-item-name">{{ item.productName }}</span>
-                <span class="cart-item-qty">{{ item.demandQuantity }}{{ item.productUnit }}</span>
+                <span class="cart-item-qty">{{ item.demandQuantity }}{{ item.productType === 'white_bar' ? WHITE_BAR_DEMAND_UNIT : item.productUnit }}</span>
               </div>
               <!-- 个人邮寄 UI 隐藏（87-1 决策 #10-B：保后端 StoreDemandBatchBo.mailing 字段，提交载荷仍带 mailing=false） -->
             </div>
@@ -177,6 +178,9 @@ const currentStoreName = computed(() => {
 });
 
 const dash = '—';
+
+/** 白条门店下单展示单位：按「份/半只」计数下单（product_unit=kg 仅供仓库分割/盘点按重量），仅展示层覆盖不落库。 */
+const WHITE_BAR_DEMAND_UNIT = '份';
 
 /** 明日日期 YYYY-MM-DD（本地时区，需求日期默认值）。 */
 function tomorrowStr(): string {

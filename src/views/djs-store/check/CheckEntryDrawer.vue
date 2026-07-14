@@ -1,15 +1,16 @@
 <template>
-  <!-- 新增当日盘点：宽抽屉整表录入，点蒙层可关（保持 Element Plus 默认）。对齐原型「门店盘点>新增当日盘点」矩阵。 -->
-  <el-drawer v-model="visible" :title="t('storeLedger.entry.title')" direction="rtl" size="85%" append-to-body destroy-on-close>
+  <!-- 新增当日盘点 / 修改盘点：宽抽屉整表录入，点蒙层可关（保持 Element Plus 默认）。对齐原型「门店盘点>新增当日盘点」矩阵。 -->
+  <el-drawer v-model="visible" :title="drawerTitle" direction="rtl" size="85%" append-to-body destroy-on-close>
     <div class="ledger-entry">
       <div class="entry-tools">
-        <!-- 门店由顶部全局选择器（StoreSwitcher）统一控制，本抽屉不再让用户改门店 -->
+        <!-- 门店由顶部全局选择器（StoreSwitcher）统一控制，本抽屉不再让用户改门店。修改模式锁定盘点日期不可改。 -->
         <el-date-picker
           v-model="ledgerDate"
           type="date"
           value-format="YYYY-MM-DD"
           :placeholder="t('storeLedger.entry.datePlaceholder')"
           :clearable="false"
+          :disabled="editMode"
           @change="loadCandidates"
         />
       </div>
@@ -99,8 +100,8 @@
 </template>
 
 <script setup name="StoreCheckEntryDrawer" lang="ts">
-import { listStoreLedgerCandidates, batchSaveStoreLedger } from '@/api/djs-store/ledger';
-import type { StoreLedgerBatchItem, StoreLedgerBelongTab, StoreLedgerCandidateVO, StoreLedgerCategory } from '@/api/djs-store/ledger/types';
+import { listStoreLedgerCandidates, batchSaveStoreLedger, getStoreLedgerDetail } from '@/api/djs-store/ledger';
+import type { StoreLedgerBatchItem, StoreLedgerBelongTab, StoreLedgerCandidateVO, StoreLedgerCategory, StoreLedgerLineVO } from '@/api/djs-store/ledger/types';
 import { formatKg } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
@@ -154,6 +155,12 @@ const ledgerDate = ref<string>(todayStr());
 const loading = ref(false);
 const submitLoading = ref(false);
 const rows = ref<EntryRow[]>([]);
+/** 修改模式（DENGBO-R13）：对已盘记录更正，锁定日期、叠加已保存值、提交 edit=true 允许覆盖。 */
+const editMode = ref(false);
+
+const drawerTitle = computed(() =>
+  editMode.value ? t('storeLedger.entry.editTitle', { date: ledgerDate.value }) : t('storeLedger.entry.title')
+);
 
 /** 产品品类页签（DENGBO-R10）：猪肉 / 果蔬 / 其他。切换只过滤视图，提交仍保存全部行。 */
 const TABS: StoreLedgerBelongTab[] = ['pork', 'veg', 'other'];
@@ -256,9 +263,15 @@ async function loadCandidates() {
   try {
     const res = await listStoreLedgerCandidates(storeId.value, ledgerDate.value);
     const candidates = (res.data ?? []) as StoreLedgerCandidateVO[];
-    rows.value = candidates.map((c) => {
+    // 修改模式（DENGBO-R13）：叠加已保存的盘点值，让用户在上次结果基础上更正。
+    const savedList: StoreLedgerLineVO[] = editMode.value
+      ? (((await getStoreLedgerDetail(storeId.value, ledgerDate.value)).data ?? []) as StoreLedgerLineVO[])
+      : [];
+    const savedByProduct = new Map<string, StoreLedgerLineVO>(savedList.map((s) => [String(s.productId), s]));
+    const candidateRows = candidates.map((c) => {
       // 入库只读：后端 inboundReadonly 为准；猪肉成品 / 白条产品行（DENGBO-R12）可手动编辑。
       const inboundReadonly = c.inboundReadonly !== false && c.category !== 'pork' && c.category !== 'white_bar';
+      const saved = savedByProduct.get(String(c.productId));
       const r: EntryRow = {
         productId: String(c.productId),
         productName: c.productName ?? '',
@@ -267,19 +280,25 @@ async function loadCandidates() {
         materialUnit: c.materialUnit ?? '',
         category: c.category,
         belongTab: c.belongTab ?? 'other',
-        openingQty: nz(c.openingQty),
-        inboundQty: nz(c.inboundQty),
+        // 修改模式取已保存值（更正上次结果）；新增模式取候选预填。
+        openingQty: saved ? nz(saved.openingQty) : nz(c.openingQty),
+        inboundQty: saved ? nz(saved.inboundQty) : nz(c.inboundQty),
         inboundReadonly,
-        saleQty: nz(c.saleQty),
-        giftQty: 0,
-        returnSaleQty: nz(c.returnSaleQty),
-        returnWhQty: nz(c.returnWhQty),
-        closingQty: 0,
+        saleQty: saved ? nz(saved.saleQty) : nz(c.saleQty),
+        giftQty: saved ? nz(saved.giftQty) : 0,
+        returnSaleQty: saved ? nz(saved.returnQty) : nz(c.returnSaleQty),
+        returnWhQty: saved ? nz(saved.whReturnQty) : nz(c.returnWhQty),
+        closingQty: saved ? nz(saved.closingQty) : 0,
         lossQty: 0
       };
       recalc(r);
       return r;
     });
+    // 修改模式（DENGBO-R13）：已保存但当前已不在候选集里的产品（字典/库存/到货变化导致掉出候选）
+    // 仍需能被更正 → 用已保存明细补齐成可编辑行，避免上次盘过的产品在修改时消失。
+    const candidateIds = new Set(candidateRows.map((r) => r.productId));
+    const extraRows = savedList.filter((s) => !candidateIds.has(String(s.productId))).map(savedToRow);
+    rows.value = [...candidateRows, ...extraRows];
     // 默认落在第一个有数据的 tab（猪肉→果蔬→其他），避免开在空页签
     activeTab.value = TABS.find((tab) => rows.value.some((r) => r.belongTab === tab)) ?? 'pork';
   } finally {
@@ -287,11 +306,42 @@ async function loadCandidates() {
   }
 }
 
+/**
+ * 已保存明细行 → 可编辑行（修改模式补齐当前非候选的历史盘点产品，DENGBO-R13）。
+ * 明细 VO 无 category / inboundReadonly：按品类推断——猪肉品类沿用「入库可编辑」口径，其余入库只读。
+ */
+function savedToRow(s: StoreLedgerLineVO): EntryRow {
+  const belongTab = (s.belongTab ?? 'other') as StoreLedgerBelongTab;
+  const r: EntryRow = {
+    productId: String(s.productId),
+    productName: s.productName ?? '',
+    productUnit: s.productUnit ?? '',
+    materialUnit: s.materialUnit ?? '',
+    category: belongTab === 'pork' ? 'pork' : 'stock',
+    belongTab,
+    openingQty: nz(s.openingQty),
+    inboundQty: nz(s.inboundQty),
+    inboundReadonly: belongTab !== 'pork',
+    saleQty: nz(s.saleQty),
+    giftQty: nz(s.giftQty),
+    returnSaleQty: nz(s.returnQty),
+    returnWhQty: nz(s.whReturnQty),
+    closingQty: nz(s.closingQty),
+    lossQty: 0
+  };
+  recalc(r);
+  return r;
+}
+
 async function handleSubmit() {
   if (!storeId.value || !rows.value.length) {
     return;
   }
-  await proxy?.$modal.confirm(t('storeLedger.entry.submitConfirm', { n: rows.value.length }));
+  await proxy?.$modal.confirm(
+    editMode.value
+      ? t('storeLedger.entry.editConfirm', { n: rows.value.length })
+      : t('storeLedger.entry.submitConfirm', { n: rows.value.length })
+  );
   const items: StoreLedgerBatchItem[] = rows.value.map((r) => ({
     productId: r.productId,
     openingQty: r.openingQty,
@@ -304,7 +354,7 @@ async function handleSubmit() {
   }));
   submitLoading.value = true;
   try {
-    await batchSaveStoreLedger({ storeId: storeId.value, ledgerDate: ledgerDate.value, items });
+    await batchSaveStoreLedger({ storeId: storeId.value, ledgerDate: ledgerDate.value, edit: editMode.value, items });
     proxy?.$modal.msgSuccess(t('common.opSuccess'));
     visible.value = false;
     emit('saved');
@@ -313,10 +363,16 @@ async function handleSubmit() {
   }
 }
 
-async function open() {
+/**
+ * 打开抽屉。
+ * @param editCtx 传入即「修改」模式（DENGBO-R13）：锁定该盘点日期、叠加已保存值、提交 edit=true 覆盖更正。
+ *                不传则「新增当日盘点」（日期默认今天，可改）。
+ */
+async function open(editCtx?: { ledgerDate: string }) {
   // 门店从父页传入（顶部 StoreSwitcher 当前门店），open 时预置，用户不可改
   storeId.value = props.storeId ? String(props.storeId) : undefined;
-  ledgerDate.value = todayStr();
+  editMode.value = !!editCtx;
+  ledgerDate.value = editCtx?.ledgerDate ?? todayStr();
   rows.value = [];
   visible.value = true;
   if (storeId.value) {
