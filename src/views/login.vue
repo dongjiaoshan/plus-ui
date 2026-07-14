@@ -3,7 +3,6 @@
     <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
       <div class="title-box">
         <h3 class="title">{{ title }}</h3>
-        <lang-select />
       </div>
       <el-form-item v-if="tenantEnabled" prop="tenantId">
         <el-select v-model="loginForm.tenantId" filterable :placeholder="proxy.$t('login.selectPlaceholder')" style="width: 100%">
@@ -202,25 +201,32 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  background-color: #c8e6c9;
+}
+
+// 背景图放伪元素：blur 只糊背景、不糊登录卡；叠一层暗绿蒙层压亮度
+.login::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(14, 34, 18, 0.32) 0%, rgba(10, 26, 13, 0.46) 100%),
+    url('@/assets/images/login-background.jpg') center / cover no-repeat;
+  filter: blur(5px) brightness(0.88);
+  transform: scale(1.08); // 放大避免模糊后边缘露出兜底色
 }
 
 .title-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
   .title {
     margin: 0px auto 26px auto;
     text-align: center;
     color: var(--el-text-color-primary);
     font-weight: 600;
     letter-spacing: 0.5px;
-  }
-
-  :deep(.lang-select--style) {
-    line-height: 0;
-    color: var(--el-text-color-secondary);
   }
 }
 
