@@ -22,14 +22,18 @@
             </span>
           </div>
           <div class="location-card__check">
-            <span class="location-card__row-label">{{ t('location.summary.lastCheck') }}</span>
-            <div class="location-card__check-result">
+            <span class="location-card__check-left">
+              <span class="location-card__row-label">{{ t('location.summary.lastCheck') }}</span>
               <template v-if="card.lastCheckDate">
                 <span class="location-card__check-date">{{ formatDate(card.lastCheckDate) }}</span>
-                <dict-tag v-if="card.lastCheckResult != null" :options="djs_check_result" :value="card.lastCheckResult" />
               </template>
               <span v-else class="text-gray-400">{{ t('location.summary.noCheck') }}</span>
-            </div>
+            </span>
+            <dict-tag
+              v-if="card.lastCheckDate && card.lastCheckResult != null"
+              :options="djs_check_result"
+              :value="card.lastCheckResult"
+            />
           </div>
         </el-card>
       </el-col>
@@ -149,11 +153,11 @@ onMounted(() => {
     color: var(--el-text-color-secondary);
   }
 
-  &__check-result {
+  &__check-left {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-left: auto;
+    min-width: 0;
   }
 
   &__check-date {

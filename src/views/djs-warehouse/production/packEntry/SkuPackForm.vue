@@ -1265,10 +1265,18 @@ onActivated(() => {
   display: flex;
   flex-direction: column;
 }
-/* 宽版（肉品打包）：右操作台加宽，填充空白；其他打包页保持 420px */
+/* 宽版（肉品/果蔬/其他/礼盒打包）：右操作台宽度对齐「白条分割管理」440px（row94-97）；
+   紧凑版（无 wide）仍 420px。
+   row96/97：面板按内容高度（不再拉伸到卡片网格满高），确认按钮紧跟内容，
+   消除「发送位置」下方大片留白（对齐「分割领用」页 panel content-height 观感）。 */
 .station-right--wide {
-  flex: 0 0 520px;
-  width: 520px;
+  flex: 0 0 440px;
+  width: 440px;
+  align-self: flex-start;
+}
+/* 内容高度面板：去掉把按钮推到底部的 margin-top:auto（否则内容少时底部留大片空白，row96/97） */
+.station-right--wide .panel-actions {
+  margin-top: 20px;
 }
 /* 触屏放大：右台控件、标签、按钮整体加大方便手指操作 */
 .station-right .panel-label {

@@ -326,10 +326,11 @@ onMounted(async () => {
   font-weight: 700;
   margin-bottom: 12px;
 }
+/* row92：右操作面板随左侧白条卡网格拉伸到等高（红框到底），内容纵向均分、间距等比放大 */
 .station-body {
   display: flex;
   gap: 16px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .station-left {
   flex: 1;
@@ -411,6 +412,7 @@ onMounted(async () => {
   font-size: 13px;
   line-height: 40px;
 }
+/* row92：面板拉伸到与卡片网格等高，各段用 space-between 均分留白（间距等比增加），确认按钮沉底 */
 .station-right {
   flex: 0 0 440px;
   width: 440px;
@@ -418,6 +420,9 @@ onMounted(async () => {
   border-radius: 8px;
   padding: 24px;
   background: var(--el-bg-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .panel-title {
   font-size: 16px;

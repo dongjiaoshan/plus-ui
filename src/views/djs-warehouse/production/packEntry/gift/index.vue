@@ -10,6 +10,7 @@
       :show-print-trace="false"
       :title="t('djs.warehouse.packEntry.giftTitle')"
       wide
+      :hide-pack-no="true"
     />
   </div>
 </template>

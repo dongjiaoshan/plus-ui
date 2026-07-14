@@ -78,32 +78,38 @@ const displayList = computed<StoreReturnVO[]>(() => {
 const searchModel = reactive<Record<string, unknown>>({
   returnStatus: undefined,
   productName: undefined,
-  returnDateFrom: undefined,
-  returnDateTo: undefined
+  returnDateRange: undefined
 });
 
-// 搜索：退货日期 / 产品类型 / 产品名称 / 退货状态（产品类型走 tab，不入搜索栏）
+// 搜索：退货日期（区间）/ 产品名称 / 退货状态（产品类型走 tab，不入搜索栏）
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'returnDateFrom', label: t('storeReturn.field.returnDateFrom'), type: 'date' },
-  { field: 'returnDateTo', label: t('storeReturn.field.returnDateTo'), type: 'date' },
+  { field: 'returnDateRange', label: t('storeReturn.field.returnDate'), type: 'daterange' },
   { field: 'productName', label: t('storeReturn.column.productName'), type: 'input' },
   { field: 'returnStatus', label: t('storeReturn.column.returnStatus'), type: 'select', dictType: 'djs_store_return_status' }
 ]);
 
-// 原型「退回记录」列：退回日期/产品类型/产品代码/产品名称/退货量/单位/货物重量/仓库实收量/仓库实收重量/退货状态
+// 「退回记录」列：退回日期/产品类型/产品名称/退货量/单位/货物重量/仓库实收量/仓库实收重量/退货状态
+// r86：去掉「产品代码」列；所有列统一 minWidth，宽度保持一致，由 el-table 均分富余宽度
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'returnDate', label: t('storeReturn.column.returnDate'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'productTypeLabel', label: t('storeReturn.column.productType'), width: 110, align: 'center' },
-  // r85：多列用 minWidth 让 el-table 把富余宽度按比例分摊，避免 productName 单列独吞成大片空白
-  { prop: 'productCode', label: t('storeReturn.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-  { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'returnQuantity', label: t('storeReturn.column.returnQuantity'), width: 90, align: 'right' },
-  { prop: 'unit', label: t('storeReturn.column.unit'), width: 70, align: 'center' },
-  { prop: 'goodsWeight', label: t('storeReturn.column.goodsWeight'), width: 100, align: 'right', formatter: (row) => formatNum3(row.goodsWeight) },
-  { prop: 'receivedQty', label: t('storeReturn.column.receivedQty'), width: 100, align: 'right' },
-  { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), width: 110, align: 'right', formatter: (row) => formatNum3(row.receivedWeight) },
-  { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), minWidth: 120, align: 'center', dictType: 'djs_store_return_status' }
+  { prop: 'returnDate', label: t('storeReturn.column.returnDate'), minWidth: 130, align: 'center', formatter: 'datetime' },
+  { prop: 'productTypeLabel', label: t('storeReturn.column.productType'), minWidth: 130, align: 'center' },
+  { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 130, align: 'center', showOverflowTooltip: true },
+  { prop: 'returnQuantity', label: t('storeReturn.column.returnQuantity'), minWidth: 130, align: 'center' },
+  { prop: 'unit', label: t('storeReturn.column.unit'), minWidth: 130, align: 'center' },
+  { prop: 'goodsWeight', label: t('storeReturn.column.goodsWeight'), minWidth: 130, align: 'center', formatter: (row) => formatNum3(row.goodsWeight) },
+  { prop: 'receivedQty', label: t('storeReturn.column.receivedQty'), minWidth: 130, align: 'center' },
+  { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), minWidth: 130, align: 'center', formatter: (row) => formatNum3(row.receivedWeight) },
+  { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), minWidth: 130, align: 'center', dictType: 'djs_store_return_status' }
 ]);
+
+// 退回日期区间：daterange 回写 [from, to]，拆成后端两个字段
+function resolveDateRange(): { returnDateFrom?: string; returnDateTo?: string } {
+  const range = searchModel.returnDateRange as [string, string] | undefined;
+  return {
+    returnDateFrom: range?.[0] || undefined,
+    returnDateTo: range?.[1] || undefined
+  };
+}
 
 async function fetchList() {
   loading.value = true;
@@ -112,8 +118,7 @@ async function fetchList() {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       returnStatus: (searchModel.returnStatus as string) || undefined,
-      returnDateFrom: (searchModel.returnDateFrom as string) || undefined,
-      returnDateTo: (searchModel.returnDateTo as string) || undefined
+      ...resolveDateRange()
     };
     const res = await listStoreReturn(query);
     list.value = (res.rows ?? res.data ?? []) as StoreReturnVO[];
@@ -148,8 +153,7 @@ async function handleExport() {
   try {
     const params: StoreReturnQuery = {
       returnStatus: (searchModel.returnStatus as string) || undefined,
-      returnDateFrom: (searchModel.returnDateFrom as string) || undefined,
-      returnDateTo: (searchModel.returnDateTo as string) || undefined
+      ...resolveDateRange()
     };
     const data = await exportStoreReturn(params);
     if (blobValidate(data)) {

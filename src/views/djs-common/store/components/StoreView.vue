@@ -14,6 +14,7 @@
       <el-descriptions-item :label="t('store.field.managerName')">{{ data.managerName || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.managerPhone')">{{ data.managerPhone || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.posSystemId')">{{ data.posSystemId || '-' }}</el-descriptions-item>
+      <el-descriptions-item :label="t('store.field.productionMarkCode')">{{ data.productionMarkCode || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.address')" :span="2">{{ data.address || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.image')" :span="2">
         <image-preview v-if="imageUrl" :src="imageUrl" :width="120" :height="120" />

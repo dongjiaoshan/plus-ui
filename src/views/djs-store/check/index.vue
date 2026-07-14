@@ -95,10 +95,11 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'ledgerRange', label: t('storeLedger.column.ledgerDate'), type: 'daterange' }
 ]);
 
+// 三列等宽：统一用 minWidth 让 el-table 均分表格剩余宽度，避免某列（盘点人）被拉伸得过宽。
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'ledgerDate', label: t('storeLedger.column.ledgerDate'), width: 160, align: 'center' },
-  { prop: 'operatorName', label: t('storeLedger.column.operatorName'), minWidth: 140, align: 'center' },
-  { prop: 'checkTime', label: t('storeLedger.column.checkTime'), width: 180, align: 'center', formatter: 'datetime' }
+  { prop: 'ledgerDate', label: t('storeLedger.column.ledgerDate'), minWidth: 160, align: 'center' },
+  { prop: 'operatorName', label: t('storeLedger.column.operatorName'), minWidth: 160, align: 'center' },
+  { prop: 'checkTime', label: t('storeLedger.column.checkTime'), minWidth: 160, align: 'center', formatter: 'datetime' }
 ]);
 
 async function fetchList() {

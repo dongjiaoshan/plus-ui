@@ -15,6 +15,8 @@ export interface ProductProductionVO {
   productSpec?: string;
   plotId?: number;
   plotName?: string;
+  /** 来源地块业务编码（plot_id → t_plant_plot_info.plot_code，后端 fillJoinNames 回填）。 */
+  plotCode?: string;
   earNo?: string;
   productSort?: number;
   productWeight: number;
@@ -158,6 +160,8 @@ export interface WhiteBarShipmentQuery {
   outMethods?: string[];
   /** 出库去向多选（djs_stock_out_dest） */
   outDests?: string[];
+  /** 门店筛选（store_id 精确过滤，空=全部门店） */
+  storeId?: number | string;
   pageNum?: number;
   pageSize?: number;
 }

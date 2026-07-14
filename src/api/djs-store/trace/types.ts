@@ -32,6 +32,14 @@ export interface StoreTraceOnsiteForm {
   weight?: number;
 }
 
+/** 现场生码出参（与后端 StoreOnsiteCodeVo 对齐，row84）。 */
+export interface StoreOnsiteCodeVO {
+  /** 追溯码 produce_code（二维码 encode 用，T{yyyyMMdd}PG{seq6}） */
+  produceCode: string;
+  /** 门店打包生产编码（标签「生产编码」文本展示，<生产标识码>YYMMDD####） */
+  productionCode: string;
+}
+
 /** 门店猪肉打包可选产品（与后端 StorePackProductVo 对齐）。 */
 export interface StorePackProductVO {
   /** 产品主键（雪花） */

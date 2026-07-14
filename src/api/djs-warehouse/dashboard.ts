@@ -63,6 +63,10 @@ export interface ChartTrendPoint {
 export interface WarehouseDashboardChartsVo {
   /** 图① 果蔬产品当日需求分布饼（近 30 日 vegetable 业态按产品名） */
   demandByType: ChartSeriesItem[];
+  /** 图①（近 7 日）明日产品需求分布·猪肉（pork 按产品名，前端「猪肉/果蔬」切换） */
+  demandPork: ChartSeriesItem[];
+  /** 图①（近 7 日）明日产品需求分布·果蔬（vegetable 按产品名，前端「猪肉/果蔬」切换 + TOP5 归其他） */
+  demandVeg: ChartSeriesItem[];
   /** 图② 退货环（退货方向构成，兼容旧口径） */
   returnByDirection: ChartSeriesItem[];
   /** 图② 退货分布·猪肉（pork 按产品名） */

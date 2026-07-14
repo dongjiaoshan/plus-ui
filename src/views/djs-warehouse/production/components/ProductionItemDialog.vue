@@ -150,12 +150,12 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (row: BizRow) => (row as ProductProductionVO).earNo || '-'
   },
   {
-    prop: 'plotName',
-    label: t('djs.warehouse.production.column.plotName'),
+    prop: 'plotCode',
+    label: t('djs.warehouse.production.column.plotCode'),
     minWidth: 120,
     formatter: (row: BizRow) => {
       const r = row as ProductProductionVO;
-      return r.plotName || (r.plotId ? String(r.plotId) : '-');
+      return r.plotCode || '-';
     }
   },
   { prop: 'storeName', label: t('djs.warehouse.production.column.storeName'), minWidth: 140 },
@@ -186,13 +186,7 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => ((row as ProductProductionVO).isArrivalConfirm === 1 ? t('common.yes') : t('common.no'))
   },
-  { prop: 'createByName', label: t('djs.warehouse.production.column.createByName'), minWidth: 100 },
-  {
-    prop: 'remark',
-    label: t('djs.warehouse.production.column.remark'),
-    minWidth: 140,
-    formatter: (row: BizRow) => (row as ProductProductionVO).remark || '-'
-  }
+  { prop: 'createByName', label: t('djs.warehouse.production.column.createByName'), minWidth: 100 }
 ]);
 
 async function loadList() {

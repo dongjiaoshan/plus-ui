@@ -1,5 +1,5 @@
 <template>
-  <el-drawer v-model="visible" :title="drawerTitle" direction="rtl" size="100%" destroy-on-close :close-on-click-modal="false" @closed="handleClosed">
+  <el-drawer v-model="visible" :title="drawerTitle" direction="rtl" size="100%" destroy-on-close @closed="handleClosed">
     <div class="cart-layout">
       <!-- 左：产品候选表（顶部 7 产品 tab 跨业态切换） -->
       <div class="cart-main">

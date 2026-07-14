@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { TraceablePigVO, StoreTraceOnsiteForm, StorePackProductVO } from './trace/types';
+import type { TraceablePigVO, StoreTraceOnsiteForm, StorePackProductVO, StoreOnsiteCodeVO } from './trace/types';
 import type { TraceCodeDetailVO, TraceCodeQuery, TraceCodeVO } from '@/api/warehouse/trace/types';
 
 /**
@@ -19,9 +19,9 @@ import type { TraceCodeDetailVO, TraceCodeQuery, TraceCodeVO } from '@/api/wareh
 export const listTraceablePig = (query?: Record<string, unknown>): AxiosPromise<TraceablePigVO[]> =>
   request({ url: '/djs/store/trace/pig/list', method: 'get', params: query });
 
-/** 现场生码（返回 produce_code 供打印）。 */
+/** 现场生码（返回追溯码 produceCode + 门店生产编码 productionCode 供打印，row84）。 */
 export const genStoreTraceCode = (data: StoreTraceOnsiteForm) =>
-  request<string>({ url: '/djs/store/trace/gen', method: 'post', data });
+  request<StoreOnsiteCodeVO>({ url: '/djs/store/trace/gen', method: 'post', data });
 
 /** 门店猪肉打包可选产品（workshop=门店打包间(5) 且 product_material∈字典 djs_pork_return_product）。 */
 export const listStorePackProducts = (): AxiosPromise<StorePackProductVO[]> =>

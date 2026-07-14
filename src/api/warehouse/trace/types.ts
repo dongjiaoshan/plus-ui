@@ -13,6 +13,8 @@ export interface TraceCodeVO {
   id: string;
   /** 追溯码（produce_code，TRC-CORE genCode 生成） */
   produceCode: string;
+  /** 生产编码（DENGBO-ROW84：门店现场打包 <生产标识码>YYMMDD####；仓库码 / 旧门店码为空） */
+  productionCode?: string;
   /** 追溯码类型（字典 djs_trace_code_type，值 pork/veg/gift） */
   codeType: string;
   /** 生成来源：warehouse=仓库 / store=门店现场分割打包（service 按 remark 计算） */

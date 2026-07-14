@@ -47,13 +47,19 @@
       </el-row>
     </el-card>
 
-    <!-- 6 图栅格（2 列 × 3 行） -->
+    <!-- 图栅格 行1：明日产品需求分布（猪肉/果蔬切换） | 退货产品分布 -->
     <el-row :gutter="12" class="chart-row">
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
-          <template #header
-            ><span class="title">{{ t('warehouse.dashboard.chartDemandPie') }}</span></template
-          >
+          <template #header>
+            <div class="card-header">
+              <span class="title">{{ t('warehouse.dashboard.chartDemandPie') }}</span>
+              <el-radio-group v-model="demandTab" size="small">
+                <el-radio-button value="pork">{{ t('warehouse.dashboard.demandTabPork') }}</el-radio-button>
+                <el-radio-button value="vegetable">{{ t('warehouse.dashboard.demandTabVeg') }}</el-radio-button>
+              </el-radio-group>
+            </div>
+          </template>
           <div ref="demandPieEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
@@ -73,8 +79,9 @@
       </el-col>
     </el-row>
 
+    <!-- 图栅格 行2：生产趋势（占满整行） -->
     <el-row :gutter="12" class="chart-row">
-      <el-col :xs="24" :md="12">
+      <el-col :xs="24" :md="24">
         <el-card class="chart-card" shadow="never">
           <template #header
             ><span class="title">{{ t('warehouse.dashboard.chartProductionTrend') }}</span></template
@@ -82,23 +89,16 @@
           <div ref="productionTrendEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
+    </el-row>
+
+    <!-- 图栅格 行3：盘点结果分布 | 损耗趋势 -->
+    <el-row :gutter="12" class="chart-row">
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
           <template #header
             ><span class="title">{{ t('warehouse.dashboard.chartCheckPie') }}</span></template
           >
           <div ref="checkPieEl" class="chart-canvas"></div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <el-row :gutter="12" class="chart-row">
-      <el-col :xs="24" :md="12">
-        <el-card class="chart-card" shadow="never">
-          <template #header
-            ><span class="title">{{ t('warehouse.dashboard.chartLocationRing') }}</span></template
-          >
-          <div ref="locationRingEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
       <el-col :xs="24" :md="12">
@@ -131,23 +131,34 @@ const charts = ref<WarehouseDashboardChartsVo | null>(null);
 const loading = ref(false);
 const lastRefreshAt = ref('');
 
-// 6 图 ref + 实例
+// 图 ref + 实例
 const demandPieEl = ref<HTMLDivElement>();
 const returnRingEl = ref<HTMLDivElement>();
 const productionTrendEl = ref<HTMLDivElement>();
 const checkPieEl = ref<HTMLDivElement>();
-const locationRingEl = ref<HTMLDivElement>();
 const lossTrendEl = ref<HTMLDivElement>();
 
 let demandPie: echarts.ECharts | null = null;
 let returnRing: echarts.ECharts | null = null;
 let productionTrend: echarts.ECharts | null = null;
 let checkPie: echarts.ECharts | null = null;
-let locationRing: echarts.ECharts | null = null;
 let lossTrend: echarts.ECharts | null = null;
 
+// 明日产品需求分布「猪肉 / 果蔬」切换
+const demandTab = ref<'pork' | 'vegetable'>('pork');
 // 退货环「猪肉 / 果蔬」切换
 const returnTab = ref<'pork' | 'vegetable'>('pork');
+
+/** 果蔬类切片取 TOP5，其余合并为「其他」（猪肉全量不折叠）。 */
+function top5WithOther(data: ChartSeriesItem[] | undefined): ChartSeriesItem[] {
+  const items = (data ?? []).filter((d) => Number(d.value) > 0).map((d) => ({ name: d.name, value: Number(d.value) }));
+  items.sort((a, b) => b.value - a.value);
+  if (items.length <= 5) return items;
+  const top = items.slice(0, 5);
+  const otherValue = items.slice(5).reduce((sum, d) => sum + Number(d.value), 0);
+  if (otherValue > 0) top.push({ name: t('warehouse.dashboard.otherSlice'), value: otherValue });
+  return top;
+}
 
 // 横条 1：今日需求 8 项（对齐原型；label 走 i18n，键名待 backfill，单位逐字对齐截图）
 const demandKpis = computed(() => {
@@ -217,28 +228,29 @@ function nowTimeText(): string {
 }
 
 function renderAll() {
-  // 图① 果蔬产品当日需求分布（按产品名）
-  renderPie(demandPieEl, () => (demandPie ??= echarts.init(demandPieEl.value!)), charts.value?.demandByType, t('warehouse.dashboard.chartDemandPie'));
-  // 图② 产品退货分布（猪肉 / 果蔬切换）
+  // 图① 明日产品需求分布（猪肉 / 果蔬切换，近 7 日）
+  renderDemandPie();
+  // 图② 退货产品分布（猪肉 / 果蔬切换，近 7 日）
   renderReturnRing();
-  // 图③ 产品生产趋势（白条头数柱 + 猪肉/果蔬重量线，组合图）
+  // 图③ 产品生产趋势（白条头数柱 + 猪肉/果蔬重量线，组合图，占满整行）
   renderProductionCombo();
   // 图④ 库存盘点结果分布
   renderPie(checkPieEl, () => (checkPie ??= echarts.init(checkPieEl.value!)), charts.value?.checkResult, t('warehouse.dashboard.chartCheckPie'));
-  // 图⑤ 当月盘点异常库位分布（按库位名）
-  renderRing(
-    locationRingEl,
-    () => (locationRing ??= echarts.init(locationRingEl.value!)),
-    charts.value?.abnormalLocationByName,
-    t('warehouse.dashboard.chartLocationRing')
-  );
-  // 图⑥ 产品生产损耗趋势（猪肉 / 果蔬多系列）
+  // 图⑤ 产品生产损耗趋势（猪肉 / 果蔬多系列）
   renderLossMulti();
 }
 
-/** 图② 退货环：按当前 tab（猪肉 / 果蔬）渲染对应产品名构成。 */
+/** 图① 明日产品需求分布：按当前 tab（猪肉全量 / 果蔬 TOP5 归其他）渲染对应产品名构成。 */
+function renderDemandPie() {
+  const raw = demandTab.value === 'pork' ? charts.value?.demandPork : charts.value?.demandVeg;
+  const data = demandTab.value === 'vegetable' ? top5WithOther(raw) : raw;
+  renderPie(demandPieEl, () => (demandPie ??= echarts.init(demandPieEl.value!)), data, t('warehouse.dashboard.chartDemandPie'));
+}
+
+/** 图② 退货环：按当前 tab（猪肉全量 / 果蔬 TOP5 归其他）渲染对应产品名构成。 */
 function renderReturnRing() {
-  const data = returnTab.value === 'pork' ? charts.value?.returnPork : charts.value?.returnVegetable;
+  const raw = returnTab.value === 'pork' ? charts.value?.returnPork : charts.value?.returnVegetable;
+  const data = returnTab.value === 'vegetable' ? top5WithOther(raw) : raw;
   renderRing(returnRingEl, () => (returnRing ??= echarts.init(returnRingEl.value!)), data, t('warehouse.dashboard.chartReturnRing'));
 }
 
@@ -369,14 +381,16 @@ function renderRing(el: typeof returnRingEl, getChart: () => echarts.ECharts, da
 }
 
 function disposeCharts() {
-  [demandPie, returnRing, productionTrend, checkPie, locationRing, lossTrend].forEach((c) => c?.dispose());
-  demandPie = returnRing = productionTrend = checkPie = locationRing = lossTrend = null;
+  [demandPie, returnRing, productionTrend, checkPie, lossTrend].forEach((c) => c?.dispose());
+  demandPie = returnRing = productionTrend = checkPie = lossTrend = null;
 }
 
 function handleResize() {
-  [demandPie, returnRing, productionTrend, checkPie, locationRing, lossTrend].forEach((c) => c?.resize());
+  [demandPie, returnRing, productionTrend, checkPie, lossTrend].forEach((c) => c?.resize());
 }
 
+// 需求饼 tab 切换 → 仅重渲染该饼图
+watch(demandTab, () => renderDemandPie());
 // 退货环 tab 切换 → 仅重渲染该环图
 watch(returnTab, () => renderReturnRing());
 

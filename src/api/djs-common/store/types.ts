@@ -20,6 +20,8 @@ export interface StoreVO extends BaseEntity {
   /** sys_user.user_id；NULL=未设置店长 */
   managerUserId?: number | null;
   posSystemId?: string;
+  /** 生产标识码（门店级唯一，门店打包生产编码前缀 <生产标识码>YYMMDD####） */
+  productionMarkCode?: string;
   /** OSS oss_id（雪花 string，禁 Number）；前端用 image-preview 展示 */
   imageOssId?: string | null;
   remark?: string;
@@ -41,6 +43,7 @@ export interface StoreForm {
   managerName?: string;
   managerPhone?: string;
   posSystemId?: string;
+  productionMarkCode?: string;
   imageOssId?: string | null;
   remark?: string;
 }

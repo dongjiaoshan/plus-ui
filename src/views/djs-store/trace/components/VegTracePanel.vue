@@ -8,7 +8,7 @@
     :search-model="searchModel"
     :page-num="pageNum"
     :page-size="pageSize"
-    :action-width="200"
+    :action-width="120"
     row-key="id"
     :selectable="false"
     :show-add="false"
@@ -21,9 +21,6 @@
     @page-change="handlePageChange"
   >
     <template #action="{ row }">
-      <el-button v-hasPermi="['djs:warehouse:trace:print']" link type="primary" icon="View" @click="handlePreview(row)">
-        {{ t('storeTrace.label.preview') }}
-      </el-button>
       <el-button v-hasPermi="['djs:warehouse:trace:print']" link type="primary" icon="Printer" @click="handlePrint(row)">
         {{ t('storeTrace.veg.print') }}
       </el-button>
@@ -62,15 +59,15 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('storeTrace.veg.productName'), type: 'input' }
 ]);
 
-// 原型「果蔬追溯码管理」列：到店日期/生产编号/产品名称/产品规格/实际重量(g)/来源地块/采摘时间/月台接收时间/发货时间
-// 去掉「序号」列（row139 ②）；实际重量转克显示（row139 ③）
+// 「果蔬追溯码管理」列：到店日期/生产编号/产品名称/产品规格/实际重量(g)/地块编码/采摘时间/月台接收时间/发货时间
+// 去掉「序号」列；实际重量转克显示；地块编码列加宽显示全（row80）
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), width: 120, align: 'center' },
   { prop: 'produceNo', label: t('storeTrace.veg.produceNo'), width: 130, align: 'center', showOverflowTooltip: true },
   { prop: 'productName', label: t('storeTrace.veg.productName'), minWidth: 110, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), width: 100, align: 'center' },
   { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), width: 100, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
-  { prop: 'plotName', label: t('storeTrace.veg.plotName'), width: 110, align: 'center', showOverflowTooltip: true },
+  { prop: 'plotName', label: t('storeTrace.veg.plotName'), minWidth: 170, align: 'center' },
   { prop: 'pickTime', label: t('storeTrace.veg.pickTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'platformReceiveTime', label: t('storeTrace.veg.platformReceiveTime'), width: 160, align: 'center', formatter: 'datetime' },
   { prop: 'shipTime', label: t('storeTrace.veg.shipTime'), width: 160, align: 'center', formatter: 'datetime' }
@@ -138,12 +135,6 @@ function buildLabel(row: BizRow): { payload: TraceLabelData; weight?: number } |
     },
     weight: r.actualWeight
   };
-}
-
-// 预览：弹出追溯码标签卡（二维码 + 8 字段），可再点「确认并打印」
-function handlePreview(row: BizRow) {
-  const l = buildLabel(row);
-  if (l) labelDialogRef.value?.open(l.payload, l.weight);
 }
 
 // 追溯码打印：不弹预览框，直接送打印（浏览器 kiosk-printing 模式下无原生对话框，静默打印）

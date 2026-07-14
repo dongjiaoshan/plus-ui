@@ -106,12 +106,12 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'purchaseDate', label: t('djs.warehouse.outsourcePig.column.purchaseDate'), width: 140, align: 'center', formatter: 'date' },
-  { prop: 'arriveTime', label: t('djs.warehouse.outsourcePig.column.arriveTime'), width: 170, align: 'center', formatter: 'datetime' },
-  { prop: 'pigMarkNo', label: t('djs.warehouse.outsourcePig.column.pigMarkNo'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-  { prop: 'pigWeight', label: t('djs.warehouse.outsourcePig.column.pigWeight'), width: 120, align: 'center' },
+  { prop: 'purchaseDate', label: t('djs.warehouse.outsourcePig.column.purchaseDate'), minWidth: 140, align: 'center', formatter: 'date' },
+  { prop: 'arriveTime', label: t('djs.warehouse.outsourcePig.column.arriveTime'), minWidth: 140, align: 'center', formatter: 'datetime' },
+  { prop: 'pigMarkNo', label: t('djs.warehouse.outsourcePig.column.pigMarkNo'), minWidth: 140, align: 'center', showOverflowTooltip: true },
+  { prop: 'pigWeight', label: t('djs.warehouse.outsourcePig.column.pigWeight'), minWidth: 140, align: 'center' },
   { prop: 'supplierName', label: t('djs.warehouse.outsourcePig.column.supplier'), minWidth: 140, align: 'center', showOverflowTooltip: true },
-  { prop: 'buyerName', label: t('djs.warehouse.outsourcePig.column.buyer'), minWidth: 120, align: 'center', showOverflowTooltip: true }
+  { prop: 'buyerName', label: t('djs.warehouse.outsourcePig.column.buyer'), minWidth: 140, align: 'center', showOverflowTooltip: true }
 ]);
 
 async function fetchList() {

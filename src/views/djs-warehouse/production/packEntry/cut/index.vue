@@ -165,6 +165,12 @@ async function loadCuttable() {
   try {
     const res = await listCuttable();
     cuttable.value = ((res as any).data ?? []) as PigCutRecordVO[];
+    // row93①：默认选中「最早进分割库」的白条 —— sortedCuttable 按 cutId 升序（= 进分割库先后），取首项。
+    // 仅在当前未选中有效分割单时补选（已手选不覆盖；所选已完成/移出列表则改选最早一条）。
+    const stillValid = form.value.cutRecordId && cuttable.value.some((r) => String(r.id) === String(form.value.cutRecordId));
+    if (!stillValid) {
+      form.value.cutRecordId = sortedCuttable.value[0]?.id ?? '';
+    }
   } finally {
     cuttableLoading.value = false;
   }
@@ -318,17 +324,17 @@ onMounted(async () => {
   font-size: 14px;
   color: var(--el-color-warning-dark-2);
 }
+/* row93②：右操作面板随左侧产品卡网格拉伸到等高（红框到底），内容纵向均分、间距等比放大 */
 .station-body {
   display: flex;
   gap: 16px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .station-left {
   flex: 1;
   min-width: 0;
 }
-/* row121①：右侧操作栏整体收紧（更小内边距 / 段间距 / 控件高度），对齐截图红框更紧凑的诉求 */
-/* r81：面板过于紧凑（上一轮收紧过头），放大回 pickup 页那档，控件与左侧产品卡成比例 */
+/* r81：控件与左侧产品卡成比例。row93②：面板拉伸到与卡片网格等高，各段用 space-between 均分留白（间距等比增加），确认按钮沉底 */
 .station-right {
   flex: 0 0 440px;
   width: 440px;
@@ -336,6 +342,9 @@ onMounted(async () => {
   border-radius: 8px;
   padding: 24px;
   background: var(--el-bg-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .panel-title {
   font-size: 16px;

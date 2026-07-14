@@ -25,6 +25,7 @@
       :auto-source="true"
       :show-ear="false"
       wide
+      :hide-pack-no="true"
     />
   </div>
 </template>

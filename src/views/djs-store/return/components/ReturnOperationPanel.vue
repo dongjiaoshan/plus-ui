@@ -83,7 +83,7 @@
       </el-table-column>
     </el-table>
 
-    <el-empty v-if="!loading && !currentRows.length" :description="t('storeReturn.operation.emptyCandidates')" />
+    <el-empty v-if="!loading && !currentRows.length" :description="t('storeReturn.operation.empty')" />
 
     <div class="op-footer">
       <el-button type="primary" :loading="submitLoading" :disabled="!filledCount" @click="handleSubmit">

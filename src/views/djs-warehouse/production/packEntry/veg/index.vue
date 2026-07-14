@@ -11,6 +11,7 @@
       plot-group
       :show-source="false"
       wide
+      :hide-pack-no="true"
       @submitted="handleSubmitted"
     />
   </div>

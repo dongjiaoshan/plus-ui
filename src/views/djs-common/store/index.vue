@@ -101,6 +101,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'storeName', label: t('store.column.storeName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'shortName', label: t('store.column.shortName'), width: 120, showOverflowTooltip: true },
   { prop: 'storeType', label: t('store.column.storeType'), width: 100, align: 'center', dictType: 'djs_store_type' },
+  { prop: 'productionMarkCode', label: t('store.column.productionMarkCode'), width: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'managerName', label: t('store.column.managerName'), width: 120 },
   { prop: 'managerPhone', label: t('store.column.managerPhone'), width: 140, align: 'center' },
   { prop: 'employeeCount', label: t('store.column.employeeCount'), width: 100, align: 'center' },

@@ -176,8 +176,8 @@ const columns = computed<BizTableColumn[]>(() => {
   return cols;
 });
 
-/** 果蔬业态操作区多一个「饲料饲喂」按钮（4 个×4 字），加宽到 400 防换行；其余 3 个按钮 240 足够 */
-const actionColWidth = computed(() => (activeBelongType.value === 'vegetable' ? 400 : 240));
+/** 操作列按内容收窄（row101：减少列宽 + 左右留白）：果蔬多一个「饲料饲喂」共 4 个 link 按钮取 330 恰好一行不换；其余 3 个按钮取 210 */
+const actionColWidth = computed(() => (activeBelongType.value === 'vegetable' ? 330 : 210));
 
 /**
  * BigDecimal→string 防 NaN 兜底。row40.2#4：kg 单位恒 3 位小数补零（对齐 mp + row30/31/33 精度约定，
@@ -289,10 +289,13 @@ async function submitOp() {
     proxy?.$modal.msgWarning(t('matPick.message.stockInsufficient'));
     return;
   }
-  // row50：损耗前置校验——损耗扣的是「今日领用剩余量」（今日出库−退回−损耗−饲喂，与列表展示口径一致），
-  //   非仓库库存。对应地块/耳号今日无领用剩余量时禁止录损耗，且损耗量不超过今日领用剩余
-  //   （猪肉按篮的最终权威仍是后端 lossPorkEar，此为行级前置软校验）。
-  if (opKind.value === 'loss') {
+  // row102：退回入库 / 当日损耗 / 饲料饲喂 前置校验——三者都消耗「今日领用剩余量」
+  //   （今日出库−退回−损耗−饲喂，与列表展示四量口径一致），非仓库库存。
+  //   ① 必须先「领用出库」：今日无领用剩余量（remaining<=0）时禁止录入这三项；
+  //   ② 单次录入不能超过今日领用剩余；
+  //   ③ 三项联动：某项录入后 remaining 随列表刷新自动减少，其他项可录量同步收窄。
+  //   （猪肉按篮 / 果蔬按地块的最终权威仍是后端 ensureTodayCapacity，此为行级前置软校验友好提示。）
+  if (opKind.value === 'return' || opKind.value === 'loss' || opKind.value === 'feed') {
     const remaining =
       Number(row.todayPicked || 0) - Number(row.todayReturned || 0) - Number(row.todayLoss || 0) - Number(row.todayFeed || 0);
     if (remaining <= 0) {
@@ -300,7 +303,7 @@ async function submitOp() {
       return;
     }
     if (qty > remaining) {
-      proxy?.$modal.msgWarning(t('matPick.message.lossExceedRemaining', { remaining: Number(remaining.toFixed(3)) }));
+      proxy?.$modal.msgWarning(t('matPick.message.exceedRemaining', { remaining: Number(remaining.toFixed(3)) }));
       return;
     }
   }

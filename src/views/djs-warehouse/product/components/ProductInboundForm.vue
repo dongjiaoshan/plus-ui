@@ -18,7 +18,6 @@
         >
           <el-option v-for="l in displayLocationOptions" :key="String(l.value)" :label="l.label" :value="l.value" />
         </el-select>
-        <span v-if="locationLocked" class="ml-2 text-gray-500">{{ t('product.inbound.locationLocked') }}</span>
       </el-form-item>
       <el-form-item :label="quantityLabel" prop="quantity">
         <el-input-number v-model="form.quantity" :precision="3" :min="0.001" :step="1" style="width: 100%" />

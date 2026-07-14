@@ -20,9 +20,6 @@
     @page-change="handlePageChange"
   >
     <template #action="{ row }">
-      <el-button v-hasPermi="['djs:store:trace:print']" link type="primary" icon="View" @click="handlePreview(row)">
-        {{ t('storeTrace.label.preview') }}
-      </el-button>
       <el-button v-hasPermi="['djs:store:trace:print']" link type="primary" icon="Printer" @click="handlePrint(row)">
         {{ t('storeTrace.pork.genPrint') }}
       </el-button>
@@ -67,21 +64,28 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
       { label: t('storeTrace.pork.sourceStore'), value: 'store' }
     ]
   },
-  { field: 'arrivalDateRange', label: t('storeTrace.veg.arrivalDate'), type: 'daterange', clearable: true },
+  { field: 'arrivalDateRange', label: t('storeTrace.pork.produceDate'), type: 'daterange', clearable: true },
   { field: 'productName', label: t('storeTrace.veg.productName'), type: 'input' }
 ]);
 
-// 猪肉追溯码列表：到店日期/生成来源/生产编号/产品名称/产品规格/实际重量(g)/来源耳号/备注/生成时间
-// row140 ②：「生成来源」列移到「到店日期」列右侧；row140 ④：「产品」文案改「产品名称」（codeProductName 已改值）；row140 ⑤：实际重量转克
+// 猪肉追溯码列表：生产日期/生成来源/生产编号/产品名称/产品规格/实际重量(g)/来源耳号/生成时间
+// row140 ②：「生成来源」列移到日期列右侧；row140 ④：「产品」文案改「产品名称」；row140 ⑤：实际重量转克
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), width: 110, align: 'center' },
+  { prop: 'arrivalDate', label: t('storeTrace.pork.produceDate'), width: 110, align: 'center' },
   { prop: 'sourceLabel', label: t('storeTrace.pork.sourceCol'), width: 90, align: 'center' },
-  { prop: 'produceNo', label: t('storeTrace.veg.produceNo'), width: 140, align: 'center', showOverflowTooltip: true },
+  {
+    prop: 'produceNo',
+    label: t('storeTrace.veg.produceNo'),
+    width: 140,
+    align: 'center',
+    showOverflowTooltip: true,
+    // row84：生产编号优先取持久化的生产编码（门店现做码无产出记录、produceNo 后端已兜底填 productionCode，此处再兜一层）
+    formatter: (row: BizRow) => (row.productionCode as string) || (row.produceNo as string) || '-'
+  },
   { prop: 'productName', label: t('storeTrace.pork.codeProductName'), minWidth: 110, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), width: 90, align: 'center' },
   { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), width: 90, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
-  { prop: 'pigEarNo', label: t('storeTrace.pork.pigEarNo'), width: 200, align: 'center', showOverflowTooltip: true },
-  { prop: 'remark', label: t('storeTrace.pork.remark'), minWidth: 130, showOverflowTooltip: true },
+  { prop: 'pigEarNo', label: t('storeTrace.pork.pigEarNo'), minWidth: 200, align: 'center', showOverflowTooltip: true },
   { prop: 'createTime', label: t('storeTrace.pork.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 
@@ -138,12 +142,14 @@ function buildLabel(row: BizRow): { payload: TraceLabelData; weight?: number } |
     proxy?.$modal.msgWarning(t('storeTrace.pork.noCode'));
     return null;
   }
+  // 生产编号：优先持久化的生产编码（门店现做码），兜底产出记录 produceNo（仓库码）
+  const productionNo = r.productionCode || r.produceNo;
   return {
     payload: {
       productCode: r.produceCode,
-      // 生产序号展示生产编号（produceNo）值
-      serialNo: r.produceNo,
-      packCode: r.produceNo,
+      // 生产序号展示生产编号（productionCode 优先，兜底 produceNo）
+      serialNo: productionNo,
+      packCode: productionNo,
       produceDate: r.arrivalDate,
       productName: r.productName,
       storeName: r.storeName,
@@ -154,12 +160,6 @@ function buildLabel(row: BizRow): { payload: TraceLabelData; weight?: number } |
     },
     weight: r.actualWeight
   };
-}
-
-// 预览：弹出追溯码标签卡（二维码 + 8 字段），可再点「确认并打印」
-function handlePreview(row: BizRow) {
-  const l = buildLabel(row);
-  if (l) labelDialogRef.value?.open(l.payload, l.weight);
 }
 
 // 追溯码打印（重打印）：不弹预览框，直接送打印（浏览器 kiosk-printing 模式下无原生对话框，静默打印）

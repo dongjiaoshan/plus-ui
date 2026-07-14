@@ -42,6 +42,12 @@
             <el-input v-model="form.posSystemId" :placeholder="t('store.placeholder.posSystemId')" maxlength="64" />
           </el-form-item>
         </el-col>
+        <el-col :span="12">
+          <!-- row83：生产标识码，门店打包生产编码前缀，门店级唯一（后端 + DB 双重校验） -->
+          <el-form-item :label="t('store.field.productionMarkCode')" prop="productionMarkCode">
+            <el-input v-model="form.productionMarkCode" :placeholder="t('store.placeholder.productionMarkCode')" maxlength="32" />
+          </el-form-item>
+        </el-col>
         <el-col v-if="isEdit" :span="12">
           <!-- admin row16：店长姓名只反显不可改（店长由门店人员绑定维护，非门店表单编辑） -->
           <el-form-item :label="t('store.field.managerName')" prop="managerName">
@@ -107,6 +113,7 @@ const defaultForm = (): StoreForm => ({
   managerName: undefined,
   managerPhone: undefined,
   posSystemId: undefined,
+  productionMarkCode: undefined,
   imageOssId: null,
   remark: undefined
 });

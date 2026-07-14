@@ -36,6 +36,8 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listWhiteBarShipment } from '@/api/djs-warehouse/whiteBarShipment';
 import type { WhiteBarShipmentQuery, WhiteBarShipmentVO } from '@/api/djs-warehouse/production/types';
+import { listStore } from '@/api/djs-common/store';
+import type { StoreVO } from '@/api/djs-common/store/types';
 import { lastMonthRange } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
@@ -63,9 +65,18 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
+/** 门店下拉选项（可输入过滤，SearchForm 的 el-select 已内置 filterable） */
+const storeOptions = ref<Array<{ label: string; value: number | string }>>([]);
+async function loadStoreOptions() {
+  const res = await listStore({ pageNum: 1, pageSize: 500 } as any);
+  const rows = ((res as any).rows ?? []) as StoreVO[];
+  storeOptions.value = rows.map((s) => ({ label: s.storeName, value: s.id }));
+}
+
 const searchModel = reactive<Record<string, any>>({
   dateRange: lastMonthRange(),
   earNo: undefined,
+  storeId: undefined,
   outMethod: [],
   outDest: []
 });
@@ -73,6 +84,7 @@ const searchModel = reactive<Record<string, any>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('djs.warehouse.whiteBarShipment.produceTime'), type: 'daterange' },
   { field: 'earNo', label: t('djs.warehouse.whiteBarShipment.earNo'), type: 'input' },
+  { field: 'storeId', label: t('djs.warehouse.whiteBarShipment.storeName'), type: 'select', options: storeOptions.value },
   { field: 'outMethod', label: t('djs.warehouse.whiteBarShipment.outMethod'), type: 'select', multiple: true, options: outMethodOptions },
   { field: 'outDest', label: t('djs.warehouse.whiteBarShipment.outDest'), type: 'select', multiple: true, dictType: 'djs_stock_out_dest' }
 ]);
@@ -103,6 +115,7 @@ function buildQuery(): WhiteBarShipmentQuery {
     beginDate: from || undefined,
     endDate: to || undefined,
     earNo: searchModel.earNo || undefined,
+    storeId: searchModel.storeId || undefined,
     outMethods: Array.isArray(searchModel.outMethod) && searchModel.outMethod.length ? searchModel.outMethod : undefined,
     outDests: Array.isArray(searchModel.outDest) && searchModel.outDest.length ? searchModel.outDest : undefined,
     pageNum: pageNum.value,
@@ -130,6 +143,7 @@ function handleSearch(payload?: Record<string, any>) {
 function handleReset() {
   searchModel.dateRange = lastMonthRange();
   searchModel.earNo = undefined;
+  searchModel.storeId = undefined;
   searchModel.outMethod = [];
   searchModel.outDest = [];
   handleSearch();
@@ -146,6 +160,7 @@ function handleExport() {
 }
 
 onMounted(() => {
+  loadStoreOptions();
   loadList();
 });
 </script>

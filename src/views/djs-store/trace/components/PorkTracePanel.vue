@@ -4,6 +4,7 @@
       <!-- 左：追溯猪只 picker（chip）+ 5 张零售部位卡（带产品图） -->
       <el-col :xs="24" :md="17" class="trace-col">
         <el-card shadow="never" class="left-card">
+          <!-- row82：白条 chip 区固定不随页滚动（内容多时自身内部滚动，不撑高整页） -->
           <div v-loading="pigLoading" class="pig-chips">
             <el-tag
               v-for="p in pigs"
@@ -20,6 +21,7 @@
             <el-empty v-if="!pigLoading && !pigs.length" :description="t('storeTrace.pork.noPig')" :image-size="60" />
           </div>
 
+          <!-- row82：仅猪肉产品列表内部滚动，整页不滚动 -->
           <div class="cut-grid">
             <div
               v-for="c in cutOptions"
@@ -264,21 +266,24 @@ async function handleGen() {
   genLoading.value = true;
   try {
     const res = await genStoreTraceCode({ earNo: selectedPig.value?.earNo, cutLabel: form.cutLabel, weight: weightKg });
-    const code = (res.data as unknown as string) ?? '';
-    proxy?.$modal.msgSuccess(t('storeTrace.pork.genOk', { code }));
+    // row84：后端返回追溯码 produceCode（二维码用）+ 门店生产编码 productionCode（<生产标识码>YYMMDD####，标签展示用）
+    const traceCode = res.data?.produceCode ?? '';
+    const productionCode = res.data?.productionCode ?? '';
+    proxy?.$modal.msgSuccess(t('storeTrace.pork.genOk', { code: productionCode || traceCode }));
     // 弹框录重量（默认本次生码重量 kg，弹框内按业态转 g 展示）→ 结构化标签卡 + 二维码 → 打印
     labelDialogRef.value?.open(
       {
-        productCode: code,
-        // row201-1：门店现场码无 product_production 生产编号，「生产编码」取追溯码本身（与已生成追溯码列表口径一致，不留空）
-        serialNo: code,
+        productCode: productionCode,
+        // row84：门店「生产编码」= <生产标识码>YYMMDD####（门店生产标识码 + 每日流水），非追溯码本身
+        serialNo: productionCode,
         produceDate: todayYmd(),
         productName: form.cutLabel,
         sourceLabel: t('storeTrace.label.earNo'),
         sourceValue: selectedPig.value?.earNo,
         // row201-2：销售门店取当前所选门店（对齐仓库肉品打包 SkuPackForm 本地解析写法）
         storeName: currentStoreName(),
-        produceCode: code,
+        // 二维码仍 encode 追溯码 traceCode（C 端扫码 /trace/pork/{code} 查得到）
+        produceCode: traceCode,
         traceType: 'pork'
       },
       weightKg
@@ -305,26 +310,40 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .trace-pork {
+  // row82：整页不滚动 —— 左右两版块定高铺满视口，滚动只发生在猪肉产品列表内部
+  overflow: hidden;
+
   // 让左右两版块铺满屏幕高度（内容少时也不留大片空白）
   .trace-row {
     align-items: stretch;
-    min-height: calc(100vh - 140px);
+    height: calc(100vh - 140px);
   }
 
   // el-col flex 拉伸，内部 card 撑满列高
   .trace-col {
     display: flex;
+    min-height: 0; // 允许内部子元素在 flex 容器内收缩，overflow 才生效
   }
 
   .left-card,
   .op-card {
     width: 100%;
-    min-height: calc(100vh - 140px);
+    height: calc(100vh - 140px);
     display: flex;
     flex-direction: column;
 
     :deep(.el-card__body) {
       flex: 1;
+      min-height: 0; // 卡片 body 可收缩，内部 cut-grid 的 overflow 才能生效
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  // 右侧操作面板固定不随内容撑高（白条信息 + 产品 + 重量 + 打印按钮，内容超出时自身滚动）
+  .op-card {
+    :deep(.el-card__body) {
+      overflow-y: auto;
     }
   }
 
@@ -332,8 +351,12 @@ onMounted(async () => {
     font-weight: 600;
   }
 
+  // row82：白条 chip 区固定高度、内部滚动，不撑高整页
   .pig-chips {
+    flex: none;
     min-height: 48px;
+    max-height: 120px;
+    overflow-y: auto;
     margin-bottom: 20px;
 
     .pig-chip {
@@ -361,9 +384,14 @@ onMounted(async () => {
     color: #606266;
   }
 
+  // row82：猪肉产品列表占满剩余高度、仅自身内部纵向滚动（整页不滚动）
   .cut-grid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-auto-rows: min-content;
     gap: 16px;
 
     .cut-card {
