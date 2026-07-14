@@ -8,7 +8,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_location_type', 'djs_location_status']"
+      :dict-types="['djs_location_type', 'djs_common_status']"
       :page-num="pageNum"
       :page-size="pageSize"
       :action-width="220"
@@ -77,7 +77,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'locationCode', label: t('location.field.locationCode'), type: 'input' },
   { field: 'locationName', label: t('location.field.locationName'), type: 'input' },
   { field: 'locationType', label: t('location.field.locationType'), type: 'select', dictType: 'djs_location_type', multiple: true },
-  { field: 'locationStatus', label: t('location.field.locationStatus'), type: 'select', dictType: 'djs_location_status' }
+  { field: 'locationStatus', label: t('location.field.locationStatus'), type: 'select', dictType: 'djs_common_status' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -85,7 +85,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'locationName', label: t('location.column.locationName'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'locationSort', label: t('location.column.locationSort'), width: 90, align: 'center' },
   { prop: 'locationType', label: t('location.column.locationType'), width: 110, align: 'center', dictType: 'djs_location_type' },
-  { prop: 'locationStatus', label: t('location.column.locationStatus'), width: 90, align: 'center', dictType: 'djs_location_status' },
+  { prop: 'locationStatus', label: t('location.column.locationStatus'), width: 90, align: 'center', dictType: 'djs_common_status' },
   { prop: 'locationDesc', label: t('location.column.locationDesc'), minWidth: 180, showOverflowTooltip: true },
   { prop: 'createTime', label: t('location.column.createTime'), width: 170, align: 'center', formatter: 'datetime' },
   { prop: 'updateTime', label: t('location.column.updateTime'), width: 170, align: 'center', formatter: 'datetime' },
@@ -139,7 +139,7 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
 }
-/** 行内启停：djs_location_status 1=启用 / 2=停用，toggle 当前值 */
+/** 行内启停：djs_common_status 1=启用 / 2=停用，toggle 当前值 */
 async function handleToggleStatus(row: BizRow) {
   const next = row.locationStatus === 1 ? 2 : 1;
   await changeLocationStatus(row.id, next);

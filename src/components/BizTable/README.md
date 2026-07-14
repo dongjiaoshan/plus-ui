@@ -26,7 +26,7 @@
     :columns="columns"
     :search-schema="searchSchema"
     :search-model="searchModel"
-    :dict-types="['djs_user_status']"
+    :dict-types="['sys_normal_disable']"
     :page-num="pageNum"
     :page-size="pageSize"
     row-key="id"
@@ -56,12 +56,12 @@ const searchModel = reactive({ name: undefined, status: undefined });
 
 const searchSchema: SearchFieldSchema[] = [
   { field: 'name', label: '名称', type: 'input' },
-  { field: 'status', label: '状态', type: 'select', dictType: 'djs_user_status' }
+  { field: 'status', label: '状态', type: 'select', dictType: 'sys_normal_disable' }
 ];
 
 const columns: BizTableColumn[] = [
   { prop: 'name', label: '名称', minWidth: 160 },
-  { prop: 'status', label: '状态', width: 100, align: 'center', dictType: 'djs_user_status' },
+  { prop: 'status', label: '状态', width: 100, align: 'center', dictType: 'sys_normal_disable' },
   { prop: 'createTime', label: '创建时间', width: 180, align: 'center', formatter: 'datetime' }
 ];
 

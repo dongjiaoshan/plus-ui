@@ -22,7 +22,7 @@
         <el-col :span="12">
           <el-form-item :label="t('location.field.locationStatus')" prop="locationStatus">
             <el-radio-group v-model="form.locationStatus">
-              <el-radio v-for="dict in djs_location_status" :key="dict.value" :value="Number(dict.value)">{{ dict.label }}</el-radio>
+              <el-radio v-for="dict in djs_common_status" :key="dict.value" :value="Number(dict.value)">{{ dict.label }}</el-radio>
             </el-radio-group>
           </el-form-item>
         </el-col>
@@ -80,7 +80,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_location_type, djs_location_status } = toRefs<any>(proxy?.useDict('djs_location_type', 'djs_location_status'));
+const { djs_location_type, djs_common_status } = toRefs<any>(proxy?.useDict('djs_location_type', 'djs_common_status'));
 
 const visible = ref(false);
 const submitting = ref(false);

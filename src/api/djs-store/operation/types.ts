@@ -22,7 +22,7 @@ export interface StoreProductRelationVO {
   productName?: string;
   productUnit?: string;
   productSpec?: string;
-  /** djs_active_status：1=启用 / 2=停用 */
+  /** djs_common_status：1=启用 / 2=停用 */
   isActive: number;
 }
 

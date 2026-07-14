@@ -110,6 +110,8 @@
             </div>
           </template>
 
+          <el-alert v-if="currentDict?.remark" :title="currentDict.remark" type="info" :closable="false" show-icon class="dict-desc-alert" />
+
           <div v-show="showDataSearch" class="dict-form-scroll">
             <el-form ref="dataQueryFormRef" :model="dataQueryParams" :inline="true">
               <el-form-item label="字典标签" prop="dictLabel">
@@ -639,6 +641,11 @@ onMounted(() => {
 .dict-card__subtitle {
   font-size: 12px;
   color: var(--el-text-color-secondary);
+}
+
+/* 字典用途说明：让运营看懂当前字典是干嘛的 */
+.dict-desc-alert {
+  margin-bottom: 12px;
 }
 
 .dict-form-scroll {

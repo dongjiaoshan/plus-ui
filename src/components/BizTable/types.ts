@@ -19,7 +19,7 @@ export type SearchFieldType = 'input' | 'select' | 'date' | 'month' | 'daterange
  * 例：
  * ```ts
  * { field: 'name', label: '名称', type: 'input', placeholder: '请输入名称' }
- * { field: 'status', label: '状态', type: 'select', dictType: 'djs_user_status' }
+ * { field: 'status', label: '状态', type: 'select', dictType: 'sys_normal_disable' }
  * { field: 'createTime', label: '创建时间', type: 'daterange' }
  * ```
  */
