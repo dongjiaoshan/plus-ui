@@ -9,7 +9,7 @@
       </router-link>
       <router-link v-else key="expand" class="sidebar-logo-link" to="/">
         <img v-if="logo" :src="logo" class="sidebar-logo" />
-        <h1 class="sidebar-title">
+        <h1 v-else class="sidebar-title">
           {{ title }}
         </h1>
       </router-link>
@@ -34,17 +34,6 @@ defineProps({
 const title = import.meta.env.VITE_APP_LOGO_TITLE;
 const settingsStore = useSettingsStore();
 const sideTheme = computed(() => settingsStore.sideTheme);
-
-// 获取Logo背景色
-const getLogoBackground = computed(() => {
-  if (settingsStore.isDark) {
-    return 'var(--sidebar-bg)';
-  }
-  if (settingsStore.navType == NavTypeEnum.TOP) {
-    return variables.menuLightBackground;
-  }
-  return sideTheme.value === 'theme-dark' ? variables.menuBg : variables.menuLightBackground;
-});
 
 // 获取Logo文字颜色
 const getLogoTextColor = computed(() => {
@@ -72,20 +61,24 @@ const getLogoTextColor = computed(() => {
   position: relative;
   height: 50px;
   line-height: 50px;
-  background: v-bind(getLogoBackground);
+  /* 果丞 logo 为深绿字/米色底，深色侧边栏上做米色 logo 头条使其清晰显示 */
+  background: #faf8eb;
   text-align: center;
   overflow: hidden;
 
   & .sidebar-logo-link {
     height: 100%;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     & .sidebar-logo {
-      width: 32px;
       height: 32px;
+      width: auto;
+      max-width: calc(100% - 20px);
+      object-fit: contain;
       vertical-align: middle;
-      margin-right: 12px;
-      margin-left: 12px;
     }
 
     & .sidebar-title {
