@@ -1273,6 +1273,9 @@ onActivated(() => {
   flex: 0 0 440px;
   width: 440px;
   align-self: flex-start;
+  /* row127：整页定高无整体滚动时，操作面板内容（数字键盘+提交按钮）超出视口要能内部滚动到底，
+     否则提交按钮点不到。flex-start 保内容高度不留白（row96/97），max-height:100% 封顶后 overflow-y:auto 生效。 */
+  max-height: 100%;
 }
 /* 内容高度面板：去掉把按钮推到底部的 margin-top:auto（否则内容少时底部留大片空白，row96/97） */
 .station-right--wide .panel-actions {
