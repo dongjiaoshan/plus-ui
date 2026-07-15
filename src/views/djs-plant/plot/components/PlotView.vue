@@ -73,22 +73,7 @@
             data.plotArea != null ? `${data.plotArea} 亩` : '-'
           }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantPlot.field.currentCropName')">{{ data.currentCropName || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantPlot.field.soilType')">
-            <dict-tag :options="djs_soil_type" :value="data.soilType" />
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantPlot.field.soilFertility')">
-            <dict-tag :options="djs_soil_fertility" :value="data.soilFertility" />
-          </el-descriptions-item>
           <el-descriptions-item :label="t('plantPlot.field.soilPh')">{{ data.soilPh ?? '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantPlot.field.terrainCondition')">
-            <dict-tag :options="djs_terrain_condition" :value="data.terrainCondition" />
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantPlot.field.lightCondition')">
-            <dict-tag :options="djs_light_condition" :value="data.lightCondition" />
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantPlot.field.drainCondition')">
-            <dict-tag :options="djs_drain_condition" :value="data.drainCondition" />
-          </el-descriptions-item>
           <el-descriptions-item :label="t('plantPlot.field.plotLocationDesc')" :span="2">{{ data.plotLocationDesc || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantPlot.field.plotImage')" :span="2">
             <image-preview v-if="plotImageUrl" :src="plotImageUrl" :width="160" :height="120" />
@@ -118,22 +103,12 @@ const {
   djs_plot_type,
   djs_plot_status,
   djs_plot_lease,
-  djs_soil_type,
-  djs_soil_fertility,
-  djs_terrain_condition,
-  djs_light_condition,
-  djs_drain_condition,
   djs_farm_work_type
 } = toRefs<any>(
   proxy?.useDict(
     'djs_plot_type',
     'djs_plot_status',
     'djs_plot_lease',
-    'djs_soil_type',
-    'djs_soil_fertility',
-    'djs_terrain_condition',
-    'djs_light_condition',
-    'djs_drain_condition',
     'djs_farm_work_type'
   )
 );

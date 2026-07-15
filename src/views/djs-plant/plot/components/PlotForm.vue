@@ -92,20 +92,6 @@
       <div class="form-section-title">{{ t('plantPlot.tab.soil') }}</div>
       <el-row :gutter="16">
             <el-col :span="12">
-              <el-form-item :label="t('plantPlot.field.soilType')" prop="soilType">
-                <el-select v-model="form.soilType" :placeholder="t('plantPlot.placeholder.soilType')" clearable style="width: 100%">
-                  <el-option v-for="d in djs_soil_type" :key="d.value" :label="d.label" :value="d.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantPlot.field.soilFertility')" prop="soilFertility">
-                <el-select v-model="form.soilFertility" :placeholder="t('plantPlot.placeholder.soilFertility')" clearable style="width: 100%">
-                  <el-option v-for="d in djs_soil_fertility" :key="d.value" :label="d.label" :value="d.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
               <el-form-item :label="t('plantPlot.field.soilPh')" prop="soilPh">
                 <el-input-number
                   v-model="form.soilPh"
@@ -116,27 +102,6 @@
                   :placeholder="t('plantPlot.placeholder.soilPh')"
                   style="width: 100%"
                 />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantPlot.field.terrainCondition')" prop="terrainCondition">
-                <el-select v-model="form.terrainCondition" :placeholder="t('plantPlot.placeholder.terrainCondition')" clearable style="width: 100%">
-                  <el-option v-for="d in djs_terrain_condition" :key="d.value" :label="d.label" :value="d.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantPlot.field.lightCondition')" prop="lightCondition">
-                <el-select v-model="form.lightCondition" :placeholder="t('plantPlot.placeholder.lightCondition')" clearable style="width: 100%">
-                  <el-option v-for="d in djs_light_condition" :key="d.value" :label="d.label" :value="d.value" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantPlot.field.drainCondition')" prop="drainCondition">
-                <el-select v-model="form.drainCondition" :placeholder="t('plantPlot.placeholder.drainCondition')" clearable style="width: 100%">
-                  <el-option v-for="d in djs_drain_condition" :key="d.value" :label="d.label" :value="d.value" />
-                </el-select>
               </el-form-item>
             </el-col>
           </el-row>
@@ -168,22 +133,12 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const {
   djs_plot_type,
   djs_plot_status,
-  djs_plot_lease,
-  djs_soil_type,
-  djs_soil_fertility,
-  djs_terrain_condition,
-  djs_light_condition,
-  djs_drain_condition
+  djs_plot_lease
 } = toRefs<any>(
   proxy?.useDict(
     'djs_plot_type',
     'djs_plot_status',
     'djs_plot_lease',
-    'djs_soil_type',
-    'djs_soil_fertility',
-    'djs_terrain_condition',
-    'djs_light_condition',
-    'djs_drain_condition'
   )
 );
 

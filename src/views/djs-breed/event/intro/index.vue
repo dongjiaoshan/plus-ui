@@ -23,9 +23,6 @@
       <template #cell-introduceType="{ row }">
         <dict-tag :options="djs_introduce_type" :value="row.introduceType" />
       </template>
-      <template #cell-pigStrainCode="{ row }">
-        <dict-tag :options="djs_pig_strain" :value="row.pigStrainCode" />
-      </template>
       <template #cell-pigSex="{ row }">
         <el-tag v-if="row.pigSex" :type="row.pigSex === 'F' ? 'success' : 'primary'" size="small">
           {{ row.pigSex === 'F' ? t('breedEvent.sex.female') : t('breedEvent.sex.male') }}
@@ -45,7 +42,7 @@ import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/compon
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 // ADR-0004 §2.4 Vue3 字典消费范式
-const { djs_introduce_type, djs_pig_strain } = toRefs<any>(proxy?.useDict('djs_introduce_type', 'djs_pig_strain'));
+const { djs_introduce_type } = toRefs<any>(proxy?.useDict('djs_introduce_type'));
 
 const tableRef = ref<BizTableExpose>();
 const list = ref<PigIntroduceVO[]>([]);

@@ -34,15 +34,6 @@ export interface StoreProductRankItem {
   /** 订单数（当月热门产品 TOP10 按订单数排行用） */
   orderCount?: number;
 }
-
-/** 近 N 日新增会员趋势单点（与后端 StoreMemberGrowthPointVo 对齐） */
-export interface StoreMemberGrowthPoint {
-  /** 日期 'YYYY-MM-DD' */
-  date: string;
-  /** 当日新增会员数 */
-  count: number;
-}
-
 /** 近 10 日趋势单点（与后端 StoreTrendPointVo 对齐） */
 export interface StoreTrendPoint {
   /** 日期 'YYYY-MM-DD' */
@@ -73,12 +64,6 @@ export interface StoreDashboardSummaryVo {
   pendingShipCount: number;
   /** 待采购数 */
   pendingPurchaseCount: number;
-  /** 会员总数（原型会员信息组） */
-  totalMembers: number;
-  /** 今日新增会员（原型会员信息组） */
-  todayNewMembers: number;
-  /** 老客复购数（当月消费 ≥2 次会员数，原型会员信息组） */
-  repeatCustomer: number;
   /** 本月客单价（monthSaleAmount/monthOrderCount，原型会员信息组） */
   monthAvgPrice: number;
   /** 今日销售额同比 %（上期为 0 时 null） */
@@ -96,7 +81,6 @@ export interface StoreDashboardSummaryVo {
   /** 近 10 日趋势（订单数/销售额/客单价/销售量/退货量） */
   trend10Days: StoreTrendPoint[];
   /** 近 10 日新增会员趋势（原型「近十日订单数与新会员趋势」竖柱） */
-  memberGrowth10Days: StoreMemberGrowthPoint[];
   /** 本月逐日趋势（原型「销售额与客单价趋势」竖柱=销售额+折线=客单价，横轴本月每天） */
   monthDailyTrend: StoreTrendPoint[];
 }

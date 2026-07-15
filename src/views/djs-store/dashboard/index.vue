@@ -43,36 +43,15 @@
       </el-row>
     </el-card>
 
-    <!-- 会员信息板块：今日新增会员数 / 会员总数 / 老客复购数 / 本月客单价 -->
+    <!-- 本月客单价 -->
     <el-card shadow="never" class="kpi-group">
       <template #header>
         <div class="group-header">
-          <span class="group-title">{{ t('storeDashboard.title.memberGroup') }}</span>
+          <span class="group-title">{{ t('storeDashboard.kpi.monthAvgPrice') }}</span>
           <el-button size="small" :loading="loading" @click="load">{{ t('storeDashboard.action.refresh') }}</el-button>
         </div>
       </template>
       <el-row :gutter="16">
-        <el-col :xs="12" :sm="6">
-          <div class="kpi-card">
-            <div class="kpi-label">{{ t('storeDashboard.kpi.todayNewMembers') }}</div>
-            <div class="kpi-value accent">{{ summary?.todayNewMembers ?? 0 }}</div>
-            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
-          </div>
-        </el-col>
-        <el-col :xs="12" :sm="6">
-          <div class="kpi-card">
-            <div class="kpi-label">{{ t('storeDashboard.kpi.totalMembers') }}</div>
-            <div class="kpi-value">{{ summary?.totalMembers ?? 0 }}</div>
-            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
-          </div>
-        </el-col>
-        <el-col :xs="12" :sm="6">
-          <div class="kpi-card">
-            <div class="kpi-label">{{ t('storeDashboard.kpi.repeatCustomer') }}</div>
-            <div class="kpi-value">{{ summary?.repeatCustomer ?? 0 }}</div>
-            <div class="kpi-foot"><span class="kpi-unit">{{ t('storeDashboard.kpi.memberUnit') }}</span></div>
-          </div>
-        </el-col>
         <el-col :xs="12" :sm="6">
           <div class="kpi-card">
             <div class="kpi-label">{{ t('storeDashboard.kpi.monthAvgPrice') }}</div>
@@ -105,12 +84,12 @@
       </el-col>
     </el-row>
 
-    <!-- 近十日订单数与新会员趋势：竖柱（新会员）+ 折线（订单数），双轴 -->
+    <!-- 近十日订单数趋势 -->
     <el-row :gutter="16">
       <el-col :span="24">
         <el-card shadow="never" class="block-card">
           <template #header>
-            <span class="title">{{ t('storeDashboard.title.memberOrderTrend') }}</span>
+            <span class="title">{{ t('storeDashboard.axis.orderCount') }}</span>
           </template>
           <div ref="memberOrderTrendEl" v-loading="loading" class="chart-canvas"></div>
         </el-card>
@@ -137,12 +116,11 @@
  *
  * KPI 两组：
  *  - 销售订单：今日销售额 / 本月累计销售额 / 今日订单数 / 本月累计订单数
- *  - 会员信息：今日新增会员数 / 会员总数 / 老客复购数 / 本月客单价
  *
  * 4 ECharts（后端 summary 已返序列，前端只渲染层）：
  *  1. 当月订单产品结构 饼图（monthProductStructure，name=产品名 / value=当月订单数）
  *  2. 当月热门产品排行 TOP10（monthTop10ByOrder，productName 当类目 / orderCount 为值，横向柱）
- *  3. 近十日订单数与新会员趋势（双轴：竖柱=memberGrowth10Days.count 新会员 / 折线=trend10Days.orderCount 订单数）
+ *  3. 近十日订单数趋势（折线=trend10Days.orderCount 订单数）
  *  4. 销售额与客单价趋势（双轴：竖柱=monthDailyTrend.saleAmount / 折线=monthDailyTrend.avgPrice，横轴本月每天）
  *
  * ECharts 4 件套：onMounted init / onUnmounted dispose+clearInterval / window resize / 5 分钟轮询。
@@ -151,7 +129,7 @@
 import { ref, onMounted, onUnmounted, nextTick, getCurrentInstance } from 'vue';
 import * as echarts from 'echarts';
 import { useI18n } from 'vue-i18n';
-import { getStoreDashboardSummary, type StoreDashboardSummaryVo, type StoreTrendPoint, type StoreMemberGrowthPoint } from '@/api/djs-store/dashboard';
+import { getStoreDashboardSummary, type StoreDashboardSummaryVo, type StoreTrendPoint } from '@/api/djs-store/dashboard';
 import { STORE_CHART_COLOR, REFRESH_INTERVAL_MS } from './constants';
 
 const { t } = useI18n();
@@ -290,38 +268,27 @@ function renderTop10Bar() {
 }
 
 /**
- * 近十日订单数与新会员趋势：双轴。
- * x=最近 10 天日期；竖柱（左轴）=新会员数；折线（右轴）=订单数。
- * 两个序列按日期 union 取并集，缺日补 0。
+ * 近十日订单数趋势：折线。x=最近 10 天日期；订单数。
  */
 function renderMemberOrderTrend() {
   if (!memberOrderTrendEl.value) return;
   if (!memberOrderTrend) memberOrderTrend = echarts.init(memberOrderTrendEl.value);
   const orders = summary.value?.trend10Days ?? [];
-  const members = summary.value?.memberGrowth10Days ?? [];
-  if (!orders.length && !members.length) {
+  if (!orders.length) {
     memberOrderTrend.clear();
     memberOrderTrend.setOption(emptyOption());
     return;
   }
-  const dates = mergeDates([orders.map((p) => p.date), members.map((p) => p.date)]);
-  const orderMap = new Map(orders.map((p: StoreTrendPoint) => [p.date, p.orderCount]));
-  const memberMap = new Map(members.map((p: StoreMemberGrowthPoint) => [p.date, p.count]));
-  const memberName = t('storeDashboard.legend.newMembers');
   const orderName = t('storeDashboard.legend.orderCount');
   memberOrderTrend.setOption({
-    color: [STORE_CHART_COLOR.primary, STORE_CHART_COLOR.accent],
+    color: [STORE_CHART_COLOR.accent],
     tooltip: { trigger: 'axis' },
-    legend: { data: [memberName, orderName], bottom: 0, textStyle: { fontSize: 11 } },
+    legend: { data: [orderName], bottom: 0, textStyle: { fontSize: 11 } },
     grid: { left: 12, right: 24, top: 24, bottom: 36, containLabel: true },
-    xAxis: { type: 'category', data: dates.map(shortDate), axisLabel: { fontSize: 11, rotate: dates.length > 7 ? 30 : 0 } },
-    yAxis: [
-      { type: 'value', name: t('storeDashboard.axis.newMembers'), position: 'left' },
-      { type: 'value', name: t('storeDashboard.axis.orderCount'), position: 'right' }
-    ],
+    xAxis: { type: 'category', data: orders.map((p) => shortDate(p.date)), axisLabel: { fontSize: 11, rotate: orders.length > 7 ? 30 : 0 } },
+    yAxis: [{ type: 'value', name: t('storeDashboard.axis.orderCount'), position: 'left' }],
     series: [
-      { name: memberName, type: 'bar', barWidth: '40%', yAxisIndex: 0, data: dates.map((d) => Number(memberMap.get(d) ?? 0)) },
-      { name: orderName, type: 'line', smooth: true, yAxisIndex: 1, data: dates.map((d) => Number(orderMap.get(d) ?? 0)) }
+      { name: orderName, type: 'line', smooth: true, data: orders.map((p: StoreTrendPoint) => Number(p.orderCount ?? 0)) }
     ]
   });
 }
