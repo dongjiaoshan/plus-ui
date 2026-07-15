@@ -432,6 +432,7 @@ export default {
       storeType: { required: '请选择门店类型' },
       posSystemId: { required: '收银系统 ID 不能为空' },
       businessStatus: { required: '请选择合作状态' },
+      productionMarkCode: { required: '生产标识码不能为空' },
       managerPhone: { pattern: '请输入合法的手机号' }
     },
     confirm: {
@@ -3047,7 +3048,7 @@ export default {
       kpiOutbound: '出库笔数',
       kpiLoss: '损耗量(kg)',
       // 6 图标题
-      chartDemandPie: '明日产品需求分布（近7日）',
+      chartDemandPie: '产品需求分布（近7日）',
       chartReturnRing: '退货产品分布(近7日)',
       chartProductionTrend: '生产趋势（近 7 日，kg）',
       chartCheckPie: '盘点结果分布',

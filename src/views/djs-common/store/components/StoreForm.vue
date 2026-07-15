@@ -135,6 +135,7 @@ const rules = computed(() => ({
   shortName: [{ required: true, message: t('store.rule.shortName.required'), trigger: 'blur' }],
   storeType: [{ required: true, message: t('store.rule.storeType.required'), trigger: 'change' }],
   businessStatus: [{ required: true, message: t('store.rule.businessStatus.required'), trigger: 'change' }],
+  productionMarkCode: [{ required: true, message: t('store.rule.productionMarkCode.required'), trigger: 'blur' }],
   managerPhone: [{ pattern: /^$|^1[3-9]\d{9}$/, message: t('store.rule.managerPhone.pattern'), trigger: 'blur' }]
 }));
 

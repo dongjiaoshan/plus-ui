@@ -274,13 +274,19 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 收银系统风格：整页定高，白条 chip 行 + 标题固定，中部 station-body 占满剩余高度，
+   右操作面板内容超视口时内部滚动到底（对齐 SkuPackForm 果蔬/肉品打包页 row127 修法） */
 .pack-station {
   padding: 12px;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
 }
 .station-title {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 12px;
+  flex: 0 0 auto;
 }
 .chip-row {
   display: flex;
@@ -288,6 +294,7 @@ onMounted(async () => {
   gap: 12px;
   margin-bottom: 16px;
   min-height: 40px;
+  flex: 0 0 auto;
 }
 .cut-chip {
   display: flex;
@@ -324,8 +331,9 @@ onMounted(async () => {
   font-size: 14px;
   color: var(--el-color-warning-dark-2);
 }
-/* row93②：右操作面板随左侧产品卡网格拉伸到等高（红框到底），内容纵向均分、间距等比放大 */
 .station-body {
+  flex: 1;
+  min-height: 0;
   display: flex;
   gap: 16px;
   align-items: stretch;
@@ -333,8 +341,13 @@ onMounted(async () => {
 .station-left {
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
 }
-/* r81：控件与左侧产品卡成比例。row93②：面板拉伸到与卡片网格等高，各段用 space-between 均分留白（间距等比增加），确认按钮沉底 */
+/* r81：控件与左侧产品卡成比例。row127（本页 .station-right 版）：整页定高无整体滚动时，
+   操作面板内容（耳号+数字键盘+入库位置+确认出库按钮）超出视口要能内部滚动到底，否则底部「入库位置」
+   被截断、确认按钮点不到。align-self:flex-start 保内容高度不留大白，max-height:100% 封顶后
+   overflow-y:auto 生效，可滚到底。 */
 .station-right {
   flex: 0 0 440px;
   width: 440px;
@@ -344,7 +357,9 @@ onMounted(async () => {
   background: var(--el-bg-color);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  align-self: flex-start;
+  max-height: 100%;
+  overflow-y: auto;
 }
 .panel-title {
   font-size: 16px;

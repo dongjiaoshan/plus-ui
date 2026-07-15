@@ -20,6 +20,8 @@
     direction="rtl"
     size="75%"
     destroy-on-close
+    :close-on-click-modal="true"
+    :close-on-press-escape="true"
   >
     <div class="demand-confirm">
       <!-- 当日该产品上下文 + 刷新 -->

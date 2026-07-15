@@ -432,6 +432,7 @@ export default {
       storeType: { required: 'Store type is required' },
       posSystemId: { required: 'POS system ID is required' },
       businessStatus: { required: 'Cooperation status is required' },
+      productionMarkCode: { required: 'Production mark code is required' },
       managerPhone: { pattern: 'Please enter a valid phone' }
     },
     confirm: {
@@ -3044,7 +3045,7 @@ export default {
       kpiOutbound: 'Outbound Count',
       kpiLoss: 'Loss Qty (kg)',
       // 6 charts
-      chartDemandPie: 'Next-day Product Demand (last 7 days)',
+      chartDemandPie: 'Product Demand (last 7 days)',
       chartReturnRing: 'Return Product Distribution (last 7 days)',
       chartProductionTrend: 'Production Trend (last 7 days, kg)',
       chartCheckPie: 'Stock-check Result',

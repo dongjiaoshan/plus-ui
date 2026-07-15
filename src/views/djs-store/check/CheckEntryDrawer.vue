@@ -102,7 +102,6 @@
 <script setup name="StoreCheckEntryDrawer" lang="ts">
 import { listStoreLedgerCandidates, batchSaveStoreLedger, getStoreLedgerDetail } from '@/api/djs-store/ledger';
 import type { StoreLedgerBatchItem, StoreLedgerBelongTab, StoreLedgerCandidateVO, StoreLedgerCategory, StoreLedgerLineVO } from '@/api/djs-store/ledger/types';
-import { formatKg } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -116,8 +115,9 @@ const emit = defineEmits<{ saved: [] }>();
 interface EntryRow {
   productId: string;
   productName: string;
+  /** 产品单位（份 / kg 等）：展示精度按此分流——kg（白条按重量盘点）保留 3 位小数，其余（份 / 盒）整数。 */
   productUnit: string;
-  /** 产品对应原材料单位：KG → 数据量按 kg 展示；其他 → 按产品单位换算成 g。空时回落 productUnit 口径。 */
+  /** 产品对应原材料单位（VO 透传，暂不参与展示精度判定）。 */
   materialUnit: string;
   category: StoreLedgerCategory;
   /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
@@ -185,47 +185,35 @@ function isKgUnit(unit?: string): boolean {
   return u === 'kg' || u === '公斤';
 }
 
-/** 是否 g（克）单位：g / G / 克 视为克重量单位（admin row7：原材料单位 g 时各项数据量带 g 展示）。 */
-function isGramUnit(unit?: string): boolean {
-  const u = (unit ?? '').trim().toLowerCase();
-  return u === 'g' || u === '克';
+/**
+ * 数据量口径依据「产品单位」（productUnit）判定：
+ * - 产品单位 = kg（白条，按重量盘点）→ 按重量列处理（kg，保留 3 位小数）；
+ * - 产品单位 = 其他（份 / 盒等，猪肉 / 果蔬按份盘点）→ 计件整数，不保留小数。
+ * 只按产品单位分流：单位是「份」的猪肉 / 果蔬即使底层原材料称重（materialUnit=kg/g）也按份显示整数。
+ */
+function isWeightRow(row: { productUnit?: string }): boolean {
+  return isKgUnit(row.productUnit);
 }
 
 /**
- * 数据量口径依据「产品对应原材料单位」（materialUnit）判定：
- * - 原材料单位 = KG → 按重量列处理（kg，保留 3 位）；
- * - 原材料单位 = 其他 → 按产品单位（计件：份 / 盒等，整数原样）。
- * materialUnit 缺省时回落到 productUnit（TODO(后端轨)：候选 VO 补 materialUnit 后此回落自然消除）。
+ * 只读量列展示：产品单位为 kg → kg（保留 3 位小数）；
+ * 否则（份 / 盒等）按整数原样（计件件数）。空值显示 '-'。
  */
-function isWeightRow(row: { materialUnit?: string; productUnit?: string }): boolean {
-  return isKgUnit(row.materialUnit || row.productUnit);
-}
-
-/**
- * 只读量列展示：原材料单位为 KG → kg（保留 3 位，走 @/utils/weight formatKg）；
- * 否则按产品单位原样（计件件数）。空值显示 '-'。
- */
-function fmtQty(value: number | string | null | undefined, row: { materialUnit?: string; productUnit?: string }): string {
+function fmtQty(value: number | string | null | undefined, row: { productUnit?: string }): string {
   if (value === null || value === undefined || value === '') {
     return '-';
   }
   if (isWeightRow(row)) {
-    return formatKg(value);
-  }
-  // admin row7：原材料单位为 g（克）→ 各项数据量带 g 单位展示（保留原数值小数，如 3.95 g）
-  if (isGramUnit(row.materialUnit || row.productUnit)) {
-    return `${Number(value)} g`;
+    // 白条按 kg 盘点：保留 3 位小数（带 kg 单位）
+    return `${Number(value).toFixed(3)} kg`;
   }
   // 计件（份 / 盒等）：去尾零显整数（DENGBO-R10：到店量按份显示，如 demand 3.000 → 3）
-  return String(Number(value));
+  return String(Math.round(Number(value)));
 }
 
-/** 可编辑量输入框小数位：原材料单位为 KG / g（克，如 3.95）→ 3 位小数，否则 0 位（整数件数）。 */
-function kgPrecision(row: { materialUnit?: string; productUnit?: string }): number {
-  if (isWeightRow(row) || isGramUnit(row.materialUnit || row.productUnit)) {
-    return 3;
-  }
-  return 0;
+/** 可编辑量输入框小数位：产品单位为 kg（白条按重量盘点）→ 3 位小数；否则（份 / 盒等）0 位整数。 */
+function kgPrecision(row: { productUnit?: string }): number {
+  return isWeightRow(row) ? 3 : 0;
 }
 
 function categoryLabel(c: StoreLedgerCategory): string {
@@ -276,7 +264,6 @@ async function loadCandidates() {
         productId: String(c.productId),
         productName: c.productName ?? '',
         productUnit: c.productUnit ?? '',
-        // TODO(后端轨)：候选 VO 补 materialUnit 后，数据量口径按原材料单位（KG→kg / 其他→产品单位）判定；缺省回落 productUnit。
         materialUnit: c.materialUnit ?? '',
         category: c.category,
         belongTab: c.belongTab ?? 'other',

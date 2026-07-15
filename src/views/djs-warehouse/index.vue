@@ -149,7 +149,7 @@ const demandTab = ref<'pork' | 'vegetable'>('pork');
 // 退货环「猪肉 / 果蔬」切换
 const returnTab = ref<'pork' | 'vegetable'>('pork');
 
-/** 果蔬类切片取 TOP5，其余合并为「其他」（猪肉全量不折叠）。 */
+/** 切片取需求最高 TOP5，其余合并为「其他」。 */
 function top5WithOther(data: ChartSeriesItem[] | undefined): ChartSeriesItem[] {
   const items = (data ?? []).filter((d) => Number(d.value) > 0).map((d) => ({ name: d.name, value: Number(d.value) }));
   items.sort((a, b) => b.value - a.value);
@@ -240,10 +240,10 @@ function renderAll() {
   renderLossMulti();
 }
 
-/** 图① 明日产品需求分布：按当前 tab（猪肉全量 / 果蔬 TOP5 归其他）渲染对应产品名构成。 */
+/** 图① 产品需求分布：按当前 tab 渲染对应产品名构成，猪肉 / 果蔬均取需求最高 TOP5、其余归「其他」。 */
 function renderDemandPie() {
   const raw = demandTab.value === 'pork' ? charts.value?.demandPork : charts.value?.demandVeg;
-  const data = demandTab.value === 'vegetable' ? top5WithOther(raw) : raw;
+  const data = top5WithOther(raw);
   renderPie(demandPieEl, () => (demandPie ??= echarts.init(demandPieEl.value!)), data, t('warehouse.dashboard.chartDemandPie'));
 }
 
@@ -352,7 +352,7 @@ function renderPie(el: typeof demandPieEl, getChart: () => echarts.ECharts, data
         radius: '60%',
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
-        label: { show: true, formatter: '{b}\n{c}' },
+        label: { show: true, formatter: '{b}，{c}' },
         data: items.length > 0 ? items : [{ name: t('warehouse.dashboard.noData'), value: 1 }]
       }
     ]
@@ -373,7 +373,7 @@ function renderRing(el: typeof returnRingEl, getChart: () => echarts.ECharts, da
         radius: ['40%', '65%'],
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
-        label: { show: true, formatter: '{b}\n{c}' },
+        label: { show: true, formatter: '{b}，{c}' },
         data: items.length > 0 ? items : [{ name: t('warehouse.dashboard.noData'), value: 1 }]
       }
     ]

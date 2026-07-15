@@ -13,14 +13,6 @@
         <el-descriptions-item :label="t('plantWork.column.cropName')">{{ detail.cropName ?? '-' }}</el-descriptions-item>
         <el-descriptions-item :label="t('plantWork.column.teamName')">{{ detail.teamName ?? '-' }}</el-descriptions-item>
 
-        <!-- 整地类专属 -->
-        <el-descriptions-item v-if="detail.tillageType" :label="t('plantWork.detail.tillageType')">
-          <dict-tag :options="dict.djs_tillage_type" :value="detail.tillageType" />
-        </el-descriptions-item>
-        <el-descriptions-item v-if="detail.tillageMethod" :label="t('plantWork.detail.tillageMethod')">
-          <dict-tag :options="dict.djs_tillage_way" :value="detail.tillageMethod" />
-        </el-descriptions-item>
-
         <!-- 移栽类专属 -->
         <el-descriptions-item v-if="detail.transplantPlotName" :label="t('plantWork.detail.transplantPlotName')">
           {{ detail.transplantPlotName }}

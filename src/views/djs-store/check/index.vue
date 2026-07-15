@@ -17,6 +17,7 @@
       :show-row-edit="false"
       :show-add="false"
       :show-export="false"
+      :action-min-width="160"
       perm-prefix="djs:store:check"
       @search="handleSearch"
       @reset="handleReset"
@@ -28,12 +29,15 @@
         </el-button>
       </template>
       <template #action="{ row }">
-        <el-button v-hasPermi="['djs:store:check:query']" link type="primary" icon="View" @click="openDetail(row)">
-          {{ t('storeLedger.action.detail') }}
-        </el-button>
-        <el-button v-hasPermi="['djs:store:check:add']" link type="primary" icon="Edit" @click="openEdit(row)">
-          {{ t('storeLedger.action.edit') }}
-        </el-button>
+        <!-- 操作两个按钮不换行：整块 nowrap，配合 action-min-width 让操作列与数据列等宽分配 -->
+        <div class="action-cell">
+          <el-button v-hasPermi="['djs:store:check:query']" link type="primary" icon="View" @click="openDetail(row)">
+            {{ t('storeLedger.action.detail') }}
+          </el-button>
+          <el-button v-hasPermi="['djs:store:check:add']" link type="primary" icon="Edit" @click="openEdit(row)">
+            {{ t('storeLedger.action.edit') }}
+          </el-button>
+        </div>
       </template>
     </BizTable>
 
@@ -170,3 +174,14 @@ onMounted(() => {
   fetchList();
 });
 </script>
+
+<style lang="scss" scoped>
+/* 操作列两个按钮同一行不换行 */
+.action-cell {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+</style>
