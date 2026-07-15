@@ -391,8 +391,12 @@ async function submitOp() {
         remark: opForm.remark || undefined
       });
     } else {
+      // 饲喂与退回/损耗同款：自产果蔬 veg-plot 行（row.plotId 非空）回传 batchId + plotId → 后端 feedByBatch
+      //   命中 isVegPlotBasket 走 feedVegPlot（按地块剥离今天待打包 WIP），本行今日领用剩余按地块口径校验（row16）。
       await feedMat({
         productId: row.productId,
+        plotId: row.plotId || undefined,
+        batchId: returnLossBatchId,
         locationId: locationId as string,
         quantity: qty,
         remark: opForm.remark || undefined

@@ -116,6 +116,10 @@ export interface MatLossBody {
 /** 饲料饲喂入参（果蔬专属） */
 export interface MatFeedBody {
   productId: string;
+  /** 地块 ID（自产果蔬行非空，snowflake string；与 MatLossBody/MatReturnBody 对齐，让本行今日领用剩余按地块口径校验） */
+  plotId?: string;
+  /** 选中源篮 ID（= location_stock.id，自产果蔬地块篮非空；后端 feedByBatch 命中 isVegPlotBasket 走 feedVegPlot） */
+  batchId?: string;
   locationId: string;
   quantity: number | string;
   proofOssIds?: string;
