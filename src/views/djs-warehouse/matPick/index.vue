@@ -186,9 +186,12 @@ const columns = computed<BizTableColumn[]>(() => {
   cols.push(
     { prop: 'todayPicked', label: t('matPick.column.todayPicked'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayPicked, row.productUnit as string) },
     { prop: 'todayReturned', label: t('matPick.column.todayReturned'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayReturned, row.productUnit as string) },
-    { prop: 'todayLoss', label: t('matPick.column.todayLoss'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayLoss, row.productUnit as string) },
-    { prop: 'todayFeed', label: t('matPick.column.todayFeed'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayFeed, row.productUnit as string) }
+    { prop: 'todayLoss', label: t('matPick.column.todayLoss'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayLoss, row.productUnit as string) }
   );
+  // 今日饲喂仅「果蔬」tab 显示（row143：饲喂只对果蔬物资有意义，其他业态不显示该列）
+  if (tab === 'vegetable') {
+    cols.push({ prop: 'todayFeed', label: t('matPick.column.todayFeed'), minWidth: 90, align: 'center', formatter: (row: BizRow) => fmtNum(row.todayFeed, row.productUnit as string) });
+  }
   return cols;
 });
 

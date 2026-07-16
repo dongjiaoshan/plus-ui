@@ -53,15 +53,17 @@
         <div class="station-right">
           <div class="panel-head">
             <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
-            <!-- row141：操作标题右侧刷新按钮，重新加载待领用白条 / 来源 / 发货门店 -->
+            <!-- row141/142：操作标题右侧刷新按钮（带文字「刷新」、触屏友好尺寸），重新加载待领用白条 / 来源 / 发货门店 -->
             <el-button
               class="panel-refresh-btn"
+              type="primary"
+              plain
               :icon="Refresh"
-              circle
               :loading="itemLoading"
-              :title="t('common.refresh')"
               @click="handleRefresh"
-            />
+            >
+              {{ t('common.refresh') }}
+            </el-button>
           </div>
 
           <div class="panel-scroll">
@@ -462,6 +464,9 @@ onMounted(async () => {
 }
 .panel-refresh-btn {
   flex: 0 0 auto;
+  height: 38px;
+  padding: 0 18px;
+  font-size: 14px;
 }
 /* 中部：头部之下、按钮之上的可滚动区 */
 .panel-scroll {
