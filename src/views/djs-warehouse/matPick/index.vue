@@ -212,9 +212,11 @@ function fmtNum(v: number | string | undefined | null, unit?: string): string {
  * ≤0 表示该行今日未领用出库（或已退/损/喂完），退回入库/当日损耗/饲料饲喂三项均应禁用。
  */
 function rowRemaining(row: MatPickItemVO): number {
-  return (
-    Number(row.todayPicked || 0) - Number(row.todayReturned || 0) - Number(row.todayLoss || 0) - Number(row.todayFeed || 0)
-  );
+  const v =
+    Number(row.todayPicked || 0) - Number(row.todayReturned || 0) - Number(row.todayLoss || 0) - Number(row.todayFeed || 0);
+  // 归一到 3 位小数（对齐库存 DECIMAL(12,3)）：消除 JS 浮点减法误差（如 0.3-0.1=0.19999999998），
+  // 避免「今日领用剩余显示 0.2、录入 0.2 却被判超限」的边界误拦（DENGBO-R20）。
+  return Number(v.toFixed(3));
 }
 
 async function fetchList() {
@@ -327,7 +329,8 @@ async function submitOp() {
       proxy?.$modal.msgWarning(t('matPick.message.noPickedRemaining'));
       return;
     }
-    if (qty > remaining) {
+    // 录入量同样归一 3 位小数再比较，与 remaining 同精度（DENGBO-R20：录入 0.2 == 剩余 0.2 不误拦）
+    if (Number(qty.toFixed(3)) > remaining) {
       proxy?.$modal.msgWarning(t('matPick.message.exceedRemaining', { remaining: Number(remaining.toFixed(3)) }));
       return;
     }

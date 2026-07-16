@@ -3939,7 +3939,22 @@ export default {
       emptyCandidates: "No products to check for this store today (only products with remaining stock from yesterday's check, and products from confirmed-received demands).",
       submit: 'Finish Check',
       submitConfirm: 'Submit check data for {n} products?',
-      editConfirm: 'Correct check data for {n} products?'
+      editConfirm: 'Correct check data for {n} products?',
+      whiteBarSplitLoss: 'White-bar split loss today: '
+    }
+  },
+  storeLoss: {
+    field: {
+      lossDate: 'Loss Date',
+      productName: 'Product Name',
+      lossType: 'Loss Type'
+    },
+    column: {
+      lossDate: 'Loss Date',
+      productName: 'Product Name',
+      lossType: 'Loss Type',
+      lossQty: 'Loss Qty',
+      productUnit: 'Unit'
     }
   },
   // Store product management (STORE-LEDGER-001, store domain entry)

@@ -3942,7 +3942,22 @@ export default {
       emptyCandidates: '该门店当日暂无可盘产品（仅显示昨日盘点尚有库存的产品，以及已确认收货的需求产品）',
       submit: '盘点完成',
       submitConfirm: '确认提交 {n} 个产品的盘点数据？',
-      editConfirm: '确认更正 {n} 个产品的盘点数据？'
+      editConfirm: '确认更正 {n} 个产品的盘点数据？',
+      whiteBarSplitLoss: '当日白条分割损耗：'
+    }
+  },
+  storeLoss: {
+    field: {
+      lossDate: '损耗日期',
+      productName: '产品名称',
+      lossType: '损耗类型'
+    },
+    column: {
+      lossDate: '损耗日期',
+      productName: '产品名称',
+      lossType: '损耗类型',
+      lossQty: '损耗量',
+      productUnit: '产品单位'
     }
   },
   // 门店产品管理（STORE-LEDGER-001，门店域入口）

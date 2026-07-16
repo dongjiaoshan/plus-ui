@@ -16,9 +16,15 @@
       </div>
 
       <!-- 品类切换：猪肉产品 / 果蔬产品 / 其他产品（DENGBO-R10）。切换只过滤视图，提交保存全部行。 -->
-      <el-tabs v-model="activeTab" class="belong-tabs">
-        <el-tab-pane v-for="tab in TABS" :key="tab" :name="tab" :label="`${t(`storeLedger.belongTab.${tab}`)} (${tabCount[tab]})`" />
-      </el-tabs>
+      <!-- 页签右侧（row140）：当日白条分割损耗 = max(0, 当日白条到店重 − 白条退回产品入库重)，后端权威计算（口径同定时任务，退回入库重取自 t_store_return 门店退货入库）；当天无白条到店则不显示。 -->
+      <div class="tabs-band">
+        <el-tabs v-model="activeTab" class="belong-tabs">
+          <el-tab-pane v-for="tab in TABS" :key="tab" :name="tab" :label="`${t(`storeLedger.belongTab.${tab}`)} (${tabCount[tab]})`" />
+        </el-tabs>
+        <div v-if="showWhiteBarSplitLoss" class="white-bar-split-loss">
+          {{ t('storeLedger.entry.whiteBarSplitLoss') }}<span class="value">{{ whiteBarSplitLoss.toFixed(3) }}</span> kg
+        </div>
+      </div>
 
       <el-table v-loading="loading" :data="filteredRows" border stripe class="entry-table">
         <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
@@ -102,6 +108,7 @@
 <script setup name="StoreCheckEntryDrawer" lang="ts">
 import { listStoreLedgerCandidates, batchSaveStoreLedger, getStoreLedgerDetail } from '@/api/djs-store/ledger';
 import type { StoreLedgerBatchItem, StoreLedgerBelongTab, StoreLedgerCandidateVO, StoreLedgerCategory, StoreLedgerLineVO } from '@/api/djs-store/ledger/types';
+import { getWhiteBarSplitLoss } from '@/api/djs-store/loss';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -174,6 +181,31 @@ const tabCount = computed<Record<StoreLedgerBelongTab, number>>(() => {
 /** 当前 tab 过滤后的行（表格 :data 绑这个） */
 const filteredRows = computed<EntryRow[]>(() => rows.value.filter((r) => r.belongTab === activeTab.value));
 
+/**
+ * 当日白条分割损耗（row140）：抽屉打开 / 门店 / 日期变化时后端拉取，口径同 white_bar_split_loss 定时任务。
+ * 白条退回入库重来自门店退货入库流水 t_store_return（门店退回仓库、已入库、白条退回产品字典），
+ * 不是本盘点抽屉的「退回量」列——所以由后端权威计算、前端直接展示，不在前端重算。
+ * 后端 BigDecimal 序列化成字符串，Number() 强转。
+ */
+const arriveWeight = ref(0);
+const whiteBarSplitLoss = ref(0);
+
+/** 当天有白条到店（到店重 > 0）才显示「当日白条分割损耗」整块。 */
+const showWhiteBarSplitLoss = computed<boolean>(() => arriveWeight.value > 0);
+
+/** 拉取当日白条分割损耗（无门店 / 无日期 → 0，不阻断录入）。 */
+async function loadWhiteBarSplitLoss() {
+  if (!storeId.value || !ledgerDate.value) {
+    arriveWeight.value = 0;
+    whiteBarSplitLoss.value = 0;
+    return;
+  }
+  const res = await getWhiteBarSplitLoss(storeId.value, ledgerDate.value);
+  const data = (res as unknown as { data?: { arriveWeight?: number | string; splitLoss?: number | string } }).data;
+  arriveWeight.value = nz(data?.arriveWeight);
+  whiteBarSplitLoss.value = nz(data?.splitLoss);
+}
+
 function nz(v: number | string | undefined): number {
   const n = Number(v ?? 0);
   return Number.isNaN(n) ? 0 : n;
@@ -245,8 +277,12 @@ function recalc(row: EntryRow) {
 async function loadCandidates() {
   if (!storeId.value) {
     rows.value = [];
+    arriveWeight.value = 0;
+    whiteBarSplitLoss.value = 0;
     return;
   }
+  // 当日白条分割损耗（row140）与候选并行拉取，不互相阻塞
+  void loadWhiteBarSplitLoss();
   loading.value = true;
   try {
     const res = await listStoreLedgerCandidates(storeId.value, ledgerDate.value);
@@ -361,6 +397,7 @@ async function open(editCtx?: { ledgerDate: string }) {
   editMode.value = !!editCtx;
   ledgerDate.value = editCtx?.ledgerDate ?? todayStr();
   rows.value = [];
+  arriveWeight.value = 0;
   visible.value = true;
   if (storeId.value) {
     await loadCandidates();
@@ -377,6 +414,32 @@ defineExpose({ open });
     align-items: center;
     gap: 12px;
     margin-bottom: 12px;
+  }
+
+  .tabs-band {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    .belong-tabs {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .white-bar-split-loss {
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      font-size: 14px;
+      color: #606266;
+      white-space: nowrap;
+
+      .value {
+        margin: 0 2px 0 4px;
+        font-weight: 600;
+        color: var(--el-color-danger);
+      }
+    }
   }
 
   .entry-table {

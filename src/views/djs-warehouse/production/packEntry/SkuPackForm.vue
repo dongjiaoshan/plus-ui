@@ -49,7 +49,7 @@
         </div>
       </div>
 
-      <!-- 右：操作 panel -->
+      <!-- 右：操作 panel（三段式：头部固定 + 中部可滚动 + 底部按钮区常驻，按钮绝不被底部门店需求条遮挡） -->
       <div class="station-right" :class="{ 'station-right--wide': wide }">
         <div class="panel-head">
           <span class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</span>
@@ -57,6 +57,8 @@
           <span v-if="!hidePackNo" class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
         </div>
 
+      <!-- 中部可滚动区（头部之下、按钮之上；内容超高在此内部滚动，不外溢到页脚） -->
+      <div class="panel-scroll">
         <!-- 肉品打包：右台顶部回显选中猪只耳号 chip（对齐原型） -->
         <div v-if="showEarChip" class="panel-section">
           <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
@@ -145,6 +147,8 @@
           <div class="panel-label">{{ t('djs.warehouse.packEntry.sendDest') }}</div>
           <DestToggle v-model="form.deliverDest" :options="sendDests" />
         </div>
+      </div>
+      <!-- /panel-scroll -->
 
         <div class="panel-actions">
           <el-button v-if="showPrintTrace" type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit(true)">
@@ -1253,33 +1257,36 @@ onActivated(() => {
   overflow-y: auto;
   padding-right: 4px;
 }
+/* row137：三处布局（SkuPackForm / pickup / cut）统一范式 ——
+   右操作台是「头部固定 + 中部可滚动 + 底部按钮区常驻」的 flex column，撑满页面可用高度（stretch），
+   内容超高时只在中部 .panel-scroll 内滚动，底部 .panel-actions 常驻在面板内，
+   绝不被页面底部「门店需求」页脚横条遮挡，也不再有礼盒页那种下方大片留白。 */
 .station-right {
-  flex: 0 0 420px;
-  width: 420px;
+  flex: 0 0 440px;
+  width: 440px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
   padding: 20px;
   background: var(--el-bg-color);
   align-self: stretch;
-  overflow-y: auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
-/* 宽版（肉品/果蔬/其他/礼盒打包）：右操作台宽度对齐「白条分割管理」440px（row94-97）；
-   紧凑版（无 wide）仍 420px。
-   row96/97：面板按内容高度（不再拉伸到卡片网格满高），确认按钮紧跟内容，
-   消除「发送位置」下方大片留白（对齐「分割领用」页 panel content-height 观感）。 */
-.station-right--wide {
-  flex: 0 0 440px;
-  width: 440px;
-  align-self: flex-start;
-  /* row127：整页定高无整体滚动时，操作面板内容（数字键盘+提交按钮）超出视口要能内部滚动到底，
-     否则提交按钮点不到。flex-start 保内容高度不留白（row96/97），max-height:100% 封顶后 overflow-y:auto 生效。 */
-  max-height: 100%;
+/* 紧凑版（无 wide，当前无调用方，保留兜底）宽度回 420px */
+.station-right:not(.station-right--wide) {
+  flex: 0 0 420px;
+  width: 420px;
 }
-/* 内容高度面板：去掉把按钮推到底部的 margin-top:auto（否则内容少时底部留大片空白，row96/97） */
-.station-right--wide .panel-actions {
-  margin-top: 20px;
+/* 头部标题行不随内容滚动 */
+.panel-head {
+  flex: 0 0 auto;
+}
+/* 中部：头部之下、按钮之上的可滚动区（内容超高在此内部滚动） */
+.panel-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 /* 触屏放大：右台控件、标签、按钮整体加大方便手指操作 */
 .station-right .panel-label {
@@ -1332,12 +1339,13 @@ onActivated(() => {
   color: var(--el-text-color-regular);
   margin-bottom: 8px;
 }
+/* row137：底部按钮区常驻在面板内（flex-shrink:0），中部滚动不影响它，按钮永远可见不被页脚遮挡 */
 .panel-actions {
+  flex: 0 0 auto;
   display: flex;
   /* row33 #1：两个按钮（确认并打印追溯码 / 确定）横向并排，不再纵向堆叠 */
   flex-direction: row;
   gap: 10px;
-  margin-top: auto;
   padding-top: 20px;
 }
 /* 横排下用 gap 控距，去掉 Element 相邻 el-button 默认 margin-left（否则间距翻倍） */

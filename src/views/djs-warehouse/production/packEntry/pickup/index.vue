@@ -49,10 +49,22 @@
           </div>
         </div>
 
-        <!-- 右：操作 panel（收银台风格） -->
+        <!-- 右：操作 panel（收银台风格；三段式：头部固定 + 中部可滚动 + 底部按钮区常驻） -->
         <div class="station-right">
-          <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
+          <div class="panel-head">
+            <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
+            <!-- row141：操作标题右侧刷新按钮，重新加载待领用白条 / 来源 / 发货门店 -->
+            <el-button
+              class="panel-refresh-btn"
+              :icon="Refresh"
+              circle
+              :loading="itemLoading"
+              :title="t('common.refresh')"
+              @click="handleRefresh"
+            />
+          </div>
 
+          <div class="panel-scroll">
           <!-- 猪只耳号 chip（当前选中白条回显） -->
           <div class="panel-section">
             <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
@@ -111,6 +123,8 @@
               />
             </el-select>
           </div>
+          </div>
+          <!-- /panel-scroll -->
 
           <div class="panel-actions">
             <el-button type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit">
@@ -127,7 +141,7 @@
 import { computed, getCurrentInstance, onMounted, ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage, ElNotification } from 'element-plus';
-import { PriceTag } from '@element-plus/icons-vue';
+import { PriceTag, Refresh } from '@element-plus/icons-vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
 import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
@@ -312,22 +326,34 @@ async function handleSubmit() {
   }
 }
 
+/** row141：刷新按钮——重拉待领用白条卡 / whiteBar 来源 / 发货门店（复用已有加载函数，不清当前录入）。 */
+async function handleRefresh() {
+  await Promise.all([loadItems(), loadSources('whiteBar'), loadShipStores()]);
+}
+
 onMounted(async () => {
   await Promise.all([loadItems(), loadSources('whiteBar'), loadShipStores()]);
 });
 </script>
 
 <style scoped>
+/* row137：整页定高，右操作台三段式（头部固定 + 中部可滚动 + 底部按钮常驻），与 SkuPackForm / cut 统一 */
 .pack-station {
   padding: 12px;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
 }
 .station-title {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 12px;
+  flex: 0 0 auto;
 }
-/* row92：右操作面板随左侧白条卡网格拉伸到等高（红框到底），内容纵向均分、间距等比放大 */
+/* 右操作面板随左侧白条卡网格拉伸到等高（红框到底） */
 .station-body {
+  flex: 1;
+  min-height: 0;
   display: flex;
   gap: 16px;
   align-items: stretch;
@@ -335,6 +361,8 @@ onMounted(async () => {
 .station-left {
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 .bar-grid {
   display: grid;
@@ -412,7 +440,7 @@ onMounted(async () => {
   font-size: 13px;
   line-height: 40px;
 }
-/* row92：面板拉伸到与卡片网格等高，各段用 space-between 均分留白（间距等比增加），确认按钮沉底 */
+/* row137：面板撑满卡片网格等高，头部固定 + 中部滚动 + 底部按钮常驻（不再靠 space-between 均分留白） */
 .station-right {
   flex: 0 0 440px;
   width: 440px;
@@ -422,12 +450,28 @@ onMounted(async () => {
   background: var(--el-bg-color);
   display: flex;
   flex-direction: column;
+  min-height: 0;
+}
+/* row141：操作标题行 —— 标题在左、刷新按钮在右 */
+.panel-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
+  margin-bottom: 18px;
+}
+.panel-refresh-btn {
+  flex: 0 0 auto;
+}
+/* 中部：头部之下、按钮之上的可滚动区 */
+.panel-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 .panel-title {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 18px;
   color: var(--el-text-color-secondary);
 }
 .panel-section {
@@ -456,10 +500,11 @@ onMounted(async () => {
   opacity: 0.85;
 }
 .panel-actions {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 24px;
+  padding-top: 20px;
 }
 .action-btn {
   width: 100%;

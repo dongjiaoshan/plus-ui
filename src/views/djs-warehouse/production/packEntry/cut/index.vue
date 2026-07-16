@@ -35,10 +35,13 @@
         <ProductCardGrid v-model="selectedProductId" :items="porkProducts" :loading="porkProductLoading" :show-stock="false" />
       </div>
 
-      <!-- 右：操作 panel -->
+      <!-- 右：操作 panel（三段式：头部固定 + 中部可滚动 + 底部按钮区常驻，与 SkuPackForm / pickup 统一） -->
       <div class="station-right">
-        <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
+        <div class="panel-head">
+          <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
+        </div>
 
+        <div class="panel-scroll">
         <!-- 猪只耳号 chip（当前选中分割单回显）+ 行尾「分割完成」按钮 -->
         <div class="panel-section">
           <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
@@ -71,6 +74,8 @@
             />
           </div>
         </div>
+        </div>
+        <!-- /panel-scroll -->
 
         <div class="panel-actions">
           <el-button type="primary" size="large" class="action-btn" :loading="cutOutSubmitting" @click="handleCutOut">
@@ -344,10 +349,8 @@ onMounted(async () => {
   min-height: 0;
   overflow-y: auto;
 }
-/* r81：控件与左侧产品卡成比例。row127（本页 .station-right 版）：整页定高无整体滚动时，
-   操作面板内容（耳号+数字键盘+入库位置+确认出库按钮）超出视口要能内部滚动到底，否则底部「入库位置」
-   被截断、确认按钮点不到。align-self:flex-start 保内容高度不留大白，max-height:100% 封顶后
-   overflow-y:auto 生效，可滚到底。 */
+/* row137：三段式操作台（头部固定 + 中部可滚动 + 底部按钮常驻），撑满卡片网格等高，
+   内容超高只在中部 .panel-scroll 内滚动，确认出库按钮常驻面板底部不被截断，与 SkuPackForm / pickup 统一。 */
 .station-right {
   flex: 0 0 440px;
   width: 440px;
@@ -357,14 +360,21 @@ onMounted(async () => {
   background: var(--el-bg-color);
   display: flex;
   flex-direction: column;
-  align-self: flex-start;
-  max-height: 100%;
+  align-self: stretch;
+  min-height: 0;
+}
+.panel-head {
+  flex: 0 0 auto;
+  margin-bottom: 18px;
+}
+.panel-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
 }
 .panel-title {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 18px;
   color: var(--el-text-color-secondary);
 }
 .panel-section {
@@ -397,10 +407,11 @@ onMounted(async () => {
   font-size: 16px;
 }
 .panel-actions {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 22px;
+  padding-top: 20px;
 }
 .action-btn {
   width: 100%;
