@@ -68,19 +68,18 @@
 </template>
 
 <script setup name="PlantPlanWizard" lang="ts">
-import { ref, reactive, computed, watch, onMounted, getCurrentInstance } from 'vue';
+import { ref, reactive, computed, watch, onMounted, nextTick, getCurrentInstance } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 import { addPlan } from '@/api/djs-plant/plan';
 import type { PlantPlanCreateForm } from '@/api/djs-plant/plan/types';
 import type { CropInfoVO } from '@/api/djs-plant/crop/types';
 import CropPicker from './components/CropPicker.vue';
 import PlotPeriodPicker from './components/PlotPeriodPicker.vue';
 import { PLAN_BASE } from './route';
+import tab from '@/plugins/tab';
 
 const { t } = useI18n();
-const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { djs_planting_season } = toRefs<any>(proxy?.useDict('djs_planting_season'));
 
@@ -90,6 +89,8 @@ const STORAGE_CROP_NAME = 'plt-plan-wizard-cropname';
 
 const currentStep = ref(0);
 const submitting = ref(false);
+// resetWizard 期间抑制 form/step watch 回写 sessionStorage（否则重置后又把初始态写回草稿缓存）
+const suppressPersist = ref(false);
 
 const form = reactive<PlantPlanCreateForm>({
   planYear: new Date().getFullYear(),
@@ -137,11 +138,33 @@ onMounted(async () => {
 watch(
   () => form,
   (val) => {
+    if (suppressPersist.value) return;
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(val));
   },
   { deep: true }
 );
-watch(currentStep, (v) => sessionStorage.setItem(STORAGE_STEP, String(v)));
+watch(currentStep, (v) => {
+  if (suppressPersist.value) return;
+  sessionStorage.setItem(STORAGE_STEP, String(v));
+});
+
+// 向导重置为初始态 + 清草稿缓存。向导是 keep-alive 缓存路由：提交成功后 tab 不关、实例保留、
+// onMounted 不会重跑，若不重置则下次「新增」复用缓存实例、显示上次选择的作物/年份/季节（row8）。
+function resetWizard() {
+  suppressPersist.value = true;
+  currentStep.value = 0;
+  form.planYear = new Date().getFullYear();
+  form.planSeason = '';
+  form.cropId = undefined;
+  form.details = [];
+  selectedCropName.value = '';
+  sessionStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_STEP);
+  sessionStorage.removeItem(STORAGE_CROP_NAME);
+  nextTick(() => {
+    suppressPersist.value = false;
+  });
+}
 
 function prevStep() {
   if (currentStep.value > 0) currentStep.value--;
@@ -177,17 +200,18 @@ async function submit() {
     });
     const newId = (res.data ?? res) as string;
     ElMessage.success(t('plantPlan.wizard.tip.submitSuccess'));
-    sessionStorage.removeItem(STORAGE_KEY);
-    sessionStorage.removeItem(STORAGE_STEP);
-    sessionStorage.removeItem(STORAGE_CROP_NAME);
-    router.push(`${PLAN_BASE}/detail?id=${newId}`);
+    // 重置内存态 + 清草稿；再用 $tab.closeOpenPage 关闭本向导 tab（销毁 keep-alive 缓存实例）并打开详情：
+    // 下次「新增」重新挂载、从零开始，不再残留上次作物（row8）。
+    resetWizard();
+    tab.closeOpenPage({ path: `${PLAN_BASE}/detail`, query: { id: newId } });
   } finally {
     submitting.value = false;
   }
 }
 
 function goList() {
-  router.push(PLAN_BASE);
+  // 关闭向导 tab 再回列表：销毁缓存实例，使下次进入重新挂载（草稿缓存保留，走 onMounted 的恢复确认）。
+  tab.closeOpenPage(PLAN_BASE);
 }
 </script>
 
