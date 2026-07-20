@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { stockOut } from '@/api/djs-warehouse/stock';
 import type { LocationStockVO, StockOutForm } from '@/api/djs-warehouse/stock/types';
+import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -77,12 +78,12 @@ const unit = ref('');
 /** 当前库存（出库弹窗只读展示，来自被点击的库存行 productStock） */
 const currentStock = ref<number | string | null>(null);
 
-/** 当前库存展示：保留两位小数 + 单位（productStock 后端 BigDecimal 可能是 string） */
+/** 当前库存展示（按单位分流）：kg/公斤 恒 3 位小数补零，非 kg 去尾零 + 单位（productStock 后端 BigDecimal 可能是 string） */
 const currentStockText = computed(() => {
   const v = currentStock.value;
   if (v === undefined || v === null || v === '') return '-';
   const n = typeof v === 'number' ? v : Number(v);
-  const text = Number.isNaN(n) ? String(v) : n.toFixed(2);
+  const text = Number.isNaN(n) ? String(v) : formatQtyByUnit(n, unit.value);
   return unit.value ? `${text}${unit.value}` : text;
 });
 

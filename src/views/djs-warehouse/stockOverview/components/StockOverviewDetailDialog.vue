@@ -50,25 +50,25 @@
         show-overflow-tooltip
       />
       <el-table-column :label="t('stockOverview.detail.beginStock')" prop="beginStock" min-width="100" align="center" header-align="center">
-        <template #default="{ row }">{{ fmt(row.beginStock) }}</template>
+        <template #default="{ row }">{{ fmt(row.beginStock, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('stockOverview.detail.inboundQty')" prop="inboundQty" min-width="90" align="center" header-align="center">
-        <template #default="{ row }">{{ fmt(row.inboundQty) }}</template>
+        <template #default="{ row }">{{ fmt(row.inboundQty, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('stockOverview.detail.outboundQty')" prop="outboundQty" min-width="90" align="center" header-align="center">
-        <template #default="{ row }">{{ fmt(row.outboundQty) }}</template>
+        <template #default="{ row }">{{ fmt(row.outboundQty, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('stockOverview.detail.shippedQty')" prop="shippedQty" min-width="90" align="center" header-align="center">
-        <template #default="{ row }">{{ fmt(row.shippedQty) }}</template>
+        <template #default="{ row }">{{ fmt(row.shippedQty, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('stockOverview.detail.lossQty')" prop="lossQty" min-width="90" align="center" header-align="center">
-        <template #default="{ row }">{{ fmt(row.lossQty) }}</template>
+        <template #default="{ row }">{{ fmt(row.lossQty, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('stockOverview.detail.feedQty')" prop="feedQty" min-width="100" align="center" header-align="center">
-        <template #default="{ row }">{{ fmt(row.feedQty) }}</template>
+        <template #default="{ row }">{{ fmt(row.feedQty, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('stockOverview.detail.endStock')" prop="endStock" min-width="100" align="center" header-align="center">
-        <template #default="{ row }">{{ fmt(row.endStock) }}</template>
+        <template #default="{ row }">{{ fmt(row.endStock, row.productUnit) }}</template>
       </el-table-column>
     </el-table>
   </el-dialog>
@@ -77,6 +77,7 @@
 <script setup lang="ts">
 import { getStockOverviewDetail, type StockOverviewDetailVO } from '@/api/djs-warehouse/stockOverview';
 import { listLocation } from '@/api/djs-warehouse/location';
+import { formatQtyByUnit, isKgUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 defineOptions({ name: 'StockOverviewDetailDialog' });
@@ -157,11 +158,11 @@ function handleExport() {
   );
 }
 
-/** 数量格式化：后端 BigDecimal 序列化为 string，统一 Number 强转保两位小数。 */
-function fmt(v: number | string | undefined | null): string {
-  if (v === undefined || v === null || v === '') return '0.00';
+/** 数量格式化（按行单位分流）：kg/公斤 恒 3 位小数补零（与损耗总览明细同一数值同一显示），非 kg 去尾零；后端 BigDecimal 序列化为 string 统一 Number 强转。 */
+function fmt(v: number | string | undefined | null, unit?: string | null): string {
+  if (v === undefined || v === null || v === '') return isKgUnit(unit) ? '0.000' : '0';
   const n = typeof v === 'number' ? v : Number(v);
-  return Number.isNaN(n) ? String(v) : n.toFixed(2);
+  return Number.isNaN(n) ? String(v) : formatQtyByUnit(n, unit);
 }
 
 defineExpose({ open });

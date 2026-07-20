@@ -32,6 +32,7 @@ import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/compon
 import { listFlowOut } from '@/api/djs-warehouse/stockFlow';
 import type { StockFlowQuery, StockFlowVO } from '@/api/djs-warehouse/stockFlow/types';
 import { listLocation } from '@/api/djs-warehouse/location';
+import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
@@ -109,7 +110,13 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'flowType', label: t('djs.warehouse.flowOut.outMode'), dictType: 'djs_flow_type', minWidth: 110, align: 'center' },
   { prop: 'stockOutDest', label: t('djs.warehouse.flowOut.stockOutDest'), dictType: 'djs_stock_out_dest', minWidth: 110, align: 'center' },
   { prop: 'locationName', label: t('djs.warehouse.flowOut.location'), minWidth: 120, align: 'center' },
-  { prop: 'changeQuantity', label: t('djs.warehouse.flowOut.changeQuantity'), minWidth: 110, align: 'center' },
+  {
+    prop: 'changeQuantity',
+    label: t('djs.warehouse.flowOut.changeQuantity'),
+    minWidth: 110,
+    align: 'center',
+    formatter: (row: StockFlowVO) => formatQtyByUnit(row.changeQuantity, row.productUnit)
+  },
   { prop: 'productUnit', label: t('djs.warehouse.flowOut.productUnit'), minWidth: 80, align: 'center' },
   { prop: 'blockNo', label: t('djs.warehouse.flowOut.blockNo'), minWidth: 110, align: 'center' },
   { prop: 'earNo', label: t('djs.warehouse.flowOut.earNo'), minWidth: 120, align: 'center' },

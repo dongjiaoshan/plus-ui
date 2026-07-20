@@ -19,10 +19,10 @@
             <span class="chip-main">{{ r.earNo ?? r.markId ?? r.barId ?? r.cutId }}</span>
           </div>
           <div v-if="r.pickupWeight != null" class="chip-line">
-            {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}：{{ Number(r.pickupWeight).toFixed(2) }}kg
+            {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}：{{ Number(r.pickupWeight).toFixed(3) }}kg
           </div>
           <div v-if="r.remainingWeight != null" class="chip-line">
-            {{ t('djs.warehouse.packEntry.remainWeightLabel') }}：{{ Number(r.remainingWeight).toFixed(2) }}kg
+            {{ t('djs.warehouse.packEntry.remainWeightLabel') }}：{{ Number(r.remainingWeight).toFixed(3) }}kg
           </div>
         </button>
       </template>
@@ -220,7 +220,7 @@ async function handleCutOut() {
   // 超量软校验（前端，与后端同口径：本次重量 ≤ 当前剩余可分割重量；后端为硬校验兜底）
   const remaining = selectedCut.value?.remainingWeight;
   if (remaining != null && curWeight.value > Number(remaining)) {
-    notifyMissing(t('djs.warehouse.packEntry.cutOutExceed', { remaining: Number(remaining).toFixed(2) }));
+    notifyMissing(t('djs.warehouse.packEntry.cutOutExceed', { remaining: Number(remaining).toFixed(3) }));
     return;
   }
   cutOutSubmitting.value = true;

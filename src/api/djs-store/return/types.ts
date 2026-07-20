@@ -124,4 +124,8 @@ export interface StoreReturnQuery {
   returnStatus?: string;
   returnDateFrom?: string;
   returnDateTo?: string;
+  /** 产品名称模糊（后端下推产品 id 集过滤，跨页正确） */
+  productName?: string;
+  /** 产品业态 tab：pork=猪肉类(含白条) / vegetable=其他(含 belong_type 空)，后端下推过滤 */
+  belongCategory?: 'pork' | 'vegetable';
 }

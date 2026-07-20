@@ -59,20 +59,18 @@ function categoryOf(belongType?: string): 'pork' | 'vegetable' {
   return belongType && PORK_BELONG_TYPES.includes(belongType) ? 'pork' : 'vegetable';
 }
 
-// 归属类型/代码/单位由后端 VO 直接回填（belongType/productCode/productUnit），按当前 tab 过滤。
-// 不再靠前端 listProduct 分页 join —— 产品数超单页容量时 join 会丢失，把猪肉退回默认归到果蔬 tab。
+// 归属类型/代码/单位由后端 VO 直接回填（belongType/productCode/productUnit）。
+// tab 过滤已下推后端（belongCategory 参数）——前端不再对当前页切片，分页 total/每页行数才正确。
 const displayList = computed<StoreReturnVO[]>(() => {
-  return list.value
-    .map((row) => {
-      const cat = categoryOf(row.belongType);
-      return {
-        ...row,
-        unit: row.productUnit,
-        productCategory: cat,
-        productTypeLabel: cat === 'pork' ? t('storeReturn.tab.pork') : t('storeReturn.tab.vegetable')
-      } as StoreReturnVO & { productCategory: 'pork' | 'vegetable'; productTypeLabel: string; unit?: string };
-    })
-    .filter((row) => (row as { productCategory: string }).productCategory === activeTab.value);
+  return list.value.map((row) => {
+    const cat = categoryOf(row.belongType);
+    return {
+      ...row,
+      unit: row.productUnit,
+      productCategory: cat,
+      productTypeLabel: cat === 'pork' ? t('storeReturn.tab.pork') : t('storeReturn.tab.vegetable')
+    } as StoreReturnVO & { productCategory: 'pork' | 'vegetable'; productTypeLabel: string; unit?: string };
+  });
 });
 
 const searchModel = reactive<Record<string, unknown>>({
@@ -118,6 +116,8 @@ async function fetchList() {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       returnStatus: (searchModel.returnStatus as string) || undefined,
+      productName: (searchModel.productName as string) || undefined,
+      belongCategory: activeTab.value,
       ...resolveDateRange()
     };
     const res = await listStoreReturn(query);
@@ -130,6 +130,9 @@ async function fetchList() {
 
 function handleTabChange() {
   tableRef.value?.clearSelection?.();
+  // tab 过滤在后端（belongCategory）：切 tab 回第 1 页重拉，total/行数按 tab 独立
+  pageNum.value = 1;
+  fetchList();
 }
 function handleSearch(payload?: Record<string, unknown>) {
   Object.assign(searchModel, payload ?? {});
@@ -153,6 +156,8 @@ async function handleExport() {
   try {
     const params: StoreReturnQuery = {
       returnStatus: (searchModel.returnStatus as string) || undefined,
+      productName: (searchModel.productName as string) || undefined,
+      belongCategory: activeTab.value,
       ...resolveDateRange()
     };
     const data = await exportStoreReturn(params);

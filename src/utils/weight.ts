@@ -52,6 +52,25 @@ export function formatNum3(value: number | string | null | undefined): string {
   return n.toFixed(3);
 }
 
+/** 单位是否为公斤口径（kg / KG / 公斤）。 */
+export function isKgUnit(unit: string | null | undefined): boolean {
+  if (!unit) return false;
+  return unit === '公斤' || unit.toLowerCase() === 'kg';
+}
+
+/**
+ * 按计量单位分流的数量格式化（不带单位文本）：
+ * - kg / 公斤 → 恒 3 位小数补零（1g 精度，同 formatNum3：0.7 → '0.700'）；
+ * - 非 kg（份 / 盒 / 瓶 / 枚 / 吨等计数单位）→ 去尾零，至多 3 位小数（985 → '985'，不显 985.000）。
+ * @returns 格式化文本；无效值（null / undefined / '' / NaN）返回 ''，由调用方决定空值占位符。
+ */
+export function formatQtyByUnit(value: number | string | null | undefined, unit: string | null | undefined): string {
+  const n = toNumber(value);
+  if (n === null) return '';
+  if (isKgUnit(unit)) return n.toFixed(3);
+  return n.toLocaleString('en-US', { maximumFractionDigits: 3, useGrouping: false });
+}
+
 /**
  * 按业务归属类型选择单位口径。
  * @param belongType 业务归属类型；'white_bar'（白条）→ 保留 kg，其余 → 转克。

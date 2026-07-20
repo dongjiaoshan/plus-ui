@@ -3,7 +3,6 @@
     <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="register-form">
       <div class="title-box">
         <h3 class="title">{{ title }}</h3>
-        <lang-select />
       </div>
       <el-form-item v-if="tenantEnabled" prop="tenantId">
         <el-select v-model="registerForm.tenantId" filterable :placeholder="proxy.$t('register.selectPlaceholder')" style="width: 100%">

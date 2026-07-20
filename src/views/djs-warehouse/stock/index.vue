@@ -58,6 +58,7 @@ import StockRecordDialog from './components/StockRecordDialog.vue';
 import { listStock } from '@/api/djs-warehouse/stock';
 import type { LocationStockQuery, LocationStockVO } from '@/api/djs-warehouse/stock/types';
 import { listLocation } from '@/api/djs-warehouse/location';
+import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -108,7 +109,7 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('stock.column.productStock'),
     minWidth: 120,
     align: 'center',
-    formatter: (row: BizRow) => formatStock(row.productStock)
+    formatter: (row: BizRow) => formatStock(row.productStock, row.productUnit as string)
   },
   { prop: 'productUnit', label: t('stock.column.productUnit'), minWidth: 120, align: 'center' },
   { prop: 'earNo', label: t('stock.column.earNo'), minWidth: 120, align: 'center' },
@@ -118,11 +119,11 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'checkResult', label: t('stock.column.checkResult'), minWidth: 120, align: 'center', dictType: 'djs_check_result' }
 ]);
 
-/** 当前库存格式化：保留两位小数（后端 BigDecimal 序列化可能是 string / 整数 / 多位小数）。 */
-function formatStock(v: number | string | undefined | null): string {
+/** 当前库存格式化（按单位分流）：kg/公斤 恒 3 位小数补零（1g 精度，与流水/损耗明细对账口径一致）；非 kg 计数单位去尾零。 */
+function formatStock(v: number | string | undefined | null, unit?: string): string {
   if (v === undefined || v === null || v === '') return '';
   const n = typeof v === 'number' ? v : Number(v);
-  return Number.isNaN(n) ? String(v) : n.toFixed(2);
+  return Number.isNaN(n) ? String(v) : formatQtyByUnit(n, unit);
 }
 
 async function fetchList() {
