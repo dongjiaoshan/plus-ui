@@ -145,6 +145,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 /** 汇总列（对齐原型 bc5e5339：11 数据列 + 1 操作列）。统一居中 + 统一 minWidth。 */
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'demandDate', label: t('demand.column.demandDate'), minWidth: 120, align: 'center' },
+  // row23：需求状态列调整到产品列之前
+  { prop: 'demandStatus', label: t('demand.column.demandStatus'), minWidth: 120, align: 'center' },
   { prop: 'productName', label: t('demand.column.productName'), minWidth: 140, align: 'center', showOverflowTooltip: true },
   { prop: 'productSpec', label: t('demand.column.productSpec'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   {
@@ -184,7 +186,6 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => String((row as unknown as DemandGroupVO).storeCount ?? 0)
   },
-  { prop: 'demandStatus', label: t('demand.column.demandStatus'), minWidth: 120, align: 'center' },
   {
     prop: 'confirmRate',
     label: t('demand.column.confirmRate'),

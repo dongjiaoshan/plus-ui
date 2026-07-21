@@ -3132,7 +3132,7 @@ export default {
       demandDate: 'Demand Date',
       productType: 'Product Type',
       storeId: 'Store',
-      productName: 'Product',
+      productName: 'Product Name',
       giftSku: 'Gift SKU',
       productSpec: 'Spec',
       demandQuantity: 'Quantity',

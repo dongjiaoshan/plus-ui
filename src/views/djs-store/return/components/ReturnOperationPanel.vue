@@ -13,7 +13,6 @@
       <el-table-column :label="t('storeReturn.column.productName')" min-width="180" show-overflow-tooltip align="center" header-align="center">
         <template #default="{ row }">
           {{ row.productName }}
-          <el-tag v-if="row.subCategory === 'white_bar'" size="small" type="warning" class="sub-tag" disable-transitions>{{ t('storeReturn.subCategory.white_bar') }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">

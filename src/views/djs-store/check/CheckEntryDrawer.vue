@@ -26,7 +26,10 @@
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="filteredRows" border stripe class="entry-table">
+      <!-- row31：必须 row-key=productId——否则切 tab 时 el-table 按 index 复用 el-input-number 实例，
+           precision prop 虽更新但 modelValue 恒 0 不触发内部重排，「份」行沿用上一「kg」行的陈旧 "0.000" 显示。
+           按产品身份重挂行 → 输入框重挂、以 precision=0 重排 → 非 kg 显整数。 -->
+      <el-table v-loading="loading" :data="filteredRows" row-key="productId" border stripe class="entry-table">
         <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
         <!-- 流程性问题 row14：去掉「类别」列 -->
         <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="80" align="center" header-align="center" />
