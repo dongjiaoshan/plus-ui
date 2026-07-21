@@ -2462,6 +2462,23 @@ export default {
       uploadTip: 'Supports {types}; up to {max}MB each'
     },
     warehouse: {
+      scale: {
+        title: 'Scale',
+        connected: 'Connected',
+        disconnected: 'Disconnected',
+        steady: 'Steady',
+        unstable: 'Unstable',
+        scaleError: 'Scale error',
+        fill: 'Fill in',
+        zero: 'Zero',
+        tare: 'Tare',
+        autoFill: 'Auto fill',
+        zeroOk: 'Zeroed',
+        zeroFail: 'Zero failed',
+        tareOk: 'Tared',
+        tareFail: 'Tare failed',
+        offlineTip: 'Not connected to scale (127.0.0.1:5017); ensure the weighing service is running on the scale'
+      },
       pigBurn: {
         title: 'Singe Records',
         burnId: 'Singe No',

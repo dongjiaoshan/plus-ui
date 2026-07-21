@@ -141,6 +141,11 @@
                remainingPackableCopies computed 仍保留，供份数模式提交前的 copiesExceed 前端软校验用（见 submit 校验）。 -->
         </div>
 
+        <!-- 电子秤实时重量（enableScale 的页试点，如肉品打包）：连本机 5017 WS，放稳自动/手动填入 productWeight -->
+        <div v-if="enableScale && kind !== 'gift' && !shouldUnitByCopies" class="panel-section">
+          <ScaleReader :in-gram="kind === 'veg' || effWeightInGram" @fill="(v) => (form.productWeight = v)" />
+        </div>
+
         <!-- 发送位置 button-toggle（其他产品打包二选无礼盒；礼盒不显示） -->
         <!-- 124#3：发送位置按钮（发货月台/礼盒）加大，触屏易点（send-dest-toggle 放大 dest-btn） -->
         <div v-if="sendDests.length > 0" class="panel-section send-dest-toggle">
@@ -173,6 +178,7 @@ import { ElMessage, ElNotification } from 'element-plus';
 import { InfoFilled, PriceTag } from '@element-plus/icons-vue';
 import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
+import ScaleReader from './components/ScaleReader.vue';
 import DestToggle from './components/DestToggle.vue';
 import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialog.vue';
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
@@ -252,6 +258,8 @@ const props = withDefaults(
      * 缺省 false，其他打包页零影响。同时自动选中第一个猪只耳号（124#4，仅 earGroup 生效）。
      */
     autoSelectFirst?: boolean;
+    /** 是否显示电子秤实时重量小部件（enableScale 的页试点，如肉品打包）；缺省 false，其他页零影响 */
+    enableScale?: boolean;
   }>(),
   {
     productType: undefined,
@@ -270,7 +278,8 @@ const props = withDefaults(
     wide: false,
     weightInGram: false,
     hidePackNo: false,
-    autoSelectFirst: false
+    autoSelectFirst: false,
+    enableScale: false
   }
 );
 

@@ -2465,6 +2465,23 @@ export default {
       uploadTip: '支持 {types} 格式，单张不超过 {max}MB'
     },
     warehouse: {
+      scale: {
+        title: '电子秤',
+        connected: '已连接',
+        disconnected: '未连接',
+        steady: '稳定',
+        unstable: '晃动',
+        scaleError: '秤异常',
+        fill: '填入',
+        zero: '归零',
+        tare: '去皮',
+        autoFill: '自动填入',
+        zeroOk: '归零成功',
+        zeroFail: '归零失败',
+        tareOk: '去皮成功',
+        tareFail: '去皮失败',
+        offlineTip: '未连接电子秤（127.0.0.1:5017），请确认秤上取重服务已启动'
+      },
       pigBurn: {
         title: '燎毛记录',
         burnId: '燎毛单号',
