@@ -1,5 +1,5 @@
 <template>
-  <div class="pack-station">
+  <div class="pack-station" :class="{ 'pack-station--mini': mini }">
     <div class="station-title">{{ title }}</div>
 
     <div class="station-body">
@@ -20,7 +20,8 @@
             :stock-unit="kind === 'veg' ? 'kg' : undefined"
             :stock-unit-map="sourceFilterActive ? wipStockUnitMap : undefined"
             :show-stock="showStock"
-            :large="wide"
+            :large="wide && !mini"
+            :compact="mini"
             :weight-in-gram="weightInGram"
             @change="onProductChange"
           />
@@ -114,7 +115,8 @@
 
         <!-- 重量 numpad（普通打包）/ 盒数 numpad（礼盒）/ 份数 numpad（其他产品按份数计量） -->
         <div class="panel-section">
-          <div class="panel-label">
+          <!-- mini 称重页由 ScaleWeightInput 自带标签头，隐藏此外层标签避免重复 -->
+          <div v-if="!(mini && kind !== 'gift' && !shouldUnitByCopies)" class="panel-label">
             {{
               kind === 'gift'
                 ? t('djs.warehouse.packEntry.packBoxCount')
@@ -123,8 +125,16 @@
                   : t('djs.warehouse.packEntry.productWeight')
             }}
           </div>
+          <!-- mini 小屏：秤重量做成可编辑输入框（替代触屏 numpad，自动填入 + 可手改） -->
+          <ScaleWeightInput
+            v-if="mini && kind !== 'gift' && !shouldUnitByCopies"
+            v-model="form.productWeight"
+            :in-gram="kind === 'veg' || effWeightInGram"
+            :unit="selectedUnit"
+            :label="t('djs.warehouse.packEntry.productWeight')"
+          />
           <WeightNumpad
-            v-if="kind === 'gift'"
+            v-else-if="kind === 'gift'"
             v-model="form.packBoxCount"
             :placeholder="t('djs.warehouse.packEntry.packBoxCount')"
             :unit="t('djs.warehouse.packEntry.box')"
@@ -141,8 +151,8 @@
                remainingPackableCopies computed 仍保留，供份数模式提交前的 copiesExceed 前端软校验用（见 submit 校验）。 -->
         </div>
 
-        <!-- 电子秤实时重量（enableScale 的页试点，如肉品打包）：连本机 5017 WS，放稳自动/手动填入 productWeight -->
-        <div v-if="enableScale && kind !== 'gift' && !shouldUnitByCopies" class="panel-section">
+        <!-- 电子秤实时重量（非 mini：大显示 + 填入/归零/去皮）；mini 已并入 ScaleWeightInput 输入框 -->
+        <div v-if="!mini && enableScale && kind !== 'gift' && !shouldUnitByCopies" class="panel-section">
           <ScaleReader :in-gram="kind === 'veg' || effWeightInGram" @fill="(v) => (form.productWeight = v)" />
         </div>
 
@@ -179,6 +189,7 @@ import { InfoFilled, PriceTag } from '@element-plus/icons-vue';
 import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
 import ScaleReader from './components/ScaleReader.vue';
+import ScaleWeightInput from './components/ScaleWeightInput.vue';
 import DestToggle from './components/DestToggle.vue';
 import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialog.vue';
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
@@ -260,6 +271,8 @@ const props = withDefaults(
     autoSelectFirst?: boolean;
     /** 是否显示电子秤实时重量小部件（enableScale 的页试点，如肉品打包）；缺省 false，其他页零影响 */
     enableScale?: boolean;
+    /** 小屏 mini 模式（TSX-615 一体秤适配试点）：右台上移 / 卡片缩小一排多个 / 去 numpad / 秤重量做成可编辑输入框；缺省 false，其他页零影响 */
+    mini?: boolean;
   }>(),
   {
     productType: undefined,
@@ -279,7 +292,8 @@ const props = withDefaults(
     weightInGram: false,
     hidePackNo: false,
     autoSelectFirst: false,
-    enableScale: false
+    enableScale: false,
+    mini: false
   }
 );
 
@@ -1463,5 +1477,23 @@ onActivated(() => {
 .demand-tags .text-gray-400 {
   font-size: 14px;
   line-height: 34px;
+}
+
+/* ===== 小屏 mini 模式（TSX-615 一体秤适配试点）：右台上移、间距收紧 ===== */
+.pack-station--mini {
+  height: calc(100vh - 60px);
+}
+/* 隐藏右台「操作」头，右台上移（#1）；页标题保留（Kevin：标题不能省略、不缩小） */
+.pack-station--mini .panel-head {
+  display: none;
+}
+.pack-station--mini .station-body {
+  gap: 12px;
+}
+.pack-station--mini .panel-scroll {
+  padding-top: 0;
+}
+.pack-station--mini .panel-section {
+  margin-bottom: 8px;
 }
 </style>

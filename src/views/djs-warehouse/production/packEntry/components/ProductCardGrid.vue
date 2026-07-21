@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="loading" class="card-grid" :class="{ 'card-grid--large': large, 'card-grid--empty': items.length === 0 }">
+  <div v-loading="loading" class="card-grid" :class="{ 'card-grid--large': large, 'card-grid--compact': compact, 'card-grid--empty': items.length === 0 }">
     <template v-if="items.length > 0">
       <div
         v-for="item in items"
@@ -7,7 +7,8 @@
         class="prod-card"
         :class="{
           active: String(modelValue) === String(item.id),
-          'prod-card--large': large
+          'prod-card--large': large,
+          'prod-card--compact': compact
         }"
         @click="select(item.id)"
       >
@@ -67,6 +68,8 @@ const props = withDefaults(
     showStock?: boolean;
     /** 大卡片版（肉品打包：卡片+缩略图放大，填充空白）；缺省紧凑版 */
     large?: boolean;
+    /** 超紧凑版（小屏 mini：卡片+缩略图更小、文字更小、一排放更多）；缺省 false */
+    compact?: boolean;
     /**
      * 「领用剩余重量」单位强制覆盖（果蔬打包传 'kg'）：系统权威量纲=kg，
      * stockMap 的数值是 kg；果蔬成品 product_unit 可能是「份」，若按产品单位渲染会出现
@@ -91,6 +94,7 @@ const props = withDefaults(
     stockMap: () => ({}),
     showStock: true,
     large: false,
+    compact: false,
     stockUnit: undefined,
     stockUnitMap: () => ({}),
     weightInGram: false
@@ -240,5 +244,33 @@ function select(id: number | string) {
 .prod-card--large .prod-row {
   font-size: 14px;
   line-height: 1.9;
+}
+
+/* ===== 紧凑版（小屏 mini）：比大卡片小、一排放更多，仍保持可读与设计感 ===== */
+.card-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+.prod-card--compact {
+  gap: 10px;
+  padding: 12px;
+}
+.prod-card--compact .prod-thumb,
+.prod-card--compact .thumb-img,
+.prod-card--compact .thumb-fallback {
+  flex-basis: 52px;
+  width: 52px;
+  height: 52px;
+}
+.prod-card--compact .thumb-fallback {
+  font-size: 22px;
+}
+.prod-card--compact .prod-name {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.prod-card--compact .prod-row {
+  font-size: 12px;
+  line-height: 1.6;
 }
 </style>
