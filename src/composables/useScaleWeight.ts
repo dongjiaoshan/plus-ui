@@ -1,12 +1,12 @@
 import { computed, ref, watch } from 'vue';
-import { useWebSocket } from '@vueuse/core';
+import { useIntervalFn, useWebSocket } from '@vueuse/core';
 import { useScaleConfigStore } from '@/store/modules/scaleConfig';
 
 /**
- * 秤桥推送/返回的重量帧（顶尖 OS2 协议）。
+ * 秤桥返回/推送的重量帧（顶尖 OS2 协议；真机实测多带 PrinterStatus 等额外字段，解析只取需要的）。
  * - Code：0=秤异常 / 1=成功（与其他接口 0=失败相反）。
  * - IsSteady：0=晃动 / 1=稳定。
- * - Weight / TareWeight：kg（后端 Decimal 序列化可能是字符串，统一 Number 强转）。
+ * - Weight / TareWeight：kg（可能序列化成字符串，统一 Number 强转）。
  */
 interface ScaleWeightFrame {
   IsSteady?: number | string | null;
@@ -26,16 +26,19 @@ const toNum = (v: number | string | null | undefined): number | null => {
 /**
  * 读电子秤重量（TSX-615 安卓一体秤上的 ScaleAdapterTool，本机 127.0.0.1:5017）。
  *
- * - WS `ws://<base>/weight` 持续推重量帧；`status==='OPEN'` 即 connected。
- * - `zero()/tare()` 走**裸 fetch** 打 `<base>/api/Zero|Tare`（**不走 utils/request.ts 的 service**，
- *   避免注入 token / Current-Store-Id 等业务头——秤桥是本机第三方服务）。
- * - 连不上**不抛异常**，只置 connected=false / lastError；组件卸载自动断连（useWebSocket 默认行为）。
+ * 双通道取数（真机实测：部分固件 WS `/weight` 能握手但不推帧，只有 GET 稳定返数）：
+ * - **主：轮询 `GET /api/Weight`**（已在真机验证可用；需秤桥开 CORS 才能跨源读取）。
+ * - **辅：WebSocket `/weight`**（无 CORS 限制；能推就用，帧按 string/Blob/ArrayBuffer 都解）。
+ * 任一通道拿到有效帧即刷新，`connected` 以"近 2s 是否收到帧"为准（比裸 socket 状态更真实）。
  *
- * 返回的都是 ref，调用方按 `const { connected, weightKg, ... } = useScaleWeight()` 解构（模板自动解包）。
+ * - `zero()/tare()` 走裸 fetch 打 `api/Zero|Tare`（不走 request.ts 的 service，避免注入业务头）。
+ * - `connect()/close()` 幂等启停两通道，供组件 onActivated/onDeactivated 配对（肉品打包页被 keep-alive 缓存）。
+ * - 连不上不抛异常，只置 connected=false / lastError。
  */
 export function useScaleWeight() {
   const cfg = useScaleConfigStore();
-  const wsUrl = computed(() => cfg.baseUrl.replace(/\/+$/, '').replace(/^http/i, 'ws') + '/weight');
+  const httpBase = computed(() => cfg.baseUrl.replace(/\/+$/, ''));
+  const wsUrl = computed(() => httpBase.value.replace(/^http/i, 'ws') + '/weight');
 
   const weightKg = ref<number | null>(null);
   const tareWeightKg = ref<number | null>(null);
@@ -43,30 +46,17 @@ export function useScaleWeight() {
   const unitName = ref<string | null>(null);
   const code = ref<number | null>(null);
   const lastError = ref<string>('');
+  const connected = ref<boolean>(false);
 
-  const { status, data, open, close } = useWebSocket(wsUrl, {
-    immediate: false,
-    autoReconnect: { retries: () => true, delay: 1500 }
-  });
-
-  const connected = computed<boolean>(() => status.value === 'OPEN');
-
-  // 幂等连接：已连 / 连接中不重复 open。供组件在 onMounted/onActivated 调用——
-  // 肉品打包页被 keep-alive 缓存，切走 deactivate、切回 activate，靠此配对 connect/close，
-  // 避免离开页面后 WS 每 1.5s 无限重连 + 后台持续解析重量帧（资源泄漏）。
-  const connect = (): void => {
-    if (status.value !== 'OPEN' && status.value !== 'CONNECTING') open();
-  };
-
-  watch(data, (raw) => {
-    if (typeof raw !== 'string' || raw.length === 0) return;
-    let frame: ScaleWeightFrame;
-    try {
-      frame = JSON.parse(raw) as ScaleWeightFrame;
-    } catch {
-      // 跳过单个坏帧（秤桥持续推送，下一帧自恢复）；不把非 i18n 文案塞进 UI
-      return;
+  // 数据新鲜度：任一通道拿到有效帧即置 connected=true 并重置 2s 计时；超 2s 无帧判失联。
+  let staleTimer: ReturnType<typeof setTimeout> | null = null;
+  const clearStale = (): void => {
+    if (staleTimer) {
+      clearTimeout(staleTimer);
+      staleTimer = null;
     }
+  };
+  const applyFrame = (frame: ScaleWeightFrame): void => {
     code.value = toNum(frame.Code);
     isSteady.value = toNum(frame.IsSteady) === 1;
     weightKg.value = toNum(frame.Weight);
@@ -74,14 +64,68 @@ export function useScaleWeight() {
     unitName.value = frame.UnitName ?? null;
     // 仅透传设备返回的 Message（不塞中文兜底；i18n 兜底在组件里做）
     lastError.value = code.value === 0 ? frame.Message || '' : '';
+    connected.value = true;
+    clearStale();
+    staleTimer = setTimeout(() => {
+      connected.value = false;
+    }, 2000);
+  };
+  const tryApply = (s: string): void => {
+    if (!s) return;
+    try {
+      applyFrame(JSON.parse(s) as ScaleWeightFrame);
+    } catch {
+      // 跳过单个坏帧（下一帧自恢复）；不把非 i18n 文案塞进 UI
+    }
+  };
+
+  // —— 通道 1：WebSocket 推送（无 CORS 限制；帧可能是 text / Blob / ArrayBuffer，全解一遍）——
+  const { data, open: wsOpen, close: wsClose } = useWebSocket(wsUrl, {
+    immediate: false,
+    autoReconnect: { retries: () => true, delay: 1500 }
   });
+  watch(data, (raw) => {
+    if (typeof raw === 'string') tryApply(raw);
+    else if (raw instanceof Blob) void raw.text().then(tryApply);
+    else if (raw instanceof ArrayBuffer) tryApply(new TextDecoder().decode(raw));
+  });
+
+  // —— 通道 2：轮询 GET /api/Weight（主通道，真机已验证可用）——
+  let inFlight = false;
+  const pollOnce = async (): Promise<void> => {
+    if (inFlight) return;
+    inFlight = true;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 1000);
+    try {
+      const res = await fetch(`${httpBase.value}/api/Weight?scaleId=${encodeURIComponent(cfg.scaleId)}`, { signal: ctrl.signal });
+      applyFrame((await res.json()) as ScaleWeightFrame);
+    } catch {
+      // 本次拉取失败（网络/CORS/超时），等下次；失联由 staleTimer 收敛为 connected=false
+    } finally {
+      clearTimeout(timer);
+      inFlight = false;
+    }
+  };
+  const { pause: pollPause, resume: pollResume, isActive: pollActive } = useIntervalFn(pollOnce, 300, { immediate: false });
+
+  const connect = (): void => {
+    wsOpen();
+    if (!pollActive.value) pollResume();
+    void pollOnce(); // 立即拉一次，首帧不等 300ms
+  };
+  const close = (): void => {
+    wsClose();
+    pollPause();
+    clearStale();
+    connected.value = false;
+  };
 
   const post = async (action: 'Zero' | 'Tare'): Promise<{ ok: boolean; message: string }> => {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 4000);
     try {
-      const base = cfg.baseUrl.replace(/\/+$/, '');
-      const res = await fetch(`${base}/api/${action}?scaleId=${encodeURIComponent(cfg.scaleId)}`, {
+      const res = await fetch(`${httpBase.value}/api/${action}?scaleId=${encodeURIComponent(cfg.scaleId)}`, {
         method: 'POST',
         signal: ctrl.signal
       });
