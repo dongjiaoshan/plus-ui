@@ -8,7 +8,7 @@
       </el-radio-group>
     </div>
 
-    <!-- 猪肉产品：产品名称 / 退回量 / 单位 / 退回产品重量(KG)（DENGBO-R11：与果蔬一致；猪肉产品按份录退回量，白条产品仅按重量） -->
+    <!-- 猪肉产品：产品名称 / 退回量 / 单位（流程性问题 row15：去掉「退回产品重量(KG)」列；退回量精度按单位 kg→3位/非kg→整数；白条产品也在退回量列录入） -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" min-width="180" show-overflow-tooltip align="center" header-align="center">
         <template #default="{ row }">
@@ -16,48 +16,12 @@
           <el-tag v-if="row.subCategory === 'white_bar'" size="small" type="warning" class="sub-tag" disable-transitions>{{ t('storeReturn.subCategory.white_bar') }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column :label="t('storeReturn.column.returnQuantity')" width="200" align="center" header-align="center">
-        <template #default="{ row }">
-          <el-input-number
-            v-if="row.subCategory !== 'white_bar'"
-            v-model="row.returnQuantity"
-            :min="0"
-            :precision="2"
-            :step="1"
-            :placeholder="t('storeReturn.operation.quantityPlaceholder')"
-            controls-position="right"
-            style="width: 160px"
-          />
-          <span v-else class="text-muted">—</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
-        <template #default="{ row }">{{ row.productUnit || '—' }}</template>
-      </el-table-column>
-      <el-table-column :label="t('storeReturn.operation.returnWeight')" width="260" align="center" header-align="center">
-        <template #default="{ row }">
-          <el-input-number
-            v-model="row.returnWeight"
-            :min="0"
-            :precision="3"
-            :step="1"
-            :placeholder="t('storeReturn.operation.weightPlaceholder')"
-            controls-position="right"
-            style="width: 220px"
-          />
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 果蔬产品：产品名称 / 退回量 / 单位 / 退回产品重量(KG) -->
-    <el-table v-else v-loading="loading" :data="vegRows" border class="op-table">
-      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
       <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
         <template #default="{ row }">
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :precision="2"
+            :precision="isKg(row.productUnit) ? 3 : 0"
             :step="1"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
@@ -68,18 +32,26 @@
       <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
         <template #default="{ row }">{{ row.productUnit || '—' }}</template>
       </el-table-column>
-      <el-table-column :label="t('storeReturn.operation.returnWeight')" width="280" align="center" header-align="center">
+    </el-table>
+
+    <!-- 果蔬产品：产品名称 / 退回量 / 单位（流程性问题 row15 同上） -->
+    <el-table v-else v-loading="loading" :data="vegRows" border class="op-table">
+      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
         <template #default="{ row }">
           <el-input-number
-            v-model="row.returnWeight"
+            v-model="row.returnQuantity"
             :min="0"
-            :precision="3"
+            :precision="isKg(row.productUnit) ? 3 : 0"
             :step="1"
-            :placeholder="t('storeReturn.operation.weightPlaceholder')"
+            :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
-            style="width: 220px"
+            style="width: 180px"
           />
         </template>
+      </el-table-column>
+      <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
+        <template #default="{ row }">{{ row.productUnit || '—' }}</template>
       </el-table-column>
     </el-table>
 
@@ -128,9 +100,14 @@ const porkRows = ref<MatrixRow[]>([]);
 const vegRows = ref<MatrixRow[]>([]);
 
 const currentRows = computed(() => (activeCat.value === 'pork' ? porkRows.value : vegRows.value));
-const filledCount = computed(
-  () => [...porkRows.value, ...vegRows.value].filter((r) => (r.returnWeight ?? 0) > 0 || (r.returnQuantity ?? 0) > 0).length
-);
+// 流程性问题 row15：唯一录入项是退回量，已填 = 退回量 > 0。
+const filledCount = computed(() => [...porkRows.value, ...vegRows.value].filter((r) => (r.returnQuantity ?? 0) > 0).length);
+
+/** 单位是否 kg（不区分大小写，兼容「公斤」）——决定退回量精度与是否派生退回产品重量。 */
+function isKg(unit?: string): boolean {
+  const u = (unit ?? '').trim().toLowerCase();
+  return u === 'kg' || u === '公斤';
+}
 
 /** 猪肉 tab：后端按「该门店当日是否有白条到店」决定是否返回字典项候选（无到店 / 未选门店 → 空）。 */
 async function loadPorkCandidates() {
@@ -187,19 +164,15 @@ async function handleSubmit() {
   if (!storeId.value) {
     return;
   }
-  // 果蔬行 + 猪肉产品行（subCategory=pork）：退回量 + 退回产品重量两值都必填（DENGBO-R11 猪肉与果蔬一致）。
-  // 白条产品行（subCategory=white_bar）：仅按重量退货，不校验退回量。
-  const bothRequiredRows = [...vegRows.value, ...porkRows.value.filter((r) => r.subCategory !== 'white_bar')];
-  const partial = bothRequiredRows.find(
-    (r) => ((r.returnQuantity ?? 0) > 0 || (r.returnWeight ?? 0) > 0) && !((r.returnQuantity ?? 0) > 0 && (r.returnWeight ?? 0) > 0)
-  );
-  if (partial) {
-    proxy?.$modal.msgWarning(t('storeReturn.operation.vegBothRequired', { name: partial.productName }));
-    return;
-  }
+  // 流程性问题 row15：唯一录入项是退回量。退回产品重量由前端按单位派生——
+  //   产品单位为 kg → 退回产品重量 = 退回量；非 kg → 退回产品重量 = 0。
   const items: StoreReturnBatchItem[] = [...porkRows.value, ...vegRows.value]
-    .filter((r) => (r.returnWeight ?? 0) > 0 || (r.returnQuantity ?? 0) > 0)
-    .map((r) => ({ productId: r.productId, returnQuantity: r.returnQuantity, returnWeight: r.returnWeight }));
+    .filter((r) => (r.returnQuantity ?? 0) > 0)
+    .map((r) => ({
+      productId: r.productId,
+      returnQuantity: r.returnQuantity,
+      returnWeight: isKg(r.productUnit) ? r.returnQuantity : 0
+    }));
   if (!items.length) {
     return;
   }

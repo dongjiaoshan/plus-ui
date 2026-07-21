@@ -161,6 +161,14 @@
             </el-radio-group>
           </el-form-item>
         </el-col>
+        <!-- 流程性问题 row11：是否原材料外售（自产产品可配；为「是」时门店盘点/退回按其关联原材料口径处理） -->
+        <el-col v-if="form.productType !== 2" :span="12">
+          <el-form-item :label="t('product.field.isMaterialSold')">
+            <el-radio-group v-model="form.isMaterialSold">
+              <el-radio v-for="d in djs_yes_no" :key="d.value" :value="Number(d.value)">{{ d.label }}</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-col>
         <el-col :span="12">
           <el-form-item :label="t('product.field.productStatus')" prop="productStatus">
             <el-radio-group v-model="form.productStatus">
@@ -238,6 +246,7 @@ const defaultForm = (): ProductInfoForm => ({
   isDelivery: 1,
   supplierId: undefined,
   isBuyOut: 0,
+  isMaterialSold: 0,
   remark: undefined
 });
 

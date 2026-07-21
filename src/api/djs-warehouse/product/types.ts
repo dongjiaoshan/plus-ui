@@ -42,6 +42,8 @@ export interface ProductInfoVO extends BaseEntity {
   /** 供应商名称（row81：商品配置列表「供应商」列；后端按 supplierId 关联 t_md_supplier 回填） */
   supplierName?: string;
   isBuyOut: number;
+  /** 是否原材料外售（djs_yes_no：1=是 / 0=否，流程性问题 row11） */
+  isMaterialSold?: number;
   remark?: string;
   /** 更新人姓名（后端 @Translation 回填） */
   updateByName?: string;
@@ -111,6 +113,8 @@ export interface ProductInfoForm {
   isDelivery: number;
   supplierId?: number | string;
   isBuyOut: number;
+  /** 是否原材料外售（djs_yes_no：1=是 / 0=否，流程性问题 row11） */
+  isMaterialSold?: number;
   remark?: string;
 }
 

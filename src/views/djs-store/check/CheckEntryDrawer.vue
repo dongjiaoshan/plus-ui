@@ -28,11 +28,7 @@
 
       <el-table v-loading="loading" :data="filteredRows" border stripe class="entry-table">
         <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
-        <el-table-column :label="t('storeLedger.column.category')" width="100" align="center" header-align="center">
-          <template #default="{ row }">
-            <el-tag :type="categoryTagType(row.category)" disable-transitions>{{ categoryLabel(row.category) }}</el-tag>
-          </template>
-        </el-table-column>
+        <!-- 流程性问题 row14：去掉「类别」列 -->
         <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="80" align="center" header-align="center" />
         <!-- 期初：只读（库存表结存） -->
         <el-table-column :label="t('storeLedger.column.openingQty')" width="110" align="center" header-align="center">
@@ -246,17 +242,6 @@ function fmtQty(value: number | string | null | undefined, row: { productUnit?: 
 /** 可编辑量输入框小数位：产品单位为 kg（白条按重量盘点）→ 3 位小数；否则（份 / 盒等）0 位整数。 */
 function kgPrecision(row: { productUnit?: string }): number {
   return isWeightRow(row) ? 3 : 0;
-}
-
-function categoryLabel(c: StoreLedgerCategory): string {
-  return t(`storeLedger.category.${c}`);
-}
-
-function categoryTagType(c: StoreLedgerCategory): 'success' | 'warning' | 'info' | 'primary' {
-  if (c === 'pork') return 'success';
-  if (c === 'white_bar') return 'primary';
-  if (c === 'inbound') return 'warning';
-  return 'info';
 }
 
 /** 损耗 = 期初 + 入库 − 销售 − 赠送 + 退货 − 退回 − 期末（与后端公式一致）。 */

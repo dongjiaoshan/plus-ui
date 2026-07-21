@@ -35,6 +35,10 @@
               <dict-tag :options="djs_yes_no" :value="data.isBuyOut" />
             </el-descriptions-item>
             <el-descriptions-item :label="t('product.field.productMaterial')">{{ data.productMaterialName || '-' }}</el-descriptions-item>
+            <!-- 流程性问题 row11：是否原材料外售 -->
+            <el-descriptions-item :label="t('product.field.isMaterialSold')">
+              <dict-tag :options="djs_yes_no" :value="data.isMaterialSold" />
+            </el-descriptions-item>
           </template>
           <!-- row67：商品详情（isGoods）下「产品图片/产品描述」文案改「商品图片/商品描述」 -->
           <el-descriptions-item :label="t(isGoods ? 'product.field.goodsThumb' : 'product.field.productThumb')" :span="2">

@@ -26,8 +26,9 @@
         <div class="prod-meta">
           <div class="prod-name">{{ item.productName }}</div>
           <div v-if="item.productSpec" class="prod-row">{{ t('djs.warehouse.packEntry.specLabel') }}：{{ item.productSpec }}</div>
+          <!-- 流程性问题 row9：需求量单位取产品自身单位（productUnit），非固定「份」；缺省回退「份」 -->
           <div v-if="demandOf(item) != null" class="prod-row">
-            {{ t('djs.warehouse.packEntry.demandLabel') }}：{{ demandOf(item) }} {{ t('djs.warehouse.packEntry.copiesUnit') }}
+            {{ t('djs.warehouse.packEntry.demandLabel') }}：{{ demandOf(item) }} {{ item.productUnit || t('djs.warehouse.packEntry.copiesUnit') }}
           </div>
           <div v-if="showStock && hasStockEntry(item)" class="prod-row">
             {{ t('djs.warehouse.packEntry.materialStockLabel') }}：{{ stockDisplay(item) }}

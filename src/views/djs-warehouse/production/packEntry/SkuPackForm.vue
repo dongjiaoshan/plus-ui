@@ -41,7 +41,7 @@
                 :effect="String(form.storeId) === String(sd.storeId) ? 'dark' : 'plain'"
                 @click="pickDemandStore(sd.storeId)"
               >
-                {{ sd.storeName }}({{ fmtCopies(sd.copies) }}{{ t('djs.warehouse.packEntry.copiesUnit') }})
+                {{ sd.storeName }}({{ fmtCopies(sd.copies) }}{{ demandChipUnit }})
               </el-tag>
             </template>
             <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.noDemand') }}</span>
@@ -838,17 +838,66 @@ function onEarChange() {
 // 当前选中目标成品（份数判定 / 卡片展示 / 提交换算用）。
 const selectedProduct = computed<ProductInfoVO | undefined>(() => products.value.find((p) => String(p.id) === String(form.value.productId)));
 
+/** 单位归一化：trim + 转小写，用于不区分大小写的单位判定（客户要求）。 */
+function normUnit(u?: string): string {
+  return (u ?? '').trim().toLowerCase();
+}
+/** 重量制单位判定：kg / 千克 / 公斤 / g / 克 视为重量单位（其余如「枚」「份」为计数制）。 */
+function isWeightUnit(u?: string): boolean {
+  const n = normUnit(u);
+  return n === 'kg' || n === '千克' || n === '公斤' || n === 'g' || n === '克';
+}
+/** KG 产品判定（不区分大小写）：kg / 公斤 视为按重量口径的产品（客户要求）。 */
+function isKgUnit(u?: string): boolean {
+  const s = normUnit(u);
+  return s === 'kg' || s === '公斤';
+}
+/** 当前选中成品的「领用来源原材料」单位：其他产品打包 wipStockUnitMap 给原料单位（鸡蛋=枚），回落 form.productUnit。 */
+const rawUnitOfSelected = computed<string>(() => wipStockUnitMap.value[String(form.value.productId)] || form.value.productUnit);
 /**
- * 其他产品打包「按份数计量」开关（req A）：成品配了 materialNum（>0，「其它产品打包计量规则」，
- * 如鸡蛋一盒30个）时，右台改为按「份数」录入（整数 numpad，单位「份」），提交前再换算成 kg 落库。
- * 仅在「其他产品打包」业态生效：kind='dry' 且 showSource 且非肉品（earGroup=false）。
- * 肉品打包(earGroup)/果蔬(veg)/礼盒(gift) 均不触发，避免误伤其它计量口径。
+ * 每份规格（每份消耗的原材料量）：优先 materialNum（30 枚礼盒=30）；为空时**仅当 productSpec 里的数字紧跟原料单位**
+ * （如「8枚」原料=枚 → 8）才解析。防「5000g/袋」「5L/桶」这类规格（原料=袋/桶，数字是克/升不是每份袋数/桶数）
+ * 被误解析成每份用量（row17 clean-QA 回归：会把 5000 当每份袋数 → 超扣 / 阻断打包）。
+ * 无法得出有效正数时返回 NaN（下游 Number.isFinite && >0 兜底，回落重量/原料单位模式）。
+ */
+const perCopyMeasure = computed<number>(() => {
+  const p = selectedProduct.value;
+  if (!p) return NaN;
+  const m = Number(p.materialNum);
+  if (Number.isFinite(m) && m > 0) return m;
+  const raw = (rawUnitOfSelected.value ?? '').trim();
+  if (raw) {
+    const esc = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const mt = String(p.productSpec ?? '').match(new RegExp(`([0-9]+(?:\\.[0-9]+)?)\\s*${esc}`));
+    if (mt) {
+      const n = parseFloat(mt[1]);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+  }
+  return NaN;
+});
+
+/**
+ * 其他产品打包「按份数计量」开关（req A + row17）：仅在「其他产品打包」业态（kind='dry' 且 showSource/autoSource 且
+ * 非肉品 earGroup=false）生效。判定条件由「配了 materialNum」放宽为「计数制原材料（领用原料单位非重量，如鸡蛋 raw=枚）
+ * + 有有效每份规格 perCopyMeasure（materialNum 优先、空则解析 productSpec 前导数）」——这样 4/8/15 枚（materialNum 为空）
+ * 也能走份数口径。重量制原材料（干货 raw=kg/g）保持重量模式，避免 copies×规格把 g 当 kg 扣减。
+ * 肉品打包(earGroup)/果蔬(veg)/礼盒(gift) 均不触发。
  */
 const shouldUnitByCopies = computed<boolean>(() => {
-  if (!dryReqMode.value) return false;
-  const measure = Number(selectedProduct.value?.materialNum);
-  return Number.isFinite(measure) && measure > 0;
+  if (!dryReqMode.value || !selectedProduct.value) return false;
+  if (isWeightUnit(rawUnitOfSelected.value)) return false;
+  const m = perCopyMeasure.value;
+  return Number.isFinite(m) && m > 0;
 });
+
+/**
+ * 门店需求 chip 单位（row10）：取产品自身单位，与卡片需求量单位（row9 ProductCardGrid 用 productUnit）保持一致——
+ * KG 产品显 kg、盒/桶/袋 显对应单位、缺省回退「份」。避免同一屏卡片显「盒」而底部 chip 显「份」的单位错位。
+ */
+const demandChipUnit = computed<string>(() =>
+  selectedProduct.value?.productUnit || t('djs.warehouse.packEntry.copiesUnit')
+);
 
 // 产品重量单位展示（row12 点2/点3，Kevin 2026-06-22 拍板量纲对齐到 kg）：
 // 果蔬(veg)产品称重录入单位显「g」（操作员按克称重），但系统权威量纲=kg —— 提交/校验前
@@ -905,7 +954,8 @@ function packWeightKg(): number | undefined {
 const remainingPackableCopies = computed<number | null>(() => {
   const p = selectedProduct.value;
   if (!p) return null;
-  const measure = Number(p.materialNum);
+  // row17：每份规格与提交换算同源（materialNum 优先、空则解析 productSpec 前导数），让 4/8/15 枚也有份数软上限。
+  const measure = perCopyMeasure.value;
   if (!measure || measure <= 0) return null;
   const stockSource = sourceFilterActive.value ? wipStockMap.value : props.kind === 'veg' ? vegStockMap.value : stockMap.value;
   const remain = stockSource[String(p.id)];
@@ -960,6 +1010,18 @@ function validate(): boolean {
     if (!form.value.productWeight || form.value.productWeight <= 0) {
       notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
       return false;
+    }
+    // row10：KG 产品（productUnit=kg/公斤，如筒子骨散装）称重必须 ≥ 所选门店剩余需求重量（sd.copies 为 kg 量纲）。
+    // 严格小于则拦截并提示（等于视为满足，客户规则：KG 只能重不能少、一次称重满足整单）；组件打包（发送位置=礼盒，无门店）
+    // 跳过；门店需求缺失时不前端拦截交后端。packWeightKg 对肉品已 g÷1000 得 kg，与 sd.copies 同量纲比较。
+    if (!isGiftComponent && form.value.storeId && isKgUnit(selectedProduct.value?.productUnit)) {
+      const d = visibleStoreDemands.value.find((sd) => String(sd.storeId) === String(form.value.storeId));
+      const remainKg = d ? Number(d.copies) : null;
+      const packKg = packWeightKg();
+      if (remainKg != null && Number.isFinite(remainKg) && packKg != null && packKg < remainKg) {
+        notifyMissing(t('djs.warehouse.packEntry.weightBelowDemand'));
+        return false;
+      }
     }
     // 其他产品按份数计量（req A）：录入的是「份数」，校验 ≤ 剩余可打包份数（remainingPackableCopies）。
     // remainingPackableCopies 为 null（未配料 / 库存缺失）时不前端拦截，交后端校验。
@@ -1040,21 +1102,22 @@ async function handleSubmit(printTrace: boolean) {
         };
         res = await submitVegPack(bo);
       } else {
-        // 份数计量（req A）：录入「份数」，提交前换算成 kg = 份数 × materialNum，productUnit 强制 'kg' 落库；
-        // 「份」仅是 UI 概念，后端零改。
-        // 重量模式（其他产品无 materialNum，如腊肉）：录入的就是「每份重量」，按原料重量单位落库（与录入/扣减一致，
+        // 份数计量（req A + row17）：录入「份数」，提交前换算成原材料消耗量 = 份数 × 每份规格（perCopyMeasure：
+        // materialNum 优先、空则解析 productSpec 前导数）；落库单位取原材料单位（鸡蛋=枚，见 rawUnitOfSelected），
+        // 与 consumeInhouse 按数值扣减口径一致（后端零改）。「份」仅是 UI 概念。
+        // 重量模式（其他产品重量制原材料，如腊肉/干货）：录入的就是「每份重量」，按原料重量单位落库（与录入/扣减一致，
         // 不落成品计数单位「袋」）；点确定 = 打包一份，后端 resolveDemandDeductQty 计数单位+无计量→扣 1 份。
         const copies = Number(form.value.productWeight);
-        const measure = Number(selectedProduct.value?.materialNum);
+        const measure = perCopyMeasure.value;
         // 124#6/row29：肉品打包 + 其他产品 kg 重量模式录入为 g → 提交前 ÷1000 换算成 kg（packWeightKg），单位强制 'kg' 落库；
-        // 份数计量按 copies×materialNum；其余重量模式原样透传（录入本就是 kg）。
+        // 份数计量按 copies×perCopyMeasure；其余重量模式原样透传（录入本就是 kg）。
         const dryWeight = shouldUnitByCopies.value
           ? copies * measure
           : effWeightInGram.value
             ? (packWeightKg() as number)
             : (form.value.productWeight as number);
         const dryUnit = shouldUnitByCopies.value
-          ? 'kg'
+          ? rawUnitOfSelected.value || 'kg'
           : effWeightInGram.value
             ? 'kg'
             : sourceFilterActive.value
