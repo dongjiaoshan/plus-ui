@@ -17,7 +17,6 @@
       weight-in-gram
       :hide-pack-no="true"
       auto-select-first
-      enable-scale
       :title="t('djs.warehouse.packEntry.meatTitle')"
     />
   </div>

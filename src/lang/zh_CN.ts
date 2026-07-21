@@ -3135,7 +3135,7 @@ export default {
       demandDate: '需求日期',
       productType: '需求产品类型',
       storeId: '门店',
-      productName: '产品',
+      productName: '产品名称',
       giftSku: '礼盒 SKU',
       productSpec: '规格',
       demandQuantity: '需求量',
