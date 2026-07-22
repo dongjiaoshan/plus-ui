@@ -40,20 +40,19 @@ const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
 
-/** djs_flow_type 是出入合并字典，出库方式下拉只保留出库方向的值（按 value 白名单过滤，不动字典 seed） */
+/**
+ * djs_flow_type 是出入合并字典，出库方式下拉只保留出库方向的值（按 value 白名单过滤，不动字典 seed）。
+ * loss / ship_out / pack_consume（生产发货与损耗）后端 queryOutList 已排除展示，下拉同步不提供。
+ */
 const FLOW_TYPE_OUT_VALUES = [
   'pick_out',
   // 领用按来源拆分 + 盘点异常出库（FIX-WMS-FLOWDICT-001）
   'dept_pick_out',
   'prod_pick_out',
   'feed_out',
-  // 'loss'（领用后损耗）不计为出库 —— 后端 queryOutList 已排除，下拉也不提供（R72）
   'cut_out',
-  'slaughter_burn',
-  'ship_out',
   'check_out',
   'check_abnormal_out',
-  'pack_consume',
   'backstage_out',
   'other'
 ];

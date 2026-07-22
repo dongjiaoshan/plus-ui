@@ -70,22 +70,28 @@
               />
             </el-select>
             <el-select
-              :model-value="rowOf(data.plot.plotId)?.plantBy"
+              :model-value="rowOf(data.plot.plotId)?.plantByIds ?? []"
               size="small"
+              multiple
+              collapse-tags
+              collapse-tags-tooltip
               clearable
-              style="width: 128px"
+              style="width: 160px"
               :placeholder="t('plantPlan.wizard.placeholder.team')"
-              @update:model-value="(v) => updateRow(data.plot, 'plantBy', v)"
+              @update:model-value="(v) => updateRow(data.plot, 'plantByIds', v)"
             >
               <el-option v-for="tm in teams" :key="tm.id" :label="tm.teamName" :value="String(tm.id)" />
             </el-select>
             <el-select
-              :model-value="rowOf(data.plot.plotId)?.harvestBy"
+              :model-value="rowOf(data.plot.plotId)?.harvestByIds ?? []"
               size="small"
+              multiple
+              collapse-tags
+              collapse-tags-tooltip
               clearable
-              style="width: 128px"
+              style="width: 160px"
               :placeholder="t('plantPlan.wizard.placeholder.team')"
-              @update:model-value="(v) => updateRow(data.plot, 'harvestBy', v)"
+              @update:model-value="(v) => updateRow(data.plot, 'harvestByIds', v)"
             >
               <el-option v-for="tm in teams" :key="tm.id" :label="tm.teamName" :value="String(tm.id)" />
             </el-select>
@@ -266,7 +272,7 @@ function updateRow(row: PlotByZoneRow, field: keyof PlantDetailInput, value: unk
   const next = [...props.modelValue];
   const idx = next.findIndex((d) => String(d.plotId) === String(row.plotId));
   if (idx < 0) return;
-  (next[idx] as Record<string, unknown>)[field] = value;
+  (next[idx] as unknown as Record<string, unknown>)[field] = value;
   emit('update:modelValue', next);
 }
 
@@ -290,7 +296,7 @@ function togglePlot(row: PlotByZoneRow, checked: unknown) {
   const idx = next.findIndex((d) => String(d.plotId) === String(row.plotId));
   if (checked) {
     if (idx < 0) {
-      next.push({ plotId: String(row.plotId), ...defaultMonthPeriod() });
+      next.push({ plotId: String(row.plotId), ...defaultMonthPeriod(), plantByIds: [], harvestByIds: [] });
     }
   } else if (idx >= 0) {
     next.splice(idx, 1);

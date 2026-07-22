@@ -189,8 +189,8 @@ const filteredRows = computed<EntryRow[]>(() => rows.value.filter((r) => r.belon
 const arriveWeight = ref(0);
 const whiteBarSplitLoss = ref(0);
 
-/** 当天有白条到店（到店重 > 0）才显示「当日白条分割损耗」整块。 */
-const showWhiteBarSplitLoss = computed<boolean>(() => arriveWeight.value > 0);
+/** 当天有白条到店（到店重 > 0）且为新增态才显示「当日白条分割损耗」整块（row48：修改盘点时隐藏）。 */
+const showWhiteBarSplitLoss = computed<boolean>(() => arriveWeight.value > 0 && !editMode.value);
 
 /** 拉取当日白条分割损耗（无门店 / 无日期 → 0，不阻断录入）。 */
 async function loadWhiteBarSplitLoss() {
@@ -298,7 +298,9 @@ async function loadCandidates() {
         saleQty: saved ? nz(saved.saleQty) : nz(c.saleQty),
         giftQty: saved ? nz(saved.giftQty) : 0,
         returnSaleQty: saved ? nz(saved.returnQty) : nz(c.returnSaleQty),
-        returnWhQty: saved ? nz(saved.whReturnQty) : nz(c.returnWhQty),
+        // row53：退回量（门店退回仓库，只读）恒取候选实时值——退回是当日退货模块聚合的客观量，
+        // 不随「上次盘点已保存值」回落（否则当日有退回却显 0）。退货量 returnSaleQty 仍保留 saved 优先（可手填）。
+        returnWhQty: nz(c.returnWhQty),
         closingQty: saved ? nz(saved.closingQty) : 0,
         lossQty: 0
       };

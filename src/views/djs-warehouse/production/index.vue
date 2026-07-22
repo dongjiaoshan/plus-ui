@@ -47,6 +47,7 @@ import ProductionItemDialog from './components/ProductionItemDialog.vue';
 import { listProduction } from '@/api/djs-warehouse/production';
 import type { ProductProductionGroupVO, ProductProductionQuery } from '@/api/djs-warehouse/production/types';
 import { lastMonthRange } from '@/utils/ruoyi';
+import { isKgUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -88,11 +89,12 @@ const columns = computed<BizTableColumn[]>(() => [
     label: '生产量',
     minWidth: 100,
     align: 'center',
-    // 生产量取整展示（后端 SUM 保留小数不丢精度，前端 Math.round 取整）
+    // 生产量按产品单位分流：kg（含公斤）保留三位小数，其余取整
     formatter: (row: BizRow) => {
       const r = row as ProductProductionGroupVO;
       if (r.produceQty === undefined || r.produceQty === null) return '-';
-      return String(Math.round(Number(r.produceQty)));
+      const n = Number(r.produceQty);
+      return isKgUnit(r.productUnit) ? n.toFixed(3) : String(Math.round(n));
     }
   },
   // 产品单位：组内取任一 product_unit（后端 MAX 兜底）

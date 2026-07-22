@@ -338,10 +338,23 @@ function renderLossMulti() {
   });
 }
 
+/** 空态占位：不画占位圆，改居中「暂无数据」文本（graphic）。 */
+function renderEmptyChart(chart: echarts.ECharts) {
+  chart.clear();
+  chart.setOption({
+    graphic: { type: 'text', left: 'center', top: 'middle', style: { text: t('warehouse.dashboard.noData'), fill: '#999', fontSize: 14 } }
+  });
+}
+
 function renderPie(el: typeof demandPieEl, getChart: () => echarts.ECharts, data: ChartSeriesItem[] | undefined, name: string) {
   if (!el.value) return;
   const chart = getChart();
   const items = (data ?? []).filter((d) => Number(d.value) > 0).map((d) => ({ name: d.name, value: Number(d.value) }));
+  if (items.length === 0) {
+    renderEmptyChart(chart);
+    return;
+  }
+  chart.clear();
   chart.setOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 0, left: 'center' },
@@ -353,7 +366,7 @@ function renderPie(el: typeof demandPieEl, getChart: () => echarts.ECharts, data
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
         label: { show: true, formatter: '{b}，{c}' },
-        data: items.length > 0 ? items : [{ name: t('warehouse.dashboard.noData'), value: 1 }]
+        data: items
       }
     ]
   });
@@ -363,6 +376,11 @@ function renderRing(el: typeof returnRingEl, getChart: () => echarts.ECharts, da
   if (!el.value) return;
   const chart = getChart();
   const items = (data ?? []).filter((d) => Number(d.value) > 0).map((d) => ({ name: d.name, value: Number(d.value) }));
+  if (items.length === 0) {
+    renderEmptyChart(chart);
+    return;
+  }
+  chart.clear();
   chart.setOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 0, left: 'center' },
@@ -374,7 +392,7 @@ function renderRing(el: typeof returnRingEl, getChart: () => echarts.ECharts, da
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
         label: { show: true, formatter: '{b}，{c}' },
-        data: items.length > 0 ? items : [{ name: t('warehouse.dashboard.noData'), value: 1 }]
+        data: items
       }
     ]
   });

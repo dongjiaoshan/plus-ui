@@ -45,13 +45,15 @@
     >
       <div v-if="currentDaily" class="mb-2 text-gray-500">{{ currentDaily.storeName }} · {{ currentDaily.returnDate }}</div>
       <el-table v-loading="detailLoading" :data="detailRows" border height="460">
-        <el-table-column prop="productName" :label="t('djs.warehouse.return.returnProduct')" min-width="140" show-overflow-tooltip />
-        <el-table-column prop="returnQuantity" :label="t('storeReturn.column.returnQuantity')" min-width="90" align="right" />
-        <el-table-column prop="goodsWeight" :label="t('storeReturn.column.goodsWeight')" min-width="100" align="right">
+        <el-table-column prop="productName" :label="t('djs.warehouse.return.returnProduct')" min-width="140" align="center" show-overflow-tooltip />
+        <el-table-column prop="returnQuantity" :label="t('storeReturn.column.returnQuantity')" min-width="90" align="center">
+          <template #default="{ row }">{{ formatQtyByUnit(row.returnQuantity, row.productUnit) || '—' }}</template>
+        </el-table-column>
+        <el-table-column prop="productUnit" :label="t('storeReturn.column.unit')" min-width="80" align="center" />
+        <el-table-column prop="goodsWeight" :label="t('storeReturn.column.storeReturnWeight')" min-width="120" align="center">
           <template #default="{ row }">{{ formatWeight(row.goodsWeight) }}</template>
         </el-table-column>
-        <el-table-column prop="receivedQty" :label="t('storeReturn.column.receivedQty')" min-width="100" align="right" />
-        <el-table-column prop="receivedWeight" :label="t('storeReturn.column.receivedWeight')" min-width="110" align="right">
+        <el-table-column prop="receivedWeight" :label="t('storeReturn.column.receivedWeight')" min-width="110" align="center">
           <template #default="{ row }">{{ formatWeight(row.receivedWeight) }}</template>
         </el-table-column>
         <el-table-column prop="returnStatus" :label="t('storeReturn.column.returnStatus')" min-width="110" align="center">
@@ -59,8 +61,11 @@
             <dict-tag :options="djs_store_return_status" :value="row.returnStatus" />
           </template>
         </el-table-column>
-        <el-table-column prop="confirmTime" :label="t('djs.warehouse.return.confirmTime')" min-width="160" />
-        <el-table-column prop="returnReason" :label="t('storeReturn.column.returnReason')" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="locationName" :label="t('storeReturn.column.returnLocation')" min-width="120" align="center">
+          <template #default="{ row }">{{ row.locationName || '—' }}</template>
+        </el-table-column>
+        <el-table-column prop="confirmTime" :label="t('djs.warehouse.return.confirmTime')" min-width="160" align="center" />
+        <el-table-column prop="returnReason" :label="t('storeReturn.column.returnReason')" min-width="120" align="center" show-overflow-tooltip />
       </el-table>
     </el-dialog>
   </div>
@@ -77,6 +82,7 @@ import type { StoreVO } from '@/api/djs-common/store/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { lastMonthRange } from '@/utils/ruoyi';
+import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -122,6 +128,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'returnWeightTotal', label: t('djs.warehouse.return.returnWeightTotal'), minWidth: 100, formatter: (row: any) => formatWeight(row.returnWeightTotal) },
   { prop: 'confirmWeightTotal', label: t('djs.warehouse.return.confirmWeightTotal'), minWidth: 100, formatter: (row: any) => formatWeight(row.confirmWeightTotal) },
   { prop: 'weightDiffTotal', label: t('djs.warehouse.return.weightDiffTotal'), minWidth: 100, formatter: (row: any) => formatWeight(row.weightDiffTotal) },
+  { prop: 'nonWeightReturnWeightTotal', label: t('djs.warehouse.return.nonWeightReturnWeightTotal'), minWidth: 130, formatter: (row: any) => formatWeight(row.nonWeightReturnWeightTotal) },
   { prop: 'confirmTime', label: t('djs.warehouse.return.confirmTime'), minWidth: 160 },
   { prop: 'confirmUserName', label: t('djs.warehouse.return.confirmUser'), minWidth: 100 }
 ]);

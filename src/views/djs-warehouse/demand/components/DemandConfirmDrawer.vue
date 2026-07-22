@@ -72,7 +72,7 @@
         <!-- 需求日期列（row196）：本抽屉锁定单一需求日期，逐行显式展示 demand_date，避免把「需求最终确认时间」误读成需求日期（次日预约单常见：确认于前一天、需求日期为次日）。 -->
         <el-table-column :label="t('demand.confirmPage.column.demandDate')" prop="demandDate" min-width="110" align="center" header-align="center" />
         <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center" header-align="center">
-          <template #default="{ row }">{{ formatQty(row.demandQuantity) }}</template>
+          <template #default="{ row }">{{ formatQty(row.demandQuantity, row.productUnit) }}</template>
         </el-table-column>
         <el-table-column :label="t('demand.confirmPage.column.productUnit')" prop="productUnit" width="70" align="center" header-align="center" />
         <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
@@ -120,6 +120,7 @@
 <script setup name="DemandConfirmDrawer" lang="ts">
 import { useI18n } from 'vue-i18n';
 import { Refresh } from '@element-plus/icons-vue';
+import { isKgUnit } from '@/utils/weight';
 import PigAssignDialog from './PigAssignDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
 import { confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';
@@ -199,8 +200,10 @@ const searchModel = reactive<{ storeId?: string; demandStatus?: string }>({
   demandStatus: undefined
 });
 
-function formatQty(v: number | string | undefined): string {
-  return Number(v ?? 0).toFixed(2);
+/** 需求量按产品单位分流：kg（含公斤）保留三位小数，其余取整不留小数。 */
+function formatQty(v: number | string | undefined, unit?: string | null): string {
+  const n = Number(v ?? 0);
+  return isKgUnit(unit) ? n.toFixed(3) : String(Math.round(n));
 }
 
 /** storeId → storeName（从 storeOptions map；无匹配回退 storeId 文本）。 */

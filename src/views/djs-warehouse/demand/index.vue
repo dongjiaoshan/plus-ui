@@ -82,6 +82,7 @@ import { batchConfirmDemand, listDemandGroup } from '@/api/djs-warehouse/demand'
 import type { DemandGroupStatusCode, DemandGroupVO, DemandManageQuery, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
+import { isKgUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -154,7 +155,10 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('demand.column.demandQuantity'),
     minWidth: 120,
     align: 'center',
-    formatter: (row: BizRow) => formatInt((row as unknown as DemandGroupVO).demandQuantity)
+    formatter: (row: BizRow) => {
+      const r = row as unknown as DemandGroupVO;
+      return formatQtyByKgRule(r.demandQuantity, r.productUnit);
+    }
   },
   {
     prop: 'productUnit',
@@ -170,7 +174,10 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('demand.column.materialQty'),
     minWidth: 120,
     align: 'center',
-    formatter: (row: BizRow) => formatNumber((row as unknown as DemandGroupVO).materialQty)
+    formatter: (row: BizRow) => {
+      const r = row as unknown as DemandGroupVO;
+      return r.materialQty == null ? '-' : formatQtyByKgRule(r.materialQty, r.materialUnit);
+    }
   },
   {
     prop: 'materialUnit',
@@ -197,13 +204,10 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'actions', label: t('demand.column.actions'), width: 110, fixed: 'right', align: 'center' }
 ]);
 
-/** 原材料计算量：两位小数显示。 */
-function formatNumber(v: number | string | undefined): string {
-  return Number(v ?? 0).toFixed(2);
-}
-/** 需求量：整数显示（原材料计算量仍保留小数）。 */
-function formatInt(v: number | string | undefined): string {
-  return String(Math.round(Number(v ?? 0)));
+/** 需求量/原材料计算量按单位分流：kg（含公斤）保留三位小数，其余取整不留小数。 */
+function formatQtyByKgRule(v: number | string | undefined, unit: string | null | undefined): string {
+  const n = Number(v ?? 0);
+  return isKgUnit(unit) ? n.toFixed(3) : String(Math.round(n));
 }
 /** 确认率：后端 0~1 小数 → 百分比整数。 */
 function formatRate(v: number | string | undefined): string {

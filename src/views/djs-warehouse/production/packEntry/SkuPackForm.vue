@@ -585,11 +585,12 @@ const plotToggleOptions = computed<{ value: number | string; label: string }[]>(
   return opts;
 });
 
-// 单地块自动选（doc#13）：plotToggleOptions 仅 1 项且尚未选时自动选中（含「无地块信息」单独成项的情况）
+// row44：地块选项就绪且尚未选时，自动选中第一项（对齐肉品耳号 autoSelectFirst，多地块也默认选首个），
+// 「领用剩余重量」随所选地块聚合（见 vegStockMap）。含「无地块信息」单独成项的情况。
 watch(
   plotToggleOptions,
   (opts) => {
-    if (props.plotGroup && opts.length === 1 && !selectedPlotId.value) {
+    if (props.plotGroup && opts.length > 0 && !selectedPlotId.value) {
       selectedPlotId.value = opts[0].value;
     }
   },
@@ -749,9 +750,18 @@ const wipStockUnitMap = computed<Record<string, string>>(() => {
 const vegStockMap = computed<Record<string, number | null>>(() => {
   const m: Record<string, number | null> = {};
   if (props.kind !== 'veg') return m;
-  // 先按原材料 id 聚合全部活动来源 inhouse 重量（source.productId = 原材料 id；已含后端打包扣减）
+  // row44：选中地块后「领用剩余重量」按所选地块聚合（镜像 displaySources 过滤），与肉品选耳号 per-ear 同口径；
+  // 未选地块退回全量。computed 依赖 selectedPlotId 会随地块切换重算。
+  let scoped = sources.value;
+  if (props.plotGroup && selectedPlotId.value) {
+    scoped =
+      selectedPlotId.value === NO_PLOT_SENTINEL
+        ? sources.value.filter((s) => s.plotId == null)
+        : sources.value.filter((s) => String(s.plotId) === String(selectedPlotId.value));
+  }
+  // 先按原材料 id 聚合（所选地块的）来源 inhouse 重量（source.productId = 原材料 id；已含后端打包扣减）
   const byMaterial: Record<string, number> = {};
-  sources.value.forEach((s) => {
+  scoped.forEach((s) => {
     if (s.productId == null) return;
     const k = String(s.productId);
     byMaterial[k] = (byMaterial[k] ?? 0) + (Number(s.productWeight) || 0);

@@ -2357,7 +2357,6 @@ export default {
       beginStock: 'Begin Stock',
       inboundQty: 'Inbound',
       outboundQty: 'Outbound',
-      shippedQty: 'Shipped',
       lossQty: 'Loss',
       feedQty: 'Feed',
       endStock: 'End Stock'
@@ -2842,6 +2841,7 @@ export default {
         returnWeightTotal: 'Return Weight',
         confirmWeightTotal: 'Confirmed Weight',
         weightDiffTotal: 'Weight Diff',
+        nonWeightReturnWeightTotal: 'Non-Weight Product Return Weight',
         detailDialogTitle: 'Return Detail'
       },
       check: {
@@ -3090,7 +3090,7 @@ export default {
       chartDemandPie: 'Product Demand (last 7 days)',
       chartReturnRing: 'Return Product Distribution (last 7 days)',
       chartProductionTrend: 'Production Trend (last 7 days, kg)',
-      chartCheckPie: 'Stock-check Result',
+      chartCheckPie: 'Stock-check Result (Last 7 Days)',
       chartLocationRing: 'Location Health (this month)',
       chartLossTrend: 'Loss Trend (last 7 days, kg)',
       seriesProduction: 'Production Weight',
@@ -3258,9 +3258,9 @@ export default {
       empty: 'No status changes yet'
     },
     kpi: {
-      pigDemand: 'Today Pig Demand',
+      pigDemand: 'Tomorrow Pig Demand',
       assigned: 'Assigned',
-      vegDemand: 'Today Veg Demand',
+      vegDemand: 'Tomorrow Veg Demand',
       otherDemand: 'Other Demand',
       unitHead: 'head',
       unitSpecies: 'species',
@@ -3858,6 +3858,8 @@ export default {
       returnQuantity: 'Return Qty',
       unit: 'Unit',
       goodsWeight: 'Goods Weight',
+      storeReturnWeight: 'Store Return Weight',
+      returnLocation: 'Return Location',
       receivedQty: 'Received Qty',
       receivedWeight: 'Received Weight',
       returnStatus: 'Return Status',
@@ -3995,6 +3997,8 @@ export default {
       lossDate: 'Loss Date',
       productName: 'Product Name',
       lossType: 'Loss Type',
+      whiteBarArriveWeight: 'White Bar Arrival Wt',
+      whiteBarSplitWeight: 'White Bar Split Total Wt',
       lossQty: 'Loss Qty',
       productUnit: 'Unit'
     }

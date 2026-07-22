@@ -107,8 +107,22 @@
             <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.plantBy')" prop="plantTeamName" width="120" align="center" header-align="center" />
-        <el-table-column :label="t('plantPlan.field.harvestBy')" prop="harvestTeamName" width="120" align="center" header-align="center" />
+        <el-table-column :label="t('plantPlan.field.plantBy')" width="140" align="center" header-align="center">
+          <template #default="{ row }">
+            <template v-if="teamNamesOf(row, 'plant').length">
+              <el-tag v-for="(nm, i) in teamNamesOf(row, 'plant')" :key="i" size="small" class="ma-1">{{ nm }}</el-tag>
+            </template>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('plantPlan.field.harvestBy')" width="140" align="center" header-align="center">
+          <template #default="{ row }">
+            <template v-if="teamNamesOf(row, 'harvest').length">
+              <el-tag v-for="(nm, i) in teamNamesOf(row, 'harvest')" :key="i" size="small" type="success" class="ma-1">{{ nm }}</el-tag>
+            </template>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
       </el-table>
 
       <!--
@@ -127,17 +141,17 @@
             <dict-tag :options="djs_plant_period" :value="row.plantPeriod" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.plantBy')" width="160" align="center" header-align="center">
+        <el-table-column :label="t('plantPlan.field.plantBy')" width="200" align="center" header-align="center">
           <template #default="{ row }">
-            <el-select v-model="row.plantBy" size="small" clearable filterable :placeholder="t('plantPlan.placeholder.team')">
-              <el-option v-for="t in teamOptions" :key="t.id" :label="t.teamName" :value="t.id" />
+            <el-select v-model="row.plantByIds" size="small" multiple collapse-tags collapse-tags-tooltip clearable filterable :placeholder="t('plantPlan.placeholder.team')">
+              <el-option v-for="t in teamOptions" :key="t.id" :label="t.teamName" :value="String(t.id)" />
             </el-select>
           </template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.harvestBy')" width="160" align="center" header-align="center">
+        <el-table-column :label="t('plantPlan.field.harvestBy')" width="200" align="center" header-align="center">
           <template #default="{ row }">
-            <el-select v-model="row.harvestBy" size="small" clearable filterable :placeholder="t('plantPlan.placeholder.team')">
-              <el-option v-for="t in teamOptions" :key="t.id" :label="t.teamName" :value="t.id" />
+            <el-select v-model="row.harvestByIds" size="small" multiple collapse-tags collapse-tags-tooltip clearable filterable :placeholder="t('plantPlan.placeholder.team')">
+              <el-option v-for="t in teamOptions" :key="t.id" :label="t.teamName" :value="String(t.id)" />
             </el-select>
           </template>
         </el-table-column>
@@ -225,6 +239,16 @@ const editDetails = ref<EditDetailRow[]>([]);
 // 班组下拉数据
 const teamOptions = ref<Array<{ id: string; teamName: string }>>([]);
 
+// 只读明细行展示班组名列表（row36 多 tag）：优先 VO 全集名，回落旧单列名
+function teamNamesOf(row: PlantDetailsVO, role: 'plant' | 'harvest'): string[] {
+  if (role === 'plant') {
+    if (row.plantTeamNames && row.plantTeamNames.length) return row.plantTeamNames;
+    return row.plantTeamName ? [row.plantTeamName] : [];
+  }
+  if (row.harvestTeamNames && row.harvestTeamNames.length) return row.harvestTeamNames;
+  return row.harvestTeamName ? [row.harvestTeamName] : [];
+}
+
 // 甘特图月份格宽：按容器宽度动态平铺 12 个月，撑满页面（行标签占 140px）。
 // 容器太窄时退回最小格宽 48px，由 .gantt-wrap 横向滚动兜底。
 const GANTT_ROW_LABEL_WIDTH = 140;
@@ -295,7 +319,12 @@ function onEnterEdit() {
   editForm.planSeason = plan.value.plan.planSeason;
   editForm.cropId = plan.value.plan.cropId;
   editForm.plantDate = plan.value.plan.plantDate;
-  editDetails.value = (plan.value.details || []).map((d) => ({ ...d }));
+  editDetails.value = (plan.value.details || []).map((d) => ({
+    ...d,
+    // 班组多选（row36）：优先 VO 全集 id，回落旧单列 → string[]，保证 el-select multiple v-model
+    plantByIds: (d.plantByIds && d.plantByIds.length ? d.plantByIds : d.plantBy ? [d.plantBy] : []).map(String),
+    harvestByIds: (d.harvestByIds && d.harvestByIds.length ? d.harvestByIds : d.harvestBy ? [d.harvestBy] : []).map(String)
+  }));
   loadTeams();
   editMode.value = true;
 }
@@ -322,8 +351,8 @@ async function onSave() {
       plotId: d.plotId,
       plantMonth: d.plantMonth,
       plantPeriod: d.plantPeriod as '05' | '15' | '25',
-      plantBy: d.plantBy || undefined,
-      harvestBy: d.harvestBy || undefined
+      plantByIds: d.plantByIds || [],
+      harvestByIds: d.harvestByIds || []
     }));
 
     const body: PlantPlanUpdateForm = {

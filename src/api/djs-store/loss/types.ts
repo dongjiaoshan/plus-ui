@@ -17,6 +17,10 @@ export interface StoreLossRecordVO {
   productUnit?: string;
   /** 损耗量。 */
   lossQty?: number | string;
+  /** 白条到店重量 kg（仅白条分割损耗行）。 */
+  whiteBarArriveWeight?: number | string;
+  /** 白条分割产品总重 kg = 退回入库重 − 材料外售到店重（仅白条分割损耗行）。 */
+  whiteBarSplitWeight?: number | string;
   /** ISO yyyy-MM-dd */
   lossDate?: string;
   /** djs_store_loss_type：store_daily_loss / white_bar_split_loss */
@@ -25,13 +29,17 @@ export interface StoreLossRecordVO {
   createTime?: string;
 }
 
-/** 当日白条分割损耗信息（门店盘点抽屉展示；口径同定时任务：max(0, 到店重−退回入库重)）。 */
+/** 当日白条分割损耗信息（门店盘点抽屉展示；口径同定时任务：max(0, 到店重 − 白条分割产品总重)）。 */
 export interface WhiteBarSplitLossVO {
   /** 当日白条到店重量 kg（>0 才显示分割损耗块）。 */
   arriveWeight?: number | string;
   /** 当日白条退回产品入库重 kg（t_store_return 门店退回仓库、已入库、白条退回产品）。 */
   returnReceivedWeight?: number | string;
-  /** 当日白条分割损耗 kg = max(0, arriveWeight − returnReceivedWeight)。 */
+  /** 当日材料外售成品到店重 kg（is_material_sold=1 且原材料∈白条退回字典的成品发货实称之和）。 */
+  materialSoldArriveWeight?: number | string;
+  /** 当日白条分割产品总重 kg = returnReceivedWeight − materialSoldArriveWeight。 */
+  splitTotalWeight?: number | string;
+  /** 当日白条分割损耗 kg = max(0, arriveWeight − splitTotalWeight)。 */
   splitLoss?: number | string;
 }
 

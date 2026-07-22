@@ -55,8 +55,10 @@ export interface ReturnStoreDailyVO {
   returnWeightTotal?: number;
   /** 确认重量合计 */
   confirmWeightTotal?: number;
-  /** 重量差异合计 = 退货重量合计 - 确认重量合计 */
+  /** 重量差异合计 = 退货重量合计 - 确认重量合计（均只算按重量计 kg 行） */
   weightDiffTotal?: number;
+  /** 非重量产品退回重量合计 = Σ 份数产品（非 kg 单位）行的确认重量（仓库称重） */
+  nonWeightReturnWeightTotal?: number;
   /** 确认时间（该组最近一条已确认行） */
   confirmTime?: string;
   confirmUser?: string;

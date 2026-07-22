@@ -127,6 +127,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 // 列对齐原型：需求日期/产品名称/产品规格/需求量/单位/需求类型/备注/预计到店重量/需求状态/需求确认时间/需求确认人/操作
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'demandDate', label: t('storeDemand.column.demandDate'), minWidth: 110, align: 'center' },
+  { prop: 'storeDemandStatus', label: t('storeDemand.column.demandStatus'), minWidth: 110, align: 'center', dictType: 'djs_store_demand_status' },
   { prop: 'productName', label: t('storeDemand.column.productName'), minWidth: 130, align: 'center', showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeDemand.column.productSpec'), minWidth: 110, align: 'center', showOverflowTooltip: true },
   {
@@ -156,7 +157,6 @@ const columns = computed<BizTableColumn[]>(() => [
       return formatWeightByBelong(r.expectedWeight, r.productType);
     }
   },
-  { prop: 'storeDemandStatus', label: t('storeDemand.column.demandStatus'), minWidth: 110, align: 'center', dictType: 'djs_store_demand_status' },
   {
     prop: 'damagedCount',
     label: t('storeDemand.column.damagedCount'),

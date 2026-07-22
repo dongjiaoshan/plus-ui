@@ -22,6 +22,12 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
+      <template #cell-whiteBarArriveWeight="{ row }">
+        {{ formatWhiteBarWeight(row, 'whiteBarArriveWeight') }}
+      </template>
+      <template #cell-whiteBarSplitWeight="{ row }">
+        {{ formatWhiteBarWeight(row, 'whiteBarSplitWeight') }}
+      </template>
       <template #cell-lossQty="{ row }">
         {{ formatLossQty(row) }}
       </template>
@@ -59,14 +65,28 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'lossType', label: t('storeLoss.field.lossType'), type: 'select', dictType: 'djs_store_loss_type' }
 ]);
 
-// 列：损耗日期 / 产品名称 / 损耗类型 / 损耗量 / 产品单位
+// 列：损耗日期 / 产品名称 / 损耗类型 / 白条到店重量 / 白条分割产品总重 / 损耗量 / 产品单位
+// 白条两列仅「白条分割损耗」行有值（后端计算），门店日损耗行显 —
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'lossDate', label: t('storeLoss.column.lossDate'), minWidth: 120, align: 'center', formatter: 'date' },
   { prop: 'productName', label: t('storeLoss.column.productName'), minWidth: 160, align: 'center', showOverflowTooltip: true },
   { prop: 'lossType', label: t('storeLoss.column.lossType'), minWidth: 130, align: 'center', dictType: 'djs_store_loss_type' },
+  { prop: 'whiteBarArriveWeight', label: t('storeLoss.column.whiteBarArriveWeight'), minWidth: 140, align: 'center' },
+  { prop: 'whiteBarSplitWeight', label: t('storeLoss.column.whiteBarSplitWeight'), minWidth: 160, align: 'center' },
   { prop: 'lossQty', label: t('storeLoss.column.lossQty'), minWidth: 120, align: 'center' },
   { prop: 'productUnit', label: t('storeLoss.column.productUnit'), minWidth: 100, align: 'center' }
 ]);
+
+// 白条到店重量 / 白条分割产品总重展示（row50）：仅「白条分割损耗」行有值，保留 3 位小数 kg；
+// 门店日损耗行无此语义 → 显 '—'
+function formatWhiteBarWeight(row: BizRow, field: 'whiteBarArriveWeight' | 'whiteBarSplitWeight'): string {
+  const r = row as StoreLossRecordVO;
+  if (r.lossType !== 'white_bar_split_loss') return '—';
+  const v = r[field];
+  if (v == null || v === '') return '—';
+  const n = Number(v);
+  return Number.isNaN(n) ? '—' : n.toFixed(3);
+}
 
 // 损耗量展示：kg 单位保留 3 位小数（白条按重量），其余整数展示；无值显 '—'
 function formatLossQty(row: BizRow): string {

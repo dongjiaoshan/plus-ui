@@ -58,9 +58,6 @@
       <el-table-column :label="t('stockOverview.detail.outboundQty')" prop="outboundQty" min-width="90" align="center" header-align="center">
         <template #default="{ row }">{{ fmt(row.outboundQty, row.productUnit) }}</template>
       </el-table-column>
-      <el-table-column :label="t('stockOverview.detail.shippedQty')" prop="shippedQty" min-width="90" align="center" header-align="center">
-        <template #default="{ row }">{{ fmt(row.shippedQty, row.productUnit) }}</template>
-      </el-table-column>
       <el-table-column :label="t('stockOverview.detail.lossQty')" prop="lossQty" min-width="90" align="center" header-align="center">
         <template #default="{ row }">{{ fmt(row.lossQty, row.productUnit) }}</template>
       </el-table-column>

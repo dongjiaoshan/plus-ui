@@ -2360,7 +2360,6 @@ export default {
       beginStock: '期初库存',
       inboundQty: '入库量',
       outboundQty: '出库量',
-      shippedQty: '已发货',
       lossQty: '损耗量',
       feedQty: '饲料饲喂量',
       endStock: '期末库存'
@@ -2845,6 +2844,7 @@ export default {
         returnWeightTotal: '退货重量',
         confirmWeightTotal: '确认重量',
         weightDiffTotal: '重量差异',
+        nonWeightReturnWeightTotal: '非重量产品退回重量',
         detailDialogTitle: '退货明细'
       },
       check: {
@@ -3093,7 +3093,7 @@ export default {
       chartDemandPie: '产品需求分布（近7日）',
       chartReturnRing: '退货产品分布(近7日)',
       chartProductionTrend: '生产趋势（近 7 日，kg）',
-      chartCheckPie: '盘点结果分布',
+      chartCheckPie: '盘点结果分布（近七日）',
       chartLocationRing: '库位健康度（当月）',
       chartLossTrend: '损耗趋势（近 7 日，kg）',
       seriesProduction: '生产重量',
@@ -3261,9 +3261,9 @@ export default {
       empty: '暂无状态变更记录'
     },
     kpi: {
-      pigDemand: '今日猪需求',
+      pigDemand: '明日猪需求',
       assigned: '已调配',
-      vegDemand: '今日果蔬需求',
+      vegDemand: '明日果蔬需求',
       otherDemand: '其他需求',
       unitHead: '头',
       unitSpecies: '品种',
@@ -3861,6 +3861,8 @@ export default {
       returnQuantity: '退回量',
       unit: '单位',
       goodsWeight: '货物重量',
+      storeReturnWeight: '门店退回重量',
+      returnLocation: '退回库位',
       receivedQty: '仓库实收量',
       receivedWeight: '仓库实收重量',
       returnStatus: '退货状态',
@@ -3998,6 +4000,8 @@ export default {
       lossDate: '损耗日期',
       productName: '产品名称',
       lossType: '损耗类型',
+      whiteBarArriveWeight: '白条到店重量',
+      whiteBarSplitWeight: '白条分割产品总重',
       lossQty: '损耗量',
       productUnit: '产品单位'
     }

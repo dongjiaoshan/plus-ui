@@ -91,8 +91,13 @@ export interface PlantDetailInput {
   plotId: string;
   plantMonth: number;
   plantPeriod: '05' | '15' | '25';
+  /** 单值兼容字段（不再单独填，仅历史回显）。 */
   plantBy?: string;
   harvestBy?: string;
+  /** 种植班组全集（G1-TEAMS-MULTISELECT，row36）。 */
+  plantByIds?: string[];
+  /** 采摘班组全集（G1-TEAMS-MULTISELECT，row36）。 */
+  harvestByIds?: string[];
 }
 
 export interface PlantPlanCreateForm {
@@ -141,6 +146,14 @@ export interface PlantDetailsVO {
   cropName?: string;
   plantTeamName?: string;
   harvestTeamName?: string;
+  /** 种植班组全集 id（G1-TEAMS-MULTISELECT，row36；编辑回显）。 */
+  plantByIds?: string[];
+  /** 采摘班组全集 id（编辑回显）。 */
+  harvestByIds?: string[];
+  /** 种植班组全集名（多 tag / 逗号展示）。 */
+  plantTeamNames?: string[];
+  /** 采摘班组全集名（多 tag / 逗号展示）。 */
+  harvestTeamNames?: string[];
 }
 
 export interface PlantPlanDetailVO {

@@ -1,11 +1,11 @@
 <!--
-  需求管理页顶部「今日全局」KPI 卡片（DJS-FIX-ADMIN-W22-007）。
+  需求管理页顶部「明日全局」KPI 卡片（DJS-FIX-ADMIN-W22-007，口径 = 明日需求）。
 
-  一次返 6 个跨业态数字（今日猪需求/已调配头数 + 今日果蔬需求/已调配品种数 + 其他需求/已调配条数），
-  供仓库管理员横向对比"今天哪种业态压力大"。
+  一次返 6 个跨业态数字（明日猪需求/已调配头数 + 明日果蔬需求/已调配品种数 + 其他需求/已调配条数），
+  供仓库管理员横向对比"明天哪种业态压力大"（门店提前一天下单，备货看的是明日需求）。
 
   row52：与「种植计划」页统计卡片样式保持一致——el-card 卡片 + flex 等宽（原为扁平内联横条）。
-  4 业态 index.vue 共用本组件（无 props，自取今日全局数）。
+  4 业态 index.vue 共用本组件（无 props，自取明日全局数）。
 -->
 <template>
   <div class="kpi-row">
@@ -27,7 +27,7 @@ const { t } = useI18n();
 
 const kpi = ref<DemandTodayKpiVO | null>(null);
 
-/** 6 张卡片：今日猪需求/已调配 + 今日果蔬需求/已调配 + 其他需求/已调配（label + 数值 + 单位）。 */
+/** 6 张卡片：明日猪需求/已调配 + 明日果蔬需求/已调配 + 其他需求/已调配（label + 数值 + 单位）。 */
 const kpiCards = computed<Array<{ key: string; label: string; value: number | undefined | null; unit: string }>>(() => [
   { key: 'pigDemand', label: t('demand.kpi.pigDemand'), value: kpi.value?.todayPigDemand, unit: t('demand.kpi.unitHead') },
   { key: 'pigAssigned', label: t('demand.kpi.assigned'), value: kpi.value?.todayPigAssigned, unit: t('demand.kpi.unitHead') },

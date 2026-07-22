@@ -2,9 +2,15 @@
   <!-- 查看详情：只读 10 列矩阵，点蒙层可关（保持 Element Plus 默认）。对齐原型「门店盘点>当日盘点只读」。 -->
   <el-drawer v-model="visible" :title="title" direction="rtl" size="80%" append-to-body destroy-on-close>
     <!-- 品类切换：猪肉产品 / 果蔬产品 / 其他产品（DENGBO-R10），与新增当日盘点一致 -->
-    <el-tabs v-model="activeTab" class="belong-tabs">
-      <el-tab-pane v-for="tab in TABS" :key="tab" :name="tab" :label="`${t(`storeLedger.belongTab.${tab}`)} (${tabCount[tab]})`" />
-    </el-tabs>
+    <!-- 页签右侧（row49）：当日白条分割损耗 = max(0, 白条到店重 − 白条分割产品总重)，后端权威计算；当天无白条到店则不显示。 -->
+    <div class="tabs-band">
+      <el-tabs v-model="activeTab" class="belong-tabs">
+        <el-tab-pane v-for="tab in TABS" :key="tab" :name="tab" :label="`${t(`storeLedger.belongTab.${tab}`)} (${tabCount[tab]})`" />
+      </el-tabs>
+      <div v-if="showWhiteBarSplitLoss" class="white-bar-split-loss">
+        {{ t('storeLedger.entry.whiteBarSplitLoss') }}<span class="value">{{ whiteBarSplitLoss.toFixed(3) }}</span> kg
+      </div>
+    </div>
     <el-table v-loading="loading" :data="filteredLines" border stripe>
       <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
       <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" header-align="center" />
@@ -28,6 +34,7 @@
 <script setup name="StoreCheckDetailDrawer" lang="ts">
 import { getStoreLedgerDetail } from '@/api/djs-store/ledger';
 import type { StoreLedgerBelongTab, StoreLedgerLineVO } from '@/api/djs-store/ledger/types';
+import { getWhiteBarSplitLoss } from '@/api/djs-store/loss';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -36,6 +43,21 @@ const visible = ref(false);
 const loading = ref(false);
 const lines = ref<StoreLedgerLineVO[]>([]);
 const currentDate = ref('');
+
+/**
+ * 当日白条分割损耗（row49）：查看详情打开时后端拉取，口径同 white_bar_split_loss 定时任务
+ * （splitLoss = max(0, 白条到店重 − 白条分割产品总重)）。当天无白条到店（到店重=0）则不显示。
+ * 后端 BigDecimal 序列化成字符串，Number() 强转。
+ */
+const arriveWeight = ref(0);
+const whiteBarSplitLoss = ref(0);
+/** 当天有白条到店（到店重 > 0）才显示「当日白条分割损耗」整块。 */
+const showWhiteBarSplitLoss = computed<boolean>(() => arriveWeight.value > 0);
+
+function nz(v: number | string | undefined): number {
+  const n = Number(v ?? 0);
+  return Number.isNaN(n) ? 0 : n;
+}
 
 /** 产品品类页签（DENGBO-R10）：猪肉 / 果蔬 / 其他，与新增当日盘点一致。 */
 const TABS: StoreLedgerBelongTab[] = ['pork', 'veg', 'other'];
@@ -77,6 +99,10 @@ async function open(storeId: string, ledgerDate: string) {
   currentDate.value = ledgerDate;
   visible.value = true;
   loading.value = true;
+  arriveWeight.value = 0;
+  whiteBarSplitLoss.value = 0;
+  // 当日白条分割损耗（row49）与明细并行拉取，不互相阻塞
+  void loadWhiteBarSplitLoss(storeId, ledgerDate);
   try {
     const res = await getStoreLedgerDetail(storeId, ledgerDate);
     lines.value = (res.data ?? []) as StoreLedgerLineVO[];
@@ -87,10 +113,49 @@ async function open(storeId: string, ledgerDate: string) {
   }
 }
 
+/** 拉取当日白条分割损耗（无门店 / 无日期 → 0）。 */
+async function loadWhiteBarSplitLoss(storeId: string, ledgerDate: string) {
+  if (!storeId || !ledgerDate) {
+    arriveWeight.value = 0;
+    whiteBarSplitLoss.value = 0;
+    return;
+  }
+  const res = await getWhiteBarSplitLoss(storeId, ledgerDate);
+  const data = (res as unknown as { data?: { arriveWeight?: number | string; splitLoss?: number | string } }).data;
+  arriveWeight.value = nz(data?.arriveWeight);
+  whiteBarSplitLoss.value = nz(data?.splitLoss);
+}
+
 defineExpose({ open });
 </script>
 
 <style lang="scss" scoped>
+.tabs-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  .belong-tabs {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .white-bar-split-loss {
+    flex-shrink: 0;
+    padding-bottom: 8px;
+    font-size: 14px;
+    color: #606266;
+    white-space: nowrap;
+
+    .value {
+      margin: 0 2px 0 4px;
+      font-weight: 600;
+      color: var(--el-color-danger);
+    }
+  }
+}
+
 .closing {
   font-weight: 600;
 }
