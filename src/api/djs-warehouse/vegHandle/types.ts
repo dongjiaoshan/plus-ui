@@ -58,3 +58,29 @@ export interface VegHandleQuery {
   pageNum?: number;
   pageSize?: number;
 }
+
+/** 采摘明细行（admin 只读列表）。 */
+export interface PickDetailVO {
+  id?: number | string;
+  /** 采摘日期 yyyy-MM-dd。 */
+  pickDate?: string;
+  cropName?: string;
+  /** 地块编号。 */
+  plotCode?: string;
+  /** 采摘量（kg）。 */
+  pickWeight?: number;
+  /** 采摘班组名称。 */
+  teamName?: string;
+}
+
+export interface PickDetailQuery {
+  /** 采摘日期范围-起 yyyy-MM-dd。 */
+  pickDateBegin?: string;
+  /** 采摘日期范围-止 yyyy-MM-dd。 */
+  pickDateEnd?: string;
+  cropName?: string;
+  /** 采摘班组 id。 */
+  teamId?: number | string;
+  pageNum?: number;
+  pageSize?: number;
+}

@@ -1505,7 +1505,7 @@ export default {
       title: '土地总览',
       idle: '空闲地块数',
       monthPending: '当月待种植地块数',
-      planted: '已种植',
+      planted: '已种植地块数',
       currentArea: '当前种植面积(亩)',
       annualYield: '当年预计产量(吨)'
     },
@@ -2005,6 +2005,8 @@ export default {
       totalPlot: '种植地块数量',
       earliestHarvestdate: '最早采摘',
       lastHarvestdate: '最晚采摘',
+      earliestStartHarvest: '最早开始采摘日期',
+      latestEndHarvest: '最晚结束采摘日期',
       expectedYield: '预计产量(kg)',
       actualYield: '实际产量(kg)',
       yieldRate: '产量达标率',
@@ -2245,6 +2247,27 @@ export default {
       expectedYield: '预计总产量',
       cumulativePickWeight: '累计已采重量'
     }
+  },
+  // 种植 - 采摘明细（admin 只读列表）
+  pickDetail: {
+    pageTitle: '采摘明细',
+    field: {
+      pickDate: '采摘日期',
+      cropName: '作物名称',
+      team: '采摘班组'
+    },
+    placeholder: {
+      cropName: '请输入作物名称',
+      team: '请选择采摘班组'
+    },
+    column: {
+      pickDate: '采摘日期',
+      cropName: '作物名称',
+      plotCode: '地块编号',
+      pickWeight: '采摘量',
+      teamName: '采摘班组'
+    },
+    unit: { kg: '公斤' }
   },
   // 东角山业务模块占位
   matPick: {
@@ -4118,7 +4141,7 @@ export default {
       team: '班组名称',
       teamMemberCount: '班组人数',
       farmCount: '农事处理总数',
-      pickWeight: '采摘总产量',
+      pickWeight: '采摘量',
       amount: '采摘绩效总额',
       action: '操作'
     },

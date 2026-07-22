@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { VegetableHandleVO, HandleRecordVO, VegHandleQuery } from './vegHandle/types';
+import type { VegetableHandleVO, HandleRecordVO, VegHandleQuery, PickDetailVO, PickDetailQuery } from './vegHandle/types';
 
 /**
  * 毛菜处理 API（WMS-VEG-001 admin 只读）。
@@ -42,5 +42,14 @@ export const exportVegHandle = (query: VegHandleQuery) => {
     method: 'post',
     data: query,
     responseType: 'blob'
+  });
+};
+
+/** 采摘明细分页查询（admin 只读，采摘日期/作物/班组维度） */
+export const listPickDetail = (query: PickDetailQuery): AxiosPromise<PickDetailVO[]> => {
+  return request({
+    url: '/djs/warehouse/vegHandle/pickDetail/list',
+    method: 'get',
+    params: query
   });
 };

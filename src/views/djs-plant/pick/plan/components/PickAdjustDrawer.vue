@@ -46,8 +46,8 @@
       <el-table-column :label="t('pickPlan.adjust.col.plantDate')" prop="plantDate" width="120" align="center" header-align="center">
         <template #default="{ row }">{{ row.plantDate || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('pickPlan.adjust.col.plantTeam')" prop="harvestTeamName" width="120" align="center" header-align="center" show-overflow-tooltip>
-        <template #default="{ row }">{{ row.harvestTeamName || '-' }}</template>
+      <el-table-column :label="t('pickPlan.adjust.col.plantTeam')" prop="plantTeamName" width="120" align="center" header-align="center" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.plantTeamName || '-' }}</template>
       </el-table-column>
       <el-table-column :label="t('pickPlan.adjust.col.beginHarvestdate')" prop="beginHarvestdate" width="140" align="center" header-align="center">
         <template #default="{ row }">{{ row.beginHarvestdate || '-' }}</template>

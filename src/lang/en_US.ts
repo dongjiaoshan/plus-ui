@@ -1504,7 +1504,7 @@ export default {
       title: 'Land Overview',
       idle: 'Idle Plots',
       monthPending: 'Pending Plots (This Month)',
-      planted: 'Planted',
+      planted: 'Planted Plots',
       currentArea: 'Current Planting Area (mu)',
       annualYield: 'Annual Expected Yield (t)'
     },
@@ -2002,6 +2002,8 @@ export default {
       totalPlot: 'Plot Count',
       earliestHarvestdate: 'Earliest Harvest',
       lastHarvestdate: 'Last Harvest',
+      earliestStartHarvest: 'Earliest Start Harvest Date',
+      latestEndHarvest: 'Latest End Harvest Date',
       expectedYield: 'Expected Yield (kg)',
       actualYield: 'Actual Yield (kg)',
       yieldRate: 'Yield Rate',
@@ -2242,6 +2244,27 @@ export default {
       expectedYield: 'Expected Yield (kg)',
       cumulativePickWeight: 'Cumulative Picked (kg)'
     }
+  },
+  // Plant - pick detail (admin read-only list)
+  pickDetail: {
+    pageTitle: 'Pick Detail',
+    field: {
+      pickDate: 'Pick Date',
+      cropName: 'Crop',
+      team: 'Pick Team'
+    },
+    placeholder: {
+      cropName: 'Enter crop name',
+      team: 'Select pick team'
+    },
+    column: {
+      pickDate: 'Pick Date',
+      cropName: 'Crop',
+      plotCode: 'Plot Code',
+      pickWeight: 'Pick Weight',
+      teamName: 'Pick Team'
+    },
+    unit: { kg: 'kg' }
   },
   // Dongjiaoshan business modules placeholder
   matPick: {
@@ -4115,7 +4138,7 @@ export default {
       team: 'Team',
       teamMemberCount: 'Team Members',
       farmCount: 'Farm Ops Total',
-      pickWeight: 'Harvest Total',
+      pickWeight: 'Pick Weight',
       amount: 'Performance Total',
       action: 'Action'
     },

@@ -1,12 +1,20 @@
 <template>
-  <el-drawer v-model="visible" :title="t('plantPerformance.detail.title')" size="640px" destroy-on-close>
+  <el-drawer v-model="visible" size="640px" destroy-on-close>
+    <template #header>
+      <div class="flex items-center justify-between w-full pr-4">
+        <span class="text-base font-medium">{{ t('plantPerformance.detail.title') }}</span>
+        <el-button v-hasPermi="['djs:plantPerformance:export']" size="small" type="primary" icon="Download" @click="handleExportDetail">
+          {{ t('biz.table.action.export') }}
+        </el-button>
+      </div>
+    </template>
     <el-tabs v-model="activeTab">
       <!-- tab1 产量绩效：按作物分行（采摘量 × 单价快照 = 该作物绩效额） -->
       <el-tab-pane :label="t('plantPerformance.detail.tabYield')" name="yield">
         <el-table v-loading="loading" :data="cropRows" border size="small" show-summary :summary-method="yieldSummary">
           <el-table-column prop="cropName" :label="t('plantPerformance.detail.cropName')" min-width="120" show-overflow-tooltip align="center" header-align="center" />
           <el-table-column :label="t('plantPerformance.detail.cropPickWeight')" width="130" align="center" header-align="center">
-            <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(3)} 斤` : '-' }}</template>
+            <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(3)} 公斤` : '-' }}</template>
           </el-table-column>
           <el-table-column :label="t('plantPerformance.detail.cropUnitPrice')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ row.unitPriceSnapshot != null ? `${row.unitPriceSnapshot} 元/斤` : '-' }}</template>
@@ -54,6 +62,9 @@ const { djs_farm_work_type: farmWorkTypeDict } = toRefs<Record<string, DictDataO
 
 const visible = ref(false);
 const activeTab = ref<'yield' | 'farm'>('yield');
+/** 当前打开的班组 / 结算月份，供右上「导出」按钮用。 */
+const curTeamId = ref<string>('');
+const curStatMonth = ref<string>('');
 const loading = ref(false);
 const farmLoading = ref(false);
 const cropRows = ref<PlantWorkPerformanceVO[]>([]);
@@ -68,7 +79,7 @@ function yieldSummary({ columns }: { columns: TableColumnCtx<PlantWorkPerformanc
     if (idx === 0) {
       sums[idx] = t('plantPerformance.detail.totalAmount');
     } else if (idx === 1) {
-      sums[idx] = `${weightSum.toFixed(3)} 斤`;
+      sums[idx] = `${weightSum.toFixed(3)} 公斤`;
     } else if (idx === 2) {
       sums[idx] = '';
     } else {
@@ -109,9 +120,19 @@ async function loadFarmRecords(teamId?: string, statMonth?: string) {
   }
 }
 
+function handleExportDetail() {
+  proxy?.download(
+    'djs/plant/work-performance/export-detail',
+    { teamId: curTeamId.value, statMonth: curStatMonth.value },
+    `${t('plantPerformance.detail.title')}_${curStatMonth.value}.xlsx`
+  );
+}
+
 async function open(teamId: string, statMonth: string) {
   visible.value = true;
   activeTab.value = 'yield';
+  curTeamId.value = teamId;
+  curStatMonth.value = statMonth;
   loading.value = true;
   cropRows.value = [];
   farmList.value = [];

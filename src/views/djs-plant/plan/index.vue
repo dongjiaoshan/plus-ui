@@ -163,6 +163,20 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.totalArea != null ? `${r.totalArea} ${t('plantPlan.unit.mu')}` : '-')
   },
   {
+    prop: 'earliestHarvestdate',
+    label: t('plantPlan.column.earliestStartHarvest'),
+    minWidth: 150,
+    align: 'center',
+    formatter: (r: BizRow) => (r.earliestHarvestdate != null ? String(r.earliestHarvestdate) : '-')
+  },
+  {
+    prop: 'lastHarvestdate',
+    label: t('plantPlan.column.latestEndHarvest'),
+    minWidth: 150,
+    align: 'center',
+    formatter: (r: BizRow) => (r.lastHarvestdate != null ? String(r.lastHarvestdate) : '-')
+  },
+  {
     prop: 'expectedYield',
     label: t('plantPlan.column.expectedYield'),
     minWidth: 120,
