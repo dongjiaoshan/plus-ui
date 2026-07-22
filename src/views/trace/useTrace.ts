@@ -7,10 +7,15 @@ import type { PublicTraceVo } from '@/api/trace/types';
 
 /**
  * 构造追溯 H5 落地 URL（二维码 encode 目标）。
- * 优先读 VITE_APP_TRACE_BASE（生产公网域名，内网/预览扫码可达）；缺省回退 location.origin。
+ * admin 域名按环境派生对应 trace 域名（admin(-staging).dongjiaoshan.com → trace(-staging).dongjiaoshan.com），
+ * 使 staging admin 生成的码落到 trace-staging、prod admin 落到 trace，无需分环境打包。
+ * 其它 host（本地开发等）回退 VITE_APP_TRACE_BASE 或 location.origin。
  */
 export function buildTraceUrl(type: string, code: string): string {
-  const base = (import.meta.env.VITE_APP_TRACE_BASE as string) || window.location.origin;
+  const host = window.location.hostname;
+  const base = host.startsWith('admin')
+    ? `${window.location.protocol}//${host.replace(/^admin/, 'trace')}`
+    : (import.meta.env.VITE_APP_TRACE_BASE as string) || window.location.origin;
   return `${base.replace(/\/$/, '')}/trace/${type}/${code}`;
 }
 

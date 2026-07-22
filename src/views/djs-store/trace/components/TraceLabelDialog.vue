@@ -70,9 +70,16 @@ const weightText = computed(() => {
   return `${weight.value} ${t('storeTrace.label.weightUnit')}`;
 });
 
-/** 二维码 encode URL：VITE_APP_TRACE_BASE 优先（内网/预览扫码可达），缺省 location.origin。 */
+/**
+ * 二维码 encode URL：admin 域名按环境派生 trace 域名
+ * （admin(-staging).dongjiaoshan.com → trace(-staging).dongjiaoshan.com），
+ * staging admin 落 trace-staging、prod admin 落 trace；其它 host 回退 VITE_APP_TRACE_BASE 或 origin。
+ */
 function buildTraceUrl(type: string, code: string): string {
-  const base = (import.meta.env.VITE_APP_TRACE_BASE as string) || window.location.origin;
+  const host = window.location.hostname;
+  const base = host.startsWith('admin')
+    ? `${window.location.protocol}//${host.replace(/^admin/, 'trace')}`
+    : (import.meta.env.VITE_APP_TRACE_BASE as string) || window.location.origin;
   return `${base.replace(/\/$/, '')}/trace/${type}/${code}`;
 }
 
