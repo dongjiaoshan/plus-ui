@@ -121,7 +121,16 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'plotCode', label: t('plantWork.column.plotCode'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'plotName', label: t('plantWork.column.plotName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'cropName', label: t('plantWork.column.cropName'), minWidth: 130, showOverflowTooltip: true },
-  { prop: 'teamName', label: t('plantWork.column.teamName'), minWidth: 130, showOverflowTooltip: true },
+  {
+    prop: 'teamName',
+    label: t('plantWork.column.teamName'),
+    minWidth: 130,
+    showOverflowTooltip: true,
+    formatter: (row: BizRow) => {
+      const r = row as unknown as { teamNames?: string[]; teamName?: string };
+      return r.teamNames && r.teamNames.length ? r.teamNames.join('、') : (r.teamName ?? '-');
+    }
+  },
   { prop: 'createTime', label: t('plantWork.column.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 

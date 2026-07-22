@@ -107,6 +107,12 @@
             <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
           </template>
         </el-table-column>
+        <el-table-column :label="t('plantPlan.field.transplantAdjusted')" width="90" align="center" header-align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.transplantAdjusted === 1" size="small" type="warning">{{ t('plantPlan.field.transplantAdjustedTag') }}</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column :label="t('plantPlan.field.plantBy')" width="140" align="center" header-align="center">
           <template #default="{ row }">
             <template v-if="teamNamesOf(row, 'plant').length">

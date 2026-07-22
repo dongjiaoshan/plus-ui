@@ -1969,6 +1969,8 @@ export default {
       lastHarvestdate: 'Last Harvest Date',
       plantStatus: 'Planting Plan Status',
       harvestStatus: 'Harvest Status',
+      transplantAdjusted: 'Transplant Adjusted',
+      transplantAdjustedTag: 'Transplant',
       plantTime: 'Plant Time',
       plantActualDate: 'Plant Date',
       beginHarvestdate: 'Harvest Start Date',

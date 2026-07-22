@@ -1972,6 +1972,8 @@ export default {
       lastHarvestdate: '最晚采摘日期',
       plantStatus: '种植计划状态',
       harvestStatus: '采摘状态',
+      transplantAdjusted: '移栽调整',
+      transplantAdjustedTag: '移栽',
       plantTime: '计划种植时间',
       plantActualDate: '种植日期',
       beginHarvestdate: '开始采摘日期',

@@ -141,6 +141,8 @@ export interface PlantDetailsVO {
   plantBy?: string;
   harvestBy?: string;
   isPick: number;
+  /** 是否移栽调整（PLT-TRANSPLANT-REDO-001）：1=该明细由育苗移栽落地生成（plot_id=目标地块）。 */
+  transplantAdjusted?: number;
   plotName?: string;
   plotCode?: string;
   cropName?: string;
