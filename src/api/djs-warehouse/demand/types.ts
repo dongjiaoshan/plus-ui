@@ -199,7 +199,7 @@ export interface AuditHistoryEntryVO {
 export interface DemandTodayKpiVO {
   /** 明日白条猪需求头数（含半只 0.5 折算，可含小数）。 */
   todayPigDemand: number;
-  /** 明日白条猪已调配头数（去重耳号数）。 */
+  /** 明日白条猪已配头数（按需求状态已全部确认计头数，含半只 0.5 折算；BigDecimal 序列化为 number）。 */
   todayPigAssigned: number;
   /** 明日猪肉产品需求条数（belong_type='pork'）。 */
   todayPorkDemand: number;

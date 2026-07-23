@@ -16,31 +16,30 @@
       </div>
 
       <!-- 品类切换：猪肉产品 / 果蔬产品 / 其他产品（DENGBO-R10）。切换只过滤视图，提交保存全部行。 -->
-      <!-- 页签右侧（row140）：当日白条分割损耗 = max(0, 当日白条到店重 − 白条退回产品入库重)，后端权威计算（口径同定时任务，退回入库重取自 t_store_return 门店退货入库）；当天无白条到店则不显示。 -->
+      <!-- 当日白条分割损耗只在「查看详情」弹框展示（CheckDetailDrawer），录入/修改抽屉不显示（流程性问题 row75）。 -->
       <div class="tabs-band">
         <el-tabs v-model="activeTab" class="belong-tabs">
           <el-tab-pane v-for="tab in TABS" :key="tab" :name="tab" :label="`${t(`storeLedger.belongTab.${tab}`)} (${tabCount[tab]})`" />
         </el-tabs>
-        <div v-if="showWhiteBarSplitLoss" class="white-bar-split-loss">
-          {{ t('storeLedger.entry.whiteBarSplitLoss') }}<span class="value">{{ whiteBarSplitLoss.toFixed(3) }}</span> kg
-        </div>
+        <!-- row37：新增/修改抽屉展示当日白条到店重量（getWhiteBarSplitLoss.arriveWeight）。 -->
+        <span class="arrive-weight">{{ t('storeLedger.entry.whiteBarArriveWeight') }}：{{ arriveWeight.toFixed(3) }} kg</span>
       </div>
 
       <!-- row31：必须 row-key=productId——否则切 tab 时 el-table 按 index 复用 el-input-number 实例，
            precision prop 虽更新但 modelValue 恒 0 不触发内部重排，「份」行沿用上一「kg」行的陈旧 "0.000" 显示。
            按产品身份重挂行 → 输入框重挂、以 precision=0 重排 → 非 kg 显整数。 -->
       <el-table v-loading="loading" :data="filteredRows" row-key="productId" border stripe class="entry-table">
-        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" width="160" show-overflow-tooltip fixed="left" align="center" header-align="center" />
+        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center" />
         <!-- 流程性问题 row14：去掉「类别」列 -->
         <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" header-align="center" />
         <!-- 期初：只读（库存表结存） -->
-        <el-table-column :label="t('storeLedger.column.openingQty')" width="120" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.openingQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <span class="text-muted">{{ fmtQty(row.openingQty, row) }}</span>
           </template>
         </el-table-column>
         <!-- 新到货：新到货行只读（发货量）；猪肉行可编辑 -->
-        <el-table-column :label="t('storeLedger.column.inboundQty')" width="120" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.inboundQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number
               v-if="!row.inboundReadonly"
@@ -55,37 +54,37 @@
           </template>
         </el-table-column>
         <!-- 销售：手动 -->
-        <el-table-column :label="t('storeLedger.column.saleQty')" width="120" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.saleQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.saleQty" :min="0" :precision="kgPrecision(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 赠送：手动 -->
-        <el-table-column :label="t('storeLedger.column.giftQty')" width="120" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.giftQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.giftQty" :min="0" :precision="kgPrecision(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 退货（顾客退货）：手动 -->
-        <el-table-column :label="t('storeLedger.column.returnQty')" width="120" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.returnQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.returnSaleQty" :min="0" :precision="kgPrecision(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 退回（门店退回仓库）：只读 -->
-        <el-table-column :label="t('storeLedger.column.returnedQty')" width="120" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.returnedQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <span class="text-muted">{{ fmtQty(row.returnWhQty, row) }}</span>
           </template>
         </el-table-column>
         <!-- 期末：手动实盘录入 -->
-        <el-table-column :label="t('storeLedger.column.closingQty')" width="120" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.closingQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.closingQty" :min="0" :precision="kgPrecision(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 损耗：只读（后端公式计算，前端同步展示） -->
-        <el-table-column :label="t('storeLedger.column.lossQty')" width="120" align="center" header-align="center" fixed="right">
+        <el-table-column :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
             <span class="loss" :class="{ 'loss-negative': row.lossQty < 0 }">{{ fmtQty(row.lossQty, row) }}</span>
           </template>
@@ -161,6 +160,8 @@ const ledgerDate = ref<string>(todayStr());
 const loading = ref(false);
 const submitLoading = ref(false);
 const rows = ref<EntryRow[]>([]);
+/** 当日该门店白条到店重量 kg（row37：新增/修改盘点抽屉顶部展示，数据源 getWhiteBarSplitLoss.arriveWeight）。 */
+const arriveWeight = ref(0);
 /** 修改模式（DENGBO-R13）：对已盘记录更正，锁定日期、叠加已保存值、提交 edit=true 允许覆盖。 */
 const editMode = ref(false);
 
@@ -179,31 +180,6 @@ const tabCount = computed<Record<StoreLedgerBelongTab, number>>(() => {
 });
 /** 当前 tab 过滤后的行（表格 :data 绑这个） */
 const filteredRows = computed<EntryRow[]>(() => rows.value.filter((r) => r.belongTab === activeTab.value));
-
-/**
- * 当日白条分割损耗（row140）：抽屉打开 / 门店 / 日期变化时后端拉取，口径同 white_bar_split_loss 定时任务。
- * 白条退回入库重来自门店退货入库流水 t_store_return（门店退回仓库、已入库、白条退回产品字典），
- * 不是本盘点抽屉的「退回量」列——所以由后端权威计算、前端直接展示，不在前端重算。
- * 后端 BigDecimal 序列化成字符串，Number() 强转。
- */
-const arriveWeight = ref(0);
-const whiteBarSplitLoss = ref(0);
-
-/** 当天有白条到店（到店重 > 0）即显示「当日白条分割损耗」整块（row66：新增/修改盘点均显示，与查看明细一致）。 */
-const showWhiteBarSplitLoss = computed<boolean>(() => arriveWeight.value > 0);
-
-/** 拉取当日白条分割损耗（无门店 / 无日期 → 0，不阻断录入）。 */
-async function loadWhiteBarSplitLoss() {
-  if (!storeId.value || !ledgerDate.value) {
-    arriveWeight.value = 0;
-    whiteBarSplitLoss.value = 0;
-    return;
-  }
-  const res = await getWhiteBarSplitLoss(storeId.value, ledgerDate.value);
-  const data = (res as unknown as { data?: { arriveWeight?: number | string; splitLoss?: number | string } }).data;
-  arriveWeight.value = nz(data?.arriveWeight);
-  whiteBarSplitLoss.value = nz(data?.splitLoss);
-}
 
 function nz(v: number | string | undefined): number {
   const n = Number(v ?? 0);
@@ -265,15 +241,16 @@ function recalc(row: EntryRow) {
 async function loadCandidates() {
   if (!storeId.value) {
     rows.value = [];
-    arriveWeight.value = 0;
-    whiteBarSplitLoss.value = 0;
     return;
   }
-  // 当日白条分割损耗（row140）与候选并行拉取，不互相阻塞
-  void loadWhiteBarSplitLoss();
   loading.value = true;
   try {
-    const res = await listStoreLedgerCandidates(storeId.value, ledgerDate.value);
+    // row37：当日白条到店重量（顶部展示），与候选一同拉取。
+    const [res, lossRes] = await Promise.all([
+      listStoreLedgerCandidates(storeId.value, ledgerDate.value),
+      getWhiteBarSplitLoss(storeId.value, ledgerDate.value)
+    ]);
+    arriveWeight.value = Number(lossRes.data?.arriveWeight ?? 0) || 0;
     const candidates = (res.data ?? []) as StoreLedgerCandidateVO[];
     // 修改模式（DENGBO-R13）：叠加已保存的盘点值，让用户在上次结果基础上更正。
     const savedList: StoreLedgerLineVO[] = editMode.value
@@ -350,6 +327,14 @@ async function handleSubmit() {
   if (!storeId.value || !rows.value.length) {
     return;
   }
+  // row39：损耗量 / 期末库存为负 → 不允许完成盘点，提示含负值产品名。
+  const negativeRows = rows.value.filter((r) => Number(r.lossQty) < 0 || Number(r.closingQty) < 0);
+  if (negativeRows.length) {
+    proxy?.$modal.msgError(
+      t('storeLedger.entry.negativeError', { names: negativeRows.map((r) => r.productName).join('、') })
+    );
+    return;
+  }
   await proxy?.$modal.confirm(
     editMode.value
       ? t('storeLedger.entry.editConfirm', { n: rows.value.length })
@@ -387,7 +372,6 @@ async function open(editCtx?: { ledgerDate: string }) {
   editMode.value = !!editCtx;
   ledgerDate.value = editCtx?.ledgerDate ?? todayStr();
   rows.value = [];
-  arriveWeight.value = 0;
   visible.value = true;
   if (storeId.value) {
     await loadCandidates();
@@ -417,18 +401,12 @@ defineExpose({ open });
       min-width: 0;
     }
 
-    .white-bar-split-loss {
+    .arrive-weight {
       flex-shrink: 0;
-      padding-bottom: 8px;
-      font-size: 14px;
-      color: #606266;
       white-space: nowrap;
-
-      .value {
-        margin: 0 2px 0 4px;
-        font-weight: 600;
-        color: var(--el-color-danger);
-      }
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--el-color-primary);
     }
   }
 

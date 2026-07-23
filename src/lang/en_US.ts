@@ -1315,7 +1315,7 @@ export default {
       productAttr: 'Attribute',
       productWorkshop: 'Workshop',
       productMaterial: 'Raw Material Product',
-      materialNum: 'Other-product packing measure',
+      materialNum: 'Packing measure',
       productThumb: 'Product Image',
       productImg: 'Images',
       imageOssId: 'Main Image (auto)',
@@ -2257,14 +2257,20 @@ export default {
     },
     placeholder: {
       cropName: 'Enter crop name',
-      team: 'Select pick team'
+      team: 'Select pick team',
+      statSource: 'Select stat source'
     },
     column: {
       pickDate: 'Pick Date',
       cropName: 'Crop',
       plotCode: 'Plot Code',
       pickWeight: 'Pick Weight',
-      teamName: 'Pick Team'
+      teamName: 'Pick Team',
+      statSource: 'Stat Source'
+    },
+    option: {
+      statSourceVeg: 'Veg Handling Room',
+      statSourceActivity: 'Picking Activity'
     },
     unit: { kg: 'kg' }
   },
@@ -3051,25 +3057,33 @@ export default {
       kpiDemandOffal: 'Offal Products',
       kpiDemandEgg: 'Egg Demand',
       kpiDemandDryGood: 'Dry Goods Demand',
-      kpiDemandVegetableKinds: 'Veg Demand Kinds',
+      kpiDemandVegetableKinds: 'Veg Demand Varieties',
+      kpiDemandPorkKinds: 'Pork Demand Varieties',
+      kpiDemandOtherKinds: 'Other Demand Varieties',
       kpiSlaughterPig: 'Slaughter Pigs',
-      kpiWhiteBarWeight: 'White-bar Total Weight',
-      kpiCutBar: 'Cut White-bars',
-      kpiCutProductWeight: 'Cut Pork Product Weight',
-      kpiVegReceiveKinds: 'Veg Received Kinds',
+      kpiWhiteBarWeight: 'Marketed Pig Weight',
+      kpiCutBar: 'Split White Bars',
+      kpiCutProductWeight: 'Cut Product Weight',
+      kpiVegReceiveKinds: 'Veg Received Varieties',
       kpiVegReceiveWeight: 'Veg Received Weight',
+      kpiVegHandleKinds: 'Veg Handled Varieties',
+      kpiVegHandleWeight: 'Veg Handled Weight',
       kpiVegProductKinds: 'Veg Product Kinds',
       kpiVegProductWeight: 'Veg Product Weight',
       returnTabPork: 'Pork',
       returnTabVeg: 'Vegetable',
+      returnTabKg: 'Kg View',
+      returnTabNonKg: 'Non-Kg View',
       demandTabPork: 'Pork',
       demandTabVeg: 'Vegetable',
+      demandTabKg: 'Kg View',
+      demandTabNonKg: 'Non-Kg View',
       otherSlice: 'Other',
       seriesWhiteBarHead: 'White-bar Heads',
       seriesPorkWeight: 'Pork Product Weight',
       seriesVegWeight: 'Veg Product Weight',
-      seriesPorkLoss: 'Pork Loss Rate',
-      seriesVegLoss: 'Veg Loss Rate',
+      seriesPorkLoss: 'Pork Loss (kg)',
+      seriesVegLoss: 'Veg Loss (kg)',
       unitHead: 'head',
       unitKg: 'kg',
       unitKind: 'kinds',
@@ -3091,7 +3105,7 @@ export default {
       // 6 charts
       chartDemandPie: 'Product Demand (last 7 days)',
       chartReturnRing: 'Return Product Distribution (last 7 days)',
-      chartProductionTrend: 'Production Trend (last 7 days, kg)',
+      chartProductionTrend: 'Product Production Trend',
       chartCheckPie: 'Stock-check Result (Last 7 Days)',
       chartLocationRing: 'Location Health (this month)',
       chartLossTrend: 'Loss Trend (last 7 days, kg)',
@@ -3267,7 +3281,7 @@ export default {
       otherDemand: 'Other Product Demand',
       unitHead: 'head',
       unitSpecies: 'species',
-      unitItem: 'item'
+      unitItem: 'variety'
     },
     cart: {
       title: 'Add {type} Demand',
@@ -3987,7 +4001,9 @@ export default {
       submit: 'Finish Check',
       submitConfirm: 'Submit check data for {n} products?',
       editConfirm: 'Correct check data for {n} products?',
-      whiteBarSplitLoss: 'White-bar split loss today: '
+      whiteBarSplitLoss: 'White-bar split loss today: ',
+      whiteBarArriveWeight: 'White-bar arrivals today',
+      negativeError: 'The following products have negative loss or closing stock and cannot complete the check: {names}'
     }
   },
   storeLoss: {

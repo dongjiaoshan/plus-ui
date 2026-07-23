@@ -49,6 +49,8 @@ export interface ChartSeriesItem {
   name: string;
   /** 聚合值 */
   value: number;
+  /** 产品单位（product_unit，用于前端 KG / 非 KG 维度过滤；'kg' 为 KG，其余 / 空为非 KG） */
+  unit?: string;
 }
 
 /** 折线图单点（与后端 ChartTrendPointVo 对齐） */
@@ -103,8 +105,12 @@ export interface WarehouseDashboardChartsVo {
   todayDemandOffal: number;
   /** 礼盒需求量（份） */
   todayDemandGiftBox: number;
-  /** 果蔬需求品类数（种） */
+  /** 果蔬产品需求品种数（种，belong_type='vegetable' 去重产品数） */
   todayDemandVegetableKinds: number;
+  /** 猪肉产品需求品种数（种，belong_type='pork' 去重产品数） */
+  todayDemandPorkKinds: number;
+  /** 其他产品需求品种数（种，belong_type 非 pork/vegetable/white_bar 去重产品数） */
+  todayDemandOtherKinds: number;
   /** 果蔬需求量（kg） */
   todayDemandVegetable: number;
   /** 鸡蛋需求量（个） */
@@ -123,6 +129,12 @@ export interface WarehouseDashboardChartsVo {
   todaySlaughterPigCount: number;
   /** 白条总重（kg） */
   todayWhiteBarWeight: number;
+  /** 出栏猪只总重（kg，今日 bar_info marketing_weight 合计） */
+  todayMarketingWeight: number;
+  /** 毛菜处理果蔬品种数（种，今日 record_type=1 已称重去重作物数） */
+  todayVegHandleKinds: number;
+  /** 毛菜处理果蔬总重量（kg，今日 record_type=1 已称重 record_weight 合计） */
+  todayVegHandleWeight: number;
   /** 分割白条（头） */
   todayCutBarCount: number;
   /** 分割猪只产品总重（kg） */

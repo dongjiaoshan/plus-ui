@@ -1317,7 +1317,7 @@ export default {
       productAttr: '产品属性',
       productWorkshop: '生产车间',
       productMaterial: '原材料产品',
-      materialNum: '其它产品打包计量规则',
+      materialNum: '打包计量规则',
       productThumb: '产品图片',
       productImg: '详情图',
       imageOssId: '主图（自动匹配）',
@@ -2260,14 +2260,20 @@ export default {
     },
     placeholder: {
       cropName: '请输入作物名称',
-      team: '请选择采摘班组'
+      team: '请选择采摘班组',
+      statSource: '请选择统计来源'
     },
     column: {
       pickDate: '采摘日期',
       cropName: '作物名称',
       plotCode: '地块编号',
       pickWeight: '采摘量',
-      teamName: '采摘班组'
+      teamName: '采摘班组',
+      statSource: '统计来源'
+    },
+    option: {
+      statSourceVeg: '毛菜处理间',
+      statSourceActivity: '采摘活动'
     },
     unit: { kg: '公斤' }
   },
@@ -3054,25 +3060,33 @@ export default {
       kpiDemandOffal: '红白脏产品',
       kpiDemandEgg: '鸡蛋需求量',
       kpiDemandDryGood: '干货需求量',
-      kpiDemandVegetableKinds: '果蔬需求品类',
+      kpiDemandVegetableKinds: '果蔬产品需求品种数',
+      kpiDemandPorkKinds: '猪肉产品需求品种数',
+      kpiDemandOtherKinds: '其他产品需求品种数',
       kpiSlaughterPig: '送宰猪只',
-      kpiWhiteBarWeight: '白条总重',
-      kpiCutBar: '分割白条',
-      kpiCutProductWeight: '分割猪只产品',
-      kpiVegReceiveKinds: '果蔬接收品种',
-      kpiVegReceiveWeight: '果蔬接收总重',
+      kpiWhiteBarWeight: '出栏猪只总重',
+      kpiCutBar: '分割白条头数',
+      kpiCutProductWeight: '白条分割产品总重量',
+      kpiVegReceiveKinds: '果蔬月台接收品种数',
+      kpiVegReceiveWeight: '果蔬月台接收总重量',
+      kpiVegHandleKinds: '毛菜处理果蔬品种数',
+      kpiVegHandleWeight: '毛菜处理果蔬总重量',
       kpiVegProductKinds: '果蔬产品种类',
       kpiVegProductWeight: '果蔬产品总重',
       returnTabPork: '猪肉产品',
       returnTabVeg: '果蔬产品',
+      returnTabKg: '按KG查看',
+      returnTabNonKg: '按非KG查看',
       demandTabPork: '猪肉产品',
       demandTabVeg: '果蔬产品',
+      demandTabKg: '按KG查看',
+      demandTabNonKg: '按非KG查看',
       otherSlice: '其他',
       seriesWhiteBarHead: '白条头数',
       seriesPorkWeight: '猪肉产品重量',
       seriesVegWeight: '果蔬产品重量',
-      seriesPorkLoss: '猪肉产品损耗率',
-      seriesVegLoss: '果蔬产品损耗率',
+      seriesPorkLoss: '猪肉产品损耗量(kg)',
+      seriesVegLoss: '果蔬产品损耗量(kg)',
       unitHead: '头',
       unitKg: 'kg',
       unitKind: '种',
@@ -3094,8 +3108,8 @@ export default {
       // 6 图标题
       chartDemandPie: '产品需求分布（近7日）',
       chartReturnRing: '退货产品分布(近7日)',
-      chartProductionTrend: '生产趋势（近 7 日，kg）',
-      chartCheckPie: '盘点结果分布（近七日）',
+      chartProductionTrend: '产品生产趋势',
+      chartCheckPie: '盘点结果分布（近7日）',
       chartLocationRing: '库位健康度（当月）',
       chartLossTrend: '损耗趋势（近 7 日，kg）',
       seriesProduction: '生产重量',
@@ -3270,7 +3284,7 @@ export default {
       otherDemand: '其他产品需求',
       unitHead: '头',
       unitSpecies: '品种',
-      unitItem: '条'
+      unitItem: '品种'
     },
     cart: {
       title: '新增{type}需求',
@@ -3990,7 +4004,9 @@ export default {
       submit: '盘点完成',
       submitConfirm: '确认提交 {n} 个产品的盘点数据？',
       editConfirm: '确认更正 {n} 个产品的盘点数据？',
-      whiteBarSplitLoss: '当日白条分割损耗：'
+      whiteBarSplitLoss: '当日白条分割损耗：',
+      whiteBarArriveWeight: '当日白条到店重量',
+      negativeError: '以下产品损耗量或期末库存为负，无法完成盘点：{names}'
     }
   },
   storeLoss: {

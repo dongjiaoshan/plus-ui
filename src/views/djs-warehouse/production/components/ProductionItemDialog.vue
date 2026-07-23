@@ -35,15 +35,17 @@
       @reset="handleReset"
       @page-change="handlePageChange"
     >
-      <!-- 行操作：追溯码（有码 link / 无码占位）+ 损坏行追加「查看损坏」 -->
+      <!-- 行操作：追溯码（有码 link / 无码占位）+ 损坏行追加「查看损坏」；inline-flex 统一垂直居中，避免占位 span 与 link 按钮基线错位 -->
       <template #action="{ row }">
-        <el-button v-if="row.traceCode" v-hasPermi="['djs:warehouse:production:list']" link type="primary" @click="handleTrace(row)">
-          {{ t('djs.warehouse.production.button.traceCode') }}
-        </el-button>
-        <span v-else class="text-gray-400">{{ t('djs.warehouse.production.text.noTrace') }}</span>
-        <el-button v-if="row.isDamaged === 1" v-hasPermi="['djs:warehouse:production:list']" link type="danger" @click="handleViewDamage(row)">
-          {{ t('djs.warehouse.production.damage.view') }}
-        </el-button>
+        <div class="inline-flex items-center gap-2">
+          <el-button v-if="row.traceCode" v-hasPermi="['djs:warehouse:production:list']" link type="primary" @click="handleTrace(row)">
+            {{ t('djs.warehouse.production.button.traceCode') }}
+          </el-button>
+          <span v-else class="text-gray-400">{{ t('djs.warehouse.production.text.noTrace') }}</span>
+          <el-button v-if="row.isDamaged === 1" v-hasPermi="['djs:warehouse:production:list']" link type="danger" @click="handleViewDamage(row)">
+            {{ t('djs.warehouse.production.damage.view') }}
+          </el-button>
+        </div>
       </template>
     </BizTable>
 

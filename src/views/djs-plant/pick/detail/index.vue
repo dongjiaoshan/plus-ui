@@ -46,15 +46,30 @@ const pageSize = ref(10);
 /** 采摘班组筛选下拉数据。 */
 const teamOptions = ref<Array<{ label: string; value: string | number }>>([]);
 
+/** 统计来源筛选下拉：1=毛菜处理间 2=采摘活动（row44）。 */
+const statSourceOptions = computed<Array<{ label: string; value: string }>>(() => [
+  { label: t('pickDetail.option.statSourceVeg'), value: '1' },
+  { label: t('pickDetail.option.statSourceActivity'), value: '2' }
+]);
+
+/** 统计来源 code → 中文文案。 */
+function statSourceLabel(v: unknown): string {
+  const code = v != null ? String(v) : '';
+  const hit = statSourceOptions.value.find((it) => it.value === code);
+  return hit ? hit.label : '-';
+}
+
 const searchModel = reactive<Record<string, unknown>>({
   pickDateRange: undefined,
   cropName: undefined,
-  teamId: undefined
+  teamId: undefined,
+  statSource: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'pickDateRange', label: t('pickDetail.field.pickDate'), type: 'daterange' },
   { field: 'cropName', label: t('pickDetail.field.cropName'), type: 'input', placeholder: t('pickDetail.placeholder.cropName') },
+  { field: 'statSource', label: t('pickDetail.column.statSource'), type: 'select', clearable: true, options: statSourceOptions.value, placeholder: t('pickDetail.placeholder.statSource') },
   { field: 'teamId', label: t('pickDetail.field.team'), type: 'select', clearable: true, options: teamOptions.value, placeholder: t('pickDetail.placeholder.team') }
 ]);
 
@@ -73,6 +88,13 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     showOverflowTooltip: true,
     formatter: (r: BizRow) => (r.cropName != null && r.cropName !== '' ? String(r.cropName) : '-')
+  },
+  {
+    prop: 'statSource',
+    label: t('pickDetail.column.statSource'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (r: BizRow) => statSourceLabel(r.statSource)
   },
   {
     prop: 'plotCode',
@@ -111,6 +133,7 @@ function buildQuery(): PickDetailQuery {
     pickDateEnd: end,
     cropName: (searchModel.cropName as string | undefined) || undefined,
     teamId: (searchModel.teamId as string | number | undefined) ?? undefined,
+    statSource: (searchModel.statSource as string | undefined) || undefined,
     pageNum: pageNum.value,
     pageSize: pageSize.value
   };
@@ -161,7 +184,8 @@ function handleExport() {
       pickDateBegin: begin,
       pickDateEnd: end,
       cropName: (searchModel.cropName as string | undefined) || undefined,
-      teamId: (searchModel.teamId as string | number | undefined) ?? undefined
+      teamId: (searchModel.teamId as string | number | undefined) ?? undefined,
+      statSource: (searchModel.statSource as string | undefined) || undefined
     },
     `${t('pickDetail.pageTitle')}_${new Date().getTime()}.xlsx`
   );

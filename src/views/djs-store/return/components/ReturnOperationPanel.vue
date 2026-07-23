@@ -20,6 +20,7 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
+            :max="row.arrivedQuantity ?? Infinity"
             :precision="isKg(row.productUnit) ? 3 : 0"
             :step="1"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
@@ -41,6 +42,7 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
+            :max="row.arrivedQuantity ?? Infinity"
             :precision="isKg(row.productUnit) ? 3 : 0"
             :step="1"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
@@ -84,6 +86,8 @@ interface MatrixRow {
   returnQuantity?: number;
   /** 退回产品重量(kg) */
   returnWeight?: number;
+  /** 到店量（退回量上限 rows40/41）：份数产品=当日到店需求订购份数 / 重量产品=当日到店重量；空 → 不封顶 */
+  arrivedQuantity?: number;
 }
 
 const storeContext = useStoreContextStore();
@@ -122,6 +126,7 @@ async function loadPorkCandidates() {
       productName: p.productName ?? '',
       productUnit: p.productUnit,
       subCategory: p.subCategory ?? 'pork',
+      arrivedQuantity: p.arrivedQuantity,
       returnQuantity: undefined,
       returnWeight: undefined
     }));
@@ -145,6 +150,7 @@ async function loadVegRows() {
       productId: String(p.productId),
       productName: p.productName ?? '',
       productUnit: p.productUnit,
+      arrivedQuantity: p.arrivedQuantity,
       returnQuantity: undefined,
       returnWeight: undefined
     }));

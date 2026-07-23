@@ -145,9 +145,9 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 /** 汇总列（对齐原型 bc5e5339：11 数据列 + 1 操作列）。统一居中 + 统一 minWidth。 */
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'demandDate', label: t('demand.column.demandDate'), minWidth: 120, align: 'center' },
-  // row23：需求状态列调整到产品列之前
+  // row29：列顺序 需求状态 → 需求日期 → 产品名称（需求状态提到需求日期之前）
   { prop: 'demandStatus', label: t('demand.column.demandStatus'), minWidth: 120, align: 'center' },
+  { prop: 'demandDate', label: t('demand.column.demandDate'), minWidth: 120, align: 'center' },
   { prop: 'productName', label: t('demand.column.productName'), minWidth: 140, align: 'center', showOverflowTooltip: true },
   { prop: 'productSpec', label: t('demand.column.productSpec'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   {
@@ -157,7 +157,9 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => {
       const r = row as unknown as DemandGroupVO;
-      return formatQtyByKgRule(r.demandQuantity, r.productUnit);
+      return r.belongType === 'white_bar'
+        ? formatWhiteBarHeads(r.demandQuantity, r.productName)
+        : formatQtyByKgRule(r.demandQuantity, r.productUnit);
     }
   },
   {
@@ -165,7 +167,10 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('demand.column.productUnit'),
     minWidth: 100,
     align: 'center',
-    formatter: (row: BizRow) => (row as unknown as DemandGroupVO).productUnit || '-'
+    formatter: (row: BizRow) => {
+      const r = row as unknown as DemandGroupVO;
+      return r.belongType === 'white_bar' ? t('demand.kpi.unitHead') : r.productUnit || '-';
+    }
   },
   { prop: 'belongType', label: t('demand.column.productType'), minWidth: 120, align: 'center', dictType: 'djs_belong_type' },
   { prop: 'rawMaterial', label: t('demand.column.rawMaterial'), minWidth: 120, align: 'center', showOverflowTooltip: true },
@@ -208,6 +213,11 @@ const columns = computed<BizTableColumn[]>(() => [
 function formatQtyByKgRule(v: number | string | undefined, unit: string | null | undefined): string {
   const n = Number(v ?? 0);
   return isKgUnit(unit) ? n.toFixed(3) : String(Math.round(n));
+}
+/** 白条按「头」折算展示（口径同 KPI）：名含「半」半扇每单位 0.5 头、整只 1 头；去尾零不补三位小数（0.5→'0.5'，22→'22'）。 */
+function formatWhiteBarHeads(qty: number | string | undefined, name: string | undefined): string {
+  const heads = Number(qty ?? 0) * ((name ?? '').includes('半') ? 0.5 : 1);
+  return heads.toLocaleString('en-US', { maximumFractionDigits: 3, useGrouping: false });
 }
 /** 确认率：后端 0~1 小数 → 百分比整数。 */
 function formatRate(v: number | string | undefined): string {

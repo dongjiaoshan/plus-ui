@@ -746,35 +746,52 @@ const wipStockUnitMap = computed<Record<string, string>>(() => {
  * 不再扣减「已打包总重」：后端 consumeInhouse 打包时已从源 inhouse 行实时扣减本次重量，
  * sources 重新加载后已反映扣减；前端若再减 packedWeightMap 会把同一次打包量重复扣两次（row45 双重扣减 bug）。
  * 数值全程 Number() 强转（防 BigDecimal 序列化字符串拼接坑）。
+ *
+ * row30（领用剩余重量常显）：镜像肉品 wipStockMap「选耳号后覆盖同料卡」两段式——
+ * 第一步按**不分地块**的完整 sources 给所有配了 product_material 的成品卡一个「地块无关领用总重量」基线（常显）；
+ * 第二步仅当已选目标成品 + 选中地块时，按所选地块(含无地块哨兵)重算所选产品原材料的量、覆盖该原材料对应的同料卡。
+ * 之前无条件按 selectedPlotId 过滤 sources（挂载即被 immediate watch 设成首地块），只含该地块有来源的原材料 →
+ * 其它地块领用的产品卡无 map 条目 → hasStockEntry=false 整行不显示（row30 根因）。
  */
 const vegStockMap = computed<Record<string, number | null>>(() => {
   const m: Record<string, number | null> = {};
   if (props.kind !== 'veg') return m;
-  // row44：选中地块后「领用剩余重量」按所选地块聚合（镜像 displaySources 过滤），与肉品选耳号 per-ear 同口径；
-  // 未选地块退回全量。computed 依赖 selectedPlotId 会随地块切换重算。
-  let scoped = sources.value;
-  if (props.plotGroup && selectedPlotId.value) {
-    scoped =
-      selectedPlotId.value === NO_PLOT_SENTINEL
-        ? sources.value.filter((s) => s.plotId == null)
-        : sources.value.filter((s) => String(s.plotId) === String(selectedPlotId.value));
-  }
-  // 先按原材料 id 聚合（所选地块的）来源 inhouse 重量（source.productId = 原材料 id；已含后端打包扣减）
-  const byMaterial: Record<string, number> = {};
-  scoped.forEach((s) => {
+  // 第一步：按原材料 id 聚合**完整** sources（不分地块）的来源 inhouse 重量（source.productId = 原材料 id；已含后端打包扣减），
+  // 给所有配了 product_material 的成品卡「地块无关领用总重量」基线，实现常显。
+  const totalByMaterial: Record<string, number> = {};
+  sources.value.forEach((s) => {
     if (s.productId == null) return;
     const k = String(s.productId);
-    byMaterial[k] = (byMaterial[k] ?? 0) + (Number(s.productWeight) || 0);
+    totalByMaterial[k] = (totalByMaterial[k] ?? 0) + (Number(s.productWeight) || 0);
   });
-  // 成品 → 其 product_material 指向原材料的共享领用池（实时余量，无需再减已打包）
   products.value.forEach((p) => {
     if (p.productMaterial == null) return;
-    const picked = byMaterial[String(p.productMaterial)];
+    const picked = totalByMaterial[String(p.productMaterial)];
     if (picked == null) return;
     // 保留 3 位小数（kg 精度=1g，与 wipStockMap / fmtCopies 一致）：领用剩余重量按克(g)展示（×1000），
     // 若在此按 2 位小数取整（×100/100）会把第 3 位=1g 精度截掉（9.701kg→9.70→9700g，row35）。
     m[String(p.id)] = Math.round(Math.max(0, picked) * 1000) / 1000;
   });
+  // 第二步（row44）：已选目标成品 + 选中地块后，「领用剩余重量」按所选地块(含无地块哨兵)聚合覆盖同料卡，
+  // 与肉品选耳号 per-ear 同口径；提交超量校验(~validate)与剩余可打包份数(remainingPackableCopies)对「已选产品」取此地块化值，行为不变。
+  // 未选产品 / 未选地块 → 保留第一步的不分地块总量基线（常显），其余卡不受影响。
+  if (props.plotGroup && selectedPlotId.value && selectedProduct.value && selectedProduct.value.productMaterial != null) {
+    const matId = String(selectedProduct.value.productMaterial);
+    let plotWeight = 0;
+    sources.value.forEach((s) => {
+      if (s.productId == null || String(s.productId) !== matId) return;
+      const matchPlot =
+        selectedPlotId.value === NO_PLOT_SENTINEL ? s.plotId == null : String(s.plotId) === String(selectedPlotId.value);
+      if (!matchPlot) return;
+      plotWeight += Number(s.productWeight) || 0;
+    });
+    const plotVal = Math.round(Math.max(0, plotWeight) * 1000) / 1000;
+    products.value.forEach((p) => {
+      if (p.productMaterial != null && String(p.productMaterial) === matId) {
+        m[String(p.id)] = plotVal;
+      }
+    });
+  }
   return m;
 });
 

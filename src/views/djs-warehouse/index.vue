@@ -9,7 +9,7 @@
       </div>
     </div>
 
-    <!-- KPI 横条 1：今日需求（8 项） -->
+    <!-- KPI 横条 1：今日需求（4 项：白条需求量 + 猪肉/果蔬/其他产品需求品种数） -->
     <el-card shadow="never" class="kpi-card">
       <template #header>
         <div class="card-header">
@@ -47,7 +47,7 @@
       </el-row>
     </el-card>
 
-    <!-- 图栅格 行1：明日产品需求分布（猪肉/果蔬切换） | 退货产品分布 -->
+    <!-- 图栅格 行1：明日产品需求分布（双维度：猪肉/果蔬 + 按 KG/非 KG） | 退货产品分布（双维度） -->
     <el-row :gutter="12" class="chart-row">
       <el-col :xs="24" :md="12">
         <el-card class="chart-card" shadow="never">
@@ -60,6 +60,12 @@
               </el-radio-group>
             </div>
           </template>
+          <div class="chart-unit-switch">
+            <el-radio-group v-model="demandUnitTab" size="small">
+              <el-radio-button value="kg">{{ t('warehouse.dashboard.demandTabKg') }}</el-radio-button>
+              <el-radio-button value="nonkg">{{ t('warehouse.dashboard.demandTabNonKg') }}</el-radio-button>
+            </el-radio-group>
+          </div>
           <div ref="demandPieEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
@@ -74,6 +80,12 @@
               </el-radio-group>
             </div>
           </template>
+          <div class="chart-unit-switch">
+            <el-radio-group v-model="returnUnitTab" size="small">
+              <el-radio-button value="kg">{{ t('warehouse.dashboard.returnTabKg') }}</el-radio-button>
+              <el-radio-button value="nonkg">{{ t('warehouse.dashboard.returnTabNonKg') }}</el-radio-button>
+            </el-radio-group>
+          </div>
           <div ref="returnRingEl" class="chart-canvas"></div>
         </el-card>
       </el-col>
@@ -126,6 +138,14 @@ import {
 
 const { t } = useI18n();
 
+/** ECharts axis-trigger tooltip 回调单条 param（只取渲染需要的字段，避免引 any）。 */
+interface TrendTooltipParam {
+  axisValue: string;
+  marker: string;
+  seriesName: string;
+  value: number | string;
+}
+
 const summary = ref<WarehouseDashboardSummaryVo | null>(null);
 const charts = ref<WarehouseDashboardChartsVo | null>(null);
 const loading = ref(false);
@@ -144,10 +164,14 @@ let productionTrend: echarts.ECharts | null = null;
 let checkPie: echarts.ECharts | null = null;
 let lossTrend: echarts.ECharts | null = null;
 
-// 明日产品需求分布「猪肉 / 果蔬」切换
+// 明日产品需求分布 维度一「猪肉 / 果蔬」切换
 const demandTab = ref<'pork' | 'vegetable'>('pork');
-// 退货环「猪肉 / 果蔬」切换
+// 明日产品需求分布 维度二「按 KG / 按非 KG」切换（与维度一取交集）
+const demandUnitTab = ref<'kg' | 'nonkg'>('kg');
+// 退货环 维度一「猪肉 / 果蔬」切换
 const returnTab = ref<'pork' | 'vegetable'>('pork');
+// 退货环 维度二「按 KG / 按非 KG」切换（与维度一取交集）
+const returnUnitTab = ref<'kg' | 'nonkg'>('kg');
 
 /** 切片取需求最高 TOP5，其余合并为「其他」。 */
 function top5WithOther(data: ChartSeriesItem[] | undefined): ChartSeriesItem[] {
@@ -160,33 +184,29 @@ function top5WithOther(data: ChartSeriesItem[] | undefined): ChartSeriesItem[] {
   return top;
 }
 
-// 横条 1：今日需求 8 项（对齐原型；label 走 i18n，键名待 backfill，单位逐字对齐截图）
+// 横条 1：今日需求 4 项（白条需求量 + 猪肉/果蔬/其他产品需求品种数，对齐原型）
 const demandKpis = computed(() => {
   const c = charts.value;
   return [
     { label: t('warehouse.dashboard.kpiDemandWhiteBar'), unit: t('warehouse.dashboard.unitHead'), value: fmtInt(c?.todayDemandWhiteBar) },
-    { label: t('warehouse.dashboard.kpiDemandPork'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayDemandPork) },
-    { label: t('warehouse.dashboard.kpiDemandOffal'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayDemandOffal) },
-    { label: t('warehouse.dashboard.kpiDemandGiftBox'), unit: t('warehouse.dashboard.unitBox'), value: fmtInt(c?.todayDemandGiftBox) },
+    { label: t('warehouse.dashboard.kpiDemandPorkKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayDemandPorkKinds ?? 0 },
     { label: t('warehouse.dashboard.kpiDemandVegetableKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayDemandVegetableKinds ?? 0 },
-    { label: t('warehouse.dashboard.kpiDemandVegetable'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayDemandVegetable) },
-    { label: t('warehouse.dashboard.kpiDemandEgg'), unit: t('warehouse.dashboard.unitPiece'), value: fmtInt(c?.todayDemandEgg) },
-    { label: t('warehouse.dashboard.kpiDemandDryGood'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayDemandDryGood) }
+    { label: t('warehouse.dashboard.kpiDemandOtherKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayDemandOtherKinds ?? 0 }
   ];
 });
 
-// 横条 2：今日生产 8 项（对齐原型）
+// 横条 2：今日生产 8 项（对齐原型；毛菜两项落第二行前两列 = 数组第 5/6 位）
 const productionKpis = computed(() => {
   const c = charts.value;
   return [
     { label: t('warehouse.dashboard.kpiSlaughterPig'), unit: t('warehouse.dashboard.unitHead'), value: c?.todaySlaughterPigCount ?? 0 },
-    { label: t('warehouse.dashboard.kpiWhiteBarWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayWhiteBarWeight) },
+    { label: t('warehouse.dashboard.kpiWhiteBarWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayMarketingWeight) },
     { label: t('warehouse.dashboard.kpiCutBar'), unit: t('warehouse.dashboard.unitHead'), value: fmtCount(c?.todayCutBarCount) },
     { label: t('warehouse.dashboard.kpiCutProductWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayCutProductWeight) },
+    { label: t('warehouse.dashboard.kpiVegHandleKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayVegHandleKinds ?? 0 },
+    { label: t('warehouse.dashboard.kpiVegHandleWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayVegHandleWeight) },
     { label: t('warehouse.dashboard.kpiVegReceiveKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayVegReceiveKinds ?? 0 },
-    { label: t('warehouse.dashboard.kpiVegReceiveWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayVegReceiveWeight) },
-    { label: t('warehouse.dashboard.kpiVegProductKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayVegProductKinds ?? 0 },
-    { label: t('warehouse.dashboard.kpiVegProductWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayVegProductWeight) }
+    { label: t('warehouse.dashboard.kpiVegReceiveWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayVegReceiveWeight) }
   ];
 });
 
@@ -228,9 +248,9 @@ function nowTimeText(): string {
 }
 
 function renderAll() {
-  // 图① 明日产品需求分布（猪肉 / 果蔬切换，近 7 日）
+  // 图① 明日产品需求分布（按 KG / 按非 KG 切换，近 7 日）
   renderDemandPie();
-  // 图② 退货产品分布（猪肉 / 果蔬切换，近 7 日）
+  // 图② 退货产品分布（按 KG / 按非 KG 切换，近 7 日）
   renderReturnRing();
   // 图③ 产品生产趋势（白条头数柱 + 猪肉/果蔬重量线，组合图，占满整行）
   renderProductionCombo();
@@ -240,17 +260,22 @@ function renderAll() {
   renderLossMulti();
 }
 
-/** 图① 产品需求分布：按当前 tab 渲染对应产品名构成，猪肉 / 果蔬均取需求最高 TOP5、其余归「其他」。 */
+/** 按产品单位维度过滤：product_unit='kg' 视为 KG，其余 / 空视为非 KG。 */
+function filterByUnit(raw: ChartSeriesItem[] | undefined, unitTab: 'kg' | 'nonkg'): ChartSeriesItem[] {
+  return (raw ?? []).filter((it) => (String(it.unit ?? '').toLowerCase() === 'kg') === (unitTab === 'kg'));
+}
+
+/** 图① 产品需求分布：先按维度一（猪肉/果蔬）取分布，再按维度二（KG/非 KG）过滤，取需求最高 TOP5、其余归「其他」。 */
 function renderDemandPie() {
   const raw = demandTab.value === 'pork' ? charts.value?.demandPork : charts.value?.demandVeg;
-  const data = top5WithOther(raw);
+  const data = top5WithOther(filterByUnit(raw, demandUnitTab.value));
   renderPie(demandPieEl, () => (demandPie ??= echarts.init(demandPieEl.value!)), data, t('warehouse.dashboard.chartDemandPie'));
 }
 
-/** 图② 退货环：按当前 tab（猪肉全量 / 果蔬 TOP5 归其他）渲染对应产品名构成。 */
+/** 图② 退货环：先按维度一（猪肉/果蔬）取分布，再按维度二（KG/非 KG）过滤，取退货最高 TOP5、其余归「其他」。 */
 function renderReturnRing() {
   const raw = returnTab.value === 'pork' ? charts.value?.returnPork : charts.value?.returnVegetable;
-  const data = returnTab.value === 'vegetable' ? top5WithOther(raw) : raw;
+  const data = top5WithOther(filterByUnit(raw, returnUnitTab.value));
   renderRing(returnRingEl, () => (returnRing ??= echarts.init(returnRingEl.value!)), data, t('warehouse.dashboard.chartReturnRing'));
 }
 
@@ -266,7 +291,23 @@ function renderProductionCombo() {
   const namePork = t('warehouse.dashboard.seriesPorkWeight');
   const nameVeg = t('warehouse.dashboard.seriesVegWeight');
   chart.setOption({
-    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'cross' },
+      // 白条头数系列显「原值+头」；两条重量线显「3 位小数 + KG」（流程性问题 row45）。
+      formatter: (params: unknown): string => {
+        const arr = (Array.isArray(params) ? params : [params]) as TrendTooltipParam[];
+        if (arr.length === 0) return '';
+        const uHead = t('warehouse.dashboard.unitHead');
+        const uKg = t('warehouse.dashboard.unitKg');
+        const lines = [arr[0].axisValue];
+        for (const p of arr) {
+          const valText = p.seriesName === nameHead ? `${p.value}${uHead}` : `${Number(p.value).toFixed(3)} ${uKg}`;
+          lines.push(`${p.marker}${p.seriesName}：${valText}`);
+        }
+        return lines.join('<br/>');
+      }
+    },
     legend: { bottom: 0, data: [nameHead, namePork, nameVeg] },
     grid: { left: 45, right: 45, top: 20, bottom: 40 },
     xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 11 } },
@@ -310,15 +351,20 @@ function renderLossMulti() {
   const namePork = t('warehouse.dashboard.seriesPorkLoss');
   const nameVeg = t('warehouse.dashboard.seriesVegLoss');
   chart.setOption({
-    tooltip: { trigger: 'axis' },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
     legend: { bottom: 0, data: [namePork, nameVeg] },
-    grid: { left: 50, right: 20, top: 20, bottom: 40 },
+    grid: { left: 50, right: 50, top: 20, bottom: 40 },
     xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 11 } },
-    yAxis: { type: 'value' },
+    // 双竖轴：左轴猪肉损耗量 / 右轴果蔬损耗量，各自独立缩放（流程性问题 row76）。
+    yAxis: [
+      { type: 'value', name: namePork, position: 'left', nameTextStyle: { color: '#5b8ff9' }, axisLine: { show: true, lineStyle: { color: '#5b8ff9' } } },
+      { type: 'value', name: nameVeg, position: 'right', nameTextStyle: { color: '#73d13d' }, axisLine: { show: true, lineStyle: { color: '#73d13d' } } }
+    ],
     series: [
       {
         name: namePork,
         type: 'line',
+        yAxisIndex: 0,
         smooth: true,
         symbol: 'circle',
         lineStyle: { color: '#5b8ff9' },
@@ -328,6 +374,7 @@ function renderLossMulti() {
       {
         name: nameVeg,
         type: 'line',
+        yAxisIndex: 1,
         smooth: true,
         symbol: 'circle',
         lineStyle: { color: '#73d13d' },
@@ -407,10 +454,12 @@ function handleResize() {
   [demandPie, returnRing, productionTrend, checkPie, lossTrend].forEach((c) => c?.resize());
 }
 
-// 需求饼 tab 切换 → 仅重渲染该饼图
+// 需求饼 维度一 / 维度二 切换 → 仅重渲染该饼图
 watch(demandTab, () => renderDemandPie());
-// 退货环 tab 切换 → 仅重渲染该环图
+watch(demandUnitTab, () => renderDemandPie());
+// 退货环 维度一 / 维度二 切换 → 仅重渲染该环图
 watch(returnTab, () => renderReturnRing());
+watch(returnUnitTab, () => renderReturnRing());
 
 onMounted(async () => {
   await loadAll();
@@ -495,6 +544,12 @@ onUnmounted(() => {
   }
 
   .chart-card {
+    .chart-unit-switch {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
     .chart-canvas {
       width: 100%;
       height: 280px;

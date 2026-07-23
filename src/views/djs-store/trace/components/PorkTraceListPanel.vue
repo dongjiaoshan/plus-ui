@@ -85,7 +85,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productName', label: t('storeTrace.pork.codeProductName'), minWidth: 110, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), width: 90, align: 'center' },
   { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), width: 90, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
-  { prop: 'pigEarNo', label: t('storeTrace.pork.pigEarNo'), minWidth: 200, align: 'center', showOverflowTooltip: true },
+  { prop: 'pigEarNo', label: t('storeTrace.pork.pigEarNo'), width: 180, align: 'center', showOverflowTooltip: true },
   { prop: 'createTime', label: t('storeTrace.pork.createTime'), width: 160, align: 'center', formatter: 'datetime' }
 ]);
 

@@ -65,6 +65,8 @@ export interface PickDetailVO {
   /** 采摘日期 yyyy-MM-dd。 */
   pickDate?: string;
   cropName?: string;
+  /** 统计来源：1=毛菜处理间 2=采摘活动。 */
+  statSource?: string;
   /** 地块编号。 */
   plotCode?: string;
   /** 采摘量（kg）。 */
@@ -81,6 +83,8 @@ export interface PickDetailQuery {
   cropName?: string;
   /** 采摘班组 id。 */
   teamId?: number | string;
+  /** 统计来源：1=毛菜处理间 2=采摘活动。 */
+  statSource?: string;
   pageNum?: number;
   pageSize?: number;
 }
