@@ -92,7 +92,7 @@ import ProductDetailDialog from './components/ProductDetailDialog.vue';
 import { listStoreDemand, removeStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
 import type { StoreDemandVO } from '@/api/djs-store/demand/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
-import { formatWeightByBelong } from '@/utils/weight';
+import { formatWeightByBelong, isKgUnit } from '@/utils/weight';
 import { nextMonthRange } from '@/utils/ruoyi';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
@@ -135,10 +135,13 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('storeDemand.column.demandQuantity'),
     minWidth: 110,
     align: 'center',
-    // 89-1：后端返 BigDecimal（3 位小数），需求量取整展示，无值显 '—'
+    // 后端返 BigDecimal，按单位分流：kg 保留 3 位小数，非 kg 取整；无值显 '—'
     formatter: (row: BizRow) => {
-      const v = (row as StoreDemandVO).demandQuantity;
-      return v == null || v === '' ? '—' : String(Math.round(Number(v)));
+      const r = row as StoreDemandVO;
+      const v = r.demandQuantity;
+      if (v == null || v === '') return '—';
+      const n = Number(v);
+      return isKgUnit(r.productUnit) ? n.toFixed(3) : String(Math.round(n));
     }
   },
   { prop: 'productUnit', label: t('storeDemand.column.productUnit'), minWidth: 110, align: 'center' },

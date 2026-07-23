@@ -3262,8 +3262,9 @@ export default {
     kpi: {
       pigDemand: 'Tomorrow Pig Demand',
       assigned: 'Assigned',
-      vegDemand: 'Tomorrow Veg Demand',
-      otherDemand: 'Other Demand',
+      porkDemand: 'Tomorrow Pork Product Demand',
+      vegDemand: 'Tomorrow Veg Product Demand',
+      otherDemand: 'Other Product Demand',
       unitHead: 'head',
       unitSpecies: 'species',
       unitItem: 'item'

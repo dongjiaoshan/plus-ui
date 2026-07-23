@@ -27,10 +27,12 @@ const { t } = useI18n();
 
 const kpi = ref<DemandTodayKpiVO | null>(null);
 
-/** 6 张卡片：明日猪需求/已调配 + 明日果蔬需求/已调配 + 其他需求/已调配（label + 数值 + 单位）。 */
+/** 8 张卡片：明日猪需求/已调配 + 明日猪肉产品需求/已调配 + 明日果蔬需求/已调配 + 其他需求/已调配（label + 数值 + 单位）。 */
 const kpiCards = computed<Array<{ key: string; label: string; value: number | undefined | null; unit: string }>>(() => [
   { key: 'pigDemand', label: t('demand.kpi.pigDemand'), value: kpi.value?.todayPigDemand, unit: t('demand.kpi.unitHead') },
   { key: 'pigAssigned', label: t('demand.kpi.assigned'), value: kpi.value?.todayPigAssigned, unit: t('demand.kpi.unitHead') },
+  { key: 'porkDemand', label: t('demand.kpi.porkDemand'), value: kpi.value?.todayPorkDemand, unit: t('demand.kpi.unitItem') },
+  { key: 'porkAssigned', label: t('demand.kpi.assigned'), value: kpi.value?.todayPorkAssigned, unit: t('demand.kpi.unitItem') },
   { key: 'vegDemand', label: t('demand.kpi.vegDemand'), value: kpi.value?.todayVegSpeciesDemand, unit: t('demand.kpi.unitSpecies') },
   { key: 'vegAssigned', label: t('demand.kpi.assigned'), value: kpi.value?.todayVegSpeciesAssigned, unit: t('demand.kpi.unitSpecies') },
   { key: 'otherDemand', label: t('demand.kpi.otherDemand'), value: kpi.value?.todayOtherDemand, unit: t('demand.kpi.unitItem') },

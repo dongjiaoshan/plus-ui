@@ -116,6 +116,7 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (row: BizRow) => (row as ProductProductionGroupVO).materialName || '-'
   },
   // 原材料消耗量：该组 SUM(material_consume)（无配料则 0/空）
+  // 按原材料单位分流：kg（含公斤）保留三位小数，其余（枚/份/袋等）取整——与产品明细子弹框同口径
   {
     prop: 'materialConsume',
     label: t('djs.warehouse.production.column.materialConsumeQty'),
@@ -123,7 +124,9 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => {
       const r = row as ProductProductionGroupVO;
-      return r.materialConsume === undefined || r.materialConsume === null ? '-' : String(r.materialConsume);
+      if (r.materialConsume === undefined || r.materialConsume === null) return '-';
+      const n = Number(r.materialConsume);
+      return isKgUnit(r.materialUnit) ? n.toFixed(3) : String(Math.round(n));
     }
   },
   // 原材料单位：material_id → product_unit（后端聚合回填）

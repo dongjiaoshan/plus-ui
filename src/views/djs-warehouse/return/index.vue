@@ -51,7 +51,7 @@
         </el-table-column>
         <el-table-column prop="productUnit" :label="t('storeReturn.column.unit')" min-width="80" align="center" />
         <el-table-column prop="goodsWeight" :label="t('storeReturn.column.storeReturnWeight')" min-width="120" align="center">
-          <template #default="{ row }">{{ formatWeight(row.goodsWeight) }}</template>
+          <template #default="{ row }">{{ formatStoreReturnWeight(row) }}</template>
         </el-table-column>
         <el-table-column prop="receivedWeight" :label="t('storeReturn.column.receivedWeight')" min-width="110" align="center">
           <template #default="{ row }">{{ formatWeight(row.receivedWeight) }}</template>
@@ -82,7 +82,7 @@ import type { StoreVO } from '@/api/djs-common/store/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { lastMonthRange } from '@/utils/ruoyi';
-import { formatQtyByUnit } from '@/utils/weight';
+import { formatQtyByUnit, isKgUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -136,6 +136,15 @@ const columns = computed<BizTableColumn[]>(() => [
 // 重量列统一带 kg 单位展示（空值 —）
 function formatWeight(v: number | undefined | null): string {
   return v === undefined || v === null ? '—' : `${v}kg`;
+}
+
+// 门店退回重量：份/盒等非 kg 单位产品门店未录重量（空或 0）→ 显 —（未录入），kg 产品保持原样（row70）
+function formatStoreReturnWeight(row: StoreReturnVO): string {
+  const w = row.goodsWeight;
+  if (!isKgUnit(row.productUnit) && (w === undefined || w === null || Number(w) === 0)) {
+    return '—';
+  }
+  return formatWeight(w);
 }
 
 async function loadStoreOptions() {

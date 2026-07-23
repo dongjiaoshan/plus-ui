@@ -63,7 +63,7 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listProductionItems } from '@/api/djs-warehouse/production';
 import type { ProductProductionGroupVO, ProductProductionQuery, ProductProductionVO } from '@/api/djs-warehouse/production/types';
-import { formatWeightByBelong } from '@/utils/weight';
+import { formatQtyByUnit, formatWeightByBelong } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 import TraceLabelDialog from '@/views/djs-store/trace/components/TraceLabelDialog.vue';
 import { traceTypeFromCode } from '@/views/djs-store/trace/components/traceType';
@@ -131,7 +131,7 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => {
       const r = row as ProductProductionVO;
-      return r.materialConsume === undefined || r.materialConsume === null ? '-' : String(r.materialConsume);
+      return formatQtyByUnit(r.materialConsume, r.materialUnit) || '-';
     }
   },
   {

@@ -3265,8 +3265,9 @@ export default {
     kpi: {
       pigDemand: '明日猪需求',
       assigned: '已调配',
-      vegDemand: '明日果蔬需求',
-      otherDemand: '其他需求',
+      porkDemand: '明日猪肉产品需求',
+      vegDemand: '明日果蔬产品需求',
+      otherDemand: '其他产品需求',
       unitHead: '头',
       unitSpecies: '品种',
       unitItem: '条'

@@ -15,7 +15,7 @@ export const listStoreLoss = (query: StoreLossQuery): AxiosPromise<StoreLossReco
 
 /**
  * 当日某门店白条分割损耗（门店盘点「当日白条分割损耗」展示，口径同定时任务）。
- * splitLoss = max(0, 白条到店重 − 白条退回产品入库重)；退回入库重来自门店退货入库流水 t_store_return。
+ * splitLoss = max(0, 白条到店重 + 材料外售同产品到店重 − 白条退回产品入库重)；退回入库重来自门店退货入库流水 t_store_return。
  * arriveWeight=0（无白条到店）时前端不显示该块。
  */
 export const getWhiteBarSplitLoss = (storeId: string, date?: string): AxiosPromise<WhiteBarSplitLossVO> =>
