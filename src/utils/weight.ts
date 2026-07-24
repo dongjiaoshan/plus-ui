@@ -72,6 +72,23 @@ export function formatQtyByUnit(value: number | string | null | undefined, unit:
 }
 
 /**
+ * 白条产品需求量 → 「头」数展示（去尾零，不带单位文本）。
+ * 白条按「头」计：产品名含「半」（半扇 / 半只）每单位折 0.5 头，否则 1 头；需求量为件数 × 每件头数。
+ * 口径与需求管理列表 KPI 一致（0.5 → '0.5'，22 → '22'，不补三位小数）。
+ * @example formatWhiteBarHeads(1, '半扇') // '0.5'   formatWhiteBarHeads(2, '整头白条') // '2'
+ * @returns 头数文本；无效值（null / undefined / '' / NaN）返回 ''，由调用方决定空值占位符。
+ */
+export function formatWhiteBarHeads(
+  value: number | string | null | undefined,
+  productName: string | null | undefined
+): string {
+  const n = toNumber(value);
+  if (n === null) return '';
+  const perUnit = (productName ?? '').includes('半') ? 0.5 : 1;
+  return (n * perUnit).toLocaleString('en-US', { maximumFractionDigits: 3, useGrouping: false });
+}
+
+/**
  * 按业务归属类型选择单位口径。
  * @param belongType 业务归属类型；'white_bar'（白条）→ 保留 kg，其余 → 转克。
  * @example formatWeightByBelong(1.2, 'white_bar') // '1.20 kg'

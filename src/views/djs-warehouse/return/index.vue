@@ -41,7 +41,7 @@
       destroy-on-close
       append-to-body
       :close-on-click-modal="true"
-      width="900px"
+      width="1000px"
     >
       <div v-if="currentDaily" class="mb-2 text-gray-500">{{ currentDaily.storeName }} · {{ currentDaily.returnDate }}</div>
       <el-table v-loading="detailLoading" :data="detailRows" border height="460">
@@ -65,7 +65,6 @@
           <template #default="{ row }">{{ row.locationName || '—' }}</template>
         </el-table-column>
         <el-table-column prop="confirmTime" :label="t('djs.warehouse.return.confirmTime')" min-width="160" align="center" />
-        <el-table-column prop="returnReason" :label="t('storeReturn.column.returnReason')" min-width="120" align="center" show-overflow-tooltip />
       </el-table>
     </el-dialog>
   </div>

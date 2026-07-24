@@ -46,6 +46,7 @@
               v-model="row.inboundQty"
               :min="0"
               :precision="kgPrecision(row)"
+              :step="kgStep(row)"
               :controls="false"
               class="cell-num"
               @change="recalc(row)"
@@ -56,19 +57,13 @@
         <!-- 销售：手动 -->
         <el-table-column :label="t('storeLedger.column.saleQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.saleQty" :min="0" :precision="kgPrecision(row)" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number v-model="row.saleQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 赠送：手动 -->
         <el-table-column :label="t('storeLedger.column.giftQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.giftQty" :min="0" :precision="kgPrecision(row)" :controls="false" class="cell-num" @change="recalc(row)" />
-          </template>
-        </el-table-column>
-        <!-- 退货（顾客退货）：手动 -->
-        <el-table-column :label="t('storeLedger.column.returnQty')" width="100" align="center" header-align="center">
-          <template #default="{ row }">
-            <el-input-number v-model="row.returnSaleQty" :min="0" :precision="kgPrecision(row)" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number v-model="row.giftQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 退回（门店退回仓库）：只读 -->
@@ -80,7 +75,7 @@
         <!-- 期末：手动实盘录入 -->
         <el-table-column :label="t('storeLedger.column.closingQty')" width="100" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.closingQty" :min="0" :precision="kgPrecision(row)" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number v-model="row.closingQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 损耗：只读（后端公式计算，前端同步展示） -->
@@ -221,6 +216,11 @@ function fmtQty(value: number | string | null | undefined, row: { productUnit?: 
 /** 可编辑量输入框小数位：产品单位为 kg（白条按重量盘点）→ 3 位小数；否则（份 / 盒等）0 位整数。 */
 function kgPrecision(row: { productUnit?: string }): number {
   return isWeightRow(row) ? 3 : 0;
+}
+
+/** 可编辑量输入框步进：重量行 0.001（与 precision=3 对齐，保证末位小数可录）；计件行 1。 */
+function kgStep(row: { productUnit?: string }): number {
+  return isWeightRow(row) ? 0.001 : 1;
 }
 
 /** 损耗 = 期初 + 入库 − 销售 − 赠送 + 退货 − 退回 − 期末（与后端公式一致）。 */

@@ -67,23 +67,25 @@
       </div>
 
       <el-table v-loading="loading" :data="list" border :empty-text="t('demand.confirmPage.empty')">
-        <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="120" align="center" header-align="center" show-overflow-tooltip />
-        <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" min-width="120" align="center" header-align="center" show-overflow-tooltip />
-        <!-- 需求日期列（row196）：本抽屉锁定单一需求日期，逐行显式展示 demand_date，避免把「需求最终确认时间」误读成需求日期（次日预约单常见：确认于前一天、需求日期为次日）。 -->
-        <el-table-column :label="t('demand.confirmPage.column.demandDate')" prop="demandDate" min-width="110" align="center" header-align="center" />
-        <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center" header-align="center">
-          <template #default="{ row }">{{ formatQty(row.demandQuantity, row.productUnit) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('demand.confirmPage.column.productUnit')" prop="productUnit" width="70" align="center" header-align="center" />
-        <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
-          <template #default="{ row }">{{ storeNameOf(row) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="120" align="center" header-align="center" show-overflow-tooltip />
         <el-table-column :label="t('demand.confirmPage.column.demandStatus')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <el-tag :type="storeStatusTagType(row.demandStatus)" effect="light">{{ storeStatusLabel(row.demandStatus) }}</el-tag>
           </template>
         </el-table-column>
+        <!-- 需求日期列（row196）：本抽屉锁定单一需求日期，逐行显式展示 demand_date，避免把「需求最终确认时间」误读成需求日期（次日预约单常见：确认于前一天、需求日期为次日）。 -->
+        <el-table-column :label="t('demand.confirmPage.column.demandDate')" prop="demandDate" min-width="110" align="center" header-align="center" />
+        <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="120" align="center" header-align="center" show-overflow-tooltip />
+        <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" min-width="120" align="center" header-align="center" show-overflow-tooltip />
+        <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center" header-align="center">
+          <template #default="{ row }">{{ productType === 'white_bar' ? formatWhiteBarHeads(row.demandQuantity, row.productName) : formatQty(row.demandQuantity, row.productUnit) }}</template>
+        </el-table-column>
+        <el-table-column :label="t('demand.confirmPage.column.productUnit')" width="70" align="center" header-align="center">
+          <template #default="{ row }">{{ productType === 'white_bar' ? t('demand.kpi.unitHead') : (row.productUnit || '-') }}</template>
+        </el-table-column>
+        <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
+          <template #default="{ row }">{{ storeNameOf(row) }}</template>
+        </el-table-column>
+        <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="120" align="center" header-align="center" show-overflow-tooltip />
         <el-table-column :label="t('demand.confirmPage.column.confirmerTime')" prop="confirmerTime" min-width="120" align="center" header-align="center">
           <template #default="{ row }">{{ row.confirmerTime ? proxy?.parseTime?.(row.confirmerTime) : '—' }}</template>
         </el-table-column>
@@ -120,7 +122,7 @@
 <script setup name="DemandConfirmDrawer" lang="ts">
 import { useI18n } from 'vue-i18n';
 import { Refresh } from '@element-plus/icons-vue';
-import { isKgUnit } from '@/utils/weight';
+import { isKgUnit, formatWhiteBarHeads } from '@/utils/weight';
 import PigAssignDialog from './PigAssignDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
 import { confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';

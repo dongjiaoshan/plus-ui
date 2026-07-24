@@ -119,9 +119,9 @@
           <div v-if="!(mini && kind !== 'gift' && !shouldUnitByCopies)" class="panel-label">
             {{
               kind === 'gift'
-                ? t('djs.warehouse.packEntry.packBoxCount')
-                : shouldUnitByCopies
-                  ? t('djs.warehouse.packEntry.packCopies')
+                ? t('djs.warehouse.packEntry.packAmount')
+                : dryNonKgAmountMode
+                  ? t('djs.warehouse.packEntry.packAmount')
                   : t('djs.warehouse.packEntry.productWeight')
             }}
           </div>
@@ -136,8 +136,8 @@
           <WeightNumpad
             v-else-if="kind === 'gift'"
             v-model="form.packBoxCount"
-            :placeholder="t('djs.warehouse.packEntry.packBoxCount')"
-            :unit="t('djs.warehouse.packEntry.box')"
+            :placeholder="t('djs.warehouse.packEntry.packAmount')"
+            :unit="selectedProduct?.productUnit || t('djs.warehouse.packEntry.box')"
             :precision="0"
           />
           <WeightNumpad
@@ -560,6 +560,9 @@ const selectedPlotId = ref<number | string | ''>('');
 /** 外购无地块来源（plotId==null）的「无地块信息」选项哨兵 value（doc#13）；选中时提交不带 plotId。 */
 const NO_PLOT_SENTINEL = '__no_plot__';
 
+/** 无耳号猪肉（外购/无耳标，earNo==null）的「无耳号」选项哨兵 value（镜像 NO_PLOT_SENTINEL）；选中时按无耳号来源解析、追溯不打印耳号。 */
+const NO_EAR_SENTINEL = '__no_ear__';
+
 const plotToggleOptions = computed<{ value: number | string; label: string }[]>(() => {
   if (!props.plotGroup) return [];
   const seen = new Map<string, { value: number | string; label: string }>();
@@ -702,10 +705,11 @@ const wipStockMap = computed<Record<string, number | null>>(() => {
   //        （不只覆盖当前选中卡）——同料多品的领用剩余重量必须一致，都随所选耳号联动（客户 2026-07-21）。
   if (props.earGroup && selectedEarNo.value && selectedProduct.value) {
     const matId = effectiveMaterialId(selectedProduct.value);
+    const isNoEar = selectedEarNo.value === NO_EAR_SENTINEL;
     let earWeight = 0;
     effectiveSources.value.forEach((s) => {
       if (String(s.productId) !== matId) return;
-      if (String(s.earNo) !== String(selectedEarNo.value)) return;
+      if (isNoEar ? !!s.earNo : String(s.earNo) !== String(selectedEarNo.value)) return;
       earWeight += Number(s.productWeight) || 0;
     });
     const earVal = Math.round(earWeight * 1000) / 1000;
@@ -805,16 +809,25 @@ const earToggleOptions = computed<{ value: number | string; label: string }[]>((
   // admin row18：未选左侧产品（无 matId）时右侧不显示任何猪只耳号——两边都应空，选了产品才按其原材料列耳号。
   if (!matId) return [];
   const seen = new Map<string, { value: number | string; label: string }>();
+  let hasNoEar = false;
   effectiveSources.value.forEach((s) => {
-    if (!s.earNo) return;
     // 已选目标产品时，耳号只列该产品有效原材料的来源（成品→原材料 / 成品即原材料），避免来源歧义
     if (String(s.productId) !== matId) return;
+    // 无耳号猪肉（外购/无耳标）聚合成单个「无耳号」可选项（镜像 plotToggleOptions 的 hasNoPlot），不再过滤丢弃
+    if (!s.earNo) {
+      hasNoEar = true;
+      return;
+    }
     const key = String(s.earNo);
     if (!seen.has(key)) {
       seen.set(key, { value: s.earNo, label: s.earNo });
     }
   });
-  return Array.from(seen.values());
+  const opts = Array.from(seen.values());
+  if (hasNoEar) {
+    opts.push({ value: NO_EAR_SENTINEL, label: t('djs.warehouse.packEntry.noEarInfo') });
+  }
+  return opts;
 });
 
 // 124#4：肉品打包耳号默认选中一个——耳号选项就绪且尚未选时，自动选第一个并解析来源（onEarChange）。
@@ -843,7 +856,10 @@ const displaySources = computed(() => {
     }
   }
   if (props.earGroup && selectedEarNo.value) {
-    list = list.filter((s) => String(s.earNo) === String(selectedEarNo.value));
+    list =
+      selectedEarNo.value === NO_EAR_SENTINEL
+        ? list.filter((s) => !s.earNo)
+        : list.filter((s) => String(s.earNo) === String(selectedEarNo.value));
   }
   return list;
 });
@@ -888,7 +904,10 @@ watch([selectedPlotId, () => form.value.productId], () => {
 // 成品→原材料(N:1) 或 成品即原材料，按有效原材料 id 匹配来源；无匹配则清空。
 function onEarChange() {
   const matId = materialIdOf(form.value.productId);
-  const earSrc = effectiveSources.value.find((x) => String(x.earNo) === String(selectedEarNo.value) && (!matId || String(x.productId) === matId));
+  const isNoEar = selectedEarNo.value === NO_EAR_SENTINEL;
+  const earSrc = effectiveSources.value.find(
+    (x) => (isNoEar ? !x.earNo : String(x.earNo) === String(selectedEarNo.value)) && (!matId || String(x.productId) === matId)
+  );
   form.value.sourceInhouseId = earSrc ? earSrc.id : '';
 }
 
@@ -911,6 +930,11 @@ function isKgUnit(u?: string): boolean {
 }
 /** 当前选中成品的「领用来源原材料」单位：其他产品打包 wipStockUnitMap 给原料单位（鸡蛋=枚），回落 form.productUnit。 */
 const rawUnitOfSelected = computed<string>(() => wipStockUnitMap.value[String(form.value.productId)] || form.value.productUnit);
+/**
+ * row60：其他产品打包（dry 非礼盒/非肉品）且原材料单位非 kg（枚/份/袋…）→「打包量」计量模式。
+ * label 显「打包量」、单位显所选成品单位（而非原材料单位）。KG 原料（isKgUnit）走克(g)重量模式、label 保持「产品重量」。
+ */
+const dryNonKgAmountMode = computed<boolean>(() => dryReqMode.value && !!selectedProduct.value && !isKgUnit(rawUnitOfSelected.value));
 /**
  * 每份规格（每份消耗的原材料量）：优先 materialNum（30 枚礼盒=30）；为空时**仅当 productSpec 里的数字紧跟原料单位**
  * （如「8枚」原料=枚 → 8）才解析。防「5000g/袋」「5L/桶」这类规格（原料=袋/桶，数字是克/升不是每份袋数/桶数）
@@ -979,6 +1003,8 @@ const selectedUnit = computed<string>(() => {
   if (props.kind === 'veg') return 'g';
   // 124#6 / row29：肉品打包 + 其他产品 kg 重量模式录入单位显「g」（克），提交前 ÷1000 换算成 kg 落库（见 packWeightKg）
   if (effWeightInGram.value) return 'g';
+  // row60：其他产品打包（dry 非礼盒）原材料非 kg 时，单位显所选成品单位（份/盒/袋…），而非原材料单位
+  if (dryNonKgAmountMode.value) return selectedProduct.value?.productUnit || form.value.productUnit || t('djs.warehouse.packEntry.copiesUnit');
   if (shouldUnitByCopies.value) return t('djs.warehouse.packEntry.copiesUnit');
   // 肉品打包(earGroup) + 其他产品打包(dryReqMode) 均按「领用来源原材料」单位显示（排骨原料=kg），
   // 而非成品自身单位（成品「份」会把按重量录入的肉品错标成「份」）。
@@ -1215,7 +1241,7 @@ async function handleSubmit(printTrace: boolean) {
         const w = packWeightKg();
         const sel = products.value.find((p) => String(p.id) === String(form.value.productId));
         const storeName = stores.value.find((s) => String(s.id) === String(form.value.storeId))?.storeName;
-        const earNoStr = selectedEarNo.value ? String(selectedEarNo.value) : undefined;
+        const earNoStr = selectedEarNo.value && selectedEarNo.value !== NO_EAR_SENTINEL ? String(selectedEarNo.value) : undefined;
         const plotName = plotMap.value?.[String(selectedPlotId.value)] || undefined;
         traceLabelRef.value?.open(
           {

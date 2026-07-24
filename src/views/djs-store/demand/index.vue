@@ -92,7 +92,7 @@ import ProductDetailDialog from './components/ProductDetailDialog.vue';
 import { listStoreDemand, removeStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
 import type { StoreDemandVO } from '@/api/djs-store/demand/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
-import { formatWeightByBelong, isKgUnit } from '@/utils/weight';
+import { formatWeightByBelong, formatWhiteBarHeads, isKgUnit } from '@/utils/weight';
 import { nextMonthRange } from '@/utils/ruoyi';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
@@ -136,15 +136,27 @@ const columns = computed<BizTableColumn[]>(() => [
     minWidth: 110,
     align: 'center',
     // 后端返 BigDecimal，按单位分流：kg 保留 3 位小数，非 kg 取整；无值显 '—'
+    // row62：白条产品（product_type='white_bar'，名含「半」如半扇 → 每单位折 0.5）需求量按「头」展示，不留三位小数。
     formatter: (row: BizRow) => {
       const r = row as StoreDemandVO;
       const v = r.demandQuantity;
       if (v == null || v === '') return '—';
+      if (r.productType === 'white_bar') return formatWhiteBarHeads(v, r.productName);
       const n = Number(v);
       return isKgUnit(r.productUnit) ? n.toFixed(3) : String(Math.round(n));
     }
   },
-  { prop: 'productUnit', label: t('storeDemand.column.productUnit'), minWidth: 110, align: 'center' },
+  {
+    prop: 'productUnit',
+    label: t('storeDemand.column.productUnit'),
+    minWidth: 110,
+    align: 'center',
+    // row62：白条产品单位统一显「头」，其余显后端返回单位（无则占位 '-'）。
+    formatter: (row: BizRow) => {
+      const r = row as StoreDemandVO;
+      return r.productType === 'white_bar' ? t('demand.kpi.unitHead') : r.productUnit || '-';
+    }
+  },
   { prop: 'demandType', label: t('storeDemand.column.demandType'), minWidth: 110, align: 'center', dictType: 'djs_demand_mailing_type' },
   { prop: 'demandRemark', label: t('storeDemand.column.demandRemark'), minWidth: 130, align: 'center', showOverflowTooltip: true },
   {
