@@ -1,6 +1,35 @@
 <template>
   <el-dialog v-model="visible" :title="t('plantCrop.title.view')" destroy-on-close append-to-body width="1200px">
     <el-tabs v-model="activeTab">
+      <el-tab-pane :label="t('plantCrop.title.baseInfo')" name="info">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item :label="t('plantCrop.field.cropCode')">{{ data.cropCode || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.cropName')">{{ data.cropName || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.varietyName')">{{ data.varietyName || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.varietyOrigin')">{{ data.varietyOrigin || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.cropFamily')">
+            <dict-tag :options="djs_crop_family" :value="data.cropFamily" />
+          </el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.plantingSeason')">
+            <dict-tag :options="djs_planting_season" :value="data.plantingSeason" />
+          </el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.sowingPeriod')">{{ data.sowingPeriod || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.column.cycle')">{{ cycleText }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.predictedPer')">{{
+            data.predictedPer != null ? `${Number(data.predictedPer).toFixed(3)} kg/亩` : '-'
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.pickUnitPrice')">{{
+            data.pickUnitPrice != null ? `¥${data.pickUnitPrice}/斤` : '-'
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.relatedProduct')">{{ data.relatedProductName ?? '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.cropImageUrl')" :span="2">
+            <image-preview v-if="cropImageUrl" :src="cropImageUrl" :width="160" :height="120" />
+            <el-text v-else type="info">-</el-text>
+          </el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.qualityDesc')" :span="2">{{ data.qualityDesc || '-' }}</el-descriptions-item>
+        </el-descriptions>
+      </el-tab-pane>
+
       <el-tab-pane :label="t('plantCrop.tab.planting')" name="planting">
         <el-table :data="plantingList" v-loading="subLoading" border size="small" max-height="520">
           <el-table-column type="index" :label="t('plantCrop.sub.index')" width="55" align="center" />
@@ -13,11 +42,11 @@
           <el-table-column prop="predictedPer" :label="t('plantCrop.planting.predictedPer')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ row.predictedPer != null ? `${Number(row.predictedPer).toFixed(3)} kg/亩` : '-' }}</template>
           </el-table-column>
+          <el-table-column prop="actualYield" :label="t('plantCrop.planting.actualYield')" min-width="110" align="center" header-align="center">
+            <template #default="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(3)} kg` : '-' }}</template>
+          </el-table-column>
           <el-table-column prop="actualPer" :label="t('plantCrop.planting.actualPer')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ row.actualPer != null ? `${Number(row.actualPer).toFixed(3)} kg/亩` : '-' }}</template>
-          </el-table-column>
-          <el-table-column prop="earliestHarvestDate" :label="t('plantCrop.planting.earliestHarvestDate')" min-width="140" align="center" header-align="center">
-            <template #default="{ row }">{{ proxy?.parseTime?.(row.earliestHarvestDate, '{y}-{m}-{d}') || '-' }}</template>
           </el-table-column>
           <el-table-column prop="pickStartDate" :label="t('plantCrop.planting.pickStartDate')" min-width="120" align="center" header-align="center">
             <template #default="{ row }">{{ proxy?.parseTime?.(row.pickStartDate, '{y}-{m}-{d}') || '-' }}</template>
@@ -51,35 +80,6 @@
           </template>
         </el-table>
       </el-tab-pane>
-
-      <el-tab-pane :label="t('plantCrop.title.baseInfo')" name="info">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item :label="t('plantCrop.field.cropCode')">{{ data.cropCode || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.cropName')">{{ data.cropName || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.varietyName')">{{ data.varietyName || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.varietyOrigin')">{{ data.varietyOrigin || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.cropFamily')">
-            <dict-tag :options="djs_crop_family" :value="data.cropFamily" />
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.plantingSeason')">
-            <dict-tag :options="djs_planting_season" :value="data.plantingSeason" />
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.sowingPeriod')">{{ data.sowingPeriod || '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.column.cycle')">{{ cycleText }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.predictedPer')">{{
-            data.predictedPer != null ? `${Number(data.predictedPer).toFixed(3)} kg/亩` : '-'
-          }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.pickUnitPrice')">{{
-            data.pickUnitPrice != null ? `¥${data.pickUnitPrice}/斤` : '-'
-          }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.relatedProduct')">{{ data.relatedProductName ?? '-' }}</el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.cropImageUrl')" :span="2">
-            <image-preview v-if="cropImageUrl" :src="cropImageUrl" :width="160" :height="120" />
-            <el-text v-else type="info">-</el-text>
-          </el-descriptions-item>
-          <el-descriptions-item :label="t('plantCrop.field.qualityDesc')" :span="2">{{ data.qualityDesc || '-' }}</el-descriptions-item>
-        </el-descriptions>
-      </el-tab-pane>
     </el-tabs>
 
     <template #footer>
@@ -101,7 +101,7 @@ const { djs_crop_family, djs_planting_season, djs_farm_work_type } = toRefs<any>
 );
 
 const visible = ref(false);
-const activeTab = ref('planting');
+const activeTab = ref('info');
 const data = ref<Partial<CropInfoVO>>({});
 const cropImageUrl = ref<string>('');
 const plantingList = ref<CropPlantingRecordVO[]>([]);
@@ -119,7 +119,7 @@ const open = async (id: number | string) => {
   cropImageUrl.value = '';
   plantingList.value = [];
   farmworkList.value = [];
-  activeTab.value = 'planting';
+  activeTab.value = 'info';
   visible.value = true;
   // 单图展示：优先后端 resolver 已回填的 imageUrl（public url）；
   // 否则用单 ossId（cropImagePreview 新口径，兼容旧 imageOssId / cropImageUrl 首图）回查 url

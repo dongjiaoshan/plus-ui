@@ -60,7 +60,7 @@
 /**
  * 片区管理独立列表页（FIX-PLT-AD-ZONE-001）。
  *
- * 8 列：片区名称 / 片区说明 / 所属大区 / 管理地块数量 / 状态 / 更新时间 / 更新人员 / 操作。
+ * 8 列：片区名称 / 所属大区 / 管理地块数量 / 状态 / 片区说明 / 更新时间 / 更新人员 / 操作。
  * 3 筛选：片区名称 / 更新时间（daterange）/ 更新人员（select → updateBy 用户 ID）。
  * 行操作（文字链接常显）：修改信息 / 禁用 / 删除（含 has_plot 级联保护）。
  */
@@ -110,10 +110,10 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 // 全列改用 minWidth（弹性列），让 Element Plus 在表格剩余宽度内按比例平均分配，避免固定 width 列纹丝不动导致名称/说明两列过宽、其余偏窄的不均匀问题。
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'zoneName', label: t('plantZone.column.zoneName'), minWidth: 140, showOverflowTooltip: true },
-  { prop: 'zoneDesc', label: t('plantZone.column.zoneDesc'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'zoneBelong', label: t('plantZone.column.zoneBelong'), minWidth: 140, align: 'center', dictType: 'djs_zone_belong', showOverflowTooltip: true },
   { prop: 'plotCount', label: t('plantZone.column.plotCount'), minWidth: 140, align: 'center' },
   { prop: 'zoneStatus', label: t('plantZone.column.zoneStatus'), minWidth: 140, align: 'center' },
+  { prop: 'zoneDesc', label: t('plantZone.column.zoneDesc'), minWidth: 140, showOverflowTooltip: true },
   { prop: 'updateTime', label: t('plantZone.column.updateTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'updateByName', label: t('plantZone.column.updateByName'), minWidth: 140, align: 'center' }
 ]);

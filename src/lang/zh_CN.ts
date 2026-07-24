@@ -40,7 +40,8 @@ export default {
     jobName: {
       'breed-aggregate': '养殖统计聚合',
       'warehouse-stat': '仓库统计聚合',
-      'organic-warning': '有机证书到期预警'
+      'organic-warning': '有机证书到期预警',
+      'store-loss': '门店损耗'
     },
     status: {
       running: '执行中',
@@ -1768,6 +1769,7 @@ export default {
       cropCertNo: '证书编号',
       cropCertCompany: '颁发单位',
       cropCertValid: '有效期',
+      cropCount: '关联作物数量',
       cropName: '关联作物',
       image: '证书图',
       warning: '预警状态',
@@ -1839,9 +1841,10 @@ export default {
       plotName: '种植地块',
       plotCode: '地块编码',
       plantTeamName: '种植班组',
-      predictedPer: '预计亩产(kg)',
+      predictedPer: '预计亩产',
       earliestHarvestDate: '预计最早采摘日期',
-      actualPer: '实际亩产(kg)',
+      actualYield: '实际产量(kg)',
+      actualPer: '实际亩产',
       pickStartDate: '采摘开始日期',
       pickEndDate: '采摘结束日期',
       pickTeamName: '采摘班组',

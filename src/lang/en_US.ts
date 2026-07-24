@@ -40,7 +40,8 @@ export default {
     jobName: {
       'breed-aggregate': 'Breeding stats aggregate',
       'warehouse-stat': 'Warehouse stats aggregate',
-      'organic-warning': 'Organic cert expiry warning'
+      'organic-warning': 'Organic cert expiry warning',
+      'store-loss': 'Store loss'
     },
     status: {
       running: 'Running',
@@ -1765,6 +1766,7 @@ export default {
       cropCertNo: 'Cert No.',
       cropCertCompany: 'Issuer',
       cropCertValid: 'Valid Until',
+      cropCount: 'Crop Count',
       cropName: 'Crop',
       image: 'Image',
       warning: 'Warning',
@@ -1836,9 +1838,10 @@ export default {
       plotName: 'Plot',
       plotCode: 'Plot Code',
       plantTeamName: 'Planting Team',
-      predictedPer: 'Expected Yield (kg)',
+      predictedPer: 'Expected Yield/mu',
       earliestHarvestDate: 'Earliest Harvest Date',
-      actualPer: 'Actual Yield (kg)',
+      actualYield: 'Actual Output (kg)',
+      actualPer: 'Actual Yield/mu',
       pickStartDate: 'Pick Start Date',
       pickEndDate: 'Pick End Date',
       pickTeamName: 'Harvest Team',

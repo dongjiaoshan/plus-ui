@@ -34,6 +34,9 @@
         />
         <span v-else class="text-gray-400">—</span>
       </template>
+      <template #cell-cropCount="{ row }">
+        {{ row.relatedCrops?.length ?? 0 }}
+      </template>
       <template #cell-cropName="{ row }">
         <template v-if="row.relatedCrops && row.relatedCrops.length > 0">
           {{ relatedCropNames(row.relatedCrops) }}
@@ -99,6 +102,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropCertCompany', label: t('plantCropOrganic.column.cropCertCompany'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'cropCertNo', label: t('plantCropOrganic.column.cropCertNo'), minWidth: 160, showOverflowTooltip: true },
   { prop: 'cropCertValid', label: t('plantCropOrganic.column.cropCertValid'), minWidth: 120, align: 'center' },
+  { prop: 'cropCount', label: t('plantCropOrganic.column.cropCount'), minWidth: 110, align: 'center' },
   { prop: 'cropName', label: t('plantCropOrganic.column.cropName'), minWidth: 180, showOverflowTooltip: true },
   { prop: 'updateTime', label: t('plantCropOrganic.column.updateTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'updateByName', label: t('plantCropOrganic.column.updateByName'), minWidth: 120, align: 'center' }

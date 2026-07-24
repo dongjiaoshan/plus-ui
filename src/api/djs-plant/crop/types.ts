@@ -101,7 +101,9 @@ export interface CropPlantingRecordVO {
   predictedPer?: number | string;
   /** 预计最早采摘日期 */
   earliestHarvestDate?: string;
-  /** 实际亩产 kg/亩 */
+  /** 实际产量 kg（明细采摘累计 actual_yield） */
+  actualYield?: number | string;
+  /** 实际亩产 kg/亩 = actual_yield / plot_area */
   actualPer?: number | string;
   /** 采摘开始日期 */
   pickStartDate?: string;
