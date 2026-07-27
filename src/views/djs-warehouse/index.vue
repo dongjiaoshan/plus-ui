@@ -62,8 +62,8 @@
           </template>
           <div class="chart-unit-switch">
             <el-radio-group v-model="demandUnitTab" size="small">
-              <el-radio-button value="kg">{{ t('warehouse.dashboard.demandTabKg') }}</el-radio-button>
               <el-radio-button value="nonkg">{{ t('warehouse.dashboard.demandTabNonKg') }}</el-radio-button>
+              <el-radio-button value="kg">{{ t('warehouse.dashboard.demandTabKg') }}</el-radio-button>
             </el-radio-group>
           </div>
           <div ref="demandPieEl" class="chart-canvas"></div>
@@ -82,8 +82,8 @@
           </template>
           <div class="chart-unit-switch">
             <el-radio-group v-model="returnUnitTab" size="small">
-              <el-radio-button value="kg">{{ t('warehouse.dashboard.returnTabKg') }}</el-radio-button>
               <el-radio-button value="nonkg">{{ t('warehouse.dashboard.returnTabNonKg') }}</el-radio-button>
+              <el-radio-button value="kg">{{ t('warehouse.dashboard.returnTabKg') }}</el-radio-button>
             </el-radio-group>
           </div>
           <div ref="returnRingEl" class="chart-canvas"></div>
@@ -146,6 +146,13 @@ interface TrendTooltipParam {
   value: number | string;
 }
 
+interface PieFormatterParam {
+  name: string;
+  value: number | string;
+  percent?: number;
+  data?: { unit?: string };
+}
+
 const summary = ref<WarehouseDashboardSummaryVo | null>(null);
 const charts = ref<WarehouseDashboardChartsVo | null>(null);
 const loading = ref(false);
@@ -175,12 +182,26 @@ const returnUnitTab = ref<'kg' | 'nonkg'>('kg');
 
 /** 切片取需求最高 TOP5，其余合并为「其他」。 */
 function top5WithOther(data: ChartSeriesItem[] | undefined): ChartSeriesItem[] {
-  const items = (data ?? []).filter((d) => Number(d.value) > 0).map((d) => ({ name: d.name, value: Number(d.value) }));
+  const items = (data ?? [])
+    .filter((d) => Number(d.value) > 0)
+    .map((d) => ({ name: d.name, value: Number(d.value), unit: d.unit }));
   items.sort((a, b) => b.value - a.value);
   if (items.length <= 5) return items;
   const top = items.slice(0, 5);
-  const otherValue = items.slice(5).reduce((sum, d) => sum + Number(d.value), 0);
-  if (otherValue > 0) top.push({ name: t('warehouse.dashboard.otherSlice'), value: otherValue });
+  // 非 KG 模式可能同时出现份/盒/袋；不同单位不能直接相加，按单位分别聚合“其他”。
+  const otherByUnit = new Map<string, number>();
+  items.slice(5).forEach((item) => {
+    const unit = String(item.unit ?? '').trim();
+    otherByUnit.set(unit, (otherByUnit.get(unit) ?? 0) + Number(item.value));
+  });
+  otherByUnit.forEach((value, unit) => {
+    if (value <= 0) return;
+    top.push({
+      name: unit ? `${t('warehouse.dashboard.otherSlice')}（${unit}）` : t('warehouse.dashboard.otherSlice'),
+      value,
+      unit: unit || undefined
+    });
+  });
   return top;
 }
 
@@ -347,11 +368,29 @@ function renderLossMulti() {
   const chart = (lossTrend ??= echarts.init(lossTrendEl.value));
   const pork = charts.value?.lossPorkTrend ?? [];
   const veg = charts.value?.lossVegTrend ?? [];
+  if (pork.length === 0 && veg.length === 0) {
+    renderEmptyChart(chart);
+    return;
+  }
   const dates = (pork.length ? pork : veg).map((p) => p.date.slice(5));
   const namePork = t('warehouse.dashboard.seriesPorkLoss');
   const nameVeg = t('warehouse.dashboard.seriesVegLoss');
   chart.setOption({
-    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'cross' },
+      // admin row86：图名不再重复写单位，单位跟随每个统计值展示。
+      formatter: (params: unknown): string => {
+        const arr = (Array.isArray(params) ? params : [params]) as TrendTooltipParam[];
+        if (arr.length === 0) return '';
+        const unit = t('warehouse.dashboard.unitKg');
+        const lines = [arr[0].axisValue];
+        for (const p of arr) {
+          lines.push(`${p.marker}${p.seriesName}：${Number(p.value).toFixed(3)} ${unit}`);
+        }
+        return lines.join('<br/>');
+      }
+    },
     legend: { bottom: 0, data: [namePork, nameVeg] },
     grid: { left: 50, right: 50, top: 20, bottom: 40 },
     xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 11 } },
@@ -396,14 +435,23 @@ function renderEmptyChart(chart: echarts.ECharts) {
 function renderPie(el: typeof demandPieEl, getChart: () => echarts.ECharts, data: ChartSeriesItem[] | undefined, name: string) {
   if (!el.value) return;
   const chart = getChart();
-  const items = (data ?? []).filter((d) => Number(d.value) > 0).map((d) => ({ name: d.name, value: Number(d.value) }));
+  const items = (data ?? [])
+    .filter((d) => Number(d.value) > 0)
+    .map((d) => ({ name: d.name, value: Number(d.value), unit: d.unit }));
   if (items.length === 0) {
     renderEmptyChart(chart);
     return;
   }
   chart.clear();
   chart.setOption({
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    tooltip: {
+      trigger: 'item',
+      formatter: (raw: unknown): string => {
+        const p = raw as PieFormatterParam;
+        const unit = p.data?.unit ? ` ${p.data.unit}` : '';
+        return `${p.name}: ${p.value}${unit} (${p.percent ?? 0}%)`;
+      }
+    },
     legend: { bottom: 0, left: 'center' },
     series: [
       {
@@ -412,7 +460,13 @@ function renderPie(el: typeof demandPieEl, getChart: () => echarts.ECharts, data
         radius: '60%',
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
-        label: { show: true, formatter: '{b}，{c}' },
+        label: {
+          show: true,
+          formatter: (raw: unknown): string => {
+            const p = raw as PieFormatterParam;
+            return `${p.name}，${p.value}${p.data?.unit ? ` ${p.data.unit}` : ''}`;
+          }
+        },
         data: items
       }
     ]
@@ -422,14 +476,23 @@ function renderPie(el: typeof demandPieEl, getChart: () => echarts.ECharts, data
 function renderRing(el: typeof returnRingEl, getChart: () => echarts.ECharts, data: ChartSeriesItem[] | undefined, name: string) {
   if (!el.value) return;
   const chart = getChart();
-  const items = (data ?? []).filter((d) => Number(d.value) > 0).map((d) => ({ name: d.name, value: Number(d.value) }));
+  const items = (data ?? [])
+    .filter((d) => Number(d.value) > 0)
+    .map((d) => ({ name: d.name, value: Number(d.value), unit: d.unit }));
   if (items.length === 0) {
     renderEmptyChart(chart);
     return;
   }
   chart.clear();
   chart.setOption({
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    tooltip: {
+      trigger: 'item',
+      formatter: (raw: unknown): string => {
+        const p = raw as PieFormatterParam;
+        const unit = p.data?.unit ? ` ${p.data.unit}` : '';
+        return `${p.name}: ${p.value}${unit} (${p.percent ?? 0}%)`;
+      }
+    },
     legend: { bottom: 0, left: 'center' },
     series: [
       {
@@ -438,7 +501,13 @@ function renderRing(el: typeof returnRingEl, getChart: () => echarts.ECharts, da
         radius: ['40%', '65%'],
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
-        label: { show: true, formatter: '{b}，{c}' },
+        label: {
+          show: true,
+          formatter: (raw: unknown): string => {
+            const p = raw as PieFormatterParam;
+            return `${p.name}，${p.value}${p.data?.unit ? ` ${p.data.unit}` : ''}`;
+          }
+        },
         data: items
       }
     ]

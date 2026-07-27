@@ -20,7 +20,6 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :max="row.arrivedQuantity ?? Infinity"
             :precision="isKg(row.productUnit) ? 3 : 0"
             :step="1"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"

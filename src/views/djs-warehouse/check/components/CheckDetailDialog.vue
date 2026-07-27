@@ -3,10 +3,8 @@
     <el-descriptions :column="3" border class="mb-3">
       <el-descriptions-item :label="t('djs.warehouse.check.checkWarehouse')">{{ header?.locationName }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.checkDate')">{{ header?.checkDate ? proxy?.parseTime?.(header.checkDate, '{y}-{m}-{d}') : '' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('djs.warehouse.check.checkStatus')">
-        <dict-tag :options="djs_check_status" :value="header?.checkStatus" />
-      </el-descriptions-item>
-      <el-descriptions-item :label="t('djs.warehouse.check.goodsCount')">{{ header?.lineCount ?? 0 }}</el-descriptions-item>
+      <el-descriptions-item :label="t('djs.warehouse.check.goodsCount')">{{ header?.stockProductCount ?? 0 }}</el-descriptions-item>
+      <el-descriptions-item :label="t('djs.warehouse.check.checkedProductCount')">{{ header?.lineCount ?? 0 }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.abnormalCount')">{{ header?.abnormalCount ?? 0 }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.checkBy')">{{ header?.checkByName }}</el-descriptions-item>
     </el-descriptions>
@@ -46,8 +44,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-// ADR-0004 §2.4 Vue3 字典消费范式：状态 / 结果走全局字典（消除本地双源）
-const { djs_check_status, djs_check_result } = toRefs<any>(proxy?.useDict('djs_check_status', 'djs_check_result'));
+const { djs_check_result } = toRefs<any>(proxy?.useDict('djs_check_result'));
 
 const visible = defineModel<boolean>({ required: true });
 const props = defineProps<{ header: StockCheckHeaderVO | null }>();

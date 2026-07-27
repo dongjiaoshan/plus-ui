@@ -77,7 +77,11 @@
         <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="120" align="center" header-align="center" show-overflow-tooltip />
         <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" min-width="120" align="center" header-align="center" show-overflow-tooltip />
         <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center" header-align="center">
-          <template #default="{ row }">{{ productType === 'white_bar' ? formatWhiteBarHeads(row.demandQuantity, row.productName) : formatQty(row.demandQuantity, row.productUnit) }}</template>
+          <template #default="{ row }">{{
+            productType === 'white_bar'
+              ? formatOrderQuantity(row.demandQuantity, row.productUnit, true)
+              : formatQty(row.demandQuantity, row.productUnit)
+          }}</template>
         </el-table-column>
         <el-table-column :label="t('demand.confirmPage.column.productUnit')" width="70" align="center" header-align="center">
           <template #default="{ row }">{{ productType === 'white_bar' ? t('demand.kpi.unitHead') : (row.productUnit || '-') }}</template>
@@ -122,7 +126,7 @@
 <script setup name="DemandConfirmDrawer" lang="ts">
 import { useI18n } from 'vue-i18n';
 import { Refresh } from '@element-plus/icons-vue';
-import { isKgUnit, formatWhiteBarHeads } from '@/utils/weight';
+import { formatOrderQuantity, isKgUnit } from '@/utils/weight';
 import PigAssignDialog from './PigAssignDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
 import { confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';

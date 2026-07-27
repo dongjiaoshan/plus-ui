@@ -32,7 +32,7 @@
         <template #default="{ row }"><dict-tag :options="djs_loss_type" :value="row.lossType" /></template>
       </el-table-column>
       <el-table-column :label="t('lossOverview.detail.lossWeight')" prop="lossWeight" min-width="110" align="center" header-align="center">
-        <template #default="{ row }">{{ formatWeight(row.lossWeight) }}</template>
+        <template #default="{ row }">{{ formatLossQuantityByUnit(row.lossWeight, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('lossOverview.detail.productUnit')" prop="productUnit" min-width="80" align="center" header-align="center" />
     </el-table>
@@ -42,6 +42,7 @@
 <script setup lang="ts">
 import { getLossDetail, type LossOverviewDetailVO } from '@/api/djs-warehouse/lossOverview';
 import { parseTime } from '@/utils/ruoyi';
+import { formatLossQuantityByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 defineOptions({ name: 'LossDetailDialog' });
@@ -95,13 +96,6 @@ function handleReset() {
 function formatDateTime(v?: string): string {
   if (!v) return '';
   return parseTime(v, '{y}-{m}-{d} {h}:{i}:{s}') as string;
-}
-
-/** 损耗量格式化：后端 BigDecimal 序列化为 string，统一 Number 强转保三位小数（第4位四舍五入，row33）。 */
-function formatWeight(v: number | string | undefined | null): string {
-  if (v === undefined || v === null || v === '') return '';
-  const n = typeof v === 'number' ? v : Number(v);
-  return Number.isNaN(n) ? String(v) : n.toFixed(3);
 }
 
 defineExpose({ open });

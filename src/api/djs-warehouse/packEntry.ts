@@ -108,6 +108,7 @@ export interface DryPackBo {
   sourceInhouseId: number | string;
   productId: number | string;
   productWeight: number;
+  allowOverMeasure?: boolean;
   productUnit: string;
   locationId?: number | string;
   storeId?: number | string;
@@ -133,6 +134,7 @@ export interface VegPackBo {
   sourceInhouseId: number | string;
   productId: number | string;
   productWeight: number;
+  allowOverMeasure?: boolean;
   locationId?: number | string;
   materialConsume?: number;
   materialId?: number | string;

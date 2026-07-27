@@ -54,8 +54,14 @@
       <div class="station-right" :class="{ 'station-right--wide': wide }">
         <div class="panel-head">
           <span class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</span>
-          <!-- 124#5：肉品打包隐藏右上角「打包序号 NO.x」（hidePackNo=true）；其他打包页仍显示 -->
-          <span v-if="!hidePackNo" class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
+          <div class="panel-head-actions">
+            <!-- 124#5：肉品打包隐藏右上角「打包序号 NO.x」（hidePackNo=true）；其他打包页仍显示 -->
+            <span v-if="!hidePackNo" class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
+            <!-- admin row79-82：四类打包页共用刷新入口，重拉来源、成品、库存和需求。 -->
+            <el-button size="small" :icon="Refresh" :loading="refreshing" @click="handleRefresh">
+              {{ t('common.refresh') }}
+            </el-button>
+          </div>
         </div>
 
       <!-- 中部可滚动区（头部之下、按钮之上；内容超高在此内部滚动，不外溢到页脚） -->
@@ -120,7 +126,7 @@
             {{
               kind === 'gift'
                 ? t('djs.warehouse.packEntry.packAmount')
-                : dryNonKgAmountMode
+                : dryNonKgLabelMode
                   ? t('djs.warehouse.packEntry.packAmount')
                   : t('djs.warehouse.packEntry.productWeight')
             }}
@@ -143,7 +149,13 @@
           <WeightNumpad
             v-else
             v-model="form.productWeight"
-            :placeholder="shouldUnitByCopies ? t('djs.warehouse.packEntry.packCopies') : t('djs.warehouse.packEntry.weightPlaceholder')"
+            :placeholder="
+              dryNonKgLabelMode
+                ? t('djs.warehouse.packEntry.packAmount')
+                : shouldUnitByCopies
+                  ? t('djs.warehouse.packEntry.packCopies')
+                  : t('djs.warehouse.packEntry.weightPlaceholder')
+            "
             :unit="selectedUnit"
             :precision="numpadPrecision"
           />
@@ -166,7 +178,15 @@
       <!-- /panel-scroll -->
 
         <div class="panel-actions">
-          <el-button v-if="showPrintTrace" type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit(true)">
+          <el-button
+            v-if="showPrintTrace"
+            type="primary"
+            size="large"
+            class="action-btn"
+            :loading="submitting"
+            :disabled="printTraceDisabled"
+            @click="handleSubmit(true)"
+          >
             {{ t('djs.warehouse.packEntry.confirmPrintTrace') }}
           </el-button>
           <el-button type="primary" size="large" class="action-btn" :loading="submitting" @click="handleSubmit(false)">
@@ -182,10 +202,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ElMessage, ElNotification } from 'element-plus';
-import { InfoFilled, PriceTag } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
+import { InfoFilled, PriceTag, Refresh } from '@element-plus/icons-vue';
 import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
 import ScaleReader from './components/ScaleReader.vue';
@@ -338,6 +358,7 @@ const {
 const effectiveSources = computed<PackSourceVO[]>(() => sources.value);
 
 const submitting = ref(false);
+const refreshing = ref(false);
 
 /** 追溯码二维码标签卡组件 ref（提交成功后 open 生成二维码供打印）。 */
 const traceLabelRef = ref<InstanceType<typeof TraceLabelDialog>>();
@@ -383,19 +404,35 @@ const form = ref<PackFormShape>(defaultForm());
 // 门店(N份) 标签条：选目标产品后按 productId 拉各门店未发货需求份数
 const storeDemands = ref<StoreDemandCopiesVO[]>([]);
 const demandLoading = ref(false);
+let storeDemandRequestSeq = 0;
+let storeDemandInFlight: { productId: string; promise: Promise<void> } | undefined;
 
-async function loadStoreDemand(productId: number | string | '') {
+function loadStoreDemand(productId: number | string | ''): Promise<void> {
   if (!productId) {
+    storeDemandRequestSeq++;
+    storeDemandInFlight = undefined;
     storeDemands.value = [];
-    return;
-  }
-  demandLoading.value = true;
-  try {
-    const res = await listStoreDemand(productId);
-    storeDemands.value = ((res as any).data ?? []) as StoreDemandCopiesVO[];
-  } finally {
     demandLoading.value = false;
+    return Promise.resolve();
   }
+  const key = String(productId);
+  if (storeDemandInFlight?.productId === key) return storeDemandInFlight.promise;
+  const requestSeq = ++storeDemandRequestSeq;
+  demandLoading.value = true;
+  const task = (async () => {
+    const res = await listStoreDemand(productId);
+    // 产品快速切换时，较慢的旧响应不得覆盖当前产品需求。
+    if (requestSeq === storeDemandRequestSeq) {
+      storeDemands.value = ((res as any).data ?? []) as StoreDemandCopiesVO[];
+    }
+  })().finally(() => {
+    if (storeDemandInFlight?.promise === task) {
+      storeDemandInFlight = undefined;
+      demandLoading.value = false;
+    }
+  });
+  storeDemandInFlight = { productId: key, promise: task };
+  return task;
 }
 
 function pickDemandStore(storeId: number | string) {
@@ -456,18 +493,14 @@ async function loadDemandMap() {
     return;
   }
   const map: Record<string, number> = {};
-  try {
-    const res = await listStoreDemandBatch(ids);
-    const grouped = ((res as any).data ?? {}) as Record<string, StoreDemandCopiesVO[]>;
-    ids.forEach((id) => {
-      const rows = grouped[String(id)] ?? [];
-      map[String(id)] = fmtCopies(rows.reduce((sum, r) => sum + (Number(r.copies) || 0), 0));
-    });
-  } catch {
-    ids.forEach((id) => {
-      map[String(id)] = 0;
-    });
-  }
+  // 请求失败时让刷新链报错并保留上一版需求数据；将失败伪装成 0 会让操作员误判
+  // “需求已完成”，也会使卡片在瞬时网络错误后展示假数据。
+  const res = await listStoreDemandBatch(ids);
+  const grouped = ((res as any).data ?? {}) as Record<string, StoreDemandCopiesVO[]>;
+  ids.forEach((id) => {
+    const rows = grouped[String(id)] ?? [];
+    map[String(id)] = fmtCopies(rows.reduce((sum, r) => sum + (Number(r.copies) || 0), 0));
+  });
   demandMap.value = map;
 }
 
@@ -803,6 +836,16 @@ const vegStockMap = computed<Record<string, number | null>>(() => {
 // 故选中目标产品后只列该产品的耳号，保证「选耳号 → 唯一确定来源 inhouse」。
 const selectedEarNo = ref<number | string | ''>('');
 
+/**
+ * admin row111/112：没有可追溯来源时仍允许普通打包，但不能生成/打印追溯码。
+ * 仅命中显式“无耳号/无地块信息”哨兵时禁用；有真实来源时立即恢复。
+ */
+const printTraceDisabled = computed(
+  () =>
+    (props.earGroup && selectedEarNo.value === NO_EAR_SENTINEL) ||
+    (props.plotGroup && selectedPlotId.value === NO_PLOT_SENTINEL)
+);
+
 const earToggleOptions = computed<{ value: number | string; label: string }[]>(() => {
   if (!props.earGroup) return [];
   const matId = materialIdOf(form.value.productId);
@@ -930,6 +973,13 @@ function isKgUnit(u?: string): boolean {
 }
 /** 当前选中成品的「领用来源原材料」单位：其他产品打包 wipStockUnitMap 给原料单位（鸡蛋=枚），回落 form.productUnit。 */
 const rawUnitOfSelected = computed<string>(() => wipStockUnitMap.value[String(form.value.productId)] || form.value.productUnit);
+/**
+ * admin row94 的文案判定只看“成品单位”：成品不是 KG 就称为“打包量”。
+ * 原材料单位只决定提交换算/库存扣减，不能反过来把袋、盒等成品标成“产品重量”。
+ */
+const dryNonKgLabelMode = computed<boolean>(() =>
+  dryReqMode.value && !!selectedProduct.value && !isKgUnit(selectedProduct.value.productUnit)
+);
 /**
  * row60：其他产品打包（dry 非礼盒/非肉品）且原材料单位非 kg（枚/份/袋…）→「打包量」计量模式。
  * label 显「打包量」、单位显所选成品单位（而非原材料单位）。KG 原料（isKgUnit）走克(g)重量模式、label 保持「产品重量」。
@@ -1145,6 +1195,33 @@ function validate(): boolean {
   return true;
 }
 
+/**
+ * admin rows97/98：肉品、果蔬按产品 materialNum 校验称重规则。
+ * 小于规则直接阻断；超过 3% 弹确认框，取消不提交，确认后由 allowOverMeasure 透传给后端复核。
+ */
+async function confirmPackMeasureRule(): Promise<boolean | null> {
+  const product = selectedProduct.value;
+  if (!product || (product.belongType !== 'pork' && product.belongType !== 'vegetable')) return false;
+  const rule = Number(product.materialNum);
+  const actual = packWeightKg();
+  if (!Number.isFinite(rule) || rule <= 0 || actual == null) return false;
+  if (actual < rule) {
+    notifyMissing(`实称重量 ${actual}kg 不能低于打包规则 ${rule}kg`);
+    return null;
+  }
+  if (actual <= rule * 1.03) return false;
+  try {
+    await ElMessageBox.confirm(
+      `实称重量 ${actual}kg 已超过打包规则 ${rule}kg 的 3%，是否继续打包？`,
+      '重量超出规则',
+      { confirmButtonText: '继续打包', cancelButtonText: '取消', type: 'warning' }
+    );
+    return true;
+  } catch {
+    return null;
+  }
+}
+
 function handleReset() {
   form.value = defaultForm();
   storeDemands.value = [];
@@ -1154,9 +1231,16 @@ function handleReset() {
 
 /** printTrace=true：提交后弹出追溯码供「打印」展示（仅肉品/果蔬有此按钮）。 */
 async function handleSubmit(printTrace: boolean) {
-  if (!validate()) return;
+  // 确认框也属于一次提交事务：在打开确认框前就获取 single-flight 锁，
+  // 防双击“确定”或与“确认并打印”交叉点击生成两条生产记录。
+  if (submitting.value) return;
   submitting.value = true;
   try {
+    // disabled 只约束鼠标交互；函数内二次守门，防键盘/程序调用绕过。
+    if (printTrace && printTraceDisabled.value) return;
+    if (!validate()) return;
+    const allowOverMeasure = await confirmPackMeasureRule();
+    if (allowOverMeasure == null) return;
     let res: any;
     // 成功/失败统一走全局自动消失的 ElMessage（与「条件缺失」走右侧 ElNotification 区分）。
     // （API 已带 suppressErrorMsg 抑制拦截器 toast）。inner try 只包提交，成功后逻辑不受影响。
@@ -1178,6 +1262,7 @@ async function handleSubmit(printTrace: boolean) {
           sourceInhouseId: form.value.sourceInhouseId as number | string,
           productId: form.value.productId as number | string,
           productWeight: packWeightKg() as number,
+          allowOverMeasure,
           storeId: form.value.storeId || undefined,
           deliverDest: form.value.deliverDest,
           productSpec: form.value.productSpec,
@@ -1210,6 +1295,7 @@ async function handleSubmit(printTrace: boolean) {
           sourceInhouseId: form.value.sourceInhouseId as number | string,
           productId: form.value.productId as number | string,
           productWeight: dryWeight,
+          allowOverMeasure,
           productUnit: dryUnit,
           storeId: form.value.storeId || undefined,
           deliverDest: form.value.deliverDest,
@@ -1277,7 +1363,7 @@ async function handleSubmit(printTrace: boolean) {
  * - 重新拉来源 → 用完的地块/耳号从 toggle 消失（req4）；
  * - 刷新需求 / 库存 / 已打包份数 → 该产品需求份数打完则卡片标「打包完成」并自动取消选中（req3）。
  */
-async function refreshAfterPack() {
+async function performRefreshAfterPack() {
   const keepProductId = String(form.value.productId || '');
   // 只清本次录入量 + 来源/地块/耳号选择，保留产品
   form.value.productWeight = undefined;
@@ -1310,13 +1396,30 @@ async function refreshAfterPack() {
   }
 }
 
+let refreshInFlight: Promise<void> | undefined;
+
+async function refreshAfterPack() {
+  // 提交后的定向刷新必须排在已有刷新之后，再进入同一互斥区；手动刷新在此期间
+  // 会复用本 Promise，避免两套来源/需求/库存请求相互覆盖。
+  if (refreshInFlight) await refreshInFlight;
+  refreshing.value = true;
+  const task = performRefreshAfterPack().finally(() => {
+    if (refreshInFlight === task) {
+      refreshInFlight = undefined;
+      refreshing.value = false;
+    }
+  });
+  refreshInFlight = task;
+  await task;
+}
+
 /**
  * 全量重新拉取页面数据（来源 / 成品 / 门店需求 / 原材料库存）——与 onMounted 初始加载等价。
  * 供父页「刷新」按钮（row130#2）+ 提交成功后自动刷新（refreshAfterPack）调用。
  * row125/128/130#5「打包后需求量不减」根因是前端不刷新：后端 fulfillDirectDemandOnPack/deductDemandOnPack
  * 各打包路径均已扣 shipped_count（无需改后端），此处 reload 重拉最新 demandMap / loadStoreDemand 即呈现减后需求量。
  */
-async function reload() {
+async function performReload() {
   await loadStores();
   if (props.kind === 'veg') {
     // 果蔬打包：先拉来源（推导本次领用原料 id），再按 product_material 命中加载成品（doc#12）
@@ -1330,11 +1433,36 @@ async function reload() {
       await loadSources(props.earGroup ? 'meat' : 'dry');
     }
   }
-  void loadDemandMap();
-  // 卡片库存口径统一：成品 product_material 指向的原材料实时库存（与后端校验/扣减一致）
-  void loadMaterialStock();
-  // 当前已选产品时同步重拉其门店需求 chip（reload 后需求量随之刷新，衔接 row130#5）
-  if (form.value.productId) void loadStoreDemand(form.value.productId);
+  await Promise.all([
+    loadDemandMap(),
+    // 卡片库存口径统一：成品 product_material 指向的原材料实时库存（与后端校验/扣减一致）
+    loadMaterialStock()
+  ]);
+  // autoSelectFirst 可能由本轮产品/需求数据触发；等待 watcher 落定后再刷新一次当前产品的
+  // 门店需求，确保刷新按钮的 loading 覆盖最后一笔可见数据请求。
+  await nextTick();
+  if (form.value.productId) {
+    await loadStoreDemand(form.value.productId);
+  }
+}
+
+function reload(): Promise<void> {
+  // onMounted、keep-alive 激活、提交后刷新和手动刷新共用同一个 single-flight，
+  // 避免较慢的旧请求在刷新按钮结束后覆盖新数据。
+  if (refreshInFlight) return refreshInFlight;
+  refreshing.value = true;
+  const task = performReload().finally(() => {
+    if (refreshInFlight === task) {
+      refreshInFlight = undefined;
+      refreshing.value = false;
+    }
+  });
+  refreshInFlight = task;
+  return task;
+}
+
+async function handleRefresh() {
+  await reload();
 }
 
 defineExpose({ reload });
@@ -1460,6 +1588,11 @@ onActivated(() => {
   font-size: 14px;
   font-weight: 600;
   color: var(--el-text-color-secondary);
+}
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .pack-no {
   font-size: 13px;

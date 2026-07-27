@@ -92,7 +92,7 @@ import ProductDetailDialog from './components/ProductDetailDialog.vue';
 import { listStoreDemand, removeStoreDemand, receiveStoreDemand } from '@/api/djs-store/demand';
 import type { StoreDemandVO } from '@/api/djs-store/demand/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
-import { formatWeightByBelong, formatWhiteBarHeads, isKgUnit } from '@/utils/weight';
+import { formatOrderQuantity, formatWeightByBelong } from '@/utils/weight';
 import { nextMonthRange } from '@/utils/ruoyi';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
@@ -135,15 +135,12 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('storeDemand.column.demandQuantity'),
     minWidth: 110,
     align: 'center',
-    // 后端返 BigDecimal，按单位分流：kg 保留 3 位小数，非 kg 取整；无值显 '—'
-    // row62：白条产品（product_type='white_bar'，名含「半」如半扇 → 每单位折 0.5）需求量按「头」展示，不留三位小数。
+    // 后端返 BigDecimal；白条订单展示用户实际下单数量，半片换算仅属于发货/KPI。
     formatter: (row: BizRow) => {
       const r = row as StoreDemandVO;
       const v = r.demandQuantity;
       if (v == null || v === '') return '—';
-      if (r.productType === 'white_bar') return formatWhiteBarHeads(v, r.productName);
-      const n = Number(v);
-      return isKgUnit(r.productUnit) ? n.toFixed(3) : String(Math.round(n));
+      return formatOrderQuantity(v, r.productUnit, r.productType === 'white_bar');
     }
   },
   {
@@ -307,7 +304,13 @@ async function onBatchReceive() {
 function onViewDetail(row: BizRow) {
   // 打开「产品明细」弹框（row40：按 需求日期 + 门店 + 产品 拉当日该产品逐件生产明细，含损坏标记）
   const r = row as StoreDemandVO;
-  detailDialogRef.value?.open({ produceDate: r.demandDate, productId: r.productId, storeId: r.storeId, productType: r.productType });
+  detailDialogRef.value?.open({
+    produceDate: r.demandDate,
+    productId: r.productId,
+    storeId: r.storeId,
+    productType: r.productType,
+    productUnit: r.productUnit
+  });
 }
 
 onMounted(() => {

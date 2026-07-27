@@ -82,8 +82,26 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'produceDate', label: '生产日期', minWidth: 120 },
+  {
+    prop: 'fulfillmentRate',
+    label: '需求满足率',
+    minWidth: 110,
+    align: 'center',
+    formatter: (row: BizRow) => `${Number((row as ProductProductionGroupVO).fulfillmentRate ?? 0).toFixed(2)}%`
+  },
   { prop: 'productName', label: '产品名称', minWidth: 180 },
   { prop: 'belongType', label: t('djs.warehouse.production.column.belongType'), minWidth: 110, dictType: 'djs_belong_type' },
+  {
+    prop: 'demandQty',
+    label: '需求量',
+    minWidth: 100,
+    align: 'center',
+    formatter: (row: BizRow) => {
+      const r = row as ProductProductionGroupVO;
+      const n = Number(r.demandQty ?? 0);
+      return isKgUnit(r.productUnit) ? n.toFixed(3) : String(Math.round(n));
+    }
+  },
   {
     prop: 'produceQty',
     label: '生产量',

@@ -83,7 +83,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'checkDate', label: t('djs.warehouse.check.checkDate'), minWidth: 140, align: 'center', formatter: 'date' },
   { prop: 'locationName', label: t('djs.warehouse.check.checkWarehouse'), minWidth: 140, align: 'center', showOverflowTooltip: true },
-  { prop: 'lineCount', label: t('djs.warehouse.check.goodsCount'), minWidth: 140, align: 'center' },
+  { prop: 'stockProductCount', label: t('djs.warehouse.check.goodsCount'), minWidth: 140, align: 'center' },
+  { prop: 'lineCount', label: t('djs.warehouse.check.checkedProductCount'), minWidth: 140, align: 'center' },
   { prop: 'abnormalCount', label: t('djs.warehouse.check.abnormalCount'), minWidth: 140, align: 'center' },
   { prop: 'checkByName', label: t('djs.warehouse.check.checkBy'), minWidth: 140, align: 'center' },
   { prop: 'createTime', label: t('djs.warehouse.check.createTime'), minWidth: 140, align: 'center', formatter: 'datetime' }

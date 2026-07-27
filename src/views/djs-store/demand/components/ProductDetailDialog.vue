@@ -24,8 +24,8 @@
       @page-change="handlePageChange"
     >
       <template #action="{ row }">
-        <!-- admin row3：白条产品明细不提供「记为损坏」（白条现场分割，非成品件标损口径） -->
-        <template v-if="!isWhiteBar">
+        <!-- admin row99：仅非 KG 生产产品可按件标损；白条与 KG 产品均不提供操作。 -->
+        <template v-if="canMarkDamage">
           <el-button v-if="(row as ProductProductionVO).isDamaged === 1" link type="primary" size="small" @click="onDamage(row)">
             {{ t('storeDemand.damage.editAction') }}
           </el-button>
@@ -52,6 +52,7 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import DamageEvidenceForm from './DamageEvidenceForm.vue';
 import { listProductionItems } from '@/api/djs-warehouse/production';
 import type { ProductProductionVO, ProductProductionQuery } from '@/api/djs-warehouse/production/types';
+import { isKgUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -71,15 +72,17 @@ const pageSize = ref(10);
  * demandId 在生产记录上是门店级松散关联（一个门店多日期多产品都挂同一 demand_id），
  * 按 demandId 过滤会拉出该门店的全部产品；改用 produceDate+productId+storeId 精确锁定该需求当日该产品。
  */
-const scope = reactive<{ produceDate: string; productId: string; storeId: string; productType: string }>({
+const scope = reactive<{ produceDate: string; productId: string; storeId: string; productType: string; productUnit: string }>({
   produceDate: '',
   productId: '',
   storeId: '',
-  productType: ''
+  productType: '',
+  productUnit: ''
 });
 
 // admin row3：白条产品（猪只整只/半只）明细不显示「记为损坏」操作
 const isWhiteBar = computed(() => scope.productType === 'white_bar');
+const canMarkDamage = computed(() => !isWhiteBar.value && !isKgUnit(scope.productUnit));
 
 // 「是否损坏」搜索条（全部 = undefined / 是 = 1 / 否 = 0），select 走 dict djs_yes_no
 const searchModel = reactive<Record<string, unknown>>({ isDamaged: undefined });
@@ -186,6 +189,7 @@ function onClosed() {
   scope.productId = '';
   scope.storeId = '';
   scope.productType = '';
+  scope.productUnit = '';
   list.value = [];
   total.value = 0;
 }
@@ -194,11 +198,12 @@ function onClosed() {
  * 打开「产品明细」弹框（row40：按需求的 日期 + 门店 + 产品 拉当日该产品生产明细）。
  * @param params 需求行的 demandDate / productId / storeId
  */
-function open(params: { produceDate: string; productId: string; storeId?: string; productType?: string }) {
+function open(params: { produceDate: string; productId: string; storeId?: string; productType?: string; productUnit?: string }) {
   scope.produceDate = String(params.produceDate ?? '');
   scope.productId = String(params.productId ?? '');
   scope.storeId = String(params.storeId ?? '');
   scope.productType = String(params.productType ?? '');
+  scope.productUnit = String(params.productUnit ?? '');
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
   pageNum.value = 1;
   pageSize.value = 10;

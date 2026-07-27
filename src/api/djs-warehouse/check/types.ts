@@ -15,7 +15,9 @@ export interface StockCheckHeaderVO extends BaseEntity {
   checkDate?: string;
   /** 字典 djs_check_status：draft / in_progress / done */
   checkStatus: string;
-  /** 盘点商品数 = 明细行数 */
+  /** 当前库位正库存产品种类数 */
+  stockProductCount?: number;
+  /** 本次盘点产品数 = 明细行数 */
   lineCount?: number;
   /** 盘点异常数 = 结果为异常（djs_check_result=2）的明细数 */
   abnormalCount?: number;

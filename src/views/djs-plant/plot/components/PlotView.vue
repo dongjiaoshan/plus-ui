@@ -22,11 +22,12 @@
           <el-table-column :label="t('plantPlot.planting.expectedYield')" prop="expectedYield" width="120" align="center" header-align="center">
             <template #default="{ row }">{{ row.expectedYield != null ? `${Number(row.expectedYield).toFixed(3)} kg/亩` : '-' }}</template>
           </el-table-column>
+          <el-table-column :label="t('plantPlot.planting.actualProduction')" prop="actualProduction" width="120" align="center" header-align="center">
+            <template #default="{ row }">{{ row.actualProduction != null ? `${Number(row.actualProduction).toFixed(3)} kg` : '-' }}</template>
+          </el-table-column>
           <el-table-column :label="t('plantPlot.planting.actualYield')" prop="actualYield" width="120" align="center" header-align="center">
             <template #default="{ row }">{{ row.actualYield != null ? `${Number(row.actualYield).toFixed(3)} kg/亩` : '-' }}</template>
           </el-table-column>
-          <el-table-column :label="t('plantPlot.planting.earliestHarvestdate')" prop="earliestHarvestdate" width="120" align="center" header-align="center" />
-          <el-table-column :label="t('plantPlot.planting.lastHarvestdate')" prop="lastHarvestdate" width="120" align="center" header-align="center" />
           <el-table-column :label="t('plantPlot.planting.beginHarvestdate')" prop="beginHarvestdate" width="120" align="center" header-align="center" />
           <el-table-column :label="t('plantPlot.planting.endHarvestdate')" prop="endHarvestdate" width="120" align="center" header-align="center" />
           <el-table-column :label="t('plantPlot.planting.harvestByName')" prop="harvestByName" width="120" align="center" header-align="center" show-overflow-tooltip />

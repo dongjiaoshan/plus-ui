@@ -2,37 +2,38 @@
   <div class="pack-station">
     <div class="station-title">{{ t('djs.warehouse.packEntry.cutTitle') }}</div>
 
-    <!-- 分割单 chip 行（猪只耳号；来源 cut_record picked/cutting） -->
-    <div v-loading="cuttableLoading" class="chip-row">
-      <template v-if="cuttable.length > 0">
-        <button
-          v-for="r in sortedCuttable"
-          :key="String(r.id)"
-          type="button"
-          class="cut-chip"
-          :class="{ active: String(form.cutRecordId) === String(r.id) }"
-          @click="form.cutRecordId = r.id"
-        >
-          <div class="chip-line chip-line-ear">
-            <el-icon><PriceTag /></el-icon>
-            <!-- 外购无耳号：回退显白条标识号/白条编号(barId)，最后才回退 CUT 业务码（FIX-WMS-OUTSOURCE-001 行53） -->
-            <span class="chip-main">{{ r.earNo ?? r.markId ?? r.barId ?? r.cutId }}</span>
-          </div>
-          <div v-if="r.pickupWeight != null" class="chip-line">
-            {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}：{{ Number(r.pickupWeight).toFixed(3) }}kg
-          </div>
-          <div v-if="r.remainingWeight != null" class="chip-line">
-            {{ t('djs.warehouse.packEntry.remainWeightLabel') }}：{{ Number(r.remainingWeight).toFixed(3) }}kg
-          </div>
-        </button>
-      </template>
-      <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.noCuttable') }}</span>
-    </div>
-
     <div class="station-body">
-      <!-- 左：分割产品卡片网格（按具体产品 belong_type=pork） -->
+      <!-- 左：待分割白条 + 分割产品卡片；右操作列从标题下方起撑满整高，与其它打包页几何一致。 -->
       <div class="station-left">
-        <ProductCardGrid v-model="selectedProductId" :items="porkProducts" :loading="porkProductLoading" :show-stock="false" />
+        <!-- 分割单 chip 行（猪只耳号；来源 cut_record picked/cutting） -->
+        <div v-loading="cuttableLoading" class="chip-row">
+          <template v-if="cuttable.length > 0">
+            <button
+              v-for="r in sortedCuttable"
+              :key="String(r.id)"
+              type="button"
+              class="cut-chip"
+              :class="{ active: String(form.cutRecordId) === String(r.id) }"
+              @click="form.cutRecordId = r.id"
+            >
+              <div class="chip-line chip-line-ear">
+                <el-icon><PriceTag /></el-icon>
+                <!-- 外购无耳号：回退显白条标识号/白条编号(barId)，最后才回退 CUT 业务码（FIX-WMS-OUTSOURCE-001 行53） -->
+                <span class="chip-main">{{ r.earNo ?? r.markId ?? r.barId ?? r.cutId }}</span>
+              </div>
+              <div v-if="r.pickupWeight != null" class="chip-line">
+                {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}：{{ Number(r.pickupWeight).toFixed(3) }}kg
+              </div>
+              <div v-if="r.remainingWeight != null" class="chip-line">
+                {{ t('djs.warehouse.packEntry.remainWeightLabel') }}：{{ Number(r.remainingWeight).toFixed(3) }}kg
+              </div>
+            </button>
+          </template>
+          <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.noCuttable') }}</span>
+        </div>
+        <div class="card-scroll">
+          <ProductCardGrid v-model="selectedProductId" :items="porkProducts" :loading="porkProductLoading" :show-stock="false" />
+        </div>
       </div>
 
       <!-- 右：操作 panel（三段式：头部固定 + 中部可滚动 + 底部按钮区常驻，与 SkuPackForm / pickup 统一） -->
@@ -347,6 +348,12 @@ onMounted(async () => {
   flex: 1;
   min-width: 0;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.card-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 /* row137：三段式操作台（头部固定 + 中部可滚动 + 底部按钮常驻），撑满卡片网格等高，
@@ -356,7 +363,7 @@ onMounted(async () => {
   width: 440px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 24px;
+  padding: 20px;
   background: var(--el-bg-color);
   display: flex;
   flex-direction: column;
@@ -365,7 +372,7 @@ onMounted(async () => {
 }
 .panel-head {
   flex: 0 0 auto;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .panel-scroll {
   flex: 1 1 auto;
@@ -373,17 +380,17 @@ onMounted(async () => {
   overflow-y: auto;
 }
 .panel-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--el-text-color-secondary);
 }
 .panel-section {
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 .panel-label {
   font-size: 15px;
   color: var(--el-text-color-regular);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .ear-row {
   display: flex;
@@ -415,8 +422,8 @@ onMounted(async () => {
 }
 .action-btn {
   width: 100%;
-  height: 56px;
-  font-size: 18px;
+  height: 52px;
+  font-size: 17px;
 }
 /* r81：触屏数字键盘 / 入库位置按钮放大到 pickup 页那档，不再过度紧凑 */
 .station-right :deep(.numpad-display) {

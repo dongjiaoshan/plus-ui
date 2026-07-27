@@ -165,6 +165,7 @@ import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
 import { useI18n } from 'vue-i18n';
+import { WHITE_BAR_DEMAND_UNIT } from '@/utils/weight';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -178,9 +179,6 @@ const currentStoreName = computed(() => {
 });
 
 const dash = '—';
-
-/** 白条门店下单展示单位：按「份/半只」计数下单（product_unit=kg 仅供仓库分割/盘点按重量），仅展示层覆盖不落库。 */
-const WHITE_BAR_DEMAND_UNIT = '份';
 
 /** 明日日期 YYYY-MM-DD（本地时区，需求日期默认值）。 */
 function tomorrowStr(): string {

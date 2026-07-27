@@ -73,8 +73,8 @@ export interface PlotInfoQuery extends PageQuery {
 }
 
 /**
- * 地块详情·种植信息子表单行（FIX-PLT-AD-DETAIL-001，按 plotId 透视，11 列）。
- * 字段对齐后端 PlotPlantingRecordVo；亩产按 kg 返（决策#7）。
+ * 地块详情·种植信息子表单行（按 plotId 透视）。
+ * 字段对齐后端 PlotPlantingRecordVo。
  */
 export interface PlotPlantingRecordVO {
   id: number | string;
@@ -88,10 +88,8 @@ export interface PlotPlantingRecordVO {
   plantByName?: string;
   /** 预计亩产（kg/亩） */
   expectedYield?: number | string;
-  /** 预计最早采摘日期 */
-  earliestHarvestdate?: string;
-  /** 预计最晚采摘日期 */
-  lastHarvestdate?: string;
+  /** 实际产量（kg） */
+  actualProduction?: number | string;
   /** 实际亩产（kg/亩） */
   actualYield?: number | string;
   /** 采摘开始日期 */

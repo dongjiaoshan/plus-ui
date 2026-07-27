@@ -233,6 +233,10 @@ const perfLoading = ref(false);
 
 const medRows = ref<MedRecordVO[]>([]);
 const medLoading = ref(false);
+let detailRequestSeq = 0;
+let historyRequestSeq = 0;
+let performanceRequestSeq = 0;
+let medRequestSeq = 0;
 
 // 配种 / 分娩明细：从状态流水筛繁殖类事件，结构化呈现（无独立 BE 端点，复用 history 数据）
 const BREEDING_EVENTS: PigStatusEventCode[] = ['BREED', 'FARROW', 'WEAN', 'OESTRUS', 'NULL_RETURN'];
@@ -248,53 +252,80 @@ const statusTagType = computed<'success' | 'warning' | 'info' | 'primary' | 'dan
 });
 
 async function loadDetail() {
-  if (!pigId.value) return;
+  const requestedPigId = pigId.value;
+  if (!requestedPigId) return;
+  const requestSeq = ++detailRequestSeq;
+  detail.value = null;
+  history.value = [];
+  performance.value = [];
+  medRows.value = [];
   loading.value = true;
   try {
-    const res = (await getPig(pigId.value)) as any;
+    const res = (await getPig(requestedPigId)) as any;
+    if (requestSeq !== detailRequestSeq || pigId.value !== requestedPigId) return;
     detail.value = (res.data ?? null) as PigDetailVO | null;
-    if (detail.value?.recentHistory?.length) {
-      history.value = detail.value.recentHistory;
+    // 空数组也必须覆盖：动态详情路由/keep-alive 切换时，不能残留上一头猪或上次激活的记录。
+    history.value = detail.value?.recentHistory ?? [];
+  } catch {
+    // 全局请求拦截器负责提示；本页只保证失败后仍为空，不回显旧猪只数据。
+    if (requestSeq === detailRequestSeq && pigId.value === requestedPigId) {
+      detail.value = null;
+      history.value = [];
     }
   } finally {
-    loading.value = false;
+    if (requestSeq === detailRequestSeq) loading.value = false;
   }
 }
 
 async function loadFullHistory() {
-  if (!pigId.value || history.value.length >= 20) {
-    // 如果详情已带 recentHistory (20)，需要全量再拉一次；这里阈值放宽，<20 不重拉
-    if (history.value.length >= 20) {
-      historyLoading.value = true;
-      try {
-        const res = (await listPigHistory(pigId.value)) as any;
-        history.value = (res.data ?? []) as PigStatusRecordVO[];
-      } finally {
-        historyLoading.value = false;
-      }
-    }
+  const requestedPigId = pigId.value;
+  if (!requestedPigId) return;
+  const requestSeq = ++historyRequestSeq;
+  history.value = [];
+  historyLoading.value = true;
+  try {
+    // recentHistory 条数不能代表数据仍是最新；每次进入记录类 tab 都重新取服务端全量流水。
+    const res = (await listPigHistory(requestedPigId)) as any;
+    if (requestSeq !== historyRequestSeq || pigId.value !== requestedPigId) return;
+    history.value = (res.data ?? []) as PigStatusRecordVO[];
+  } catch {
+    if (requestSeq === historyRequestSeq && pigId.value === requestedPigId) history.value = [];
+  } finally {
+    if (requestSeq === historyRequestSeq) historyLoading.value = false;
   }
 }
 
 async function loadPerformance() {
-  if (!detail.value || detail.value.pigType !== 'sow') return;
+  const requestedPigId = pigId.value;
+  if (!requestedPigId || !detail.value || detail.value.pigType !== 'sow') return;
+  const requestSeq = ++performanceRequestSeq;
+  performance.value = [];
   perfLoading.value = true;
   try {
-    const res = (await listSowPerformance(pigId.value)) as any;
+    const res = (await listSowPerformance(requestedPigId)) as any;
+    if (requestSeq !== performanceRequestSeq || pigId.value !== requestedPigId) return;
     performance.value = (res.data ?? []) as SowPerformanceVO[];
+  } catch {
+    if (requestSeq === performanceRequestSeq && pigId.value === requestedPigId) performance.value = [];
   } finally {
-    perfLoading.value = false;
+    if (requestSeq === performanceRequestSeq) perfLoading.value = false;
   }
 }
 
 async function loadMed() {
-  if (!pigId.value) return;
+  const requestedPigId = pigId.value;
+  if (!requestedPigId) return;
+  const requestSeq = ++medRequestSeq;
+  medRows.value = [];
   medLoading.value = true;
   try {
-    const res = (await listMedRecord({ pigId: pigId.value, pageNum: 1, pageSize: 100 })) as any;
+    const res = (await listMedRecord({ pigId: requestedPigId, pageNum: 1, pageSize: 100 })) as any;
+    if (requestSeq !== medRequestSeq || pigId.value !== requestedPigId) return;
     medRows.value = (res.rows ?? []) as MedRecordVO[];
+  } catch {
+    if (requestSeq === medRequestSeq && pigId.value === requestedPigId) medRows.value = [];
   } finally {
-    medLoading.value = false;
+    if (requestSeq === medRequestSeq) medLoading.value = false;
   }
 }
 
@@ -326,8 +357,46 @@ function goBack() {
   router.back();
 }
 
-onMounted(() => {
-  loadDetail();
+/** keep-alive 首次挂载会紧接一次 activated，跳过该次重复请求。 */
+let firstActivation = true;
+
+async function refreshActiveView() {
+  await loadDetail();
+  if (activeTab.value === 'history' || activeTab.value === 'breeding') {
+    await loadFullHistory();
+  } else if (activeTab.value === 'performance') {
+    await loadPerformance();
+  } else if (activeTab.value === 'med') {
+    await loadMed();
+  }
+}
+
+watch(
+  pigId,
+  (id, previousId) => {
+    if (!id || id === previousId) return;
+    // 同一 keep-alive 组件内由关联猪只 A 跳到 B 时，路由只换 params，不会重新 mounted/activated。
+    // 先清空 A 的所有派生数据，再刷新 B；各请求的序号守卫同时阻止 A 的慢响应回写。
+    detailRequestSeq++;
+    historyRequestSeq++;
+    performanceRequestSeq++;
+    medRequestSeq++;
+    detail.value = null;
+    history.value = [];
+    performance.value = [];
+    medRows.value = [];
+    void refreshActiveView();
+  },
+  { immediate: true }
+);
+
+// 详情页是缓存标签：从事件台账/录入页切回时 mounted 不会重跑，必须刷新状态、流水和当前 tab。
+onActivated(() => {
+  if (firstActivation) {
+    firstActivation = false;
+    return;
+  }
+  void refreshActiveView();
 });
 </script>
 

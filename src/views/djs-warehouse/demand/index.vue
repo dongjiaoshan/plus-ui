@@ -82,7 +82,7 @@ import { batchConfirmDemand, listDemandGroup } from '@/api/djs-warehouse/demand'
 import type { DemandGroupStatusCode, DemandGroupVO, DemandManageQuery, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import { listStore } from '@/api/djs-common/store';
 import type { StoreVO } from '@/api/djs-common/store/types';
-import { isKgUnit } from '@/utils/weight';
+import { formatOrderQuantity, isKgUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -157,9 +157,7 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (row: BizRow) => {
       const r = row as unknown as DemandGroupVO;
-      return r.belongType === 'white_bar'
-        ? formatWhiteBarHeads(r.demandQuantity, r.productName)
-        : formatQtyByKgRule(r.demandQuantity, r.productUnit);
+      return formatOrderQuantity(r.demandQuantity, r.productUnit, r.belongType === 'white_bar');
     }
   },
   {
@@ -213,11 +211,6 @@ const columns = computed<BizTableColumn[]>(() => [
 function formatQtyByKgRule(v: number | string | undefined, unit: string | null | undefined): string {
   const n = Number(v ?? 0);
   return isKgUnit(unit) ? n.toFixed(3) : String(Math.round(n));
-}
-/** 白条按「头」折算展示（口径同 KPI）：名含「半」半扇每单位 0.5 头、整只 1 头；去尾零不补三位小数（0.5→'0.5'，22→'22'）。 */
-function formatWhiteBarHeads(qty: number | string | undefined, name: string | undefined): string {
-  const heads = Number(qty ?? 0) * ((name ?? '').includes('半') ? 0.5 : 1);
-  return heads.toLocaleString('en-US', { maximumFractionDigits: 3, useGrouping: false });
 }
 /** 确认率：后端 0~1 小数 → 百分比整数。 */
 function formatRate(v: number | string | undefined): string {

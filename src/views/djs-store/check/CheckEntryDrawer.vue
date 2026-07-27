@@ -29,17 +29,17 @@
            precision prop 虽更新但 modelValue 恒 0 不触发内部重排，「份」行沿用上一「kg」行的陈旧 "0.000" 显示。
            按产品身份重挂行 → 输入框重挂、以 precision=0 重排 → 非 kg 显整数。 -->
       <el-table v-loading="loading" :data="filteredRows" row-key="productId" border stripe class="entry-table">
-        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center" />
+        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="120" show-overflow-tooltip align="center" header-align="center" />
         <!-- 流程性问题 row14：去掉「类别」列 -->
-        <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" header-align="center" />
+        <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" min-width="120" align="center" header-align="center" />
         <!-- 期初：只读（库存表结存） -->
-        <el-table-column :label="t('storeLedger.column.openingQty')" width="100" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.openingQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <span class="text-muted">{{ fmtQty(row.openingQty, row) }}</span>
           </template>
         </el-table-column>
         <!-- 新到货：新到货行只读（发货量）；猪肉行可编辑 -->
-        <el-table-column :label="t('storeLedger.column.inboundQty')" width="100" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.inboundQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number
               v-if="!row.inboundReadonly"
@@ -55,31 +55,31 @@
           </template>
         </el-table-column>
         <!-- 销售：手动 -->
-        <el-table-column :label="t('storeLedger.column.saleQty')" width="100" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.saleQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.saleQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 赠送：手动 -->
-        <el-table-column :label="t('storeLedger.column.giftQty')" width="100" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.giftQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.giftQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 退回（门店退回仓库）：只读 -->
-        <el-table-column :label="t('storeLedger.column.returnedQty')" width="100" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.returnedQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <span class="text-muted">{{ fmtQty(row.returnWhQty, row) }}</span>
           </template>
         </el-table-column>
         <!-- 期末：手动实盘录入 -->
-        <el-table-column :label="t('storeLedger.column.closingQty')" width="100" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.closingQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <el-input-number v-model="row.closingQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
           </template>
         </el-table-column>
         <!-- 损耗：只读（后端公式计算，前端同步展示） -->
-        <el-table-column :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center">
+        <el-table-column :label="t('storeLedger.column.lossQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <span class="loss" :class="{ 'loss-negative': row.lossQty < 0 }">{{ fmtQty(row.lossQty, row) }}</span>
           </template>

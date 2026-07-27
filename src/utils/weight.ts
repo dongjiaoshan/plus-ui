@@ -58,6 +58,33 @@ export function isKgUnit(unit: string | null | undefined): boolean {
   return unit === '公斤' || unit.toLowerCase() === 'kg';
 }
 
+/** 白条订单展示单位。 */
+export const WHITE_BAR_DEMAND_UNIT = '头';
+
+/**
+ * 订单行需求量展示。
+ *
+ * 白条订单必须展示用户下单的原始数量，不能复用发货/KPI 的半片折算；
+ * 非白条沿用 KG 三位、计数单位整数的订单口径。
+ */
+export function formatOrderQuantity(value: number | string | null | undefined, unit: string | null | undefined, isWhiteBar: boolean): string {
+  const n = toNumber(value);
+  if (n === null) return '';
+  if (isWhiteBar) {
+    return n.toLocaleString('en-US', { maximumFractionDigits: 3, useGrouping: false });
+  }
+  return isKgUnit(unit) ? n.toFixed(3) : String(Math.round(n));
+}
+
+/**
+ * 损耗量展示：KG 保留三位小数，计数单位按整数展示。
+ */
+export function formatLossQuantityByUnit(value: number | string | null | undefined, unit: string | null | undefined): string {
+  const n = toNumber(value);
+  if (n === null) return '';
+  return isKgUnit(unit) ? n.toFixed(3) : String(Math.round(n));
+}
+
 /**
  * 按计量单位分流的数量格式化（不带单位文本）：
  * - kg / 公斤 → 恒 3 位小数补零（1g 精度，同 formatNum3：0.7 → '0.700'）；
@@ -78,10 +105,7 @@ export function formatQtyByUnit(value: number | string | null | undefined, unit:
  * @example formatWhiteBarHeads(1, '半扇') // '0.5'   formatWhiteBarHeads(2, '整头白条') // '2'
  * @returns 头数文本；无效值（null / undefined / '' / NaN）返回 ''，由调用方决定空值占位符。
  */
-export function formatWhiteBarHeads(
-  value: number | string | null | undefined,
-  productName: string | null | undefined
-): string {
+export function formatWhiteBarHeads(value: number | string | null | undefined, productName: string | null | undefined): string {
   const n = toNumber(value);
   if (n === null) return '';
   const perUnit = (productName ?? '').includes('半') ? 0.5 : 1;
@@ -94,9 +118,6 @@ export function formatWhiteBarHeads(
  * @example formatWeightByBelong(1.2, 'white_bar') // '1.20 kg'
  * @example formatWeightByBelong(1.2, 'vegetable') // '1200 g'
  */
-export function formatWeightByBelong(
-  value: number | string | null | undefined,
-  belongType: string | null | undefined
-): string {
+export function formatWeightByBelong(value: number | string | null | undefined, belongType: string | null | undefined): string {
   return belongType === 'white_bar' ? formatKg(value) : formatKgToG(value);
 }
