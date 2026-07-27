@@ -2435,7 +2435,7 @@ export default {
     },
     column: {
       lossDate: '日期',
-      productCount: '损耗产品数量'
+      productCount: '损耗记录数'
     },
     detail: {
       title: '当日损耗明细',
@@ -2704,6 +2704,10 @@ export default {
         submitSuccess: '打包提交成功',
         packFailedTitle: '打包失败',
         cannotSubmit: '无法提交',
+        belowMeasureRule: '产品生产重量小于产品规格要求，不可打包。',
+        measureRuleTip: '规格要求 {rule}kg，当前称重 {actual}kg',
+        overMeasureRule: '产品重量超过规定，是否继续打包？',
+        overMeasureRuleTitle: '重量超过规定',
         cutHint: '选择已领用的白条分割单，录入各分割产品重量后确认入库；全部称重完成后点「白条完成分割」。',
         cutRecord: '分割单（猪只耳号）',
         cutRecordPlaceholder: '请选择待称重/称重中的分割单',

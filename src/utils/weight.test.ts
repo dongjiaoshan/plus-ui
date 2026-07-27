@@ -27,4 +27,11 @@ describe('损耗数量展示口径', () => {
     expect(formatLossQuantityByUnit('3.000', '盒')).toBe('3');
     expect(formatLossQuantityByUnit(1.6, '份')).toBe('2');
   });
+
+  // 燎毛损耗等流水不带 product_unit，本质是 kg 重量：按 kg 展示，不能取整成 0
+  it('单位缺失按 KG 展示', () => {
+    expect(formatLossQuantityByUnit(0.2, null)).toBe('0.200');
+    expect(formatLossQuantityByUnit(0.7, undefined)).toBe('0.700');
+    expect(formatLossQuantityByUnit(12.5, '')).toBe('12.500');
+  });
 });

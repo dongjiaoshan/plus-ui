@@ -78,11 +78,14 @@ export function formatOrderQuantity(value: number | string | null | undefined, u
 
 /**
  * 损耗量展示：KG 保留三位小数，计数单位按整数展示。
+ * 单位缺失（燎毛损耗等流水不带 product_unit）按 kg 重量处理，否则 0.200 kg 会被取整成 0。
  */
 export function formatLossQuantityByUnit(value: number | string | null | undefined, unit: string | null | undefined): string {
   const n = toNumber(value);
   if (n === null) return '';
-  return isKgUnit(unit) ? n.toFixed(3) : String(Math.round(n));
+  const unitText = typeof unit === 'string' ? unit.trim() : '';
+  if (unitText === '' || isKgUnit(unitText)) return n.toFixed(3);
+  return String(Math.round(n));
 }
 
 /**

@@ -2432,7 +2432,7 @@ export default {
     },
     column: {
       lossDate: 'Date',
-      productCount: 'Loss Product Count'
+      productCount: 'Loss Records'
     },
     detail: {
       title: 'Daily Loss Detail',
@@ -2701,6 +2701,10 @@ export default {
         submitSuccess: 'Packing submitted',
         packFailedTitle: 'Pack failed',
         cannotSubmit: 'Cannot submit',
+        belowMeasureRule: 'Production weight is below the product specification; packing is not allowed.',
+        measureRuleTip: 'Spec requires {rule}kg, current weight {actual}kg',
+        overMeasureRule: 'Weight exceeds the specification. Continue packing?',
+        overMeasureRuleTitle: 'Weight exceeds specification',
         cutHint: 'Pick a picked cut record, enter cut-product weights and confirm inbound; click "Finish Cut" when all are weighed.',
         cutRecord: 'Cut Record (Ear No)',
         cutRecordPlaceholder: 'Select a picked/cutting record',

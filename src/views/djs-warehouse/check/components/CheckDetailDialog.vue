@@ -3,8 +3,9 @@
     <el-descriptions :column="3" border class="mb-3">
       <el-descriptions-item :label="t('djs.warehouse.check.checkWarehouse')">{{ header?.locationName }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.checkDate')">{{ header?.checkDate ? proxy?.parseTime?.(header.checkDate, '{y}-{m}-{d}') : '' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('djs.warehouse.check.goodsCount')">{{ header?.stockProductCount ?? 0 }}</el-descriptions-item>
+      <!-- row108#3：去掉「状态」列，盘点产品数占原状态位；库存产品数紧随其后 -->
       <el-descriptions-item :label="t('djs.warehouse.check.checkedProductCount')">{{ header?.lineCount ?? 0 }}</el-descriptions-item>
+      <el-descriptions-item :label="t('djs.warehouse.check.goodsCount')">{{ header?.stockProductCount ?? 0 }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.abnormalCount')">{{ header?.abnormalCount ?? 0 }}</el-descriptions-item>
       <el-descriptions-item :label="t('djs.warehouse.check.checkBy')">{{ header?.checkByName }}</el-descriptions-item>
     </el-descriptions>
@@ -44,6 +45,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// ADR-0004 §2.4 Vue3 字典消费范式：结果走全局字典（消除本地双源）
 const { djs_check_result } = toRefs<any>(proxy?.useDict('djs_check_result'));
 
 const visible = defineModel<boolean>({ required: true });

@@ -63,7 +63,7 @@
         </el-col>
         <el-col :span="12">
           <el-form-item :label="t('storeDemand.field.productUnit')" prop="productUnit">
-            <el-input v-model="form.productUnit" maxlength="16" :placeholder="t('storeDemand.placeholder.productUnit')" disabled />
+            <el-input :model-value="displayProductUnit" maxlength="16" :placeholder="t('storeDemand.placeholder.productUnit')" disabled />
           </el-form-item>
         </el-col>
 
@@ -88,6 +88,7 @@ import { addStoreDemand, getStoreDemand, updateStoreDemand } from '@/api/djs-sto
 import type { StoreDemandForm, StoreDemandProductType } from '@/api/djs-store/demand/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import { WHITE_BAR_DEMAND_UNIT } from '@/utils/weight';
 import { useStoreContextStore } from '@/store/modules/storeContext';
 import { storeToRefs } from 'pinia';
 
@@ -118,6 +119,12 @@ const form = reactive<StoreDemandForm>(baseForm());
 
 /** 业态优先取已载入单据的落库业态，其次取传入默认值，最后兜底 other。 */
 const effectiveType = computed<StoreDemandProductType>(() => form.productType ?? props.productType ?? 'other');
+
+// row113：白条产品单位统一显示为「头」（产品主数据里白条 product_unit 是 kg）。
+// 仅改展示，form.productUnit 原值照常提交，不影响落库口径。
+const displayProductUnit = computed<string>(() =>
+  effectiveType.value === 'white_bar' ? WHITE_BAR_DEMAND_UNIT : (form.productUnit ?? '')
+);
 
 // 门店选项 = 当前登录人有权限的门店（全局门店上下文，不再 listStore 拉全部）
 const { myStores: storeOptions } = storeToRefs(useStoreContextStore());

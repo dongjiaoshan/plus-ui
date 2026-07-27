@@ -1196,25 +1196,75 @@ function validate(): boolean {
 }
 
 /**
+ * admin rows97/98：当前所选产品的打包计量规则（kg）。
+ * 仅肉品 / 果蔬按 materialNum 校验；未配置或非正数 → null（不校验）。
+ */
+function packMeasureRuleKg(): number | null {
+  const product = selectedProduct.value;
+  if (!product || (product.belongType !== 'pork' && product.belongType !== 'vegetable')) return null;
+  const rule = Number(product.materialNum);
+  return Number.isFinite(rule) && rule > 0 ? rule : null;
+}
+
+// admin rows97/98：客户要求「获取到产品重量时」就弹提示，而不是等点提交。
+// 秤回填（ScaleReader @fill）与手工录入都会改 form.productWeight，故直接盯该值。
+// ⚠️ 必须防抖：numpad 是逐键 emit 的（输入 500 会依次产生 5 / 50 / 500），
+// 不防抖会在 5g、50g 各误报一次。等用户停手 700ms 再判，且同一产品只在
+// 「由不违规变违规」时提示一次，避免退格重输时刷屏。
+const belowRuleNotified = ref(false);
+let measureRuleTimer: ReturnType<typeof setTimeout> | null = null;
+watch(
+  () => [form.value.productWeight, form.value.productId] as const,
+  () => {
+    if (measureRuleTimer) clearTimeout(measureRuleTimer);
+    measureRuleTimer = setTimeout(() => {
+      const rule = packMeasureRuleKg();
+      const actual = packWeightKg();
+      if (rule == null || actual == null || actual >= rule) {
+        belowRuleNotified.value = false;
+        return;
+      }
+      if (belowRuleNotified.value) return;
+      belowRuleNotified.value = true;
+      ElNotification.warning({
+        title: t('djs.warehouse.packEntry.belowMeasureRule'),
+        message: t('djs.warehouse.packEntry.measureRuleTip', { rule, actual })
+      });
+    }, 700);
+  }
+);
+
+onBeforeUnmount(() => {
+  if (measureRuleTimer) clearTimeout(measureRuleTimer);
+});
+
+/**
  * admin rows97/98：肉品、果蔬按产品 materialNum 校验称重规则。
  * 小于规则直接阻断；超过 3% 弹确认框，取消不提交，确认后由 allowOverMeasure 透传给后端复核。
  */
 async function confirmPackMeasureRule(): Promise<boolean | null> {
-  const product = selectedProduct.value;
-  if (!product || (product.belongType !== 'pork' && product.belongType !== 'vegetable')) return false;
-  const rule = Number(product.materialNum);
+  const rule = packMeasureRuleKg();
   const actual = packWeightKg();
-  if (!Number.isFinite(rule) || rule <= 0 || actual == null) return false;
+  if (rule == null || actual == null) return false;
   if (actual < rule) {
-    notifyMissing(`实称重量 ${actual}kg 不能低于打包规则 ${rule}kg`);
+    // 文案用客户原话，数值放副文案。
+    ElNotification.warning({
+      title: t('djs.warehouse.packEntry.belowMeasureRule'),
+      message: t('djs.warehouse.packEntry.measureRuleTip', { rule, actual })
+    });
     return null;
   }
+  // row97/98：超出比例 =（实称 − 规则）/ 规则；≤3% 走正常流程，>3% 才提示确认。
   if (actual <= rule * 1.03) return false;
   try {
     await ElMessageBox.confirm(
-      `实称重量 ${actual}kg 已超过打包规则 ${rule}kg 的 3%，是否继续打包？`,
-      '重量超出规则',
-      { confirmButtonText: '继续打包', cancelButtonText: '取消', type: 'warning' }
+      t('djs.warehouse.packEntry.overMeasureRule'),
+      t('djs.warehouse.packEntry.overMeasureRuleTitle'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
     );
     return true;
   } catch {

@@ -13,7 +13,7 @@ import { AxiosPromise } from 'axios';
 export interface LossOverviewDailyVO {
   /** 损耗日期 yyyy-MM-dd */
   lossDate: string;
-  /** 当日 distinct 损耗产品/商品数 */
+  /** 当日损耗记录条数（与详情弹框行数一致） */
   productCount: number;
 }
 
