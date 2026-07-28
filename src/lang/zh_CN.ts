@@ -2435,7 +2435,7 @@ export default {
     },
     column: {
       lossDate: '日期',
-      productCount: '损耗记录数'
+      productCount: '损耗品种数'
     },
     detail: {
       title: '当日损耗明细',
@@ -3854,6 +3854,40 @@ export default {
       noCode: '该行无追溯码可补打'
     }
   },
+  vegHandleRecord: {
+    pageTitle: '毛菜间处理记录',
+    field: {
+      handleDate: '处理日期',
+      cropName: '作物名称',
+      statSource: '统计来源',
+      handleMethod: '处理方式',
+      plotCode: '地块编号',
+      recorder: '记录人'
+    },
+    placeholder: {
+      cropName: '请输入作物名称',
+      statSource: '请选择统计来源',
+      handleMethod: '请选择处理方式',
+      plotCode: '请输入地块编号',
+      recorder: '请输入记录人'
+    },
+    option: {
+      statSourceVeg: '毛菜处理间',
+      statSourceActivity: '采摘活动'
+    },
+    column: {
+      handleDate: '处理日期',
+      cropName: '作物名称',
+      statSource: '统计来源',
+      handleMethod: '处理方式',
+      plotCode: '地块编号',
+      handleWeight: '处理量',
+      recorder: '记录人'
+    },
+    unit: {
+      kg: 'kg'
+    }
+  },
   storeReturn: {
     export: {
       failed: '导出失败，请稍后重试'
@@ -3888,6 +3922,7 @@ export default {
       unit: '单位',
       goodsWeight: '货物重量',
       storeReturnWeight: '门店退回重量',
+      returnLimit: '可退上限',
       returnLocation: '退回库位',
       receivedQty: '仓库实收量',
       receivedWeight: '仓库实收重量',
@@ -3922,7 +3957,9 @@ export default {
       submit: '确认提交',
       submitConfirm: '确认提交 {n} 条退回？',
       quantityPlaceholder: '请输入退回量',
-      vegBothRequired: '果蔬「{name}」需同时填写退回量和退回产品重量'
+      vegBothRequired: '果蔬「{name}」需同时填写退回量和退回产品重量',
+      noReturnable: '当日无可退量',
+      overLimit: '「{name}」退回量超过可退上限 {limit}{unit}'
     },
     placeholder: {
       returnDirection: '请选择退回方向',

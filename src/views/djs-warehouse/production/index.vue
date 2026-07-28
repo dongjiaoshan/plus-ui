@@ -87,7 +87,13 @@ const columns = computed<BizTableColumn[]>(() => [
     label: '需求满足率',
     minWidth: 110,
     align: 'center',
-    formatter: (row: BizRow) => `${Number((row as ProductProductionGroupVO).fulfillmentRate ?? 0).toFixed(2)}%`
+    // 满足率 = 生产量 / 需求量 × 100%；需求量为 0 时后端返 null → 展示 -
+    formatter: (row: BizRow) => {
+      const v = (row as ProductProductionGroupVO).fulfillmentRate;
+      if (v === null || v === undefined) return '-';
+      const n = Number(v);
+      return Number.isFinite(n) ? `${n.toFixed(2)}%` : '-';
+    }
   },
   { prop: 'productName', label: '产品名称', minWidth: 180 },
   { prop: 'belongType', label: t('djs.warehouse.production.column.belongType'), minWidth: 110, dictType: 'djs_belong_type' },

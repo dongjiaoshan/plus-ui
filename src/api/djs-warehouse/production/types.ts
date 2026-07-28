@@ -73,8 +73,8 @@ export interface ProductProductionGroupVO {
   productType?: number;
   /** 当天有效需求总量（取消/删除需求不计） */
   demandQty: number;
-  /** 客户验收公式：需求量 / 生产量 × 100% */
-  fulfillmentRate: number;
+  /** 客户验收公式：生产量 / 需求量 × 100%；需求量为 0 时后端返 null，前端展示 - */
+  fulfillmentRate: number | null;
   produceQty: number;
   itemCount: number;
   /** 原材料名称：material_id → product_info.product_name（后端聚合回填；row167 列表列） */

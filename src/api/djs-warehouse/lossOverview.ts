@@ -13,7 +13,7 @@ import { AxiosPromise } from 'axios';
 export interface LossOverviewDailyVO {
   /** 损耗日期 yyyy-MM-dd */
   lossDate: string;
-  /** 当日损耗记录条数（与详情弹框行数一致） */
+  /** 当日损耗品种数（= 详情弹框按产品编码去重的数量；燎毛损耗无编码不计入） */
   productCount: number;
 }
 
@@ -29,7 +29,7 @@ export interface LossOverviewDetailVO {
   productCode?: string;
   /** 产品名称 */
   productName?: string;
-  /** 单位 */
+  /** 单位（燎毛损耗流水无快照单位，后端固定返 kg） */
   productUnit?: string;
   /** 损耗类型 djs_loss_type */
   lossType?: string;

@@ -1,5 +1,5 @@
 <template>
-  <!-- 查看详情：只读 10 列矩阵，点蒙层可关（保持 Element Plus 默认）。对齐原型「门店盘点>当日盘点只读」。 -->
+  <!-- 查看详情：只读 9 列矩阵，点蒙层可关（保持 Element Plus 默认）。对齐原型「门店盘点>当日盘点只读」。 -->
   <el-drawer v-model="visible" :title="title" direction="rtl" size="80%" append-to-body destroy-on-close>
     <!-- 品类切换：猪肉产品 / 果蔬产品 / 其他产品（DENGBO-R10），与新增当日盘点一致 -->
     <!-- 页签右侧（row49）：当日白条分割损耗 = max(0, 白条到店重 − 白条分割产品总重)，后端权威计算；当天无白条到店则不显示。 -->
@@ -11,17 +11,17 @@
         {{ t('storeLedger.entry.whiteBarSplitLoss') }}<span class="value">{{ whiteBarSplitLoss.toFixed(3) }}</span> kg
       </div>
     </div>
+    <!-- row120：所有列同一 min-width（el-table 按比例分配 → 等宽），产品名称不再独占大半；「退货量」(returnQty，顾客退货) 隐藏，只留「退回量」(whReturnQty，门店退回仓库)。 -->
     <el-table v-loading="loading" :data="filteredLines" border stripe>
-      <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="140" show-overflow-tooltip fixed="left" align="center" header-align="center" />
-      <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" width="90" align="center" header-align="center" />
-      <el-table-column prop="openingQty" :label="t('storeLedger.column.openingQty')" width="110" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="inboundQty" :label="t('storeLedger.column.inboundQty')" width="110" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="saleQty" :label="t('storeLedger.column.saleQty')" width="100" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="giftQty" :label="t('storeLedger.column.giftQty')" width="100" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="returnQty" :label="t('storeLedger.column.returnQty')" width="100" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="whReturnQty" :label="t('storeLedger.column.returnedQty')" width="100" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" width="100" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="closingQty" :label="t('storeLedger.column.closingQty')" width="110" align="center" header-align="center" fixed="right">
+      <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="120" show-overflow-tooltip fixed="left" align="center" header-align="center" />
+      <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" min-width="120" align="center" header-align="center" />
+      <el-table-column prop="openingQty" :label="t('storeLedger.column.openingQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
+      <el-table-column prop="inboundQty" :label="t('storeLedger.column.inboundQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
+      <el-table-column prop="saleQty" :label="t('storeLedger.column.saleQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
+      <el-table-column prop="giftQty" :label="t('storeLedger.column.giftQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
+      <el-table-column prop="whReturnQty" :label="t('storeLedger.column.returnedQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
+      <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
+      <el-table-column prop="closingQty" :label="t('storeLedger.column.closingQty')" min-width="120" align="center" header-align="center" fixed="right">
         <template #default="{ row }">
           <span class="closing">{{ fmtQty(row.closingQty, row.materialUnit || row.productUnit) }}</span>
         </template>

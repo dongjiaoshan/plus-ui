@@ -54,7 +54,13 @@
               </template>
             </el-table-column>
 
-            <el-table-column :label="t('storeDemand.create.productName')" min-width="160" show-overflow-tooltip align="center" header-align="center">
+            <el-table-column
+              :label="t('storeDemand.create.productName')"
+              :min-width="DATA_COL_MIN_WIDTH"
+              show-overflow-tooltip
+              align="center"
+              header-align="center"
+            >
               <template #default="{ row }">{{ row.displayName || row.productName }}</template>
             </el-table-column>
 
@@ -62,7 +68,7 @@
             <el-table-column
               v-if="activeTab === 'white_bar'"
               :label="t('storeDemand.create.availablePigs')"
-              width="140"
+              :min-width="DATA_COL_MIN_WIDTH"
               align="center"
               header-align="center"
             >
@@ -70,34 +76,41 @@
             </el-table-column>
 
             <!-- 规格（除白条外都有） -->
-            <el-table-column v-if="cols.spec" :label="t('storeDemand.create.spec')" width="100" align="center" header-align="center">
+            <el-table-column
+              v-if="cols.spec"
+              :label="t('storeDemand.create.spec')"
+              :min-width="DATA_COL_MIN_WIDTH"
+              align="center"
+              header-align="center"
+            >
               <template #default="{ row }">{{ row.productSpec || dash }}</template>
             </el-table-column>
 
             <!-- 单位（果蔬无单列：原型果蔬表无「单位」列） -->
             <!-- 白条下单按「份/半只」计数口径展示单位（product_unit=kg 仅供分割/盘点按重量用），仅展示层覆盖，不改落库单位 -->
-            <el-table-column v-if="cols.unit" :label="t('storeDemand.create.unit')" width="90" align="center" header-align="center">
+            <el-table-column
+              v-if="cols.unit"
+              :label="t('storeDemand.create.unit')"
+              :min-width="DATA_COL_MIN_WIDTH"
+              align="center"
+              header-align="center"
+            >
               <template #default="{ row }">{{ activeTab === 'white_bar' ? WHITE_BAR_DEMAND_UNIT : row.productUnit || dash }}</template>
             </el-table-column>
 
-            <!-- 原材料库存（跨域字段，product 主数据无，占位 '—'） -->
-            <el-table-column v-if="cols.material" :label="t('storeDemand.create.materialStock')" width="120" align="center" header-align="center">
-              <template #default>{{ dash }}</template>
-            </el-table-column>
-
-            <!-- 果蔬专属：剩余地块 / 预计产量 / 最早可采摘 / 最晚可采摘（均跨域，占位 '—'） -->
+            <!-- 果蔬专属：剩余地块 / 预计产量 / 最早可采摘 / 最晚可采摘（取种植域作物地块统计，无数据显示 '—'） -->
             <template v-if="activeTab === 'vegetable'">
-              <el-table-column :label="t('storeDemand.create.remainPlot')" width="100" align="center" header-align="center">
-                <template #default>{{ dash }}</template>
+              <el-table-column :label="t('storeDemand.create.remainPlot')" :min-width="DATA_COL_MIN_WIDTH" align="center" header-align="center">
+                <template #default="{ row }">{{ cropStatOf(row)?.remainPlotCount ?? dash }}</template>
               </el-table-column>
-              <el-table-column :label="t('storeDemand.create.expectYield')" width="110" align="center" header-align="center">
-                <template #default>{{ dash }}</template>
+              <el-table-column :label="t('storeDemand.create.expectYield')" :min-width="DATA_COL_MIN_WIDTH" align="center" header-align="center">
+                <template #default="{ row }">{{ cropStatOf(row)?.expectYield ?? dash }}</template>
               </el-table-column>
-              <el-table-column :label="t('storeDemand.create.earliestPick')" width="130" align="center" header-align="center">
-                <template #default>{{ dash }}</template>
+              <el-table-column :label="t('storeDemand.create.earliestPick')" :min-width="DATA_COL_MIN_WIDTH" align="center" header-align="center">
+                <template #default="{ row }">{{ cropStatOf(row)?.earliestPickDate || dash }}</template>
               </el-table-column>
-              <el-table-column :label="t('storeDemand.create.latestPick')" width="130" align="center" header-align="center">
-                <template #default>{{ dash }}</template>
+              <el-table-column :label="t('storeDemand.create.latestPick')" :min-width="DATA_COL_MIN_WIDTH" align="center" header-align="center">
+                <template #default="{ row }">{{ cropStatOf(row)?.latestPickDate || dash }}</template>
               </el-table-column>
             </template>
 
@@ -129,7 +142,9 @@
               <el-icon class="cart-del" @click="removeFromCart(item.productId)"><CircleCloseFilled /></el-icon>
               <div class="cart-item-main">
                 <span class="cart-item-name">{{ item.productName }}</span>
-                <span class="cart-item-qty">{{ item.demandQuantity }}{{ item.productType === 'white_bar' ? WHITE_BAR_DEMAND_UNIT : item.productUnit }}</span>
+                <span class="cart-item-qty"
+                  >{{ item.demandQuantity }}{{ item.productType === 'white_bar' ? WHITE_BAR_DEMAND_UNIT : item.productUnit }}</span
+                >
               </div>
               <!-- 个人邮寄 UI 隐藏（87-1 决策 #10-B：保后端 StoreDemandBatchBo.mailing 字段，提交载荷仍带 mailing=false） -->
             </div>
@@ -163,6 +178,8 @@ import { batchCreateStoreDemand, listStoreDemandAvailablePigs } from '@/api/djs-
 import type { StoreDemandBatchItem, StoreDemandProductType, StoreDemandTabType } from '@/api/djs-store/demand/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import { listCropPlotStat, buildCropPlotStatByProduct, type CropPlotStatByProduct } from '@/api/djs-plant/cropStat';
+import type { CropPlotStatVO } from '@/api/djs-plant/cropStat/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
 import { useI18n } from 'vue-i18n';
 import { WHITE_BAR_DEMAND_UNIT } from '@/utils/weight';
@@ -179,6 +196,17 @@ const currentStoreName = computed(() => {
 });
 
 const dash = '—';
+
+/**
+ * 数据列统一 min-width（客户要求「各列宽度都一样」）。
+ *
+ * el-table 分配规则：设 width 的列固定占该宽度，其余（只设 min-width）为弹性列 ——
+ * 表体剩余宽度按各弹性列 min-width 的比例瓜分，因此所有弹性列取同一 min-width 即等宽；
+ * 剩余宽度不够时各弹性列退回 min-width、表体横向滚动，仍然等宽。
+ * 130 是最长表头（「最早可采摘日期」/「可出栏猪只头数」7 字 ≈ 98px + 单元格左右 padding 24px）不折行的下限。
+ * 产品图片（width=90）与需求量（width=180，stepper 需固定空间）不参与瓜分。
+ */
+const DATA_COL_MIN_WIDTH = 130;
 
 /** 明日日期 YYYY-MM-DD（本地时区，需求日期默认值）。 */
 function tomorrowStr(): string {
@@ -233,21 +261,18 @@ const cart = ref<CartLine[]>([]);
 
 const currentTab = computed<TabDef>(() => TABS.find((x) => x.key === activeTab.value) ?? TABS[0]);
 
-/** 每 tab 列开关（原材料库存所有 tab 恒显示）。 */
+/** 每 tab 列开关。 */
 const cols = computed(() => {
   switch (activeTab.value) {
     case 'white_bar':
-      // 产品图片 / 产品名称 / 可出栏猪只头数 / 单位 / 原材料库存 / 需求量
-      return { spec: false, unit: true, material: true };
+      // 产品图片 / 产品名称 / 可出栏猪只头数 / 单位 / 需求量
+      return { spec: false, unit: true };
     case 'vegetable':
-      // 产品图片 / 产品名称 / 规格 / 原材料库存 / 剩余地块 / 预计产量 / 采摘日期×2 / 需求量（无单位列）
-      return { spec: true, unit: false, material: true };
-    case 'gift_box':
-      // 产品图片 / 产品名称 / 单位 / 规格 / 原材料库存 / 需求量
-      return { spec: true, unit: true, material: true };
+      // 产品图片 / 产品名称 / 规格 / 剩余地块 / 预计产量 / 采摘日期×2 / 需求量（无单位列）
+      return { spec: true, unit: false };
     default:
-      // 猪/干货/鸡蛋/其他：产品图片 / 产品名称 / 规格 / 单位 / 原材料库存 / 需求量
-      return { spec: true, unit: true, material: true };
+      // 猪/干货/鸡蛋/礼盒/其他：产品图片 / 产品名称 / 规格 / 单位 / 需求量
+      return { spec: true, unit: true };
   }
 });
 
@@ -272,10 +297,34 @@ const tabProducts = computed<ProductInfoVO[]>(() => {
   // 产品名称过滤（点「查询」后生效，跨 tab 保留 appliedKeyword）
   const kw = appliedKeyword.value.toLowerCase();
   if (kw) {
-    list = list.filter((p) => ((p.displayName || p.productName) ?? '').toLowerCase().includes(kw) || (p.productName ?? '').toLowerCase().includes(kw));
+    list = list.filter(
+      (p) => ((p.displayName || p.productName) ?? '').toLowerCase().includes(kw) || (p.productName ?? '').toLowerCase().includes(kw)
+    );
   }
   return list;
 });
+
+const cropStats = ref<CropPlotStatVO[]>([]);
+
+/**
+ * 果蔬统计索引「产品 id → 统计值」。归并由 api 层的 buildCropPlotStatByProduct 负责：
+ * 同一基础果蔬产品可能被多条作物指向（如「甘蓝」挂两条测试作物），地块数与预计产量必须累加、
+ * 日期取 min/max，直接按 relatedProduct 建 Map 会互相覆盖漏算。
+ */
+const cropStatMap = computed<Record<string, CropPlotStatByProduct>>(() => buildCropPlotStatByProduct(cropStats.value));
+
+/**
+ * 果蔬产品行 → 作物统计（与后端展示名解析同一条映射链）：
+ * 原材料产品 id = `product_material ?? product.id`（成品挂原材料，基础果蔬自身即原材料）
+ * → `t_plant_crop_info.related_product` 命中作物。查不到返回 undefined，列渲染回落 '—'。
+ */
+function cropStatOf(row: ProductInfoVO): CropPlotStatByProduct | undefined {
+  const key = row.productMaterial ?? row.id;
+  if (key === undefined || key === null || String(key) === '') {
+    return undefined;
+  }
+  return cropStatMap.value[String(key)];
+}
 
 function quantityOf(row: ProductInfoVO): number {
   const line = cart.value.find((c) => c.productId === String(row.id));
@@ -310,12 +359,24 @@ function removeFromCart(productId: string) {
   if (idx >= 0) cart.value.splice(idx, 1);
 }
 
+/** 候选产品单页拉取条数；总数超过一页时按 total 逐页补齐（见 loadProducts）。 */
+const PRODUCT_PAGE_SIZE = 500;
+
 async function loadProducts() {
   productLoading.value = true;
   try {
     // withDisplayName：果蔬候选按原材料作物有效有机证书解析展示名（有证=产品名 / 无证=别名），与下单定格一致。
-    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0, withDisplayName: true });
-    const rows = ((res as unknown as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
+    // 必须按 total 翻完所有页：启用产品总数已超过单页 500，只取第一页会让靠后的业态（果蔬/其他）整片产品在
+    // 对应 tab 里消失（门店根本下不了单），且缺失是静默的、看不出来。
+    type ProductPage = { rows?: ProductInfoVO[]; data?: ProductInfoVO[]; total?: number };
+    const first = (await listProduct({ pageNum: 1, pageSize: PRODUCT_PAGE_SIZE, productStatus: 0, withDisplayName: true })) as unknown as ProductPage;
+    const rows: ProductInfoVO[] = [...((first.rows ?? first.data ?? []) as ProductInfoVO[])];
+    const total = Number(first.total ?? rows.length);
+    const pages = Math.ceil(total / PRODUCT_PAGE_SIZE);
+    for (let page = 2; page <= pages; page++) {
+      const next = (await listProduct({ pageNum: page, pageSize: PRODUCT_PAGE_SIZE, productStatus: 0, withDisplayName: true })) as unknown as ProductPage;
+      rows.push(...((next.rows ?? next.data ?? []) as ProductInfoVO[]));
+    }
     // 加载全部启用产品，原料排除按 tab 业态区分（见 tabProducts）：
     // 白条 tab 取自产白条(含原料态白条，门店订白条→现场分割)；其余业态排除原材料(product_attr=2)。
     allProducts.value = rows;
@@ -324,6 +385,17 @@ async function loadProducts() {
     allProducts.value = [];
   } finally {
     productLoading.value = false;
+  }
+}
+
+/** 果蔬 tab 的剩余地块 / 预计产量 / 可采摘日期区间（种植域按作物聚合）。 */
+async function loadCropStats() {
+  try {
+    const res = await listCropPlotStat();
+    cropStats.value = res.data ?? [];
+  } catch (e) {
+    console.warn('[DemandCartDrawer] listCropPlotStat failed', e);
+    cropStats.value = [];
   }
 }
 
@@ -370,6 +442,7 @@ async function submit() {
 function reset() {
   activeTab.value = 'white_bar';
   cart.value = [];
+  cropStats.value = [];
   demandRemark.value = '';
   demandDate.value = tomorrowStr();
   searchKeyword.value = '';
@@ -384,7 +457,7 @@ async function open(presetStoreId: string) {
   reset();
   storeId.value = presetStoreId || '';
   visible.value = true;
-  await Promise.all([loadProducts(), loadAvailablePigs()]);
+  await Promise.all([loadProducts(), loadAvailablePigs(), loadCropStats()]);
 }
 
 defineExpose({ open });

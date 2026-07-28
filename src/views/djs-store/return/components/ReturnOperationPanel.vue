@@ -8,7 +8,7 @@
       </el-radio-group>
     </div>
 
-    <!-- 猪肉产品：产品名称 / 退回量 / 单位（流程性问题 row15：去掉「退回产品重量(KG)」列；退回量精度按单位 kg→3位/非kg→整数；白条产品也在退回量列录入） -->
+    <!-- 猪肉产品：产品名称 / 退回量 / 可退上限 / 单位（row119：退回量按「当日到店量 − 今日已退」封顶，上限 0 → 不可退） -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" min-width="180" show-overflow-tooltip align="center" header-align="center">
         <template #default="{ row }">
@@ -20,12 +20,19 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
+            :max="maxOf(row)"
+            :disabled="maxOf(row) === 0"
             :precision="isKg(row.productUnit) ? 3 : 0"
             :step="1"
-            :placeholder="t('storeReturn.operation.quantityPlaceholder')"
+            :placeholder="placeholderOf(row)"
             controls-position="right"
             style="width: 180px"
           />
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('storeReturn.column.returnLimit')" width="140" align="center" header-align="center">
+        <template #default="{ row }">
+          <span :class="{ 'limit-zero': maxOf(row) === 0 }">{{ limitText(row) }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
@@ -33,7 +40,7 @@
       </el-table-column>
     </el-table>
 
-    <!-- 果蔬产品：产品名称 / 退回量 / 单位（流程性问题 row15 同上） -->
+    <!-- 果蔬产品：产品名称 / 退回量 / 可退上限 / 单位（row119 同上） -->
     <el-table v-else v-loading="loading" :data="vegRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
       <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
@@ -41,13 +48,19 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :max="row.arrivedQuantity ?? Infinity"
+            :max="maxOf(row)"
+            :disabled="maxOf(row) === 0"
             :precision="isKg(row.productUnit) ? 3 : 0"
             :step="1"
-            :placeholder="t('storeReturn.operation.quantityPlaceholder')"
+            :placeholder="placeholderOf(row)"
             controls-position="right"
             style="width: 180px"
           />
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('storeReturn.column.returnLimit')" width="140" align="center" header-align="center">
+        <template #default="{ row }">
+          <span :class="{ 'limit-zero': maxOf(row) === 0 }">{{ limitText(row) }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
@@ -87,6 +100,8 @@ interface MatrixRow {
   returnWeight?: number;
   /** 到店量（退回量上限 rows40/41）：份数产品=当日到店需求订购份数 / 重量产品=当日到店重量；空 → 不封顶 */
   arrivedQuantity?: number;
+  /** 今日已退量（row119）：可退上限 = 到店量 − 今日已退 */
+  returnedQuantity?: number;
 }
 
 const storeContext = useStoreContextStore();
@@ -111,6 +126,31 @@ function isKg(unit?: string): boolean {
   return u === 'kg' || u === '公斤';
 }
 
+/**
+ * row119：该行可退上限 = 当日到店量 − 今日已退量（不小于 0）。
+ * 后端候选接口给 arrivedQuantity / returnedQuantity，两端同一口径；到店量为空 = 该产品不封顶（Infinity）。
+ */
+function maxOf(row: MatrixRow): number {
+  if (row.arrivedQuantity === undefined || row.arrivedQuantity === null) {
+    return Infinity;
+  }
+  return Math.max(0, Number(row.arrivedQuantity) - Number(row.returnedQuantity ?? 0));
+}
+
+/** 可退上限展示文案：不封顶 → '—'；kg 保留 3 位、计件去尾零。 */
+function limitText(row: MatrixRow): string {
+  const max = maxOf(row);
+  if (!Number.isFinite(max)) {
+    return '—';
+  }
+  return isKg(row.productUnit) ? max.toFixed(3) : String(Number(max.toFixed(0)));
+}
+
+/** 上限为 0（当日没到店 / 今日已退完）时，输入框直接禁用并说明原因。 */
+function placeholderOf(row: MatrixRow): string {
+  return maxOf(row) === 0 ? t('storeReturn.operation.noReturnable') : t('storeReturn.operation.quantityPlaceholder');
+}
+
 /** 猪肉 tab：后端按「该门店当日是否有白条到店」决定是否返回字典项候选（无到店 / 未选门店 → 空）。 */
 async function loadPorkCandidates() {
   if (!storeId.value) {
@@ -126,6 +166,7 @@ async function loadPorkCandidates() {
       productUnit: p.productUnit,
       subCategory: p.subCategory ?? 'pork',
       arrivedQuantity: p.arrivedQuantity,
+      returnedQuantity: p.returnedQuantity,
       returnQuantity: undefined,
       returnWeight: undefined
     }));
@@ -150,6 +191,7 @@ async function loadVegRows() {
       productName: p.productName ?? '',
       productUnit: p.productUnit,
       arrivedQuantity: p.arrivedQuantity,
+      returnedQuantity: p.returnedQuantity,
       returnQuantity: undefined,
       returnWeight: undefined
     }));
@@ -166,6 +208,12 @@ watch(storeId, () => {
 
 async function handleSubmit() {
   if (!storeId.value) {
+    return;
+  }
+  // row119：提交前再拦一次超限（input :max 挡键盘输入，粘贴 / 上限刷新后仍可能越界；后端同口径二次把关）。
+  const over = [...porkRows.value, ...vegRows.value].find((r) => (r.returnQuantity ?? 0) > maxOf(r));
+  if (over) {
+    proxy?.$modal.msgError(t('storeReturn.operation.overLimit', { name: over.productName, limit: limitText(over), unit: over.productUnit ?? '' }));
     return;
   }
   // 流程性问题 row15：唯一录入项是退回量。退回产品重量由前端按单位派生——
@@ -185,10 +233,8 @@ async function handleSubmit() {
   try {
     await batchCreateStoreReturn({ storeId: storeId.value, items });
     proxy?.$modal.msgSuccess(t('common.opSuccess'));
-    [...porkRows.value, ...vegRows.value].forEach((r) => {
-      r.returnQuantity = undefined;
-      r.returnWeight = undefined;
-    });
+    // row119：重拉候选刷新「今日已退」→ 可退上限随之收缩，避免连续提交累计越界。
+    await Promise.all([loadPorkCandidates(), loadVegRows()]);
   } finally {
     submitLoading.value = false;
   }
@@ -220,6 +266,11 @@ onMounted(async () => {
 
   .sub-tag {
     margin-left: 6px;
+  }
+
+  // 可退上限为 0（当日没到店 / 今日已退完）：置灰提示，输入框同时禁用
+  .limit-zero {
+    color: var(--el-color-danger);
   }
 
   .text-muted {

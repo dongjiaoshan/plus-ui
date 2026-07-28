@@ -2432,7 +2432,7 @@ export default {
     },
     column: {
       lossDate: 'Date',
-      productCount: 'Loss Records'
+      productCount: 'Loss Varieties'
     },
     detail: {
       title: 'Daily Loss Detail',
@@ -3851,6 +3851,40 @@ export default {
       noCode: 'No trace code to reprint for this row'
     }
   },
+  vegHandleRecord: {
+    pageTitle: 'Veg Handling Records',
+    field: {
+      handleDate: 'Handle Date',
+      cropName: 'Crop Name',
+      statSource: 'Source',
+      handleMethod: 'Handling Method',
+      plotCode: 'Plot Code',
+      recorder: 'Recorder'
+    },
+    placeholder: {
+      cropName: 'Enter crop name',
+      statSource: 'Select source',
+      handleMethod: 'Select handling method',
+      plotCode: 'Enter plot code',
+      recorder: 'Enter recorder'
+    },
+    option: {
+      statSourceVeg: 'Veg Handling Room',
+      statSourceActivity: 'Picking Activity'
+    },
+    column: {
+      handleDate: 'Handle Date',
+      cropName: 'Crop Name',
+      statSource: 'Source',
+      handleMethod: 'Handling Method',
+      plotCode: 'Plot Code',
+      handleWeight: 'Handled Weight',
+      recorder: 'Recorder'
+    },
+    unit: {
+      kg: 'kg'
+    }
+  },
   storeReturn: {
     export: {
       failed: 'Export failed, please try again later'
@@ -3885,6 +3919,7 @@ export default {
       unit: 'Unit',
       goodsWeight: 'Goods Weight',
       storeReturnWeight: 'Store Return Weight',
+      returnLimit: 'Returnable Limit',
       returnLocation: 'Return Location',
       receivedQty: 'Received Qty',
       receivedWeight: 'Received Weight',
@@ -3919,7 +3954,9 @@ export default {
       submit: 'Submit',
       submitConfirm: 'Submit {n} returns?',
       quantityPlaceholder: 'Enter return quantity',
-      vegBothRequired: 'Produce "{name}" requires both return quantity and return weight'
+      vegBothRequired: 'Produce "{name}" requires both return quantity and return weight',
+      noReturnable: 'Nothing returnable today',
+      overLimit: '"{name}" return quantity exceeds the limit {limit}{unit}'
     },
     placeholder: {
       returnDirection: 'Select direction',
