@@ -8,7 +8,7 @@
     :search-model="searchModel"
     :page-num="pageNum"
     :page-size="pageSize"
-    :action-width="120"
+    :action-width="160"
     row-key="id"
     :selectable="false"
     :show-add="false"
@@ -84,7 +84,7 @@ const columns = computed<BizTableColumn[]>(() => [
     // row84：生产编号优先取持久化的生产编码（门店现做码无产出记录、produceNo 后端已兜底填 productionCode，此处再兜一层）
     formatter: (row: BizRow) => (row.productionCode as string) || (row.produceNo as string) || '-'
   },
-  { prop: 'productName', label: t('storeTrace.pork.codeProductName'), minWidth: 150, showOverflowTooltip: true },
+  { prop: 'productName', label: t('storeTrace.pork.codeProductName'), minWidth: 165, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), minWidth: 100, align: 'center' },
   { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), minWidth: 100, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
   { prop: 'pigEarNo', label: t('storeTrace.pork.pigEarNo'), minWidth: 150, align: 'center', showOverflowTooltip: true },

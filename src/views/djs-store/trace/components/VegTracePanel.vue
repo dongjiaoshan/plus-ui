@@ -8,7 +8,7 @@
     :search-model="searchModel"
     :page-num="pageNum"
     :page-size="pageSize"
-    :action-width="120"
+    :action-width="160"
     row-key="id"
     :selectable="false"
     :show-add="false"
@@ -65,7 +65,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), minWidth: 100, align: 'center' },
   { prop: 'produceNo', label: t('storeTrace.veg.produceNo'), minWidth: 120, align: 'center', showOverflowTooltip: true },
-  { prop: 'productName', label: t('storeTrace.veg.productName'), minWidth: 175, showOverflowTooltip: true },
+  { prop: 'productName', label: t('storeTrace.veg.productName'), minWidth: 185, showOverflowTooltip: true },
   { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), minWidth: 95, align: 'center' },
   { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), minWidth: 95, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
   { prop: 'plotName', label: t('storeTrace.veg.plotName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
