@@ -13,13 +13,15 @@ export interface StoreLossRecordVO {
   productId?: string;
   /** 产品名称（白条分割损耗汇总行=损耗类型中文占位）。 */
   productName?: string;
+  /** 产品类型（djs_belong_type；外购商品回落 other，白条分割损耗汇总行固定 white_bar）。 */
+  belongType?: string;
   /** 产品单位。 */
   productUnit?: string;
   /** 损耗量。 */
   lossQty?: number | string;
   /** 白条到店重量 kg（仅白条分割损耗行）。 */
   whiteBarArriveWeight?: number | string;
-  /** 白条分割产品总重 kg = 退回入库重 − 材料外售到店重（仅白条分割损耗行）。 */
+  /** 白条分割产品总重 kg = max(0, 各白条部位当日入库量之和 − 材料外售同原材料成品当日到店重)（仅白条分割损耗行）。 */
   whiteBarSplitWeight?: number | string;
   /** ISO yyyy-MM-dd */
   lossDate?: string;
@@ -33,7 +35,7 @@ export interface StoreLossRecordVO {
 export interface WhiteBarSplitLossVO {
   /** 当日白条到店重量 kg（>0 才显示分割损耗块）。 */
   arriveWeight?: number | string;
-  /** 当日白条分割产品总重 kg = 当日该店盘点各白条部位入库量之和（白条在门店分割下来的产品总重）。 */
+  /** 当日白条分割产品总重 kg = max(0, 各白条部位入库量之和 − 材料外售同原材料成品到店重)。 */
   splitTotalWeight?: number | string;
   /** 当日白条分割损耗 kg = max(0, arriveWeight − splitTotalWeight)。 */
   splitLoss?: number | string;
@@ -43,6 +45,8 @@ export interface WhiteBarSplitLossVO {
 export interface StoreLossQuery extends PageQuery {
   /** 产品名称模糊 */
   productName?: string;
+  /** djs_belong_type 产品类型多选（选中 other 一并命中 belong_type 为空的外购商品） */
+  belongTypes?: string[];
   /** djs_store_loss_type 损耗类型 */
   lossType?: string;
   /** ISO yyyy-MM-dd 损耗日期下界（含） */

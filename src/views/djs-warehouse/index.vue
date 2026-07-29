@@ -209,7 +209,7 @@ function top5WithOther(data: ChartSeriesItem[] | undefined): ChartSeriesItem[] {
 const demandKpis = computed(() => {
   const c = charts.value;
   return [
-    { label: t('warehouse.dashboard.kpiDemandWhiteBar'), unit: t('warehouse.dashboard.unitHead'), value: fmtInt(c?.todayDemandWhiteBar) },
+    { label: t('warehouse.dashboard.kpiDemandWhiteBar'), unit: t('warehouse.dashboard.unitHead'), value: fmtCount(c?.todayDemandWhiteBar) },
     { label: t('warehouse.dashboard.kpiDemandPorkKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayDemandPorkKinds ?? 0 },
     { label: t('warehouse.dashboard.kpiDemandVegetableKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayDemandVegetableKinds ?? 0 },
     { label: t('warehouse.dashboard.kpiDemandOtherKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayDemandOtherKinds ?? 0 }
@@ -236,13 +236,8 @@ function fmt(v?: number | null): string {
   return Number(v).toFixed(2);
 }
 
-function fmtInt(v?: number | null): number {
-  if (v == null) return 0;
-  return Math.round(Number(v));
-}
-
-// 分割白条数：半只 0.5 计，值可为小数（后端 BigDecimal 序列化成字符串）。
-// 不四舍五入（fmtInt 会把 0.5→1 破坏口径），去掉整数的 .0 尾巴：3.0→"3"、1.5→"1.5"。
+// 头数口径（白条需求量 / 分割白条数）：半只 0.5 计，值可为小数（后端 BigDecimal 序列化成字符串）。
+// 不四舍五入（取整会把 0.5→1 破坏口径），去掉整数的 .0 尾巴：3.0→"3"、1.5→"1.5"。
 function fmtCount(v?: number | string | null): string {
   if (v == null) return '0';
   return String(Number(v));

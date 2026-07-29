@@ -126,7 +126,7 @@
             {{
               kind === 'gift'
                 ? t('djs.warehouse.packEntry.packAmount')
-                : dryNonKgLabelMode
+                : dryNonKgAmountMode
                   ? t('djs.warehouse.packEntry.packAmount')
                   : t('djs.warehouse.packEntry.productWeight')
             }}
@@ -150,7 +150,7 @@
             v-else
             v-model="form.productWeight"
             :placeholder="
-              dryNonKgLabelMode
+              dryNonKgAmountMode
                 ? t('djs.warehouse.packEntry.packAmount')
                 : shouldUnitByCopies
                   ? t('djs.warehouse.packEntry.packCopies')
@@ -974,15 +974,10 @@ function isKgUnit(u?: string): boolean {
 /** 当前选中成品的「领用来源原材料」单位：其他产品打包 wipStockUnitMap 给原料单位（鸡蛋=枚），回落 form.productUnit。 */
 const rawUnitOfSelected = computed<string>(() => wipStockUnitMap.value[String(form.value.productId)] || form.value.productUnit);
 /**
- * admin row94 的文案判定只看“成品单位”：成品不是 KG 就称为“打包量”。
- * 原材料单位只决定提交换算/库存扣减，不能反过来把袋、盒等成品标成“产品重量”。
- */
-const dryNonKgLabelMode = computed<boolean>(() =>
-  dryReqMode.value && !!selectedProduct.value && !isKgUnit(selectedProduct.value.productUnit)
-);
-/**
- * row60：其他产品打包（dry 非礼盒/非肉品）且原材料单位非 kg（枚/份/袋…）→「打包量」计量模式。
- * label 显「打包量」、单位显所选成品单位（而非原材料单位）。KG 原料（isKgUnit）走克(g)重量模式、label 保持「产品重量」。
+ * 其他产品打包（dry 非礼盒/非肉品）且原材料单位非 kg（枚/份/袋…）→「打包量」计量模式：
+ * label / placeholder 显「打包量」、单位显所选成品单位（而非原材料单位）。
+ * KG 原料（isKgUnit，如干羊肚菌 70g 的原料按 kg 领用）走克(g)重量模式、label 显「产品重量」——
+ * 文案跟着「实际录入的是什么」走（原材料是重量就录重量），不看成品单位（成品「份」不代表录的是份数）。
  */
 const dryNonKgAmountMode = computed<boolean>(() => dryReqMode.value && !!selectedProduct.value && !isKgUnit(rawUnitOfSelected.value));
 /**

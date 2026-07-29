@@ -8,7 +8,7 @@
       </el-radio-group>
     </div>
 
-    <!-- 猪肉产品：产品名称 / 退回量 / 可退上限 / 单位（row119：退回量按「当日到店量 − 今日已退」封顶，上限 0 → 不可退） -->
+    <!-- 猪肉产品：产品名称 / 退回量 / 单位（row119：退回量按「当日到店量 − 今日已退」封顶，上限 0 → 输入框禁用，上限本身不展示） -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" min-width="180" show-overflow-tooltip align="center" header-align="center">
         <template #default="{ row }">
@@ -30,17 +30,12 @@
           />
         </template>
       </el-table-column>
-      <el-table-column :label="t('storeReturn.column.returnLimit')" width="140" align="center" header-align="center">
-        <template #default="{ row }">
-          <span :class="{ 'limit-zero': maxOf(row) === 0 }">{{ limitText(row) }}</span>
-        </template>
-      </el-table-column>
       <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
         <template #default="{ row }">{{ row.productUnit || '—' }}</template>
       </el-table-column>
     </el-table>
 
-    <!-- 果蔬产品：产品名称 / 退回量 / 可退上限 / 单位（row119 同上） -->
+    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row119 同上） -->
     <el-table v-else v-loading="loading" :data="vegRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
       <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
@@ -56,11 +51,6 @@
             controls-position="right"
             style="width: 180px"
           />
-        </template>
-      </el-table-column>
-      <el-table-column :label="t('storeReturn.column.returnLimit')" width="140" align="center" header-align="center">
-        <template #default="{ row }">
-          <span :class="{ 'limit-zero': maxOf(row) === 0 }">{{ limitText(row) }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
@@ -137,7 +127,7 @@ function maxOf(row: MatrixRow): number {
   return Math.max(0, Number(row.arrivedQuantity) - Number(row.returnedQuantity ?? 0));
 }
 
-/** 可退上限展示文案：不封顶 → '—'；kg 保留 3 位、计件去尾零。 */
+/** 可退上限文案（超限提示用）：不封顶 → '—'；kg 保留 3 位、计件去尾零。 */
 function limitText(row: MatrixRow): string {
   const max = maxOf(row);
   if (!Number.isFinite(max)) {
@@ -266,11 +256,6 @@ onMounted(async () => {
 
   .sub-tag {
     margin-left: 6px;
-  }
-
-  // 可退上限为 0（当日没到店 / 今日已退完）：置灰提示，输入框同时禁用
-  .limit-zero {
-    color: var(--el-color-danger);
   }
 
   .text-muted {

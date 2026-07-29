@@ -3927,7 +3927,7 @@ export default {
       returnLimit: '可退上限',
       returnLocation: '退回库位',
       receivedQty: '仓库实收量',
-      receivedWeight: '仓库实收重量',
+      receivedWeight: '仓库实收重量(KG)',
       returnStatus: '退货状态',
       returnReason: '退回原因',
       traceCode: '追溯码',
@@ -4061,11 +4061,13 @@ export default {
     field: {
       lossDate: '损耗日期',
       productName: '产品名称',
+      productType: '产品类型',
       lossType: '损耗类型'
     },
     column: {
       lossDate: '损耗日期',
       productName: '产品名称',
+      productType: '产品类型',
       lossType: '损耗类型',
       whiteBarArriveWeight: '白条到店重量',
       whiteBarSplitWeight: '白条分割产品总重',

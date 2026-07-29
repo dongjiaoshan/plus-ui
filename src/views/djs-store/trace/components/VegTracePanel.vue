@@ -60,17 +60,18 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 // 「果蔬追溯码管理」列：到店日期/生产编号/产品名称/产品规格/实际重量(g)/地块编码/采摘时间/月台接收时间/发货时间
-// 去掉「序号」列；实际重量转克显示；地块编码列加宽显示全（row80）
+// 去掉「序号」列；实际重量转克显示
+// 全列统一 minWidth（弹性列）：el-table 按 minWidth 比例均分表格富余宽度，列宽分布均匀。
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), width: 120, align: 'center' },
-  { prop: 'produceNo', label: t('storeTrace.veg.produceNo'), width: 130, align: 'center', showOverflowTooltip: true },
-  { prop: 'productName', label: t('storeTrace.veg.productName'), minWidth: 110, showOverflowTooltip: true },
-  { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), width: 100, align: 'center' },
-  { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), width: 100, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
-  { prop: 'plotName', label: t('storeTrace.veg.plotName'), minWidth: 170, align: 'center' },
-  { prop: 'pickTime', label: t('storeTrace.veg.pickTime'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'platformReceiveTime', label: t('storeTrace.veg.platformReceiveTime'), width: 160, align: 'center', formatter: 'datetime' },
-  { prop: 'shipTime', label: t('storeTrace.veg.shipTime'), width: 160, align: 'center', formatter: 'datetime' }
+  { prop: 'arrivalDate', label: t('storeTrace.veg.arrivalDate'), minWidth: 100, align: 'center' },
+  { prop: 'produceNo', label: t('storeTrace.veg.produceNo'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'productName', label: t('storeTrace.veg.productName'), minWidth: 175, showOverflowTooltip: true },
+  { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), minWidth: 95, align: 'center' },
+  { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), minWidth: 95, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
+  { prop: 'plotName', label: t('storeTrace.veg.plotName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'pickTime', label: t('storeTrace.veg.pickTime'), minWidth: 150, align: 'center', formatter: 'datetime' },
+  { prop: 'platformReceiveTime', label: t('storeTrace.veg.platformReceiveTime'), minWidth: 150, align: 'center', formatter: 'datetime' },
+  { prop: 'shipTime', label: t('storeTrace.veg.shipTime'), minWidth: 150, align: 'center', formatter: 'datetime' }
 ]);
 
 async function fetchList() {

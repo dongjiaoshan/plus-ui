@@ -3924,7 +3924,7 @@ export default {
       returnLimit: 'Returnable Limit',
       returnLocation: 'Return Location',
       receivedQty: 'Received Qty',
-      receivedWeight: 'Received Weight',
+      receivedWeight: 'Received Weight (KG)',
       returnStatus: 'Return Status',
       returnReason: 'Reason',
       traceCode: 'Trace Code',
@@ -4058,11 +4058,13 @@ export default {
     field: {
       lossDate: 'Loss Date',
       productName: 'Product Name',
+      productType: 'Product Type',
       lossType: 'Loss Type'
     },
     column: {
       lossDate: 'Loss Date',
       productName: 'Product Name',
+      productType: 'Product Type',
       lossType: 'Loss Type',
       whiteBarArriveWeight: 'White Bar Arrival Wt',
       whiteBarSplitWeight: 'White Bar Split Total Wt',

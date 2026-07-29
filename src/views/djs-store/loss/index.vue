@@ -9,7 +9,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_store_loss_type']"
+      :dict-types="['djs_store_loss_type', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -55,21 +55,25 @@ const pageSize = ref(10);
 const searchModel = reactive<Record<string, unknown>>({
   lossDateRange: undefined,
   productName: undefined,
+  // 产品类型多选（djs_belong_type 10 项）
+  belongType: [],
   lossType: undefined
 });
 
-// 筛选：损耗日期（范围）+ 产品名称 + 损耗类型
+// 筛选：损耗日期（范围）+ 产品名称 + 产品类型 + 损耗类型
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'lossDateRange', label: t('storeLoss.field.lossDate'), type: 'daterange' },
   { field: 'productName', label: t('storeLoss.field.productName'), type: 'input' },
+  { field: 'belongType', label: t('storeLoss.field.productType'), type: 'select', multiple: true, dictType: 'djs_belong_type', clearable: true },
   { field: 'lossType', label: t('storeLoss.field.lossType'), type: 'select', dictType: 'djs_store_loss_type' }
 ]);
 
-// 列：损耗日期 / 产品名称 / 损耗类型 / 损耗量 / 产品单位 / 白条到店重量 / 白条分割产品总重
+// 列：损耗日期 / 产品名称 / 产品类型 / 损耗类型 / 损耗量 / 产品单位 / 白条到店重量 / 白条分割产品总重
 // 白条两列（仅「白条分割损耗」行有值，门店日损耗行显 —）移到「产品单位」之后（row69）
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'lossDate', label: t('storeLoss.column.lossDate'), minWidth: 120, align: 'center', formatter: 'date' },
   { prop: 'productName', label: t('storeLoss.column.productName'), minWidth: 160, align: 'center', showOverflowTooltip: true },
+  { prop: 'belongType', label: t('storeLoss.column.productType'), minWidth: 120, align: 'center', dictType: 'djs_belong_type' },
   { prop: 'lossType', label: t('storeLoss.column.lossType'), minWidth: 130, align: 'center', dictType: 'djs_store_loss_type' },
   { prop: 'lossQty', label: t('storeLoss.column.lossQty'), minWidth: 120, align: 'center' },
   { prop: 'productUnit', label: t('storeLoss.column.productUnit'), minWidth: 100, align: 'center' },
@@ -102,13 +106,15 @@ async function fetchList() {
   loading.value = true;
   try {
     // storeId 不显式传：后端按请求头 Current-Store-Id 做行级过滤
-    // 损耗日期范围（lossDateRange）拆成 lossDateFrom / lossDateTo，原始数组不下发
-    const { lossDateRange, ...rest } = searchModel;
+    // 损耗日期范围（lossDateRange）拆成 lossDateFrom / lossDateTo，产品类型多选（belongType）
+    // 转成后端 belongTypes 数组，两个原始字段都不下发
+    const { lossDateRange, belongType, ...rest } = searchModel;
     const range = Array.isArray(lossDateRange) ? (lossDateRange as string[]) : [];
     const params = {
       ...rest,
       lossDateFrom: range[0],
       lossDateTo: range[1],
+      belongTypes: Array.isArray(belongType) && belongType.length ? (belongType as string[]) : undefined,
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
@@ -128,6 +134,8 @@ function handleSearch(payload?: Record<string, unknown>) {
 }
 function handleReset() {
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
+  // 多选字段重置成空数组（el-select 多选）
+  searchModel.belongType = [];
   pageNum.value = 1;
   fetchList();
 }

@@ -104,7 +104,7 @@
                 <template #default="{ row }">{{ cropStatOf(row)?.remainPlotCount ?? dash }}</template>
               </el-table-column>
               <el-table-column :label="t('storeDemand.create.expectYield')" :min-width="DATA_COL_MIN_WIDTH" align="center" header-align="center">
-                <template #default="{ row }">{{ cropStatOf(row)?.expectYield ?? dash }}</template>
+                <template #default="{ row }">{{ expectYieldText(row) }}</template>
               </el-table-column>
               <el-table-column :label="t('storeDemand.create.earliestPick')" :min-width="DATA_COL_MIN_WIDTH" align="center" header-align="center">
                 <template #default="{ row }">{{ cropStatOf(row)?.earliestPickDate || dash }}</template>
@@ -163,7 +163,7 @@
           <span class="footer-label">{{ t('storeDemand.create.remark') }}</span>
           <el-input v-model="demandRemark" :placeholder="t('storeDemand.create.remarkPh')" :maxlength="500" style="width: 280px" />
         </div>
-        <el-button type="primary" :loading="submitting" :disabled="cart.length === 0" @click="submit">
+        <el-button type="primary" size="large" class="confirm-btn" :loading="submitting" :disabled="cart.length === 0" @click="submit">
           {{ t('storeDemand.create.confirm') }}
         </el-button>
       </div>
@@ -324,6 +324,23 @@ function cropStatOf(row: ProductInfoVO): CropPlotStatByProduct | undefined {
     return undefined;
   }
   return cropStatMap.value[String(key)];
+}
+
+/**
+ * 果蔬「预计产量」单元格文本：数值后缀 KG（`213.34KG`，大写无空格；单位在单元格不在列头，与同表「原材料库存」一致）。
+ * 同一产品被多条作物指向时预计产量是前端累加值，浮点长尾（16.200000000000003）按最多 2 位小数收口。
+ * 无统计数据回落 '—'。
+ */
+function expectYieldText(row: ProductInfoVO): string {
+  const stat = cropStatOf(row);
+  if (!stat) {
+    return dash;
+  }
+  const n = stat.expectYield;
+  if (!Number.isFinite(n)) {
+    return dash;
+  }
+  return `${n.toLocaleString('en-US', { maximumFractionDigits: 2, useGrouping: false })}KG`;
 }
 
 function quantityOf(row: ProductInfoVO): number {
@@ -586,6 +603,9 @@ defineExpose({ open });
   gap: 16px;
 
   .footer-fields {
+    // 字段区吃掉剩余宽度（min-width:0 允许收缩），确认按钮加大后「需求门店 / 备注」不被挤到换行
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -602,6 +622,16 @@ defineExpose({ open });
       color: var(--el-text-color-primary);
       min-width: 80px;
     }
+  }
+
+  // 确认下单：抽屉主操作，比默认档更醒目（与左侧 280px 备注输入框视觉等高）
+  .confirm-btn {
+    flex: 0 0 auto;
+    min-width: 160px;
+    height: 44px;
+    padding: 0 28px;
+    font-size: 16px;
+    font-weight: 600;
   }
 }
 </style>

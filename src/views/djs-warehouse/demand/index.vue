@@ -3,8 +3,8 @@
 
   原型 bc5e5339：列表按「需求日期 + 需求产品」分组汇总——同一需求日期的同一种需求产品，
   无论被几家门店下单，只展示一条汇总统计行（不再平铺每条需求单）。
-  列：需求日期/需求产品/产品规格/需求量/需求产品类型/原材料/原材料计算量/需求门店数量/
-      需求状态(三态 待确认|已全部确认|部分确认)/需求确认率/需求最终确认时间/操作(查看需求)。
+  列：需求状态(三态 待确认|已全部确认|部分确认)/需求确认率/需求日期/产品名称/规格/需求量/单位/
+      需求产品类型/原材料/原材料计算量/原材料单位/需求门店数量/需求最终确认时间/操作(查看需求)。
   点「查看需求」→ 跳需求确认页（携 demandDate + productId），逐门店明细 + 状态机操作在确认页内做。
   数据源：GET /djs/warehouse/demand/group-list（后端 queryGroupList，聚合 + 三态 + 确认率）。
   顶部保留今日全局 KPI（DemandKpiBar）+「新增需求」跨业态购物车（DemandCart）。
@@ -143,10 +143,17 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'demandDateRange', label: t('demand.field.demandDateRange'), type: 'daterange' }
 ]);
 
-/** 汇总列（对齐原型 bc5e5339：11 数据列 + 1 操作列）。统一居中 + 统一 minWidth。 */
+/** 汇总列（对齐原型 bc5e5339：13 数据列 + 1 操作列）。统一居中 + 统一 minWidth。 */
 const columns = computed<BizTableColumn[]>(() => [
-  // row29：列顺序 需求状态 → 需求日期 → 产品名称（需求状态提到需求日期之前）
+  // 列顺序：需求状态 → 需求确认率 → 需求日期 → 产品名称
   { prop: 'demandStatus', label: t('demand.column.demandStatus'), minWidth: 120, align: 'center' },
+  {
+    prop: 'confirmRate',
+    label: t('demand.column.confirmRate'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (row: BizRow) => formatRate((row as unknown as DemandGroupVO).confirmRate)
+  },
   { prop: 'demandDate', label: t('demand.column.demandDate'), minWidth: 120, align: 'center' },
   { prop: 'productName', label: t('demand.column.productName'), minWidth: 140, align: 'center', showOverflowTooltip: true },
   { prop: 'productSpec', label: t('demand.column.productSpec'), minWidth: 120, align: 'center', showOverflowTooltip: true },
@@ -195,13 +202,6 @@ const columns = computed<BizTableColumn[]>(() => [
     minWidth: 120,
     align: 'center',
     formatter: (row: BizRow) => String((row as unknown as DemandGroupVO).storeCount ?? 0)
-  },
-  {
-    prop: 'confirmRate',
-    label: t('demand.column.confirmRate'),
-    minWidth: 120,
-    align: 'center',
-    formatter: (row: BizRow) => formatRate((row as unknown as DemandGroupVO).confirmRate)
   },
   { prop: 'lastConfirmTime', label: t('demand.column.lastConfirmTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'actions', label: t('demand.column.actions'), width: 110, fixed: 'right', align: 'center' }
