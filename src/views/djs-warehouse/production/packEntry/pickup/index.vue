@@ -109,7 +109,7 @@
             </el-select>
           </div>
 
-          <!-- 仓库出库：选出库去向（复用系统字典 djs_stock_out_dest = 矿山/厨房/大冶门店/个人…，warehouse 分支必填） -->
+          <!-- 仓库出库：选出库去向（复用系统字典 djs_stock_out_dest = 矿山/厨房/大冶门店/各收货单位…，warehouse 分支必填） -->
           <div v-if="pickupForm.outDest === 'warehouse'" class="panel-section">
             <div class="panel-label">{{ t('djs.warehouse.packEntry.outDest') }}</div>
             <el-select
@@ -118,7 +118,7 @@
               class="ship-store-select"
             >
               <el-option
-                v-for="d in djs_stock_out_dest"
+                v-for="d in stockOutDestOptions"
                 :key="d.value"
                 :label="d.label"
                 :value="d.value"
@@ -149,13 +149,17 @@ import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
 import { listPickupItems, submitPickup, submitWhiteBarOut, submitWarehouseOut } from '@/api/djs-warehouse/packEntry';
 import type { BarPickupItemVO } from '@/api/djs-warehouse/packEntry';
+import { filterManualOutDest } from '@/views/djs-warehouse/constants';
 import request from '@/utils/request';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance()!;
 
-// 出库去向复用系统已有字典 djs_stock_out_dest（矿山/厨房/大冶门店/个人/发货月台…）；toRefs 解构保响应式（否则冷 store 挂载恒空）
+// 出库去向复用系统已有字典 djs_stock_out_dest（矿山/厨房/大冶门店/各收货单位…）；toRefs 解构保响应式（否则冷 store 挂载恒空）
 const { djs_stock_out_dest } = toRefs<any>(proxy?.useDict('djs_stock_out_dest'));
+
+/** 只列可手选的最终去向；代码自动回填的内部流转值（发货月台 / 白条分割 / 生产领用…）不进下拉。 */
+const stockOutDestOptions = computed(() => filterManualOutDest(djs_stock_out_dest.value));
 
 const { sources, loadSources } = usePackEntryOptions();
 

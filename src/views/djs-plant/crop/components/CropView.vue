@@ -10,6 +10,7 @@
           <el-descriptions-item :label="t('plantCrop.field.cropFamily')">
             <dict-tag :options="djs_crop_family" :value="data.cropFamily" />
           </el-descriptions-item>
+          <el-descriptions-item :label="t('plantCrop.field.cropGenus')">{{ data.cropGenus || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.plantingSeason')">
             <dict-tag :options="djs_planting_season" :value="data.plantingSeason" />
           </el-descriptions-item>

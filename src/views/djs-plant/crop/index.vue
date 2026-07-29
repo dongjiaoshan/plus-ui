@@ -83,6 +83,7 @@ const userOptions = ref<Array<{ label: string; value: number | string }>>([]);
 const searchModel = reactive<Record<string, any>>({
   cropName: undefined,
   cropFamily: undefined,
+  cropGenus: undefined,
   varietyName: undefined,
   varietyOrigin: undefined,
   hasOrganic: undefined,
@@ -93,7 +94,8 @@ const searchModel = reactive<Record<string, any>>({
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'cropName', label: t('plantCrop.field.cropName'), type: 'input' },
-  { field: 'cropFamily', label: t('plantCrop.field.cropFamily'), type: 'input' },
+  { field: 'cropFamily', label: t('plantCrop.field.cropFamily'), type: 'select', dictType: 'djs_crop_family' },
+  { field: 'cropGenus', label: t('plantCrop.field.cropGenus'), type: 'input' },
   { field: 'varietyName', label: t('plantCrop.field.varietyName'), type: 'input' },
   { field: 'varietyOrigin', label: t('plantCrop.search.varietyOrigin'), type: 'input' },
   {
@@ -131,6 +133,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropName', label: t('plantCrop.column.cropName'), minWidth: 130, showOverflowTooltip: true },
   { prop: 'cropCode', label: t('plantCrop.column.cropCode'), width: 100, showOverflowTooltip: true },
   { prop: 'cropFamily', label: t('plantCrop.column.cropFamily'), width: 110, align: 'center', dictType: 'djs_crop_family', showOverflowTooltip: true },
+  { prop: 'cropGenus', label: t('plantCrop.column.cropGenus'), width: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'varietyName', label: t('plantCrop.column.varietyName'), width: 130, showOverflowTooltip: true },
   { prop: 'varietyOrigin', label: t('plantCrop.label.varietyOrigin'), width: 140, showOverflowTooltip: true },
   {
@@ -197,6 +200,7 @@ function buildQuery(): CropInfoQuery {
     pageSize: pageSize.value,
     cropName: searchModel.cropName || undefined,
     cropFamily: searchModel.cropFamily || undefined,
+    cropGenus: searchModel.cropGenus || undefined,
     varietyName: searchModel.varietyName || undefined,
     varietyOrigin: searchModel.varietyOrigin || undefined,
     hasOrganic: searchModel.hasOrganic ?? undefined,
@@ -282,6 +286,7 @@ function handleExport() {
     {
       cropName: searchModel.cropName || undefined,
       cropFamily: searchModel.cropFamily || undefined,
+      cropGenus: searchModel.cropGenus || undefined,
       varietyName: searchModel.varietyName || undefined,
       varietyOrigin: searchModel.varietyOrigin || undefined,
       hasOrganic: searchModel.hasOrganic ?? undefined,

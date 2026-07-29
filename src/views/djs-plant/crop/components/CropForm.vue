@@ -38,6 +38,11 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
+              <el-form-item :label="t('plantCrop.field.cropGenus')" prop="cropGenus">
+                <el-input v-model="form.cropGenus" :placeholder="t('plantCrop.placeholder.cropGenus')" maxlength="32" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
               <el-form-item :label="t('plantCrop.field.relatedProduct')" prop="relatedProduct">
                 <el-select
                   v-model="form.relatedProduct"
@@ -160,6 +165,7 @@ const defaultForm = (): CropInfoForm => ({
   varietyName: undefined,
   varietyOrigin: undefined,
   cropFamily: undefined,
+  cropGenus: undefined,
   relatedProduct: undefined,
   plantingSeason: undefined,
   sowingPeriod: undefined,

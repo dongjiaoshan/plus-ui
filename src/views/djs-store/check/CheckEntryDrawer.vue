@@ -258,8 +258,8 @@ async function loadCandidates() {
       : [];
     const savedByProduct = new Map<string, StoreLedgerLineVO>(savedList.map((s) => [String(s.productId), s]));
     const candidateRows = candidates.map((c) => {
-      // 入库只读：后端 inboundReadonly 为准；猪肉成品 / 白条产品行（DENGBO-R12）可手动编辑。
-      const inboundReadonly = c.inboundReadonly !== false && c.category !== 'pork' && c.category !== 'white_bar';
+      // 入库只读：后端 inboundReadonly 为准；猪肉产品行可手动编辑。
+      const inboundReadonly = c.inboundReadonly !== false && c.category !== 'pork';
       const saved = savedByProduct.get(String(c.productId));
       const r: EntryRow = {
         productId: String(c.productId),

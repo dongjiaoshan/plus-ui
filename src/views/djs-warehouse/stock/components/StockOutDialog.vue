@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { stockOut } from '@/api/djs-warehouse/stock';
 import type { LocationStockVO, StockOutForm } from '@/api/djs-warehouse/stock/types';
+import { filterManualOutDest } from '@/views/djs-warehouse/constants';
 import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
@@ -64,12 +65,10 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { djs_stock_out_dest } = toRefs<any>(proxy?.useDict('djs_stock_out_dest'));
 
 /**
- * 后台手工出库去向下拉：隐藏 FIX-WMS-FLOWDICT-001 新增的 5 个工序去向
- * （ship_dock / dept_pick / bar_cut / prod_pick / check_loss）—— 这 5 个由各业务出库路径
- * 自动回填、不让后台手工出库选；只保留可手选的最终去向（厨房 / 矿山 / 大冶门店 / 个人 等）。
+ * 后台手工出库去向下拉：只保留可手选的最终去向（厨房 / 矿山 / 大冶门店 / 各收货单位 等），
+ * 隐藏由各业务出库路径自动回填的内部流转值（见 HIDDEN_OUT_DEST）。
  */
-const HIDDEN_OUT_DEST = new Set(['ship_dock', 'dept_pick', 'bar_cut', 'prod_pick', 'check_loss']);
-const stockOutDestOptions = computed(() => (djs_stock_out_dest.value ?? []).filter((d: any) => !HIDDEN_OUT_DEST.has(String(d.value))));
+const stockOutDestOptions = computed(() => filterManualOutDest(djs_stock_out_dest.value));
 
 const visible = ref(false);
 const submitting = ref(false);

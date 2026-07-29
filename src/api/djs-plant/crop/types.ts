@@ -11,6 +11,8 @@ export interface CropInfoVO extends BaseEntity {
   varietyName?: string;
   varietyOrigin?: string;
   cropFamily?: string;
+  /** 作物属（自由文本，例 芸薹属） */
+  cropGenus?: string;
   relatedProduct?: number | string;
   /** 关联产品名称（后端按 relatedProduct → t_warehouse_product_info.product_name 批量 enrich） */
   relatedProductName?: string;
@@ -54,6 +56,8 @@ export interface CropInfoForm {
   varietyName?: string;
   varietyOrigin?: string;
   cropFamily?: string;
+  /** 作物属（自由文本，例 芸薹属） */
+  cropGenus?: string;
   relatedProduct?: number | string;
   /** 多选逗号分隔（spring,summer 等） */
   plantingSeason?: string;
@@ -73,6 +77,8 @@ export interface CropInfoQuery extends PageQuery {
   varietyName?: string;
   varietyOrigin?: string;
   cropFamily?: string;
+  /** 作物属（自由文本，模糊） */
+  cropGenus?: string;
   plantingSeason?: string;
   /** 有机证书（1=有 / 2=无） */
   hasOrganic?: number;

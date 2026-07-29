@@ -1196,7 +1196,17 @@ function validate(): boolean {
 }
 
 /**
- * admin rows97/98：当前所选产品的打包计量规则（kg）。
+ * 打包实称相对单包规则（product_info.material_num）的允许偏差百分比（对称，上下同值）。
+ * 与后端 `ProductProductionServiceImpl.PACK_MEASURE_TOLERANCE_PERCENT` 同值，改动必须两侧同步。
+ */
+const PACK_MEASURE_TOLERANCE_PERCENT = 10;
+/** 容差带下界系数（0.9）。 */
+const PACK_MEASURE_LOWER_FACTOR = 1 - PACK_MEASURE_TOLERANCE_PERCENT / 100;
+/** 容差带上界系数（1.1）。 */
+const PACK_MEASURE_UPPER_FACTOR = 1 + PACK_MEASURE_TOLERANCE_PERCENT / 100;
+
+/**
+ * 当前所选产品的打包计量规则（kg）。
  * 仅肉品 / 果蔬按 materialNum 校验；未配置或非正数 → null（不校验）。
  */
 function packMeasureRuleKg(): number | null {
@@ -1206,12 +1216,23 @@ function packMeasureRuleKg(): number | null {
   return Number.isFinite(rule) && rule > 0 ? rule : null;
 }
 
-// admin rows97/98：客户要求「获取到产品重量时」就弹提示，而不是等点提交。
+/**
+ * 实称落在打包规则的 ±{@link PACK_MEASURE_TOLERANCE_PERCENT}% 容差带外（偏低或偏高都算）。
+ *
+ * 两端先按 kg 6 位小数取整再比，与后端 BigDecimal 判定对齐——否则 `rule * 0.9` 的浮点尾差
+ * 会把「恰好落在界上」的重量误判成超差，导致前端不弹确认框、后端却拒收的死角。
+ */
+function isMeasureOutOfTolerance(rule: number, actual: number): boolean {
+  const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
+  return round6(actual) < round6(rule * PACK_MEASURE_LOWER_FACTOR) || round6(actual) > round6(rule * PACK_MEASURE_UPPER_FACTOR);
+}
+
+// 客户要求「获取到产品重量时」就弹提示，而不是等点提交。
 // 秤回填（ScaleReader @fill）与手工录入都会改 form.productWeight，故直接盯该值。
 // ⚠️ 必须防抖：numpad 是逐键 emit 的（输入 500 会依次产生 5 / 50 / 500），
 // 不防抖会在 5g、50g 各误报一次。等用户停手 700ms 再判，且同一产品只在
 // 「由不违规变违规」时提示一次，避免退格重输时刷屏。
-const belowRuleNotified = ref(false);
+const deviationNotified = ref(false);
 let measureRuleTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
   () => [form.value.productWeight, form.value.productId] as const,
@@ -1220,15 +1241,15 @@ watch(
     measureRuleTimer = setTimeout(() => {
       const rule = packMeasureRuleKg();
       const actual = packWeightKg();
-      if (rule == null || actual == null || actual >= rule) {
-        belowRuleNotified.value = false;
+      if (rule == null || actual == null || !isMeasureOutOfTolerance(rule, actual)) {
+        deviationNotified.value = false;
         return;
       }
-      if (belowRuleNotified.value) return;
-      belowRuleNotified.value = true;
+      if (deviationNotified.value) return;
+      deviationNotified.value = true;
       ElNotification.warning({
-        title: t('djs.warehouse.packEntry.belowMeasureRule'),
-        message: t('djs.warehouse.packEntry.measureRuleTip', { rule, actual })
+        title: t('djs.warehouse.packEntry.measureDeviationTitle'),
+        message: t('djs.warehouse.packEntry.measureDeviationTip', { rule, actual, tolerance: PACK_MEASURE_TOLERANCE_PERCENT })
       });
     }, 700);
   }
@@ -1239,27 +1260,21 @@ onBeforeUnmount(() => {
 });
 
 /**
- * admin rows97/98：肉品、果蔬按产品 materialNum 校验称重规则。
- * 小于规则直接阻断；超过 3% 弹确认框，取消不提交，确认后由 allowOverMeasure 透传给后端复核。
+ * 肉品、果蔬按产品 materialNum（单包规则重量 kg）校验称重：与后端 validatePackMeasureRule 同口径。
+ * 实称在 ±10% 容差带内直接提交；偏低或偏高超出容差都弹确认框（不直接拒收），
+ * 取消则不提交，确认后由 allowOverMeasure 透传给后端复核放行。
+ *
+ * @returns null = 用户取消提交；true = 已确认偏差继续；false = 无需确认，直接提交
  */
 async function confirmPackMeasureRule(): Promise<boolean | null> {
   const rule = packMeasureRuleKg();
   const actual = packWeightKg();
   if (rule == null || actual == null) return false;
-  if (actual < rule) {
-    // 文案用客户原话，数值放副文案。
-    ElNotification.warning({
-      title: t('djs.warehouse.packEntry.belowMeasureRule'),
-      message: t('djs.warehouse.packEntry.measureRuleTip', { rule, actual })
-    });
-    return null;
-  }
-  // row97/98：超出比例 =（实称 − 规则）/ 规则；≤3% 走正常流程，>3% 才提示确认。
-  if (actual <= rule * 1.03) return false;
+  if (!isMeasureOutOfTolerance(rule, actual)) return false;
   try {
     await ElMessageBox.confirm(
-      t('djs.warehouse.packEntry.overMeasureRule'),
-      t('djs.warehouse.packEntry.overMeasureRuleTitle'),
+      t('djs.warehouse.packEntry.measureDeviationConfirm', { rule, actual, tolerance: PACK_MEASURE_TOLERANCE_PERCENT }),
+      t('djs.warehouse.packEntry.measureDeviationTitle'),
       {
         confirmButtonText: t('common.confirm'),
         cancelButtonText: t('common.cancel'),

@@ -28,9 +28,7 @@ export interface StoreLedgerLineVO {
   productId: string;
   productName?: string;
   productUnit?: string;
-  /**
-   * 白条产品（DENGBO-R12）对应原材料单位（KG → 按重量展示，保留 3 位）；仅白条产品行有值，其余回落 productUnit。
-   */
+  /** 产品对应原材料单位（KG → 按重量展示，保留 3 位）；仅猪肉产品行有值，其余回落 productUnit。 */
   materialUnit?: string;
   /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
   belongTab?: StoreLedgerBelongTab;
@@ -50,25 +48,21 @@ export interface StoreLedgerLineVO {
   createTime?: string;
 }
 
-/** 候选类别（来源）：pork=猪肉成品 / white_bar=白条产品(DENGBO-R12) / inbound=新到货 / stock=昨日库存。 */
-export type StoreLedgerCategory = 'pork' | 'white_bar' | 'inbound' | 'stock';
+/** 候选类别（来源）：pork=猪肉产品（白条到店分割部位字典驱动） / inbound=新到货 / stock=昨日库存。 */
+export type StoreLedgerCategory = 'pork' | 'inbound' | 'stock';
 
 /** 产品品类页签（DENGBO-R10）：pork=猪肉产品 / veg=果蔬产品 / other=其他产品。 */
 export type StoreLedgerBelongTab = 'pork' | 'veg' | 'other';
 
-/** 当日盘点候选行（新增当日盘点 GET：三类产品并集 + 预填量）。 */
+/** 当日盘点候选行（新增当日盘点 GET：猪肉产品 ∪ 新到货 ∪ 昨日库存 + 预填量）。 */
 export interface StoreLedgerCandidateVO {
   productId: string;
   productName?: string;
   productUnit?: string;
-  /**
-   * 产品对应原材料单位（KG → 数据量按 kg 展示；其他 → 按产品单位换算成 g）。
-   * TODO(后端轨)：StoreDailyLedgerCandidateVo 目前未返回该字段，需后端补 materialUnit
-   *（取产品关联原材料的计量单位）；缺省时前端回落到 productUnit 口径。
-   */
+  /** 产品对应原材料单位（KG → 数据量按 kg 展示）；仅猪肉产品行有值，缺省时前端回落 productUnit。 */
   materialUnit?: string;
   productSpec?: string;
-  /** 候选类别（来源）：pork=猪肉成品 / white_bar=白条产品 / inbound=新到货 / stock=昨日库存 */
+  /** 候选类别（来源）：pork=猪肉产品 / inbound=新到货 / stock=昨日库存 */
   category: StoreLedgerCategory;
   /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
   belongTab?: StoreLedgerBelongTab;

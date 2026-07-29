@@ -23,7 +23,7 @@ export const listTraceablePig = (query?: Record<string, unknown>): AxiosPromise<
 export const genStoreTraceCode = (data: StoreTraceOnsiteForm) =>
   request<StoreOnsiteCodeVO>({ url: '/djs/store/trace/gen', method: 'post', data });
 
-/** 门店猪肉打包可选产品（workshop=门店打包间(5) 且 product_material∈字典 djs_pork_return_product）。 */
+/** 门店猪肉打包可选产品（生产车间=门店打包间(5) 的猪肉生产产品，admin 产品配置驱动）。 */
 export const listStorePackProducts = (): AxiosPromise<StorePackProductVO[]> =>
   request({ url: '/djs/store/trace/products', method: 'get' });
 
