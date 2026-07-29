@@ -72,9 +72,10 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 // 猪肉追溯码列表：生产日期/生成来源/生产编号/产品名称/产品规格/实际重量(g)/来源耳号/生成时间
 // row140 ②：「生成来源」列移到日期列右侧；row140 ④：「产品」文案改「产品名称」；row140 ⑤：实际重量转克
 // 全列统一 minWidth（弹性列）：el-table 按 minWidth 比例均分表格富余宽度，列宽分布均匀。
+// 各列 minWidth 下界 = 该列最坏文本实测宽 + 24（cell padding）+ 1（td border），保证 ≤1440 窄视口不折行。
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'arrivalDate', label: t('storeTrace.pork.produceDate'), minWidth: 110, align: 'center' },
-  { prop: 'sourceLabel', label: t('storeTrace.pork.sourceCol'), minWidth: 100, align: 'center' },
+  { prop: 'arrivalDate', label: t('storeTrace.pork.produceDate'), minWidth: 118, align: 'center' },
+  { prop: 'sourceLabel', label: t('storeTrace.pork.sourceCol'), minWidth: 80, align: 'center' },
   {
     prop: 'produceNo',
     label: t('storeTrace.veg.produceNo'),
@@ -84,11 +85,11 @@ const columns = computed<BizTableColumn[]>(() => [
     // row84：生产编号优先取持久化的生产编码（门店现做码无产出记录、produceNo 后端已兜底填 productionCode，此处再兜一层）
     formatter: (row: BizRow) => (row.productionCode as string) || (row.produceNo as string) || '-'
   },
-  { prop: 'productName', label: t('storeTrace.pork.codeProductName'), minWidth: 165, showOverflowTooltip: true },
-  { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), minWidth: 100, align: 'center' },
-  { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), minWidth: 100, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
-  { prop: 'pigEarNo', label: t('storeTrace.pork.pigEarNo'), minWidth: 150, align: 'center', showOverflowTooltip: true },
-  { prop: 'createTime', label: t('storeTrace.pork.createTime'), minWidth: 160, align: 'center', formatter: 'datetime' }
+  { prop: 'productName', label: t('storeTrace.pork.codeProductName'), minWidth: 195, showOverflowTooltip: true },
+  { prop: 'productSpec', label: t('storeTrace.veg.productSpec'), minWidth: 90, align: 'center' },
+  { prop: 'actualWeight', label: t('storeTrace.veg.actualWeight'), minWidth: 80, align: 'right', formatter: (row: BizRow) => formatKgToG(row.actualWeight) },
+  { prop: 'pigEarNo', label: t('storeTrace.pork.pigEarNo'), minWidth: 137, align: 'center', showOverflowTooltip: true },
+  { prop: 'createTime', label: t('storeTrace.pork.createTime'), minWidth: 180, align: 'center', formatter: 'datetime' }
 ]);
 
 async function fetchList() {
