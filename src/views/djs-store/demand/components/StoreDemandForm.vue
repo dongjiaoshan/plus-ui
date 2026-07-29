@@ -130,16 +130,34 @@ const displayProductUnit = computed<string>(() =>
 const { myStores: storeOptions } = storeToRefs(useStoreContextStore());
 const productOptions = ref<ProductInfoVO[]>([]);
 
+/**
+ * 落库业态（{@code djs_demand_product_type} 4 值）中已绑定单一归属类型的三类。
+ * 业态=other 是兜底桶，覆盖 pork / dry_good / egg / 无归属的自产成品（购物车 7 tab 里这几类都落 productType=other），
+ * 故 other 只排除这 3 类「有自己业态」的归属，不排除 pork/dry_good/egg（否则编辑猪肉/干货/鸡蛋需求时选项里找不到本单产品）。
+ */
+const TYPED_BELONGS = ['white_bar', 'vegetable', 'gift_box'];
+
 async function loadProductOptions() {
   try {
     const belongType = effectiveType.value === 'other' ? undefined : effectiveType.value;
     // withDisplayName：果蔬候选按原材料作物有效有机证书解析展示名（有证=产品名 / 无证=别名），与下单定格一致。
-    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0, withDisplayName: true });
+    // productTypes=[1]：门店只下单自产产品（含礼盒），外购商品（product_type=2）是生产投入品，走采购入库 → 物资领用（doc/14 §5）。
+    const res = await listProduct({ pageNum: 1, pageSize: 500, productTypes: [1], belongType, productStatus: 0, withDisplayName: true });
     const rows = ((res as unknown as { rows?: ProductInfoVO[] }).rows ?? []) as ProductInfoVO[];
-    // 门店只能下单「可售产品」（自产成品 / 外购 / 礼盒），排除所有原材料（product_attr=2）：
-    // 原料是仓库内部流转（分割/毛菜处理产出 → 领用 → 打包成成品），门店订成品、不订原料。
-    // 不过滤 → 用户会把原料当产品下单，需求落原料 id 上，打包卡（成品）按 product_id 查不到 → 需求量 0（doc/14 §5）。
-    productOptions.value = rows.filter((p) => Number(p.productAttr) !== 2);
+    // 前端兜底同口径（服务端已按 productTypes 过滤）
+    let list = rows.filter((p) => Number(p.productType) === 1);
+    // 白条 / 礼盒不按产品属性收口：白条在仓库域建模为原材料（product_attr=2），但门店订白条 → 现场分割，可订；
+    // 礼盒的 product_attr 在商品配置表单非必填、历史数据可能为空。
+    // 其余业态取自产成品白名单（product_attr=1）：排除原材料（=2，仓库内部流转：分割/毛菜处理产出 → 领用 → 打包成成品），
+    // 同时挡住属性未配置（空）的脏数据。不收口 → 用户把原料当产品下单，需求落原料 id 上，打包卡（成品）按 product_id 查不到 → 需求量 0。
+    if (effectiveType.value !== 'white_bar' && effectiveType.value !== 'gift_box') {
+      list = list.filter((p) => Number(p.productAttr) === 1);
+    }
+    // other 业态服务端不限定 belongType，前端排除已有独立业态的 3 类归属，避免白条 / 果蔬成品 / 礼盒混进「其他」下拉
+    if (effectiveType.value === 'other') {
+      list = list.filter((p) => !TYPED_BELONGS.includes(String(p.belongType ?? '')));
+    }
+    productOptions.value = list;
   } catch (e) {
     console.warn('[StoreDemandForm] loadProductOptions failed', e);
     productOptions.value = [];

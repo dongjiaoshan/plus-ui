@@ -66,11 +66,19 @@ export function useDemandProducts(productType: DemandProductType = 'white_bar') 
       const belongType = DEMAND_TYPE_TO_BELONG[tp];
       // withDisplayName：果蔬候选按原材料作物有效有机证书解析展示名（有证=产品名 / 无证=别名），
       // 与下单后定格（DemandManageServiceImpl.insertByBo）一致，避免选择器显示组织名而列表显别名。
-      const res = await listProduct({ pageNum: 1, pageSize: 500, belongType, productStatus: 0, withDisplayName: true });
+      // productTypes=[1]：需求只挂自产产品（含礼盒）。外购商品（product_type=2）是生产投入品
+      //（种子/药品/农药/肥料/饲料/包材/设备），走采购入库 → 物资领用，不进需求下单链路（doc/14 §5）。
+      const res = await listProduct({ pageNum: 1, pageSize: 500, productTypes: [1], belongType, productStatus: 0, withDisplayName: true });
       const rsp = res as { rows?: ProductInfoVO[]; data?: ProductInfoVO[] };
-      // 需求只能挂可售产品（自产成品 / 外购 / 礼盒），排除自产原料（type=1 & attr=2）：
-      // 原料是仓库内部流转（分割/毛菜处理产出 → 领用 → 打包成成品），不可被门店下单（doc/14 §5）。
-      const rows = (rsp.rows ?? rsp.data ?? []).filter((p) => !(Number(p.productType) === 1 && Number(p.productAttr) === 2));
+      // 前端兜底同口径（服务端已按 productTypes 过滤）
+      let rows = (rsp.rows ?? rsp.data ?? []).filter((p) => Number(p.productType) === 1);
+      // 白条 / 礼盒不按产品属性收口：白条在仓库域建模为原材料（product_attr=2），但门店订白条 → 现场分割，可订；
+      // 礼盒的 product_attr 在商品配置表单非必填、历史数据可能为空。
+      // 其余业态取自产成品白名单（product_attr=1）：排除原材料（=2，仓库内部流转：分割/毛菜处理产出 → 领用 → 打包成成品），
+      // 同时挡住属性未配置（空）的脏数据混进「其他」兜底桶。
+      if (tp !== 'white_bar' && tp !== 'gift_box') {
+        rows = rows.filter((p) => Number(p.productAttr) === 1);
+      }
       // other tab：服务端不过滤 belongType，前端兜底排除已知 6 类（剩"其他"）
       if (tp === 'other') {
         productOptions.value = rows.filter((p) => !KNOWN_BELONG_TYPES.includes(String(p.belongType ?? '')));

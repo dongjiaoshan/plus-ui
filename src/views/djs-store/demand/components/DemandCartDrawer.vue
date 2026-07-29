@@ -221,7 +221,7 @@ function tomorrowStr(): string {
 /** 7 业态 tab：belongType 为产品归属分组键，productType 为落库的仓库域 4 业态码。 */
 interface TabDef {
   key: StoreDemandTabType;
-  belongType: string | null; // null = 「其他」兜底（无归属 / 外购）
+  belongType: string | null; // null = 「其他」兜底（归属为空 / 不在已知 6 类的自产成品）
   productType: StoreDemandProductType; // 落库映射（仓库域 4 业态）
 }
 const TABS: TabDef[] = [
@@ -285,14 +285,16 @@ const tabProducts = computed<ProductInfoVO[]>(() => {
   } else {
     list = allProducts.value.filter((p) => p.belongType === def.belongType);
   }
-  // 白条业态：加载「产品类型=自产(productType=1) + 类别=白条产品(belongType=white_bar)」全部数据。
-  // 白条(整只/半只)在仓库域建模为原材料(product_attr=2)，但门店订白条→现场分割，故不套用下方原料排除。
-  if (def.key === 'white_bar') {
-    list = list.filter((p) => Number(p.productType) === 1);
-  } else {
-    // 其他业态：门店只下单可售成品，排除原材料(product_attr=2)；
-    // 原料是仓库内部流转(分割/毛菜处理产出→领用→打包成成品)，门店订成品不订原料(doc/14 §5)。
-    list = list.filter((p) => Number(p.productAttr) !== 2);
+  // 门店只下单自产产品(product_type=1，含礼盒)：外购商品(=2)是生产投入品(种子/药品/农药/肥料/饲料/包材/设备)，
+  // 走采购入库 → 物资领用，不进门店下单链路(doc/14 §5)。服务端已按 productTypes=[1] 过滤，此处前端兜底。
+  list = list.filter((p) => Number(p.productType) === 1);
+  // 白条 / 礼盒不按产品属性收口：
+  //   白条(整只/半只)在仓库域建模为原材料(product_attr=2)，但门店订白条→现场分割，可订；
+  //   礼盒的 product_attr 在商品配置表单非必填，历史礼盒可能为空，按白名单会被误伤。
+  // 其余业态取自产成品白名单(product_attr=1)：既排除原材料(=2，仓库内部流转：分割/毛菜处理产出→领用→打包成成品)，
+  // 也挡住属性未配置(空)的脏数据漏进「其他产品」兜底桶。
+  if (def.key !== 'white_bar' && def.key !== 'gift_box') {
+    list = list.filter((p) => Number(p.productAttr) === 1);
   }
   // 产品名称过滤（点「查询」后生效，跨 tab 保留 appliedKeyword）
   const kw = appliedKeyword.value.toLowerCase();
@@ -385,17 +387,31 @@ async function loadProducts() {
     // withDisplayName：果蔬候选按原材料作物有效有机证书解析展示名（有证=产品名 / 无证=别名），与下单定格一致。
     // 必须按 total 翻完所有页：启用产品总数已超过单页 500，只取第一页会让靠后的业态（果蔬/其他）整片产品在
     // 对应 tab 里消失（门店根本下不了单），且缺失是静默的、看不出来。
+    // productTypes=[1]：只取自产产品（含礼盒）。外购商品(product_type=2，生产投入品)不可被门店下单，
+    // 服务端直接落 product_type IN (1)，候选从 682 条收窄到自产集，兜底见 tabProducts。
     type ProductPage = { rows?: ProductInfoVO[]; data?: ProductInfoVO[]; total?: number };
-    const first = (await listProduct({ pageNum: 1, pageSize: PRODUCT_PAGE_SIZE, productStatus: 0, withDisplayName: true })) as unknown as ProductPage;
+    const first = (await listProduct({
+      pageNum: 1,
+      pageSize: PRODUCT_PAGE_SIZE,
+      productTypes: [1],
+      productStatus: 0,
+      withDisplayName: true
+    })) as unknown as ProductPage;
     const rows: ProductInfoVO[] = [...((first.rows ?? first.data ?? []) as ProductInfoVO[])];
     const total = Number(first.total ?? rows.length);
     const pages = Math.ceil(total / PRODUCT_PAGE_SIZE);
     for (let page = 2; page <= pages; page++) {
-      const next = (await listProduct({ pageNum: page, pageSize: PRODUCT_PAGE_SIZE, productStatus: 0, withDisplayName: true })) as unknown as ProductPage;
+      const next = (await listProduct({
+        pageNum: page,
+        pageSize: PRODUCT_PAGE_SIZE,
+        productTypes: [1],
+        productStatus: 0,
+        withDisplayName: true
+      })) as unknown as ProductPage;
       rows.push(...((next.rows ?? next.data ?? []) as ProductInfoVO[]));
     }
-    // 加载全部启用产品，原料排除按 tab 业态区分（见 tabProducts）：
-    // 白条 tab 取自产白条(含原料态白条，门店订白条→现场分割)；其余业态排除原材料(product_attr=2)。
+    // 加载全部启用自产产品，属性收口按 tab 业态区分（见 tabProducts）：
+    // 白条 / 礼盒 tab 不按 product_attr 过滤；其余业态只取自产成品(product_attr=1)。
     allProducts.value = rows;
   } catch (e) {
     console.warn('[DemandCartDrawer] loadProducts failed', e);
