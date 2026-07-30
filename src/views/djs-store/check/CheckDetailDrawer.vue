@@ -15,15 +15,20 @@
     <el-table v-loading="loading" :data="filteredLines" border stripe>
       <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="120" show-overflow-tooltip fixed="left" align="center" header-align="center" />
       <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" min-width="120" align="center" header-align="center" />
-      <el-table-column prop="openingQty" :label="t('storeLedger.column.openingQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="inboundQty" :label="t('storeLedger.column.inboundQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="saleQty" :label="t('storeLedger.column.saleQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="giftQty" :label="t('storeLedger.column.giftQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="whReturnQty" :label="t('storeLedger.column.returnedQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
-      <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" min-width="120" align="center" header-align="center" :formatter="qtyFormatter" />
+      <!-- 计量列配色（admin row150/151）：>0 蓝色高亮、0 灰色；损耗量单独红色（负损耗=盘盈用橙色） -->
+      <el-table-column v-for="col in QTY_COLUMNS" :key="col.prop" :prop="col.prop" :label="t(col.label)" min-width="120" align="center" header-align="center">
+        <template #default="{ row }">
+          <span :class="qtyClass(row[col.prop])">{{ qtyText(row, col.prop) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="lossQty" :label="t('storeLedger.column.lossQty')" min-width="120" align="center" header-align="center">
+        <template #default="{ row }">
+          <span class="loss" :class="{ 'loss-negative': Number(row.lossQty) < 0, 'is-zero': !Number(row.lossQty) }">{{ qtyText(row, 'lossQty') }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="closingQty" :label="t('storeLedger.column.closingQty')" min-width="120" align="center" header-align="center" fixed="right">
         <template #default="{ row }">
-          <span class="closing">{{ fmtQty(row.closingQty, row.materialUnit || row.productUnit) }}</span>
+          <span class="closing" :class="qtyClass(row.closingQty)">{{ fmtQty(row.closingQty, row.materialUnit || row.productUnit) }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -88,9 +93,26 @@ function fmtQty(value: number | string | null | undefined, unit?: string): strin
   return Number.isNaN(n) ? '-' : n.toFixed(3);
 }
 
-/** el-table 列 formatter 适配（row / column / cellValue / index）。白条产品行按原材料单位（materialUnit）判重量口径。 */
-function qtyFormatter(row: StoreLedgerLineVO, _column: unknown, cellValue: number | string | null | undefined): string {
-  return fmtQty(cellValue, row.materialUnit || row.productUnit);
+/** 期初 / 入库 / 销售 / 赠送 / 退回 五个通用计量列（损耗、期末另有配色规则，单独声明）。 */
+const QTY_COLUMNS: Array<{ prop: keyof StoreLedgerLineVO & string; label: string }> = [
+  { prop: 'openingQty', label: 'storeLedger.column.openingQty' },
+  { prop: 'inboundQty', label: 'storeLedger.column.inboundQty' },
+  { prop: 'saleQty', label: 'storeLedger.column.saleQty' },
+  { prop: 'giftQty', label: 'storeLedger.column.giftQty' },
+  { prop: 'whReturnQty', label: 'storeLedger.column.returnedQty' }
+];
+
+/** 单元格文案：白条产品行按原材料单位（materialUnit）判重量口径。 */
+function qtyText(row: StoreLedgerLineVO, prop: string): string {
+  return fmtQty((row as Record<string, unknown>)[prop] as number | string | null | undefined, row.materialUnit || row.productUnit);
+}
+
+/**
+ * 计量格配色（admin row150）：数值 > 0 蓝色高亮、0 / 空值灰色，
+ * 让操作员一眼扫出哪几行当天真有出入库，不用逐格读 0.000。
+ */
+function qtyClass(value: number | string | null | undefined): string {
+  return Number(value) > 0 ? 'qty-positive' : 'is-zero';
 }
 
 const title = computed(() => t('storeLedger.detail.titleByDate', { date: currentDate.value || '-' }));
@@ -156,7 +178,34 @@ defineExpose({ open });
   }
 }
 
+/* 期末库存恒加粗：.is-zero / .qty-positive 与 .closing 同权重且后声明，会盖掉 font-weight，
+   这里靠组合选择器提高特异度锁住加粗，颜色仍交给 .is-zero / .qty-positive */
 .closing {
   font-weight: 600;
+
+  &.is-zero,
+  &.qty-positive {
+    font-weight: 600;
+  }
+}
+
+/* 计量格配色（admin row150/151）：>0 蓝、=0 灰、损耗红（负损耗=盘盈橙） */
+.qty-positive {
+  font-weight: 600;
+  color: var(--el-color-primary);
+}
+
+.is-zero {
+  color: #909399;
+  font-weight: 400;
+}
+
+.loss {
+  font-weight: 600;
+  color: var(--el-color-danger);
+
+  &.loss-negative {
+    color: var(--el-color-warning);
+  }
 }
 </style>

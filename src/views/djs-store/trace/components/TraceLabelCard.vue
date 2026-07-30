@@ -1,10 +1,13 @@
 <template>
-  <!-- 追溯码贴纸：3cm×3cm 定尺，顶「东角山有机追溯码」+ 二维码 + 底「生产编码-门店名称」。预览与打印共用同一份结构。 -->
+  <!-- 追溯码贴纸：3cm×3cm 定尺，顶「东角山有机追溯码」+ 二维码 + 底「生产编码」「门店名称」两行。预览与打印共用同一份结构。 -->
   <div class="trace-label">
     <div class="trace-label__title">{{ t('storeTrace.label.traceCaption') }}</div>
     <img v-if="qrDataUrl" :src="qrDataUrl" alt="qr" class="trace-label__qr" />
     <div v-else class="trace-label__qr trace-label__qr--empty">-</div>
-    <div class="trace-label__foot">{{ footText }}</div>
+    <div class="trace-label__foot">
+      <div class="trace-label__foot-line">{{ serialText }}</div>
+      <div v-if="storeText" class="trace-label__foot-line">{{ storeText }}</div>
+    </div>
   </div>
 </template>
 
@@ -24,12 +27,12 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
-/** 底部单行「生产编码-门店名称」；无门店只显生产编码。 */
-const footText = computed(() => {
-  const serial = props.data.serialNo != null ? String(props.data.serialNo) : '';
-  const store = props.data.storeName || '';
-  return store ? `${serial}-${store}` : serial;
-});
+/**
+ * 底部两行：第一行生产编码、第二行门店名称（admin row147/148）。
+ * 拼成一行会让门店名被 word-break 从中间硬拆（「东角」「山徐汇旗舰店」），故拆行渲染。
+ */
+const serialText = computed(() => (props.data.serialNo != null ? String(props.data.serialNo) : ''));
+const storeText = computed(() => props.data.storeName || '');
 </script>
 
 <style lang="scss" scoped>
@@ -72,6 +75,10 @@ const footText = computed(() => {
   font-size: 2.1mm;
   line-height: 1.05;
   text-align: center;
+}
+/* 生产编码 / 门店名各占一行；单行内仍允许超长时折行，但两者不再互相挤同一行 */
+.trace-label__foot-line {
+  width: 100%;
   word-break: break-all;
 }
 </style>

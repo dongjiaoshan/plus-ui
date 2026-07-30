@@ -43,11 +43,11 @@ export function usePackEntryOptions() {
    * @param productType     djs_product_type：1=自产 / 2=外购（不传=全部；礼盒不传，按 belong_type=gift_box 过滤，已废弃 3）
    * @param belongType      自产归属类型过滤（如 'pork' 仅猪肉产品、'gift_box' 礼盒；不传=不限）
    * @param belongTypes     自产归属类型集合（如 ['egg','dry_good','other'] 其他产品打包；非空落 belong_type IN）
-   * @param productWorkshop 字典 djs_product_workshop（如 3=门店打包间，肉品打包目标）；不传=不限
+   * @param productWorkshop 字典 djs_product_workshop 车间码字符串（如 '3'）；命中「挂了该车间」的产品，不传=不限
    * @param productAttr     产品属性 djs_product_attr（1=生产产品/打包目标成品 2=原材料，取数逻辑 doc#13）；不传=不限。
    *                        ⚠️ 形参追加在末尾，勿插中间——SkuPackForm 按位调用，错位会破坏 veg/dry/gift/other 入口
    */
-  async function loadProducts(productType?: number, belongType?: string, belongTypes?: string[], productWorkshop?: number, productAttr?: number) {
+  async function loadProducts(productType?: number, belongType?: string, belongTypes?: string[], productWorkshop?: string, productAttr?: number) {
     productLoading.value = true;
     try {
       const res = await listProduct({ pageNum: 1, pageSize: 500, productType, belongType, belongTypes, productWorkshop, productAttr } as any);

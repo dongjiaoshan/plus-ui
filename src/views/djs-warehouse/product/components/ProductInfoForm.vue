@@ -70,11 +70,13 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- row29：生产车间——原材料(productAttr=2)非必填，其余必填（row69）；礼盒不要求 -->
+          <!-- row29：生产车间——原材料(productAttr=2)非必填，其余必填（row69）；礼盒不要求。
+               多选：同一产品可归属多个车间（如猪肉成品「肉品打包间 + 门店打包间」两处都能生产），
+               存 CSV（'3,5'），由 workshopSelection 桥接数组 ⇄ 字符串 -->
           <el-col :span="12">
             <el-form-item :label="t('product.field.productWorkshop')" prop="productWorkshop" :required="!isGiftBoxForm() && form.productAttr !== 2">
-              <el-select v-model="form.productWorkshop" clearable>
-                <el-option v-for="d in djs_product_workshop" :key="d.value" :label="d.label" :value="Number(d.value)" />
+              <el-select v-model="workshopSelection" multiple collapse-tags collapse-tags-tooltip clearable>
+                <el-option v-for="d in djs_product_workshop" :key="d.value" :label="d.label" :value="String(d.value)" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -251,6 +253,19 @@ const defaultForm = (): ProductInfoForm => ({
 });
 
 const form = ref<ProductInfoForm>(defaultForm());
+
+/**
+ * 生产车间多选桥接：接口/表单用 CSV 字符串（`'3,5'`），el-select multiple 用字符串数组。
+ *
+ * <p>清空时写回 `undefined` 而非空串，与其它 clearable 字段保持一致（后端 updateById
+ * 非 null 才更新，空串会被当成有效值写进库）。</p>
+ */
+const workshopSelection = computed<string[]>({
+  get: () => (form.value.productWorkshop ? String(form.value.productWorkshop).split(',').filter(Boolean) : []),
+  set: (codes: string[]) => {
+    form.value.productWorkshop = codes.length ? codes.join(',') : undefined;
+  }
+});
 
 /**
  * 原材料下拉候选：只显示与当前产品「产品类别(belongType)」相同的原材料

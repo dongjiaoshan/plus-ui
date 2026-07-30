@@ -330,7 +330,7 @@ async function ensureFrozenLocations() {
 
 async function ensurePorkProducts() {
   if (porkProducts.value.length) return;
-  const res = await listProduct({ productType: 1, productWorkshop: 2, belongType: 'pork', pageNum: 1, pageSize: 200 });
+  const res = await listProduct({ productType: 1, productWorkshop: '2', belongType: 'pork', pageNum: 1, pageSize: 200 });
   porkProducts.value = (res as any).rows ?? [];
 }
 

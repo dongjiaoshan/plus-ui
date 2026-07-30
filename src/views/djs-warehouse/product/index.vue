@@ -228,9 +228,10 @@ function buildQuery(): Omit<ProductInfoQuery, 'pageNum' | 'pageSize'> {
   const userProductTypes =
     Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType.map((v: any) => Number(v)) : undefined;
   const belongTypes = Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType : undefined;
+  // 车间是 CSV 多归属列，后端按 FIND_IN_SET 匹配，故传字符串码（不能 Number 化——列里存的是 '3,5' 这类串）
   const productWorkshops =
     Array.isArray(searchModel.productWorkshop) && searchModel.productWorkshop.length
-      ? searchModel.productWorkshop.map((v: any) => Number(v))
+      ? searchModel.productWorkshop.map((v: any) => String(v))
       : undefined;
   const storeLocationIds =
     Array.isArray(searchModel.storeLocationId) && searchModel.storeLocationId.length

@@ -58,7 +58,8 @@
             <!-- 124#5：肉品打包隐藏右上角「打包序号 NO.x」（hidePackNo=true）；其他打包页仍显示 -->
             <span v-if="!hidePackNo" class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
             <!-- admin row79-82：四类打包页共用刷新入口，重拉来源、成品、库存和需求。 -->
-            <el-button size="small" :icon="Refresh" :loading="refreshing" @click="handleRefresh">
+            <!-- admin row147：打包站是触屏作业，按钮放大到 large 并加宽点击区，方便手指点中。 -->
+            <el-button class="refresh-btn" size="large" :icon="Refresh" :loading="refreshing" @click="handleRefresh">
               {{ t('common.refresh') }}
             </el-button>
           </div>
@@ -250,8 +251,8 @@ const props = withDefaults(
     belongType?: string;
     /** 目标产品 belong_type 集合过滤（如 ['egg','dry_good','other'] 其他产品打包）；非空落 belong_type IN */
     belongTypes?: string[];
-    /** 目标产品 djs_product_workshop 过滤（如 3=门店打包间，肉品打包目标）；不传=不限，向后兼容 */
-    productWorkshop?: number;
+    /** 目标产品 djs_product_workshop 车间码字符串过滤（如 '3'）；命中「挂了该车间」的产品，不传=不限 */
+    productWorkshop?: string;
     /** 目标产品 djs_product_attr 过滤（1=生产产品/打包目标成品，取数逻辑 doc#13）；不传=不限 */
     productAttr?: number;
     /** 发送位置可选项（缺省三选）；传 [] 不显示 */
@@ -1191,14 +1192,13 @@ function validate(): boolean {
 }
 
 /**
- * 打包实称相对单包规则（product_info.material_num）的允许偏差百分比（对称，上下同值）。
- * 与后端 `ProductProductionServiceImpl.PACK_MEASURE_TOLERANCE_PERCENT` 同值，改动必须两侧同步。
+ * 打包实称相对单包规则（product_info.material_num）的允许**超出**百分比。
+ * 口径非对称：只能大于不能小于；超出该百分比只提示、确认后可继续。
+ * 与后端 `ProductProductionServiceImpl.PACK_MEASURE_OVER_TOLERANCE_PERCENT` 同值，改动必须两侧同步。
  */
-const PACK_MEASURE_TOLERANCE_PERCENT = 10;
-/** 容差带下界系数（0.9）。 */
-const PACK_MEASURE_LOWER_FACTOR = 1 - PACK_MEASURE_TOLERANCE_PERCENT / 100;
-/** 容差带上界系数（1.1）。 */
-const PACK_MEASURE_UPPER_FACTOR = 1 + PACK_MEASURE_TOLERANCE_PERCENT / 100;
+const PACK_MEASURE_OVER_TOLERANCE_PERCENT = 3;
+/** 允许上界系数（1.03）。 */
+const PACK_MEASURE_UPPER_FACTOR = 1 + PACK_MEASURE_OVER_TOLERANCE_PERCENT / 100;
 
 /**
  * 当前所选产品的打包计量规则（kg）。
@@ -1211,15 +1211,23 @@ function packMeasureRuleKg(): number | null {
   return Number.isFinite(rule) && rule > 0 ? rule : null;
 }
 
+const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
+
 /**
- * 实称落在打包规则的 ±{@link PACK_MEASURE_TOLERANCE_PERCENT}% 容差带外（偏低或偏高都算）。
+ * 实称低于规则重量 —— **硬拒**支（不能少于规则重量，不给「继续」）。
  *
- * 两端先按 kg 6 位小数取整再比，与后端 BigDecimal 判定对齐——否则 `rule * 0.9` 的浮点尾差
- * 会把「恰好落在界上」的重量误判成超差，导致前端不弹确认框、后端却拒收的死角。
+ * 两端先按 kg 6 位小数取整再比，与后端 BigDecimal 判定对齐——否则浮点尾差
+ * 会把「恰好等于规则」的重量误判成偏低，前端拦下、后端本会放行，产生死角。
  */
-function isMeasureOutOfTolerance(rule: number, actual: number): boolean {
-  const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
-  return round6(actual) < round6(rule * PACK_MEASURE_LOWER_FACTOR) || round6(actual) > round6(rule * PACK_MEASURE_UPPER_FACTOR);
+function isMeasureBelowRule(rule: number, actual: number): boolean {
+  return round6(actual) < round6(rule);
+}
+
+/**
+ * 实称超出规则重量 {@link PACK_MEASURE_OVER_TOLERANCE_PERCENT}% —— **提示**支（确认后可继续提交）。
+ */
+function isMeasureOverTolerance(rule: number, actual: number): boolean {
+  return round6(actual) > round6(rule * PACK_MEASURE_UPPER_FACTOR);
 }
 
 // 客户要求「获取到产品重量时」就弹提示，而不是等点提交。
@@ -1236,15 +1244,20 @@ watch(
     measureRuleTimer = setTimeout(() => {
       const rule = packMeasureRuleKg();
       const actual = packWeightKg();
-      if (rule == null || actual == null || !isMeasureOutOfTolerance(rule, actual)) {
+      const below = rule != null && actual != null && isMeasureBelowRule(rule, actual);
+      const over = rule != null && actual != null && isMeasureOverTolerance(rule, actual);
+      if (!below && !over) {
         deviationNotified.value = false;
         return;
       }
       if (deviationNotified.value) return;
       deviationNotified.value = true;
+      // 偏低是硬拒（提交会被拦），文案要说清「不能少于」；超出只是提示，说明确认后可继续
       ElNotification.warning({
-        title: t('djs.warehouse.packEntry.measureDeviationTitle'),
-        message: t('djs.warehouse.packEntry.measureDeviationTip', { rule, actual, tolerance: PACK_MEASURE_TOLERANCE_PERCENT })
+        title: t(below ? 'djs.warehouse.packEntry.measureBelowTitle' : 'djs.warehouse.packEntry.measureDeviationTitle'),
+        message: below
+          ? t('djs.warehouse.packEntry.measureBelowTip', { rule, actual })
+          : t('djs.warehouse.packEntry.measureDeviationTip', { rule, actual, tolerance: PACK_MEASURE_OVER_TOLERANCE_PERCENT })
       });
     }, 700);
   }
@@ -1255,20 +1268,29 @@ onBeforeUnmount(() => {
 });
 
 /**
- * 肉品、果蔬按产品 materialNum（单包规则重量 kg）校验称重：与后端 validatePackMeasureRule 同口径。
- * 实称在 ±10% 容差带内直接提交；偏低或偏高超出容差都弹确认框（不直接拒收），
- * 取消则不提交，确认后由 allowOverMeasure 透传给后端复核放行。
+ * 肉品、果蔬按产品 materialNum（单包规则重量 kg）校验称重：与后端 validatePackMeasureRule 同口径
+ * （非对称，只能大于不能小于）。
+ * - 实称 < 规则 → 弹警告 + **拒绝提交**（返回 null，与「用户取消」同路径不提交）。
+ * - 实称 ∈ [规则, 规则×1.03] → 直接提交。
+ * - 实称 > 规则×1.03 → 弹确认框，取消则不提交，确认后由 allowOverMeasure 透传给后端复核放行。
  *
- * @returns null = 用户取消提交；true = 已确认偏差继续；false = 无需确认，直接提交
+ * @returns null = 不提交（偏低被拒 / 用户取消）；true = 已确认超出继续；false = 无需确认，直接提交
  */
 async function confirmPackMeasureRule(): Promise<boolean | null> {
   const rule = packMeasureRuleKg();
   const actual = packWeightKg();
   if (rule == null || actual == null) return false;
-  if (!isMeasureOutOfTolerance(rule, actual)) return false;
+  if (isMeasureBelowRule(rule, actual)) {
+    ElNotification.warning({
+      title: t('djs.warehouse.packEntry.measureBelowTitle'),
+      message: t('djs.warehouse.packEntry.measureBelowTip', { rule, actual })
+    });
+    return null;
+  }
+  if (!isMeasureOverTolerance(rule, actual)) return false;
   try {
     await ElMessageBox.confirm(
-      t('djs.warehouse.packEntry.measureDeviationConfirm', { rule, actual, tolerance: PACK_MEASURE_TOLERANCE_PERCENT }),
+      t('djs.warehouse.packEntry.measureDeviationConfirm', { rule, actual, tolerance: PACK_MEASURE_OVER_TOLERANCE_PERCENT }),
       t('djs.warehouse.packEntry.measureDeviationTitle'),
       {
         confirmButtonText: t('common.confirm'),
@@ -1653,6 +1675,12 @@ onActivated(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+/* 触屏点击区（admin row147）：≥44px 高、加宽内边距，达到手指可点的最小热区 */
+.refresh-btn {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
 }
 .pack-no {
   font-size: 13px;

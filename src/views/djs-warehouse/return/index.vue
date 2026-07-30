@@ -54,7 +54,7 @@
           <template #default="{ row }">{{ formatStoreReturnWeight(row) }}</template>
         </el-table-column>
         <el-table-column prop="receivedWeight" :label="t('storeReturn.column.receivedWeight')" min-width="110" align="center">
-          <template #default="{ row }">{{ formatReceivedWeight(row.receivedWeight) }}</template>
+          <template #default="{ row }">{{ formatReceivedWeight(row) }}</template>
         </el-table-column>
         <el-table-column prop="returnStatus" :label="t('storeReturn.column.returnStatus')" min-width="110" align="center">
           <template #default="{ row }">
@@ -137,9 +137,16 @@ function formatWeight(v: number | undefined | null): string {
   return v === undefined || v === null ? '—' : `${v}kg`;
 }
 
-// 仓库实收重量：列头已带单位(KG)，单元格只出裸数值（3 位小数，空值 —），与门店「退回记录」同口径
-function formatReceivedWeight(v: number | undefined | null): string {
-  return formatNum3(v) || '—';
+// 仓库实收重量（admin row152）：列头不带单位，单位跟在每行数值后面，空值 —。
+// 只有 kg 口径产品才补 kg —— 份 / 盒 / 枚等计件产品的 received_weight 落的是件数
+// （后端 receivedWeight 缺省回退 receivedQty），补 kg 会把「3 份」谎报成「3 公斤」。
+function formatReceivedWeight(row: StoreReturnVO): string {
+  const v = row.receivedWeight;
+  if (!isKgUnit(row.productUnit)) {
+    return formatQtyByUnit(v, row.productUnit) || '—';
+  }
+  const n = formatNum3(v);
+  return n ? `${n}kg` : '—';
 }
 
 // 门店退回重量：份/盒等非 kg 单位产品门店未录重量（空或 0）→ 显 —（未录入），kg 产品保持原样（row70）

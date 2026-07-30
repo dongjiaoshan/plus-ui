@@ -35,7 +35,7 @@
         <!-- 期初：只读（库存表结存） -->
         <el-table-column :label="t('storeLedger.column.openingQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <span class="text-muted">{{ fmtQty(row.openingQty, row) }}</span>
+            <span :class="qtyClass(row.openingQty, row)">{{ fmtQty(row.openingQty, row) }}</span>
           </template>
         </el-table-column>
         <!-- 新到货：新到货行只读（发货量）；猪肉行可编辑 -->
@@ -51,7 +51,7 @@
               class="cell-num"
               @change="recalc(row)"
             />
-            <span v-else class="text-muted">{{ fmtQty(row.inboundQty, row) }}</span>
+            <span v-else :class="qtyClass(row.inboundQty, row)">{{ fmtQty(row.inboundQty, row) }}</span>
           </template>
         </el-table-column>
         <!-- 销售：手动 -->
@@ -69,7 +69,7 @@
         <!-- 退回（门店退回仓库）：只读 -->
         <el-table-column :label="t('storeLedger.column.returnedQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <span class="text-muted">{{ fmtQty(row.returnWhQty, row) }}</span>
+            <span :class="qtyClass(row.returnWhQty, row)">{{ fmtQty(row.returnWhQty, row) }}</span>
           </template>
         </el-table-column>
         <!-- 期末：手动实盘录入 -->
@@ -81,7 +81,7 @@
         <!-- 损耗：只读（后端公式计算，前端同步展示） -->
         <el-table-column :label="t('storeLedger.column.lossQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <span class="loss" :class="{ 'loss-negative': row.lossQty < 0 }">{{ fmtQty(row.lossQty, row) }}</span>
+            <span class="loss" :class="{ 'loss-negative': row.lossQty < 0, 'is-zero': !Number(row.lossQty) }">{{ fmtQty(row.lossQty, row) }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -211,6 +211,22 @@ function fmtQty(value: number | string | null | undefined, row: { productUnit?: 
   }
   // 计件（份 / 盒等）：去尾零显整数（DENGBO-R10：到店量按份显示，如 demand 3.000 → 3）
   return String(Math.round(Number(value)));
+}
+
+/**
+ * 只读计量格配色（admin row150）：数值 > 0 走蓝色高亮，0 / 空值走灰色，
+ * 让操作员一眼扫出哪几行当天真有出入库，不用逐格读 0.000。
+ *
+ * 判定用 fmtQty **显示后**的值：计件行 fmtQty 会 Math.round，0.4 份显示成 "0"，
+ * 若按原始值判就会出现「文字是 0、颜色是蓝」的自相矛盾。
+ */
+function qtyClass(value: number | string | null | undefined, row: { productUnit?: string }): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return 'is-zero';
+  }
+  const shown = isWeightRow(row) ? n : Math.round(n);
+  return shown > 0 ? 'qty-positive' : 'is-zero';
 }
 
 /** 可编辑量输入框小数位：产品单位为 kg（白条按重量盘点）→ 3 位小数；否则（份 / 盒等）0 位整数。 */
@@ -416,13 +432,25 @@ defineExpose({ open });
     }
   }
 
+  /* 损耗量红色（admin row151）；0 走 .is-zero 保持灰，负损耗（盘盈）另用橙色区分 */
   .loss {
     font-weight: 600;
-    color: var(--el-color-primary);
+    color: var(--el-color-danger);
 
     &.loss-negative {
-      color: var(--el-color-danger);
+      color: var(--el-color-warning);
     }
+  }
+
+  /* 只读计量列：>0 蓝色、=0 灰色，便于一眼扫出哪些格子有数（admin row150） */
+  .qty-positive {
+    font-weight: 600;
+    color: var(--el-color-primary);
+  }
+
+  .is-zero {
+    color: #909399;
+    font-weight: 400;
   }
 
   .text-muted {

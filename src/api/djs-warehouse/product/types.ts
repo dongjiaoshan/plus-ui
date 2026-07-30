@@ -27,7 +27,8 @@ export interface ProductInfoVO extends BaseEntity {
   /** 主图 public URL（resolver 兜底回填） */
   imageUrl?: string | null;
   productAttr?: number;
-  productWorkshop?: number;
+  /** 生产车间 CSV 多值（djs_product_workshop，如 '3,5'）；一个产品可归属多个车间 */
+  productWorkshop?: string;
   storeLocationId?: string;
   /** 存储仓库名称（后端按 store_location_id 关联 location_info 回填；多库位逗号拼接） */
   storeLocationName?: string;
@@ -104,7 +105,8 @@ export interface ProductInfoForm {
   /** 图来源（0 自动 / 1 手动） */
   imageSource?: number;
   productAttr?: number;
-  productWorkshop?: number;
+  /** 生产车间 CSV 多值（djs_product_workshop，如 '3,5'）；一个产品可归属多个车间 */
+  productWorkshop?: string;
   storeLocationId?: string;
   productStatus: number;
   productMaterial?: number | string;
@@ -130,10 +132,10 @@ export interface ProductInfoQuery extends PageQuery {
   buyClass?: string;
   /** 是否支持外购（djs_yes_no：1=是 / 0=否） */
   isBuyOut?: number;
-  /** 生产车间（djs_product_workshop） */
-  productWorkshop?: number;
-  /** 生产车间集合（R70 多选）；非空叠加 product_workshop IN (...) */
-  productWorkshops?: number[];
+  /** 生产车间单值筛选（djs_product_workshop）；落 FIND_IN_SET，命中「挂了该车间」的产品 */
+  productWorkshop?: string;
+  /** 生产车间集合（R70 多选）；非空落 OR 连接的多个 FIND_IN_SET（命中任一即入选） */
+  productWorkshops?: string[];
   /** 产品属性 djs_product_attr：1=生产产品（打包目标成品）/ 2=原材料（取数逻辑 doc#13） */
   productAttr?: number;
   /** 关联原材料（自引用 FK → product_info.id 雪花 id，超 JS Number 精度故用 string 精确匹配） */

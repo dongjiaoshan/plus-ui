@@ -38,7 +38,7 @@ import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/compon
 import { listStoreReturn, exportStoreReturn } from '@/api/djs-store/return';
 import type { StoreReturnQuery, StoreReturnVO } from '@/api/djs-store/return/types';
 import { blobValidate } from '@/utils/ruoyi';
-import { formatNum3, formatQtyByUnit } from '@/utils/weight';
+import { formatNum3, formatQtyByUnit, isKgUnit } from '@/utils/weight';
 import FileSaver from 'file-saver';
 import { useI18n } from 'vue-i18n';
 
@@ -86,6 +86,17 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'returnStatus', label: t('storeReturn.column.returnStatus'), type: 'select', dictType: 'djs_store_return_status' }
 ]);
 
+// 仓库实收重量（row152）：单位跟在数值后面，空值 —。
+// 只有 kg 口径产品才补 kg —— 份 / 盒 / 枚等计件产品的 received_weight 落的是件数
+// （后端 receivedWeight 缺省回退 receivedQty），补 kg 会把「3 份」谎报成「3 公斤」。
+function formatReceivedWeight(row: { receivedWeight?: number | string | null; unit?: string | null }): string {
+  if (!isKgUnit(row.unit)) {
+    return formatQtyByUnit(row.receivedWeight, row.unit) || '—';
+  }
+  const n = formatNum3(row.receivedWeight);
+  return n ? `${n}kg` : '—';
+}
+
 // 「退回记录」列：退回日期/产品类型/产品名称/退货量/单位/仓库实收重量/退货状态
 // r86：去掉「产品代码」列；所有列统一 minWidth，宽度保持一致，由 el-table 均分富余宽度
 // row54：退货量按单位分流（KG→3 位小数 / 非 KG→整数）；去掉「货物重量」「仓库实收量」两列
@@ -95,7 +106,8 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 130, align: 'center', showOverflowTooltip: true },
   { prop: 'returnQuantity', label: t('storeReturn.column.returnQuantity'), minWidth: 130, align: 'center', formatter: (row) => formatQtyByUnit(row.returnQuantity, row.unit) },
   { prop: 'unit', label: t('storeReturn.column.unit'), minWidth: 130, align: 'center' },
-  { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), minWidth: 130, align: 'center', formatter: (row) => formatNum3(row.receivedWeight) },
+  // row152：列头不带单位，kg 跟在每行数值后面
+  { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), minWidth: 130, align: 'center', formatter: (row) => formatReceivedWeight(row) },
   { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), minWidth: 130, align: 'center', dictType: 'djs_store_return_status' }
 ]);
 

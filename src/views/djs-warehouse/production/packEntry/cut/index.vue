@@ -149,7 +149,7 @@ async function loadPorkProducts() {
   try {
     // 分割车间(productWorkshop=2) 的猪肉**原材料**(productAttr=2)：分割产出入冷库的是原料，不是成品。
     // 成品(attr=1)由打包产出、不可被分割/领用（领用都是原材料，doc/14 §1）。
-    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork', productWorkshop: 2, productAttr: 2, productStatus: 0 } as any);
+    const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork', productWorkshop: '2', productAttr: 2, productStatus: 0 } as any);
     porkProducts.value = ((res as any).rows ?? []) as ProductInfoVO[];
   } finally {
     porkProductLoading.value = false;
