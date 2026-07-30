@@ -217,12 +217,22 @@ function formatRate(v: number | string | undefined): string {
   return Math.round(Number(v ?? 0) * 100) + '%';
 }
 
-/** 三态状态文案（无字典，前端固定 map；与后端 groupStatus 编码对齐）。 */
-function groupStatusLabel(code: DemandGroupStatusCode): string {
-  return t(`demand.groupStatus.${code}`);
+/** 是否后端约定的聚合三态；入参放宽到 string 以便拦住三态之外的取值。 */
+function isGroupStatus(code: string | null | undefined): code is DemandGroupStatusCode {
+  return code === 'PENDING' || code === 'ALL_CONFIRMED' || code === 'PARTIAL';
 }
-/** 三态对应 el-tag 颜色。 */
-function groupStatusTagType(code: DemandGroupStatusCode): 'info' | 'success' | 'warning' {
+/**
+ * 三态状态文案（无字典，前端固定 map；与后端 groupStatus 编码对齐）。
+ *
+ * 三态之外一律回落 unknown 文案，不允许把 i18n key 拼进页面：
+ * el-table-column 渲染时会先拿空行 `{}` 走一遍列 slot 去探测子列（Element Plus
+ * table-column render），此时 demandStatus 是 undefined；后端将来加第 4 态同样落这里。
+ */
+function groupStatusLabel(code: string | null | undefined): string {
+  return isGroupStatus(code) ? t(`demand.groupStatus.${code}`) : t('demand.groupStatus.unknown');
+}
+/** 三态对应 el-tag 颜色；三态之外按中性灰（同「待确认」）。 */
+function groupStatusTagType(code: string | null | undefined): 'info' | 'success' | 'warning' {
   switch (code) {
     case 'ALL_CONFIRMED':
       return 'success';

@@ -3205,7 +3205,8 @@ export default {
     groupStatus: {
       PENDING: 'Pending',
       ALL_CONFIRMED: 'All Confirmed',
-      PARTIAL: 'Partial'
+      PARTIAL: 'Partial',
+      unknown: 'Unknown'
     },
     placeholder: {
       demandNoAuto: 'Auto-generated on save',

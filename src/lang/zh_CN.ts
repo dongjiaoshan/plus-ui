@@ -3208,7 +3208,8 @@ export default {
     groupStatus: {
       PENDING: '待确认',
       ALL_CONFIRMED: '已全部确认',
-      PARTIAL: '部分确认'
+      PARTIAL: '部分确认',
+      unknown: '未知'
     },
     placeholder: {
       demandNoAuto: '保存后自动生成',
