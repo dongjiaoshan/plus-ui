@@ -1,7 +1,7 @@
 <template>
   <div class="p-2">
     <!--
-      STORE-RETURN-UNIFY-001：仓库「退货记录」统一读门店退回真相源 t_store_return（门店退货→仓库确认入库）。
+      STORE-RETURN-UNIFY-001：仓库「退回记录」统一读门店退回真相源 t_store_return（门店退回→仓库确认入库）。
       本页只读（master-detail 查看）：门店发起退回(pending) → 仓库工人在小程序「接受」确认入库 → 此处可见记录。
       确认动作在小程序端（mp 仓库 > 分拣发货 > 退货管理），admin 不在此确认（避免双确认入口）。
     -->
@@ -27,6 +27,18 @@
       @export="handleExport"
       @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
     >
+      <!--
+        确认进度 n/m（row178）：确认时间 / 确认人取的是「最近一条已确认行」，只要有 1 条确认过就填上，
+        部分确认（3/4）与全部确认在外层看不出差别 —— 未确认的行既没入库、外层也不留痕迹。
+        未确认完标警告色 + tooltip，避免看成已经完事。
+      -->
+      <template #cell-confirmProgress="{ row }">
+        <el-tooltip v-if="isPartiallyConfirmed(row as ReturnStoreDailyVO)" :content="t('djs.warehouse.return.confirmProgressTip')">
+          <span class="confirm-progress--partial">{{ formatConfirmProgress(row as ReturnStoreDailyVO) }}</span>
+        </el-tooltip>
+        <span v-else>{{ formatConfirmProgress(row as ReturnStoreDailyVO) }}</span>
+      </template>
+
       <template #action="{ row }">
         <el-button type="primary" link @click="openDetailDialog(row as ReturnStoreDailyVO)">
           {{ t('djs.warehouse.return.viewDetail') }}
@@ -50,11 +62,13 @@
           <template #default="{ row }">{{ formatQtyByUnit(row.returnQuantity, row.productUnit) || '—' }}</template>
         </el-table-column>
         <el-table-column prop="productUnit" :label="t('storeReturn.column.unit')" min-width="80" align="center" />
-        <el-table-column prop="goodsWeight" :label="t('storeReturn.column.storeReturnWeight')" min-width="120" align="center">
-          <template #default="{ row }">{{ formatStoreReturnWeight(row) }}</template>
-        </el-table-column>
         <el-table-column prop="receivedWeight" :label="t('storeReturn.column.receivedWeight')" min-width="110" align="center">
           <template #default="{ row }">{{ formatReceivedWeight(row) }}</template>
+        </el-table-column>
+        <el-table-column prop="quantityDiff" :label="t('djs.warehouse.return.quantityDiff')" min-width="110" align="center">
+          <template #default="{ row }">
+            <span :class="{ 'qty-diff': hasQuantityDiff(row) }">{{ formatQuantityDiff(row) }}</span>
+          </template>
         </el-table-column>
         <el-table-column prop="returnStatus" :label="t('storeReturn.column.returnStatus')" min-width="110" align="center">
           <template #default="{ row }">
@@ -98,7 +112,7 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-// 退货记录默认查近一月（退回日期 daterange 回显 [今天-1月, 今天]）；重置清空即展示全部
+// 退回记录默认查近一月（退回日期 daterange 回显 [今天-1月, 今天]）；重置清空即展示全部
 // R70 退回产品 / 退回门店下拉多选 → 默认空数组
 const searchModel = reactive<Record<string, any>>({
   returnDate: lastMonthRange(),
@@ -128,34 +142,58 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'confirmWeightTotal', label: t('djs.warehouse.return.confirmWeightTotal'), minWidth: 100, formatter: (row: any) => formatWeight(row.confirmWeightTotal) },
   { prop: 'weightDiffTotal', label: t('djs.warehouse.return.weightDiffTotal'), minWidth: 100, formatter: (row: any) => formatWeight(row.weightDiffTotal) },
   { prop: 'nonWeightReturnWeightTotal', label: t('djs.warehouse.return.nonWeightReturnWeightTotal'), minWidth: 130, formatter: (row: any) => formatWeight(row.nonWeightReturnWeightTotal) },
+  { prop: 'confirmProgress', label: t('djs.warehouse.return.confirmProgress'), minWidth: 100 },
   { prop: 'confirmTime', label: t('djs.warehouse.return.confirmTime'), minWidth: 160 },
   { prop: 'confirmUserName', label: t('djs.warehouse.return.confirmUser'), minWidth: 100 }
 ]);
 
+// 空值 / 不适用占位符（与本页其余列一致）
+const EMPTY_TEXT = '—';
+
 // 重量列统一带 kg 单位展示（空值 —）
 function formatWeight(v: number | undefined | null): string {
-  return v === undefined || v === null ? '—' : `${v}kg`;
+  return v === undefined || v === null ? EMPTY_TEXT : `${v}kg`;
 }
 
-// 仓库实收重量（admin row152）：列头不带单位，单位跟在每行数值后面，空值 —。
-// 只有 kg 口径产品才补 kg —— 份 / 盒 / 枚等计件产品的 received_weight 落的是件数
-// （后端 receivedWeight 缺省回退 receivedQty），补 kg 会把「3 份」谎报成「3 公斤」。
+// 仓库实收重量（admin row177）：不论产品单位是否 kg，实收落的都是过磅重量（kg），
+// 统一 3 位小数 + kg 单位展示，空值 —。
 function formatReceivedWeight(row: StoreReturnVO): string {
-  const v = row.receivedWeight;
-  if (!isKgUnit(row.productUnit)) {
-    return formatQtyByUnit(v, row.productUnit) || '—';
-  }
-  const n = formatNum3(v);
-  return n ? `${n}kg` : '—';
+  const n = formatNum3(row.receivedWeight);
+  return n ? `${n}kg` : EMPTY_TEXT;
 }
 
-// 门店退回重量：份/盒等非 kg 单位产品门店未录重量（空或 0）→ 显 —（未录入），kg 产品保持原样（row70）
-function formatStoreReturnWeight(row: StoreReturnVO): string {
-  const w = row.goodsWeight;
-  if (!isKgUnit(row.productUnit) && (w === undefined || w === null || Number(w) === 0)) {
-    return '—';
-  }
-  return formatWeight(w);
+// 差异量（admin row177）只对 kg 口径产品有意义：份 / 盒 / 枚等计件产品的退回量是件数，
+// 与实收重量不同量纲，相减无意义 → 显 —。
+// 仓库还没确认（实收为空）的行同样显 — ：货还没收，谈不上差异；按实收 0 计会让整行红字像报错。
+function hasQuantityDiff(row: StoreReturnVO): boolean {
+  return isKgUnit(row.productUnit) && toNum(row.returnQuantity) !== null && toNum(row.receivedWeight) !== null;
+}
+
+// 差异量 = 退回量 − 仓库实收重量
+function formatQuantityDiff(row: StoreReturnVO): string {
+  if (!hasQuantityDiff(row)) return EMPTY_TEXT;
+  return `${((toNum(row.returnQuantity) ?? 0) - (toNum(row.receivedWeight) ?? 0)).toFixed(3)}kg`;
+}
+
+// 确认进度 n/m（row178）：n=已确认行数，m=当天该门店退回总行数
+function formatConfirmProgress(row: ReturnStoreDailyVO): string {
+  const total = row.totalCount;
+  if (total === undefined || total === null) return EMPTY_TEXT;
+  return `${row.confirmedCount ?? 0}/${total}`;
+}
+
+// 未确认完（含一条都没确认）→ 警告色 + tooltip
+function isPartiallyConfirmed(row: ReturnStoreDailyVO): boolean {
+  const total = row.totalCount;
+  if (!total) return false;
+  return (row.confirmedCount ?? 0) < total;
+}
+
+// 后端 BigDecimal 序列化成字符串，统一 Number 强转；无效值返 null（不当 0 用）
+function toNum(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isNaN(n) ? null : n;
 }
 
 async function loadStoreOptions() {
@@ -254,7 +292,7 @@ function handlePageChange(pn: number, ps: number) {
 
 // 导出外层「门店 + 当日」汇总（与列表同口径，走 store-daily 导出端点）
 function handleExport() {
-  proxy?.download('djs/store/return/store-daily/export', buildQueryParams(), `退货记录_${new Date().getTime()}.xlsx`);
+  proxy?.download('djs/store/return/store-daily/export', buildQueryParams(), `退回记录_${new Date().getTime()}.xlsx`);
 }
 
 onMounted(() => {
@@ -263,3 +301,16 @@ onMounted(() => {
   loadProductOptions();
 });
 </script>
+
+<style scoped>
+/* 差异量：统一红色，不按正负变色 */
+.qty-diff {
+  color: var(--el-color-danger);
+}
+
+/* 确认进度未满：警告色加粗，避免与「已全部确认」混同 */
+.confirm-progress--partial {
+  color: var(--el-color-warning);
+  font-weight: 600;
+}
+</style>

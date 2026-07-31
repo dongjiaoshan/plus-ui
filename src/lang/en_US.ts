@@ -2884,7 +2884,10 @@ export default {
         confirmWeightTotal: 'Confirmed Weight',
         weightDiffTotal: 'Weight Diff',
         nonWeightReturnWeightTotal: 'Non-Weight Product Return Weight',
-        detailDialogTitle: 'Return Detail'
+        detailDialogTitle: 'Return Detail',
+        quantityDiff: 'Quantity Diff',
+        confirmProgress: 'Confirm Progress',
+        confirmProgressTip: 'Warehouse has not confirmed every return line of the day; unconfirmed lines are not stocked in'
       },
       check: {
         checkId: 'Check No.',
@@ -3948,7 +3951,6 @@ export default {
       returnQuantity: 'Return Qty',
       unit: 'Unit',
       goodsWeight: 'Goods Weight',
-      storeReturnWeight: 'Store Return Weight',
       returnLimit: 'Returnable Limit',
       returnLocation: 'Return Location',
       receivedQty: 'Received Qty',
@@ -4040,7 +4042,7 @@ export default {
       inboundQty: 'Inbound',
       saleQty: 'Sales',
       giftQty: 'Gift',
-      returnQty: 'Return',
+      returnQty: 'Customer Return',
       returnedQty: 'Returned',
       whReturnQty: 'Return to WH',
       lossQty: 'Loss',

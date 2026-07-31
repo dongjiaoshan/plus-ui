@@ -105,9 +105,10 @@ function formatPlantingPeriod(r: BizRow): string {
 // ---- 筛选：原型 4 项（计划月份 / 种植农作物 / 计划更新时间 / 计划编制人） ----
 // 农作物 / 计划编制人改为输入框模糊查询（cropName / queryCreateByName）。
 // planYear 默认当年：5 张 KPI 卡 + 列表默认按当年过滤（row37）
+// planMonth 多选，v-model 值恒为数组（el-select multiple 不接受 undefined），未选 = []
 const searchModel = reactive<Record<string, unknown>>({
   planYear: new Date().getFullYear(),
-  planMonth: undefined,
+  planMonth: [],
   cropName: undefined,
   queryUpdateTime: undefined,
   queryCreateByName: undefined
@@ -130,7 +131,16 @@ const planYearOptions = computed(() => {
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'planYear', label: t('plantPlan.column.planYear'), type: 'select', placeholder: t('plantPlan.placeholder.planYear'), options: planYearOptions.value, width: 160 },
-  { field: 'planMonth', label: t('plantPlan.field.planMonth'), type: 'select', clearable: true, placeholder: t('plantPlan.placeholder.planMonth'), options: planMonthOptions.value, width: 160 },
+  {
+    field: 'planMonth',
+    label: t('plantPlan.field.planMonth'),
+    type: 'select',
+    multiple: true,
+    clearable: true,
+    placeholder: t('plantPlan.placeholder.planMonth'),
+    options: planMonthOptions.value,
+    width: 220
+  },
   { field: 'cropName', label: t('plantPlan.field.crop'), type: 'input', placeholder: t('plantPlan.placeholder.cropNameInput'), width: 160 },
   { field: 'queryUpdateTime', label: t('plantPlan.field.updateTime'), type: 'date', placeholder: t('plantPlan.placeholder.updateTime'), width: 160 },
   { field: 'queryCreateByName', label: t('plantPlan.field.createBy'), type: 'input', placeholder: t('plantPlan.placeholder.createByInput'), width: 160 }
@@ -235,10 +245,16 @@ async function loadStats() {
   }
 }
 
-// 筛选：planYear + planMonth（计划月份）+ cropName + 更新时间 + 编制人
+// 筛选：planYear + planMonth（计划月份多选）+ cropName + 更新时间 + 编制人
+// planMonth 是数组（多选），后端收 planMonths: List<Integer>；未选时不传（不加月份条件）
 function buildQueryParams(): PlantPlanQuery {
+  const months = searchModel.planMonth;
   return {
-    ...(searchModel as Record<string, unknown>),
+    planYear: (searchModel.planYear as number | undefined) ?? undefined,
+    planMonths: Array.isArray(months) && months.length > 0 ? months.map((m) => Number(m)) : undefined,
+    cropName: (searchModel.cropName as string | undefined) || undefined,
+    queryUpdateTime: (searchModel.queryUpdateTime as string | undefined) || undefined,
+    queryCreateByName: (searchModel.queryCreateByName as string | undefined) || undefined,
     pageNum: pageNum.value,
     pageSize: pageSize.value
   };
@@ -289,6 +305,8 @@ const handleReset = () => {
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
   // 计划年份重置回默认当年（KPI 卡默认按当年统计）
   searchModel.planYear = new Date().getFullYear();
+  // 计划月份是多选，清空要回数组而不是 undefined
+  searchModel.planMonth = [];
   handleSearch();
 };
 

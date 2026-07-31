@@ -42,7 +42,7 @@
 import { useI18n } from 'vue-i18n';
 import { listStatusRecord } from '@/api/djs-breed/event/status-record';
 import type { PigStatusRecordVO, PigStatusRecordQuery } from '@/api/djs-breed/event/status-record';
-import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -53,6 +53,19 @@ function statusTagType(s: string): 'success' | 'warning' | 'info' | 'danger' {
   if (s === 'END') return 'info';
   if (['LC', 'KH', 'FQ'].includes(s)) return 'warning';
   return 'success';
+}
+
+/**
+ * 变更时间显示。
+ *
+ * 后端 change_time 的日期部分恒为业务日期（表单选的引种 / 转移 / 配种 … 日期）；时分秒只有在
+ * 「业务日期 = 操作当天」时才是真实操作时刻，补录历史日期时后端存 00:00:00（那天几点录的不可知）。
+ * 这里对 00:00:00 只显日期，不把误导性的「00:00:00」摆出来当成时间记录。
+ */
+function formatChangeTime(row: BizRow): string {
+  const full = proxy?.parseTime?.(row.changeTime as string) as string | undefined;
+  if (!full) return '-';
+  return full.endsWith(' 00:00:00') ? full.slice(0, 10) : full;
 }
 
 const tableRef = ref<BizTableExpose>();
@@ -91,7 +104,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'changeTime', label: t('breedEvent.ledger.column.changeTime'), width: 165, align: 'center', formatter: 'datetime', fixed: 'left' },
+  { prop: 'changeTime', label: t('breedEvent.ledger.column.changeTime'), width: 165, align: 'center', formatter: formatChangeTime, fixed: 'left' },
   { prop: 'earNo', label: t('breedEvent.ledger.column.earNo'), minWidth: 140, align: 'center' },
   { prop: 'eventType', label: t('breedEvent.ledger.column.eventType'), minWidth: 110, align: 'center', dictType: 'djs_pig_status_event' },
   { prop: 'transition', label: t('breedEvent.ledger.column.transition'), minWidth: 180, align: 'center' },

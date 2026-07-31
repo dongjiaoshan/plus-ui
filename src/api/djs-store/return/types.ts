@@ -64,6 +64,8 @@ export interface StoreReturnPorkCandidateVO {
   productUnit?: string;
   /** 子类（DENGBO-R11）：pork=猪肉产品(按份,退回量+单位+重量) / white_bar=白条产品(按重量) */
   subCategory?: StoreReturnPorkSubCategory;
+  /** 归属类型 djs_belong_type；gift_box 礼盒不可退回仓库（后端已剔除，前端二次过滤） */
+  belongType?: string;
   /** 到店量（退回量上限 row40）：猪肉产品=当日到店需求订购份数 / 材料外售=对应成品到店重 / 白条=max(当日盘点 期初+入库, 材料外售到店重) */
   arrivedQuantity?: number;
   /** 今日已退量（row119）：剩余可退 = arrivedQuantity − returnedQuantity，即输入框 :max */
@@ -76,6 +78,8 @@ export interface StoreReturnVegCandidateVO {
   productId: string;
   productName: string;
   productUnit?: string;
+  /** 归属类型 djs_belong_type；gift_box 礼盒不可退回仓库（后端已剔除，前端二次过滤） */
+  belongType?: string;
   /** 到店量（退回量上限 row41）= 当日（今天+昨天）该产品需求订购份数合计 */
   arrivedQuantity?: number;
   /** 今日已退量（row119）：剩余可退 = arrivedQuantity − returnedQuantity，即输入框 :max */

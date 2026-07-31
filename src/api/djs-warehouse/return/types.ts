@@ -59,7 +59,11 @@ export interface ReturnStoreDailyVO {
   weightDiffTotal?: number;
   /** 非重量产品退回重量合计 = Σ 份数产品（非 kg 单位）行的确认重量（仓库称重） */
   nonWeightReturnWeightTotal?: number;
-  /** 确认时间（该组最近一条已确认行） */
+  /** 已确认行数（该组 returnStatus=received 计数），与 totalCount 组成「确认进度」 */
+  confirmedCount?: number;
+  /** 总行数（该组全部退回行，含未确认） */
+  totalCount?: number;
+  /** 确认时间（该组最近一条已确认行；只要有 1 条确认过就有值 → 判断是否全部确认要看 confirmedCount/totalCount） */
   confirmTime?: string;
   confirmUser?: string;
   /** 确认人姓名（该组最近一条已确认行，后端翻译） */
