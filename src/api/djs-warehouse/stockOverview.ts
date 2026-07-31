@@ -28,6 +28,8 @@ export interface StockOverviewDetailVO {
   productCode?: string;
   /** 产品名称 */
   productName?: string;
+  /** 规格（product_info.product_spec，如 500g/包，可空） */
+  productSpec?: string;
   /** 单位 */
   productUnit?: string;
   /** 库位 id（string 防精度丢失） */

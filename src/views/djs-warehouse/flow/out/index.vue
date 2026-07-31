@@ -32,7 +32,7 @@ import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/compon
 import { listFlowOut } from '@/api/djs-warehouse/stockFlow';
 import type { StockFlowQuery, StockFlowVO } from '@/api/djs-warehouse/stockFlow/types';
 import { listLocation } from '@/api/djs-warehouse/location';
-import { formatQtyByUnit } from '@/utils/weight';
+import { formatStockQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
@@ -114,7 +114,7 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('djs.warehouse.flowOut.changeQuantity'),
     minWidth: 110,
     align: 'center',
-    formatter: (row: StockFlowVO) => formatQtyByUnit(row.changeQuantity, row.productUnit)
+    formatter: (row: StockFlowVO) => formatStockQtyByUnit(row.changeQuantity, row.productUnit)
   },
   { prop: 'productUnit', label: t('djs.warehouse.flowOut.productUnit'), minWidth: 80, align: 'center' },
   { prop: 'blockNo', label: t('djs.warehouse.flowOut.blockNo'), minWidth: 110, align: 'center' },

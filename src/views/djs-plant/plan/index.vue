@@ -136,9 +136,19 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'queryCreateByName', label: t('plantPlan.field.createBy'), type: 'input', placeholder: t('plantPlan.placeholder.createByInput'), width: 160 }
 ]);
 
-// ---- 列：原型 14 列序（去首列 planNo + plantDate 文本列；最早/最晚改取开始日期；时间列用 updateTime） ----
+// ---- 列：去首列 planNo + plantDate 文本列；最早/最晚取开始日期；时间列用 updateTime ----
+// 列序：计划完成率 + 种植计划状态紧跟计划年份；产量达标率跟种植面积；预计/实际产量置于采摘日期左侧
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'planYear', label: t('plantPlan.column.planYear'), minWidth: 90, align: 'center' },
+  {
+    prop: 'completionRate',
+    label: t('plantPlan.column.completionRate'),
+    minWidth: 130,
+    align: 'center',
+    formatter: (r: BizRow) => (r.completionRate != null ? `${r.completionRate}%` : '-')
+  },
+  // 「执行延期」红高亮由字典 djs_plant_plan_status (delayed → list_class='danger') 自动着色
+  { prop: 'plantStatus', label: t('plantPlan.column.plantStatus'), minWidth: 100, align: 'center', dictType: 'djs_plant_plan_status' },
   {
     prop: 'plantingPeriod',
     label: t('plantPlan.column.plantingPeriod'),
@@ -163,18 +173,16 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.totalArea != null ? `${r.totalArea} ${t('plantPlan.unit.mu')}` : '-')
   },
   {
-    prop: 'earliestHarvestdate',
-    label: t('plantPlan.column.earliestStartHarvest'),
-    minWidth: 150,
+    // 产量达标率 = 实际产量 / 预计产量 × 100%（row46）；预计产量为空/0 时显 '-' 防除零
+    prop: 'yieldRate',
+    label: t('plantPlan.column.yieldRate'),
+    minWidth: 120,
     align: 'center',
-    formatter: (r: BizRow) => (r.earliestHarvestdate != null ? String(r.earliestHarvestdate) : '-')
-  },
-  {
-    prop: 'lastHarvestdate',
-    label: t('plantPlan.column.latestEndHarvest'),
-    minWidth: 150,
-    align: 'center',
-    formatter: (r: BizRow) => (r.lastHarvestdate != null ? String(r.lastHarvestdate) : '-')
+    formatter: (r: BizRow) => {
+      const expected = Number(r.expectedYield ?? 0);
+      if (r.actualYield == null || expected <= 0) return '-';
+      return `${((Number(r.actualYield) / expected) * 100).toFixed(1)}%`;
+    }
   },
   {
     prop: 'expectedYield',
@@ -191,16 +199,18 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.actualYield != null ? `${Number(r.actualYield).toFixed(3)} kg` : '-')
   },
   {
-    // 产量达标率 = 实际产量 / 预计产量 × 100%（row46）；预计产量为空/0 时显 '-' 防除零
-    prop: 'yieldRate',
-    label: t('plantPlan.column.yieldRate'),
-    minWidth: 120,
+    prop: 'earliestHarvestdate',
+    label: t('plantPlan.column.earliestStartHarvest'),
+    minWidth: 150,
     align: 'center',
-    formatter: (r: BizRow) => {
-      const expected = Number(r.expectedYield ?? 0);
-      if (r.actualYield == null || expected <= 0) return '-';
-      return `${((Number(r.actualYield) / expected) * 100).toFixed(1)}%`;
-    }
+    formatter: (r: BizRow) => (r.earliestHarvestdate != null ? String(r.earliestHarvestdate) : '-')
+  },
+  {
+    prop: 'lastHarvestdate',
+    label: t('plantPlan.column.latestEndHarvest'),
+    minWidth: 150,
+    align: 'center',
+    formatter: (r: BizRow) => (r.lastHarvestdate != null ? String(r.lastHarvestdate) : '-')
   },
   {
     prop: 'finishedPlot',
@@ -209,15 +219,6 @@ const columns = computed<BizTableColumn[]>(() => [
     align: 'center',
     formatter: (r: BizRow) => (r.finishedPlot != null ? String(r.finishedPlot) : '-')
   },
-  {
-    prop: 'completionRate',
-    label: t('plantPlan.column.completionRate'),
-    minWidth: 130,
-    align: 'center',
-    formatter: (r: BizRow) => (r.completionRate != null ? `${r.completionRate}%` : '-')
-  },
-  // 「执行延期」红高亮由字典 djs_plant_plan_status (delayed → list_class='danger') 自动着色
-  { prop: 'plantStatus', label: t('plantPlan.column.plantStatus'), minWidth: 100, align: 'center', dictType: 'djs_plant_plan_status' },
   { prop: 'updateTime', label: t('plantPlan.column.updateTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'createByName', label: t('plantPlan.column.createBy'), minWidth: 110, align: 'center', showOverflowTooltip: true }
 ]);

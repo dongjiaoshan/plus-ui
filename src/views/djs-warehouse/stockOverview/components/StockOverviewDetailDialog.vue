@@ -40,6 +40,16 @@
         header-align="center"
         show-overflow-tooltip
       />
+      <el-table-column
+        :label="t('stockOverview.detail.productSpec')"
+        prop="productSpec"
+        min-width="110"
+        align="center"
+        header-align="center"
+        show-overflow-tooltip
+      >
+        <template #default="{ row }">{{ row.productSpec || '-' }}</template>
+      </el-table-column>
       <el-table-column :label="t('stockOverview.detail.productUnit')" prop="productUnit" min-width="70" align="center" header-align="center" />
       <el-table-column
         :label="t('stockOverview.detail.locationCol')"

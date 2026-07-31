@@ -1291,6 +1291,7 @@ export default {
       baseInfo: '产品属性',
       production: '生产记录',
       flow: '业务流水',
+      purchaseRecord: '采购记录',
       inout: '出入库记录',
       goodsView: '商品详情',
       goodsBaseInfo: '商品属性',
@@ -1418,17 +1419,20 @@ export default {
     },
     flow: {
       bizDate: '业务日期',
+      purchaseDate: '采购日期',
       bizDatePlaceholder: '请选择业务日期',
       bizDateStart: '开始日期',
       bizDateEnd: '结束日期',
       bizType: '业务类型',
       bizNum: '数量',
+      purchaseNum: '采购量',
       bizUnit: '单位',
       typeInStock: '入库',
       typePickOut: '领用出库',
       typeBackendOut: '后台出库',
       supplierName: '供应商',
-      operatorName: '操作人'
+      operatorName: '操作人',
+      export: '导出'
     },
     confirm: {
       del: '是否确认删除选中的 {count} 条商品？删除前需先确保无库存且未被作为原材料引用。'
@@ -1460,7 +1464,7 @@ export default {
       flowOut: '出库记录',
       checkRecord: '盘点记录',
       productOut: '产品出库',
-      pigTransfer: '猪肉转移',
+      pigTransfer: '猪肉库位转移',
       viewDetail: '查看详情'
     },
     outDialog: {
@@ -1481,7 +1485,7 @@ export default {
       }
     },
     transferDialog: {
-      title: '猪肉转移',
+      title: '猪肉库位转移',
       fromLocation: '源库位',
       toLocation: '目标库位',
       frozenLocation: '冻品库',
@@ -2386,6 +2390,7 @@ export default {
       image: '产品图片',
       productCode: '产品编码',
       productNameCol: '产品名称',
+      productSpec: '规格',
       productUnit: '单位',
       locationCol: '存储库位',
       beginStock: '期初库存',
