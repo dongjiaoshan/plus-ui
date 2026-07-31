@@ -3,7 +3,11 @@
     <el-card shadow="never">
       <template #header>
         <div class="ph">
-          <span class="pt">{{ t('farm.proto.penDetailTitle') }}</span>
+          <span class="pt">
+            {{ t('farm.proto.penDetailTitle') }}
+            <!-- 栏位名只存栏位名（不带栋舍名前缀），栋舍上下文放标题上，避免每行重复 -->
+            <span v-if="barnName" class="pt-barn">{{ barnName }}</span>
+          </span>
           <el-button link type="primary" @click="goBack">
             <el-icon><back /></el-icon>
             <span>{{ t('farm.proto.back') }}</span>
@@ -118,7 +122,7 @@
 <script setup name="FarmPenDetail" lang="ts">
 import { Back } from '@element-plus/icons-vue';
 import { useRoute, useRouter } from 'vue-router';
-import { delPen, penDetail } from '@/api/djs-breed/farm';
+import { delPen, getBarn, penDetail } from '@/api/djs-breed/farm';
 import type { PenDetailVO } from '@/api/djs-breed/farm/types';
 import { useI18n } from 'vue-i18n';
 
@@ -134,6 +138,7 @@ const route = useRoute();
 const router = useRouter();
 
 const barnId = computed(() => String(route.params.barnId ?? ''));
+const barnName = ref('');
 const activeTab = ref<PenType>('big');
 const loading = ref(false);
 
@@ -147,11 +152,23 @@ async function loadType(type: PenType) {
   counts[type] = data.length;
 }
 
+async function loadBarnName() {
+  const res = await getBarn(barnId.value);
+  barnName.value = res.data?.barnName ?? '';
+}
+
 async function loadAll() {
   if (!barnId.value) return;
   loading.value = true;
   try {
-    await Promise.all([loadType('big'), loadType('stall'), loadType('farrow'), loadType('scatter'), loadType('nursery_pen')]);
+    await Promise.all([
+      loadBarnName(),
+      loadType('big'),
+      loadType('stall'),
+      loadType('farrow'),
+      loadType('scatter'),
+      loadType('nursery_pen')
+    ]);
   } finally {
     loading.value = false;
   }
@@ -183,5 +200,10 @@ onMounted(loadAll);
 .pt {
   font-weight: 600;
   font-size: 14px;
+}
+.pt-barn {
+  margin-left: 8px;
+  font-weight: 400;
+  color: var(--el-text-color-regular);
 }
 </style>

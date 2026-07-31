@@ -11,7 +11,7 @@
       :dict-types="['djs_check_result', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
-      :action-width="160"
+      :action-width="270"
       row-key="id"
       perm-prefix="djs:warehouse:stock"
       show-export

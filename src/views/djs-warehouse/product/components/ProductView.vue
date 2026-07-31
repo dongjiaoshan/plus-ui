@@ -104,10 +104,11 @@
         </el-table>
       </el-tab-pane>
 
-      <!-- 业务流水子表：外购商品=业务流水；row80 原材料（productType=1 & productAttr=2）=出入库记录（同一 flow 数据源，标题分叉） -->
+      <!-- 业务流水子表：外购商品=采购记录（row168 文案 采购日期 / 采购量）；
+           row80 原材料（productType=1 & productAttr=2）=出入库记录（同一 flow 数据源，标题与列头分叉） -->
       <el-tab-pane v-if="showFlowTab" :label="t(flowTabLabelKey)" name="flow">
         <el-form :inline="true" class="mb-2">
-          <el-form-item :label="t('product.flow.bizDate')">
+          <el-form-item :label="flowDateLabel">
             <el-date-picker
               v-model="flowFilter.bizDateRange"
               type="daterange"
@@ -122,14 +123,19 @@
           <el-form-item>
             <el-button type="primary" @click="loadFlow">{{ t('common.search') }}</el-button>
             <el-button @click="resetFlowFilter">{{ t('common.reset') }}</el-button>
+            <!-- row168：采购记录导出（仅外购商品语境；原材料出入库记录未要求导出） -->
+            <el-button v-if="isGoods" type="warning" icon="Download" @click="handleFlowExport">{{ t('product.flow.export') }}</el-button>
           </el-form-item>
         </el-form>
         <el-table v-loading="flowLoading" :data="flowList" border>
-          <el-table-column prop="bizDate" :label="t('product.flow.bizDate')" width="130" align="center" header-align="center" />
+          <el-table-column prop="bizDate" :label="flowDateLabel" width="130" align="center" header-align="center" />
           <el-table-column :label="t('product.flow.bizType')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ bizTypeLabel(row.bizType) }}</template>
           </el-table-column>
-          <el-table-column prop="bizNum" :label="t('product.flow.bizNum')" min-width="120" align="center" header-align="center" />
+          <!-- row168：KG 保留 3 位小数，非 KG 去掉无意义尾零（吨 / 斤 / 升 等连续量单位的小数如实保留） -->
+          <el-table-column prop="bizNum" :label="flowNumLabel" min-width="120" align="center" header-align="center">
+            <template #default="{ row }">{{ formatQtyByUnit(row.bizNum, row.bizUnit) || '-' }}</template>
+          </el-table-column>
           <el-table-column prop="bizUnit" :label="t('product.flow.bizUnit')" width="100" align="center" header-align="center" />
           <!-- row25：单位列后加供应商，供应商后加操作人 -->
           <el-table-column prop="supplierName" :label="t('product.flow.supplierName')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
@@ -156,6 +162,7 @@ import { getProduct, listProductFlowRecords, listProductionRecords } from '@/api
 import type { ProductFlowRecordVO, ProductInfoVO, ProductionRecordVO } from '@/api/djs-warehouse/product/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { lastMonthRange } from '@/utils/ruoyi';
+import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -189,8 +196,12 @@ const showProductionTab = computed(() => data.value.productType !== 2 && !isRawM
 /** 业务流水 / 出入库记录 tab：外购商品 或 原材料 都显示（同一 flow 数据源） */
 const showFlowTab = computed(() => data.value.productType === 2 || isRawMaterial.value);
 
-/** flow tab 标题：外购商品=业务流水；原材料=出入库记录 */
-const flowTabLabelKey = computed(() => (isRawMaterial.value ? 'product.title.inout' : 'product.title.flow'));
+/** flow tab 标题：外购商品=采购记录（row168）；原材料=出入库记录 */
+const flowTabLabelKey = computed(() => (isRawMaterial.value ? 'product.title.inout' : 'product.title.purchaseRecord'));
+
+/** row168：外购商品语境列头「采购日期 / 采购量」；原材料出入库记录沿用「业务日期 / 数量」 */
+const flowDateLabel = computed(() => t(isGoods.value ? 'product.flow.purchaseDate' : 'product.flow.bizDate'));
+const flowNumLabel = computed(() => t(isGoods.value ? 'product.flow.purchaseNum' : 'product.flow.bizNum'));
 
 // 生产记录子表（自产 / 礼盒）
 const productionList = ref<ProductionRecordVO[]>([]);
@@ -254,6 +265,20 @@ async function loadFlow() {
 function resetFlowFilter() {
   flowFilter.bizDateRange = lastMonthRange();
   loadFlow();
+}
+
+/** row168：导出采购记录（按当前采购日期区间筛选，导出区间内全量，不受表格展示限制）。 */
+function handleFlowExport() {
+  if (!currentId.value) return;
+  const range = Array.isArray(flowFilter.bizDateRange) ? flowFilter.bizDateRange : [];
+  proxy?.download(
+    `djs/warehouse/product/flow/export/${currentId.value}`,
+    {
+      bizDateFrom: range[0] || undefined,
+      bizDateTo: range[1] || undefined
+    },
+    `${t('product.title.purchaseRecord')}_${Date.now()}.xlsx`
+  );
 }
 
 const open = async (id: number | string, _productType?: number) => {

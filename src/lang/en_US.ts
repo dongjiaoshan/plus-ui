@@ -662,8 +662,9 @@ export default {
     },
     tab: {
       all: 'All',
-      sow: 'Sow',
-      boar: 'Boar',
+      // 与 zh_CN 同步（DICT-PIG-TYPE-001）：sow/boar 指种用猪，与育肥猪区分
+      sow: 'Breeding Sow',
+      boar: 'Breeding Boar',
       piglet: 'Piglet',
       fattening: 'Fattening'
     },
@@ -1287,6 +1288,7 @@ export default {
       baseInfo: 'Product info',
       production: 'Production Records',
       flow: 'Transaction Flow',
+      purchaseRecord: 'Purchase Records',
       inout: 'Stock In/Out Records',
       goodsView: 'Goods detail',
       goodsBaseInfo: 'Goods info',
@@ -1414,17 +1416,20 @@ export default {
     },
     flow: {
       bizDate: 'Biz Date',
+      purchaseDate: 'Purchase Date',
       bizDatePlaceholder: 'Select biz date',
       bizDateStart: 'Start Date',
       bizDateEnd: 'End Date',
       bizType: 'Biz Type',
       bizNum: 'Quantity',
+      purchaseNum: 'Purchase Qty',
       bizUnit: 'Unit',
       typeInStock: 'Inbound',
       typePickOut: 'Pick Out',
       typeBackendOut: 'Backend Out',
       supplierName: 'Supplier',
-      operatorName: 'Operator'
+      operatorName: 'Operator',
+      export: 'Export'
     },
     confirm: {
       del: 'Delete {count} product(s)? Make sure none has active stock or is referenced as raw material.'
@@ -1456,7 +1461,7 @@ export default {
       flowOut: 'Outbound',
       checkRecord: 'Check log',
       productOut: 'Stock Out',
-      pigTransfer: 'Pork Transfer',
+      pigTransfer: 'Pork Location Transfer',
       viewDetail: 'View Detail'
     },
     outDialog: {
@@ -1477,7 +1482,7 @@ export default {
       }
     },
     transferDialog: {
-      title: 'Pork Transfer',
+      title: 'Pork Location Transfer',
       fromLocation: 'From Location',
       toLocation: 'To Location',
       frozenLocation: 'Frozen Warehouse',
@@ -2381,6 +2386,7 @@ export default {
       image: 'Image',
       productCode: 'Product Code',
       productNameCol: 'Product Name',
+      productSpec: 'Spec',
       productUnit: 'Unit',
       locationCol: 'Location',
       beginStock: 'Begin Stock',
