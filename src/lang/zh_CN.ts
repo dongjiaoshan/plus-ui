@@ -662,8 +662,10 @@ export default {
     },
     tab: {
       all: '全部',
-      sow: '母猪',
-      boar: '公猪',
+      // 与字典 djs_pig_type 的 dict_label 保持一致（DICT-PIG-TYPE-001）：
+      // 同页 Tab 与「猪只类型」列的 tag 指同一个东西，两处文案必须同名，否则读起来自相矛盾
+      sow: '种母猪',
+      boar: '种公猪',
       piglet: '仔猪',
       fattening: '育肥'
     },

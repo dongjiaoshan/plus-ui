@@ -662,8 +662,9 @@ export default {
     },
     tab: {
       all: 'All',
-      sow: 'Sow',
-      boar: 'Boar',
+      // 与 zh_CN 同步（DICT-PIG-TYPE-001）：sow/boar 指种用猪，与育肥猪区分
+      sow: 'Breeding Sow',
+      boar: 'Breeding Boar',
       piglet: 'Piglet',
       fattening: 'Fattening'
     },
