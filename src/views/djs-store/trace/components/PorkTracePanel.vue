@@ -390,16 +390,23 @@ onMounted(async () => {
 
   // 右侧操作面板固定不随内容撑高（白条信息 + 产品 + 重量 + 打印按钮，内容超出时自身滚动）
   .op-card {
-    // row175：操作面板内边距 20px → 10px，数字键盘与「追溯码打印」按钮横向各多出 20px。
-    // 头部横向内边距同步压到 10px，「操作」标题 / 刷新按钮才与下方内容左右对齐；
-    // 头部纵向仍 18px（Element Plus 默认 calc(padding - 2px)），头部高度不变。
-    // 只作用于右侧 op-card，左侧产品卡区 left-card 保持 20px 不受影响。
+    // row175：操作面板内边距压到 10px，数字键盘与「追溯码打印」按钮横向各多出 20px
+    // （按钮本来就 width:100%，这个 padding 是唯一能真正加宽它的杠杆）。
+    // 头只改横向到 10px（纵向沿用全局 14/7 节奏，头部高度不变），
+    // 「操作」标题 / 刷新按钮才与下方内容左右对齐 —— 全局头 15px / 体 20px 本来差 5px。
+    //
+    // ⚠️ 必须带 !important：全局 assets/styles/ruoyi.scss 里
+    //    `.el-card__header { padding: 14px 15px 7px !important }`
+    //    `.el-card__body   { padding: 15px 20px 20px 20px !important }`
+    //    是 !important，不加的话 scoped :deep() 特异度再高也压不过它（改完是死代码）。
+    //    两边都 !important 后才回到比特异度：本规则 (0,4,0) > 全局 (0,1,0)，本规则胜出。
+    // 只作用于右侧 op-card，左侧产品卡区 left-card 仍走全局值，不受影响。
     :deep(.el-card__header) {
-      padding: 18px 10px;
+      padding: 14px 10px 7px !important;
     }
 
     :deep(.el-card__body) {
-      padding: 10px;
+      padding: 10px !important;
       overflow-y: auto;
     }
   }
@@ -466,11 +473,12 @@ onMounted(async () => {
     min-height: 0;
     overflow-y: auto;
     display: grid;
-    // row174：卡片加宽到「一行能放约 15 个中文字」——
-    // 产品名 .cut-name 字号 14px，中文为全角（字宽 = 1em），15 字 ≈ 14 × 15 = 210px；
+    // row174：卡片加宽到「一行能放 15 个中文字」——
+    // 产品名 .cut-name 字号 14px，中文为全角（字宽 = 1em），15 字 = 14 × 15 = 210px；
     // 卡片左右内边距 8px × 2 = 16px、边框 1px × 2 = 2px；
-    // 故卡片最小宽 = 210 + 16 + 2 = 228px，取 230px 留 2px 余量。
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    // 理论下界 = 210 + 16 + 2 = 228px。取 240px（文本可用宽 222px）留 12px 余量：
+    // 228px 只富余 2px，日后谁加 letter-spacing / 调大字号 / 加卡片内边距就会静默掉到 14 字。
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     grid-auto-rows: min-content;
     gap: 16px;
 
@@ -479,7 +487,10 @@ onMounted(async () => {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      // row174：长产品名不得把卡片撑出 grid 轨道（省略号在卡内生效）
+      // 防御性：grid 项默认 min-width:auto。本页轨道下界是定值 240px（非 auto），
+      // 按规范自动最小尺寸不会生效，所以这行当前不影响几何（实测改 auto 结果一致）；
+      // 留着是为了轨道下界哪天改成 auto/min-content 时长名不至于撑破卡片。
+      // 省略号真正靠的是 .cut-name 的 overflow:hidden + 这里的定值轨道下界，不是这行。
       min-width: 0;
       padding: 16px 8px;
       border: 1px solid #e4e7ed;
@@ -558,8 +569,9 @@ onMounted(async () => {
       margin-bottom: 16px;
     }
 
-    // row175：追溯码打印是本页主操作（触屏点按），按钮加高 + 字号放大；
-    // 宽度已占满操作面板（与上方数字键盘同宽），不再另行外扩。
+    // row175：追溯码打印是本页主操作（触屏点按），按钮加高 + 字号放大。
+    // 宽度本来就是面板 100%，真正的加宽杠杆在上面 .op-card 的 el-card__body padding
+    // （20px → 10px，按钮和数字键盘一起横向多 20px），这里不需要再动。
     .gen-btn {
       width: 100%;
       height: 60px;

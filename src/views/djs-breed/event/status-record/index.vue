@@ -104,7 +104,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'changeTime', label: t('breedEvent.ledger.column.changeTime'), width: 165, align: 'center', formatter: formatChangeTime, fixed: 'left' },
+  // width 180：`yyyy-MM-dd HH:mm:ss` 实测 138~141px（随数字字形浮动），165 的内容盒只有 140px 会折行
+  { prop: 'changeTime', label: t('breedEvent.ledger.column.changeTime'), width: 180, align: 'center', formatter: formatChangeTime, fixed: 'left' },
   { prop: 'earNo', label: t('breedEvent.ledger.column.earNo'), minWidth: 140, align: 'center' },
   { prop: 'eventType', label: t('breedEvent.ledger.column.eventType'), minWidth: 110, align: 'center', dictType: 'djs_pig_status_event' },
   { prop: 'transition', label: t('breedEvent.ledger.column.transition'), minWidth: 180, align: 'center' },
