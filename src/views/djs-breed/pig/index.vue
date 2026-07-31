@@ -54,8 +54,12 @@
             </el-tag>
           </template>
 
-          <!-- 操作：详情（D7 BRD-LIST-001 起 admin 只读，无事件录入） -->
+          <!-- 操作：详情（D7 BRD-LIST-001 起 admin 只读，无事件录入）
+               + row162「转为育肥猪」（仅后备状态的种母猪出现） -->
           <template #action="{ row }">
+            <el-button v-if="canToFatten(row as unknown as PigVO)" type="warning" link size="small" @click="openToFatten(row as unknown as PigVO)">
+              {{ t('pig.toFatten.action') }}
+            </el-button>
             <el-button type="primary" link size="small" @click="openDetail(row.id)">
               {{ t('common.detail') }}
             </el-button>
@@ -76,6 +80,9 @@
         <PigListFattening v-if="activeTab === 'fattening'" />
       </el-tab-pane>
     </el-tabs>
+
+    <!-- row162：后备种母猪转为育肥猪 -->
+    <ToFattenDialog ref="toFattenRef" @success="load" />
   </div>
 </template>
 
@@ -100,6 +107,7 @@ import PigListSow from './sow/index.vue';
 import PigListBoar from './boar/index.vue';
 import PigListPiglet from './piglet/index.vue';
 import PigListFattening from './fattening/index.vue';
+import ToFattenDialog from './components/ToFattenDialog.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -230,6 +238,19 @@ function handlePageChange(p: number, s: number) {
 
 function handleExport() {
   ElMessage.info(t('pig.exportTodo'));
+}
+
+/**
+ * row162：仅「猪只类型=种母猪 且 当前状态=后备」的行显示「转为育肥猪」。
+ * 与后端 toFatten 前置校验同口径（后端会再校一次，防绕过前端直调接口）。
+ */
+function canToFatten(row: PigVO): boolean {
+  return row?.pigType === 'sow' && row?.currentStatus === 'HB';
+}
+
+const toFattenRef = ref<{ open: (row: PigVO) => void }>();
+function openToFatten(row: PigVO) {
+  toFattenRef.value?.open(row);
 }
 
 function openDetail(id: number | string) {

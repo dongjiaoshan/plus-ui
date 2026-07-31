@@ -41,7 +41,9 @@
                 </div>
                 <div class="bar-row">
                   <span class="bar-row-label">{{ t('djs.warehouse.packEntry.outputWeightLabel') }}</span>
-                  <span class="bar-row-value bar-row-value--strong">{{ it.productWeight != null ? `${Number(it.productWeight)}${it.productUnit ?? 'kg'}` : '-' }}</span>
+                  <span class="bar-row-value bar-row-value--strong">{{
+                    it.productWeight != null ? `${Number(it.productWeight)}${it.productUnit ?? 'kg'}` : '-'
+                  }}</span>
                 </div>
               </div>
             </button>
@@ -54,77 +56,65 @@
           <div class="panel-head">
             <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
             <!-- row141/142：操作标题右侧刷新按钮（带文字「刷新」、触屏友好尺寸），重新加载待领用白条 / 来源 / 发货门店 -->
-            <el-button
-              class="panel-refresh-btn"
-              type="primary"
-              plain
-              :icon="Refresh"
-              :loading="itemLoading"
-              @click="handleRefresh"
-            >
+            <el-button class="panel-refresh-btn" type="primary" plain :icon="Refresh" :loading="refreshing || itemLoading" @click="handleRefresh">
               {{ t('common.refresh') }}
             </el-button>
           </div>
 
           <div class="panel-scroll">
-          <!-- 猪只耳号 chip（当前选中白条回显） -->
-          <div class="panel-section">
-            <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
-            <div v-if="selectedItem" class="ear-chip">
-              <el-icon><PriceTag /></el-icon>
-              <span>{{ selectedItem.earNo ?? selectedItem.markId ?? selectedItem.barId }}</span>
-              <span v-if="selectedItem.productName" class="ear-chip-sub">· {{ selectedItem.productName }}</span>
+            <!-- 猪只耳号 chip（当前选中白条回显） -->
+            <div class="panel-section">
+              <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
+              <div v-if="selectedItem" class="ear-chip">
+                <el-icon><PriceTag /></el-icon>
+                <span>{{ selectedItem.earNo ?? selectedItem.markId ?? selectedItem.barId }}</span>
+                <span v-if="selectedItem.productName" class="ear-chip-sub">· {{ selectedItem.productName }}</span>
+              </div>
+              <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.barRequired') }}</span>
             </div>
-            <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.barRequired') }}</span>
-          </div>
 
-          <!-- 产品重量数字键盘 -->
-          <div class="panel-section">
-            <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
-            <WeightNumpad v-model="pickupForm.productWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
-          </div>
-
-          <!-- 出库位置：固定三按钮（分割车间 / 发货月台 / 仓库出库） -->
-          <div class="panel-section">
-            <div class="panel-label">{{ t('djs.warehouse.packEntry.outLocation') }}</div>
-            <DestToggle v-model="pickupForm.outDest" :options="outDestOptions" />
-          </div>
-
-          <!-- 发货月台：关联发货门店（ship 分支必填）。row153：只列当天有已确认白条需求的门店，名后带需求数。 -->
-          <div v-if="pickupForm.outDest === 'ship'" class="panel-section">
-            <div class="panel-label">{{ t('djs.warehouse.packEntry.shipStore') }}</div>
-            <el-select
-              v-model="pickupForm.storeId"
-              v-loading="shipStoreLoading"
-              :placeholder="t('djs.warehouse.packEntry.shipStorePlaceholder')"
-              filterable
-              class="ship-store-select"
-            >
-              <el-option
-                v-for="s in shipStores"
-                :key="String(s.storeId)"
-                :label="`${s.storeName}(${Number(s.demandQty)})`"
-                :value="s.storeId"
+            <!-- 产品重量数字键盘 -->
+            <div class="panel-section">
+              <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
+              <WeightNumpad
+                v-model="pickupForm.productWeight"
+                :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')"
+                unit="kg"
+                :precision="3"
               />
-            </el-select>
-          </div>
+            </div>
 
-          <!-- 仓库出库：选出库去向（复用系统字典 djs_stock_out_dest = 矿山/厨房/大冶门店/各收货单位…，warehouse 分支必填） -->
-          <div v-if="pickupForm.outDest === 'warehouse'" class="panel-section">
-            <div class="panel-label">{{ t('djs.warehouse.packEntry.outDest') }}</div>
-            <el-select
-              v-model="pickupForm.warehouseOutDest"
-              :placeholder="t('djs.warehouse.packEntry.outDestPlaceholder')"
-              class="ship-store-select"
-            >
-              <el-option
-                v-for="d in stockOutDestOptions"
-                :key="d.value"
-                :label="d.label"
-                :value="d.value"
-              />
-            </el-select>
-          </div>
+            <!-- 出库位置：固定三按钮（分割车间 / 发货月台 / 仓库出库） -->
+            <div class="panel-section">
+              <div class="panel-label">{{ t('djs.warehouse.packEntry.outLocation') }}</div>
+              <DestToggle v-model="pickupForm.outDest" :options="outDestOptions" />
+            </div>
+
+            <!-- 发货月台：关联发货门店（ship 分支必填）。row153：只列当天有已确认白条需求的门店，名后带需求数。 -->
+            <div v-if="pickupForm.outDest === 'ship'" class="panel-section">
+              <div class="panel-label">{{ t('djs.warehouse.packEntry.shipStore') }}</div>
+              <el-select
+                v-model="pickupForm.storeId"
+                v-loading="shipStoreLoading"
+                :placeholder="t('djs.warehouse.packEntry.shipStorePlaceholder')"
+                filterable
+                class="ship-store-select"
+              >
+                <el-option v-for="s in shipStores" :key="String(s.storeId)" :label="`${s.storeName}(${Number(s.demandQty)})`" :value="s.storeId" />
+              </el-select>
+            </div>
+
+            <!-- 仓库出库：选出库去向（复用系统字典 djs_stock_out_dest = 矿山/厨房/大冶门店/各收货单位…，warehouse 分支必填） -->
+            <div v-if="pickupForm.outDest === 'warehouse'" class="panel-section">
+              <div class="panel-label">{{ t('djs.warehouse.packEntry.outDest') }}</div>
+              <el-select
+                v-model="pickupForm.warehouseOutDest"
+                :placeholder="t('djs.warehouse.packEntry.outDestPlaceholder')"
+                class="ship-store-select"
+              >
+                <el-option v-for="d in stockOutDestOptions" :key="d.value" :label="d.label" :value="d.value" />
+              </el-select>
+            </div>
           </div>
           <!-- /panel-scroll -->
 
@@ -332,9 +322,21 @@ async function handleSubmit() {
   }
 }
 
-/** row141：刷新按钮——重拉待领用白条卡 / whiteBar 来源 / 发货门店（复用已有加载函数，不清当前录入）。 */
+/**
+ * row141：刷新按钮——重拉待领用白条卡 / whiteBar 来源 / **发货门店下拉**（复用已有加载函数，不清当前录入）。
+ *
+ * row158：loading 由专用 refreshing 统管，不再只跟 itemLoading —— 发货门店下拉
+ * （loadShipStores，当天有已确认白条需求的门店 + 需求数后缀）比白条卡慢时，
+ * 按钮会提前停转，看起来像「门店下拉没被刷新」。三个请求全部落定才结束 loading。
+ */
+const refreshing = ref(false);
 async function handleRefresh() {
-  await Promise.all([loadItems(), loadSources('whiteBar'), loadShipStores()]);
+  refreshing.value = true;
+  try {
+    await Promise.all([loadItems(), loadSources('whiteBar'), loadShipStores()]);
+  } finally {
+    refreshing.value = false;
+  }
 }
 
 onMounted(async () => {
@@ -447,12 +449,13 @@ onMounted(async () => {
   line-height: 40px;
 }
 /* row137：面板撑满卡片网格等高，头部固定 + 中部滚动 + 底部按钮常驻（不再靠 space-between 均分留白） */
+/* row157：内边距收紧 24→16，把省下的纵向空间让给中部内容，减少内部滚动 */
 .station-right {
   flex: 0 0 440px;
   width: 440px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 24px;
+  padding: 16px;
   background: var(--el-bg-color);
   display: flex;
   flex-direction: column;
@@ -464,13 +467,15 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
+/* row153：与其它生产管理页（SkuPackForm / 白条分割）的刷新按钮统一到 44px 触屏热区，
+   本页原为 38px，是 7 个生产管理页里唯一的例外。 */
 .panel-refresh-btn {
   flex: 0 0 auto;
-  height: 38px;
-  padding: 0 18px;
-  font-size: 14px;
+  height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
 }
 /* 中部：头部之下、按钮之上的可滚动区 */
 .panel-scroll {
@@ -483,19 +488,21 @@ onMounted(async () => {
   font-weight: 600;
   color: var(--el-text-color-secondary);
 }
+/* row157：段间距 22→12、label 下间距 10→6 —— 四段（耳号/重量/出库位置/联动项）累计省出约 56px，
+   让「发货月台→发货门店」「仓库出库→出库方式」的联动项不用滚动就能看到。 */
 .panel-section {
-  margin-bottom: 22px;
+  margin-bottom: 12px;
 }
 .panel-label {
   font-size: 15px;
   color: var(--el-text-color-regular);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 .ear-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 8px 14px;
   border-radius: 8px;
   background: var(--el-color-warning-light-9);
   color: var(--el-color-warning-dark-2);
@@ -513,27 +520,32 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-top: 20px;
+  padding-top: 12px;
 }
 .action-btn {
   width: 100%;
-  height: 56px;
+  height: 50px;
   font-size: 18px;
 }
-/* 触屏放大：数字键盘 / 出库位置按钮（组件内默认偏小，本台面页面级放大） */
+/* 触屏放大：数字键盘 / 出库位置按钮（组件内默认偏小，本台面页面级放大）。
+   row157：整体压矮一档（键 56→46 / 录入框 56→48 / 去向按钮 52→44），仍 ≥44px 触屏最小热区（row147 标准）。 */
 .station-right :deep(.numpad-display) {
-  height: 56px;
+  height: 48px;
+  margin-bottom: 8px;
 }
 .station-right :deep(.numpad-input) {
-  font-size: 22px;
+  font-size: 20px;
+}
+.station-right :deep(.numpad-keys) {
+  gap: 6px;
 }
 .station-right :deep(.numpad-key) {
-  height: 56px;
-  font-size: 22px;
+  height: 46px;
+  font-size: 20px;
 }
 .station-right :deep(.dest-btn) {
   min-width: 96px;
-  height: 52px;
+  height: 44px;
   font-size: 16px;
 }
 .ship-store-select {

@@ -25,11 +25,18 @@
         <el-link type="primary" @click="openDetail(row.id)">{{ row.earNo }}</el-link>
       </template>
       <template #action="{ row }">
+        <!-- row162：后备种母猪「转为育肥猪」——与「全部」页签同一入口，母猪页签是管后备母猪的人最先看的地方 -->
+        <el-button v-if="canToFatten(row as unknown as PigVO)" type="warning" link size="small" @click="openToFatten(row as unknown as PigVO)">
+          {{ t('pig.toFatten.action') }}
+        </el-button>
         <el-button type="primary" link size="small" @click="openDetail(row.id)">
           {{ t('common.detail') }}
         </el-button>
       </template>
     </BizTable>
+
+    <!-- row162：后备种母猪转为育肥猪 -->
+    <ToFattenDialog ref="toFattenRef" @success="load" />
   </div>
 </template>
 
@@ -39,12 +46,15 @@
  *
  * 列：耳号 / 当前状态 / 进入状态日期 / 胎次 / 上次配种日 / 栋舍 / 栏位 / 备注
  * 隐藏：父猪耳号 / 出生日期（母猪场景不重要）
- * 操作：详情（独立路由 `/djs-breed/pig/detail/:id`）—— admin 只读，事件录入只走 mp（doc/12 偏离审计决策 a）
+ * 操作：详情（独立路由 `/djs-breed/pig/detail/:id`）—— admin 只读，事件录入只走 mp（doc/12 偏离审计决策 a）；
+ *       例外：row162「转为育肥猪」是客户在猪只主表明确要求的 admin 操作入口，与「全部」页签一致。
  */
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { usePigListByType } from '../composables/usePigListByType';
+import ToFattenDialog from '../components/ToFattenDialog.vue';
+import type { PigVO } from '@/api/djs-breed/pig/types';
 import type { BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
 
 const { t } = useI18n();
@@ -77,6 +87,16 @@ const columns: BizTableColumn[] = [
   { prop: 'birthDate', label: t('pig.column.birthDate'), width: 120, align: 'center', formatter: 'date', visible: false },
   { prop: 'remark', label: t('pig.column.remark'), minWidth: 120, visible: false }
 ];
+
+/** row162：仅「后备」状态的种母猪显示「转为育肥猪」（与后端 toFatten 前置校验同口径）。 */
+function canToFatten(row: PigVO): boolean {
+  return row?.pigType === 'sow' && row?.currentStatus === 'HB';
+}
+
+const toFattenRef = ref<{ open: (row: PigVO) => void }>();
+function openToFatten(row: PigVO) {
+  toFattenRef.value?.open(row);
+}
 
 function openDetail(id: number | string) {
   router.push({ path: `/djs-breed/pig/detail/${id}` });

@@ -22,7 +22,8 @@
 export type PigSex = 'F' | 'M';
 
 /** 8 lifecycle 状态码（种母猪繁殖状态机，字典 djs_pig_lifecycle；非种母猪 current_status 为空 ''） */
-export type PigLifecycle = 'HB' | 'PZ' | 'FM' | 'DN' | 'LC' | 'KH' | 'FQ' | 'END';
+/** YF = 育肥（admin row162：后备种母猪转育肥后的状态） */
+export type PigLifecycle = 'HB' | 'PZ' | 'FM' | 'DN' | 'LC' | 'KH' | 'FQ' | 'YF' | 'END';
 
 /** 11 UI 事件码（字典 djs_pig_status_event） */
 export type PigStatusEventCode =

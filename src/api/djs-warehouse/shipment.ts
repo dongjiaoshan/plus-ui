@@ -25,12 +25,6 @@ export const getShipment = (id: string) => {
   });
 };
 
-/** 导出 */
-export const exportShipment = (query?: ShipmentQuery) => {
-  return request({
-    url: '/djs/warehouse/shipment/export',
-    method: 'get',
-    params: query,
-    responseType: 'blob'
-  });
-};
+// 发货流水导出没有独立 api 封装：页面统一走 utils/request 的通用 download()（POST + 表单参数），
+// 见 views/djs-warehouse/shipment/index.vue handleExport。
+// 原先这里有一个 GET 版 exportShipment 但无任何调用方，且后端端点已改 @PostMapping，留着只会误导，已删。

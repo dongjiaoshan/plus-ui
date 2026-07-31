@@ -65,118 +65,118 @@
           </div>
         </div>
 
-      <!-- 中部可滚动区（头部之下、按钮之上；内容超高在此内部滚动，不外溢到页脚） -->
-      <div class="panel-scroll">
-        <!-- 肉品打包：右台顶部回显选中猪只耳号 chip（对齐原型） -->
-        <div v-if="showEarChip" class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
-          <div v-if="selectedSource && selectedSource.earNo" class="ear-chip">
-            <el-icon><PriceTag /></el-icon>
-            <span>{{ selectedSource.earNo }}</span>
-          </div>
-          <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.sourceRequired') }}</span>
-        </div>
-
-        <!-- 肉品：耳号 button-toggle（顶部，按已领用出库猪肉来源耳号去重，选耳号再过滤来源） -->
-        <template v-if="earGroup">
-          <div class="panel-section">
+        <!-- 中部可滚动区（头部之下、按钮之上；内容超高在此内部滚动，不外溢到页脚） -->
+        <div class="panel-scroll">
+          <!-- 肉品打包：右台顶部回显选中猪只耳号 chip（对齐原型） -->
+          <div v-if="showEarChip" class="panel-section">
             <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
+            <div v-if="selectedSource && selectedSource.earNo" class="ear-chip">
+              <el-icon><PriceTag /></el-icon>
+              <span>{{ selectedSource.earNo }}</span>
+            </div>
+            <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.sourceRequired') }}</span>
+          </div>
+
+          <!-- 肉品：耳号 button-toggle（顶部，按已领用出库猪肉来源耳号去重，选耳号再过滤来源） -->
+          <template v-if="earGroup">
+            <div class="panel-section">
+              <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
+              <div v-loading="sourceLoading">
+                <DestToggle
+                  v-model="selectedEarNo"
+                  :options="earToggleOptions"
+                  :empty-text="t('djs.warehouse.packEntry.noEarSource')"
+                  @change="onEarChange"
+                />
+              </div>
+            </div>
+          </template>
+
+          <!-- 果蔬：地块 button-toggle（顶部，选地块再过滤来源） -->
+          <template v-if="plotGroup">
+            <div class="panel-section">
+              <div class="panel-label">{{ t('djs.warehouse.packEntry.plot') }}</div>
+              <div v-loading="sourceLoading || plotLoading">
+                <DestToggle
+                  v-model="selectedPlotId"
+                  :options="plotToggleOptions"
+                  :empty-text="t('djs.warehouse.packEntry.noPlotSource')"
+                  @change="onPlotChange"
+                />
+              </div>
+            </div>
+          </template>
+
+          <!-- 来源过程产品（肉品/果蔬=来源 chip 选择；礼盒无；可按 showSource 隐藏） -->
+          <div v-if="kind !== 'gift' && showSource" class="panel-section">
+            <div class="panel-label">{{ kind === 'veg' ? t('djs.warehouse.packEntry.sourceVeg') : t('djs.warehouse.packEntry.source') }}</div>
             <div v-loading="sourceLoading">
               <DestToggle
-                v-model="selectedEarNo"
-                :options="earToggleOptions"
-                :empty-text="t('djs.warehouse.packEntry.noEarSource')"
-                @change="onEarChange"
+                v-model="form.sourceInhouseId"
+                :options="sourceToggleOptions"
+                :empty-text="t('djs.warehouse.packEntry.sourcePlaceholder')"
+                @change="onSourceChange"
               />
             </div>
           </div>
-        </template>
 
-        <!-- 果蔬：地块 button-toggle（顶部，选地块再过滤来源） -->
-        <template v-if="plotGroup">
+          <!-- 重量 numpad（普通打包）/ 盒数 numpad（礼盒）/ 份数 numpad（其他产品按份数计量） -->
           <div class="panel-section">
-            <div class="panel-label">{{ t('djs.warehouse.packEntry.plot') }}</div>
-            <div v-loading="sourceLoading || plotLoading">
-              <DestToggle
-                v-model="selectedPlotId"
-                :options="plotToggleOptions"
-                :empty-text="t('djs.warehouse.packEntry.noPlotSource')"
-                @change="onPlotChange"
-              />
-            </div>
-          </div>
-        </template>
-
-        <!-- 来源过程产品（肉品/果蔬=来源 chip 选择；礼盒无；可按 showSource 隐藏） -->
-        <div v-if="kind !== 'gift' && showSource" class="panel-section">
-          <div class="panel-label">{{ kind === 'veg' ? t('djs.warehouse.packEntry.sourceVeg') : t('djs.warehouse.packEntry.source') }}</div>
-          <div v-loading="sourceLoading">
-            <DestToggle
-              v-model="form.sourceInhouseId"
-              :options="sourceToggleOptions"
-              :empty-text="t('djs.warehouse.packEntry.sourcePlaceholder')"
-              @change="onSourceChange"
-            />
-          </div>
-        </div>
-
-        <!-- 重量 numpad（普通打包）/ 盒数 numpad（礼盒）/ 份数 numpad（其他产品按份数计量） -->
-        <div class="panel-section">
-          <!-- mini 称重页由 ScaleWeightInput 自带标签头，隐藏此外层标签避免重复 -->
-          <div v-if="!(mini && kind !== 'gift' && !shouldUnitByCopies)" class="panel-label">
-            {{
-              kind === 'gift'
-                ? t('djs.warehouse.packEntry.packAmount')
-                : dryNonKgAmountMode
+            <!-- mini 称重页由 ScaleWeightInput 自带标签头，隐藏此外层标签避免重复 -->
+            <div v-if="!(mini && kind !== 'gift' && !shouldUnitByCopies)" class="panel-label">
+              {{
+                kind === 'gift'
                   ? t('djs.warehouse.packEntry.packAmount')
-                  : t('djs.warehouse.packEntry.productWeight')
-            }}
-          </div>
-          <!-- mini 小屏：秤重量做成可编辑输入框（替代触屏 numpad，自动填入 + 可手改） -->
-          <ScaleWeightInput
-            v-if="mini && kind !== 'gift' && !shouldUnitByCopies"
-            v-model="form.productWeight"
-            :in-gram="kind === 'veg' || effWeightInGram"
-            :unit="selectedUnit"
-            :label="t('djs.warehouse.packEntry.productWeight')"
-          />
-          <WeightNumpad
-            v-else-if="kind === 'gift'"
-            v-model="form.packBoxCount"
-            :placeholder="t('djs.warehouse.packEntry.packAmount')"
-            :unit="selectedProduct?.productUnit || t('djs.warehouse.packEntry.box')"
-            :precision="0"
-          />
-          <WeightNumpad
-            v-else
-            v-model="form.productWeight"
-            :placeholder="
-              dryNonKgAmountMode
-                ? t('djs.warehouse.packEntry.packAmount')
-                : shouldUnitByCopies
-                  ? t('djs.warehouse.packEntry.packCopies')
-                  : t('djs.warehouse.packEntry.weightPlaceholder')
-            "
-            :unit="selectedUnit"
-            :precision="numpadPrecision"
-          />
-          <!-- row74（Kevin 2026-07-14）：所有打包一律不展示「剩余可打包份数」提示。
+                  : dryNonKgAmountMode
+                    ? t('djs.warehouse.packEntry.packAmount')
+                    : t('djs.warehouse.packEntry.productWeight')
+              }}
+            </div>
+            <!-- mini 小屏：秤重量做成可编辑输入框（替代触屏 numpad，自动填入 + 可手改） -->
+            <ScaleWeightInput
+              v-if="mini && kind !== 'gift' && !shouldUnitByCopies"
+              v-model="form.productWeight"
+              :in-gram="kind === 'veg' || effWeightInGram"
+              :unit="selectedUnit"
+              :label="t('djs.warehouse.packEntry.productWeight')"
+            />
+            <WeightNumpad
+              v-else-if="kind === 'gift'"
+              v-model="form.packBoxCount"
+              :placeholder="t('djs.warehouse.packEntry.packAmount')"
+              :unit="selectedProduct?.productUnit || t('djs.warehouse.packEntry.box')"
+              :precision="0"
+            />
+            <WeightNumpad
+              v-else
+              v-model="form.productWeight"
+              :placeholder="
+                dryNonKgAmountMode
+                  ? t('djs.warehouse.packEntry.packAmount')
+                  : shouldUnitByCopies
+                    ? t('djs.warehouse.packEntry.packCopies')
+                    : t('djs.warehouse.packEntry.weightPlaceholder')
+              "
+              :unit="selectedUnit"
+              :precision="numpadPrecision"
+            />
+            <!-- row74（Kevin 2026-07-14）：所有打包一律不展示「剩余可打包份数」提示。
                remainingPackableCopies computed 仍保留，供份数模式提交前的 copiesExceed 前端软校验用（见 submit 校验）。 -->
-        </div>
+          </div>
 
-        <!-- 电子秤实时重量（非 mini：大显示 + 填入/归零/去皮）；mini 已并入 ScaleWeightInput 输入框 -->
-        <div v-if="!mini && enableScale && kind !== 'gift' && !shouldUnitByCopies" class="panel-section">
-          <ScaleReader :in-gram="kind === 'veg' || effWeightInGram" @fill="(v) => (form.productWeight = v)" />
-        </div>
+          <!-- 电子秤实时重量（非 mini：大显示 + 填入/归零/去皮）；mini 已并入 ScaleWeightInput 输入框 -->
+          <div v-if="!mini && enableScale && kind !== 'gift' && !shouldUnitByCopies" class="panel-section">
+            <ScaleReader :in-gram="kind === 'veg' || effWeightInGram" @fill="(v) => (form.productWeight = v)" />
+          </div>
 
-        <!-- 发送位置 button-toggle（其他产品打包二选无礼盒；礼盒不显示） -->
-        <!-- 124#3：发送位置按钮（发货月台/礼盒）加大，触屏易点（send-dest-toggle 放大 dest-btn） -->
-        <div v-if="sendDests.length > 0" class="panel-section send-dest-toggle">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.sendDest') }}</div>
-          <DestToggle v-model="form.deliverDest" :options="sendDests" />
+          <!-- 发送位置 button-toggle（其他产品打包二选无礼盒；礼盒不显示） -->
+          <!-- 124#3：发送位置按钮（发货月台/礼盒）加大，触屏易点（send-dest-toggle 放大 dest-btn） -->
+          <div v-if="sendDests.length > 0" class="panel-section send-dest-toggle">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.sendDest') }}</div>
+            <DestToggle v-model="form.deliverDest" :options="sendDests" />
+          </div>
         </div>
-      </div>
-      <!-- /panel-scroll -->
+        <!-- /panel-scroll -->
 
         <div class="panel-actions">
           <el-button
@@ -818,8 +818,7 @@ const vegStockMap = computed<Record<string, number | null>>(() => {
     let plotWeight = 0;
     sources.value.forEach((s) => {
       if (s.productId == null || String(s.productId) !== matId) return;
-      const matchPlot =
-        selectedPlotId.value === NO_PLOT_SENTINEL ? s.plotId == null : String(s.plotId) === String(selectedPlotId.value);
+      const matchPlot = selectedPlotId.value === NO_PLOT_SENTINEL ? s.plotId == null : String(s.plotId) === String(selectedPlotId.value);
       if (!matchPlot) return;
       plotWeight += Number(s.productWeight) || 0;
     });
@@ -842,9 +841,7 @@ const selectedEarNo = ref<number | string | ''>('');
  * 仅命中显式“无耳号/无地块信息”哨兵时禁用；有真实来源时立即恢复。
  */
 const printTraceDisabled = computed(
-  () =>
-    (props.earGroup && selectedEarNo.value === NO_EAR_SENTINEL) ||
-    (props.plotGroup && selectedPlotId.value === NO_PLOT_SENTINEL)
+  () => (props.earGroup && selectedEarNo.value === NO_EAR_SENTINEL) || (props.plotGroup && selectedPlotId.value === NO_PLOT_SENTINEL)
 );
 
 const earToggleOptions = computed<{ value: number | string; label: string }[]>(() => {
@@ -901,9 +898,7 @@ const displaySources = computed(() => {
   }
   if (props.earGroup && selectedEarNo.value) {
     list =
-      selectedEarNo.value === NO_EAR_SENTINEL
-        ? list.filter((s) => !s.earNo)
-        : list.filter((s) => String(s.earNo) === String(selectedEarNo.value));
+      selectedEarNo.value === NO_EAR_SENTINEL ? list.filter((s) => !s.earNo) : list.filter((s) => String(s.earNo) === String(selectedEarNo.value));
   }
   return list;
 });
@@ -1022,9 +1017,7 @@ const shouldUnitByCopies = computed<boolean>(() => {
  * 门店需求 chip 单位（row10）：取产品自身单位，与卡片需求量单位（row9 ProductCardGrid 用 productUnit）保持一致——
  * KG 产品显 kg、盒/桶/袋 显对应单位、缺省回退「份」。避免同一屏卡片显「盒」而底部 chip 显「份」的单位错位。
  */
-const demandChipUnit = computed<string>(() =>
-  selectedProduct.value?.productUnit || t('djs.warehouse.packEntry.copiesUnit')
-);
+const demandChipUnit = computed<string>(() => selectedProduct.value?.productUnit || t('djs.warehouse.packEntry.copiesUnit'));
 
 // 产品重量单位展示（row12 点2/点3，Kevin 2026-06-22 拍板量纲对齐到 kg）：
 // 果蔬(veg)产品称重录入单位显「g」（操作员按克称重），但系统权威量纲=kg —— 提交/校验前
@@ -1037,10 +1030,8 @@ const demandChipUnit = computed<string>(() =>
 // 其余业态（肉品等）按当前选中产品的 product_unit 显示（onProductChange 选卡片时已回填 form.productUnit）。
 // row29：其他产品打包中「重量模式（非份数计量）且原料单位=kg」的产品，录入/展示按克(g)，
 // 提交前 ÷1000 换算成 kg 落库（与肉品 weightInGram、果蔬 kind=veg 同口径）；枚/份计量产品（如鸡蛋）不受影响。
-const dryWeightInGram = computed<boolean>(() =>
-  props.kind === 'dry'
-  && !shouldUnitByCopies.value
-  && (wipStockUnitMap.value[String(form.value.productId)] || form.value.productUnit) === 'kg'
+const dryWeightInGram = computed<boolean>(
+  () => props.kind === 'dry' && !shouldUnitByCopies.value && (wipStockUnitMap.value[String(form.value.productId)] || form.value.productUnit) === 'kg'
 );
 /** 有效「按克录入」标志：显式 weightInGram（肉品）或 其他产品 kg 重量模式（row29）。 */
 const effWeightInGram = computed<boolean>(() => props.weightInGram || dryWeightInGram.value);
@@ -1182,7 +1173,8 @@ function validate(): boolean {
       const remainKg = vegStockMap.value[String(form.value.productId)];
       // remainKg 为 null/undefined（成品未配 product_material）→ 不前端拦截，交后端校验
       if (remainKg != null && packKg > Number(remainKg)) {
-        notifyMissing(t('djs.warehouse.packEntry.vegWeightExceed', { remain: Number(remainKg) }));
+        // row154：提示按 g 展示（录入框单位即 g），比较仍走 kg 口径
+        notifyMissing(t('djs.warehouse.packEntry.vegWeightExceed', { remain: kgToG(Number(remainKg)) }));
         return false;
       }
     }
@@ -1212,6 +1204,16 @@ function packMeasureRuleKg(): number | null {
 }
 
 const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
+
+/**
+ * row154：打包重量提示统一按 **g** 展示。
+ *
+ * 校验口径本身仍走 kg（与后端 BigDecimal 同量纲，见 {@link isMeasureBelowRule}），
+ * 只在拼提示文案时把 kg 换算成 g —— 打包页录入框单位就是 g（124#6 / row29），
+ * 提示再说 kg 会让操作员两个量纲来回换算。
+ * 保留最多 3 位小数（1g 以下的尾差不抹掉），整数则不带小数点。
+ */
+const kgToG = (kg: number): number => Math.round(kg * 1e6) / 1e3;
 
 /**
  * 实称低于规则重量 —— **硬拒**支（不能少于规则重量，不给「继续」）。
@@ -1256,8 +1258,12 @@ watch(
       ElNotification.warning({
         title: t(below ? 'djs.warehouse.packEntry.measureBelowTitle' : 'djs.warehouse.packEntry.measureDeviationTitle'),
         message: below
-          ? t('djs.warehouse.packEntry.measureBelowTip', { rule, actual })
-          : t('djs.warehouse.packEntry.measureDeviationTip', { rule, actual, tolerance: PACK_MEASURE_OVER_TOLERANCE_PERCENT })
+          ? t('djs.warehouse.packEntry.measureBelowTip', { rule: kgToG(rule as number), actual: kgToG(actual as number) })
+          : t('djs.warehouse.packEntry.measureDeviationTip', {
+              rule: kgToG(rule as number),
+              actual: kgToG(actual as number),
+              tolerance: PACK_MEASURE_OVER_TOLERANCE_PERCENT
+            })
       });
     }, 700);
   }
@@ -1283,14 +1289,18 @@ async function confirmPackMeasureRule(): Promise<boolean | null> {
   if (isMeasureBelowRule(rule, actual)) {
     ElNotification.warning({
       title: t('djs.warehouse.packEntry.measureBelowTitle'),
-      message: t('djs.warehouse.packEntry.measureBelowTip', { rule, actual })
+      message: t('djs.warehouse.packEntry.measureBelowTip', { rule: kgToG(rule), actual: kgToG(actual) })
     });
     return null;
   }
   if (!isMeasureOverTolerance(rule, actual)) return false;
   try {
     await ElMessageBox.confirm(
-      t('djs.warehouse.packEntry.measureDeviationConfirm', { rule, actual, tolerance: PACK_MEASURE_OVER_TOLERANCE_PERCENT }),
+      t('djs.warehouse.packEntry.measureDeviationConfirm', {
+        rule: kgToG(rule),
+        actual: kgToG(actual),
+        tolerance: PACK_MEASURE_OVER_TOLERANCE_PERCENT
+      }),
       t('djs.warehouse.packEntry.measureDeviationTitle'),
       {
         confirmButtonText: t('common.confirm'),

@@ -29,10 +29,12 @@
       :show-row-edit="false"
       :show-row-del="false"
       :show-batch-del="false"
+      show-export
       perm-prefix="djs:warehouse:demand"
       @search="handleSearch"
       @reset="handleReset"
       @add="handleAdd"
+      @export="handleExport"
       @page-change="handlePageChange"
       @selection-change="onSelectionChange"
     >
@@ -249,26 +251,40 @@ function rowKeyOf(row: DemandGroupVO): string {
   return `${row.demandDate}_${row.productId}`;
 }
 
+/**
+ * 查询条件（不含分页）—— 列表与导出共用，保证导出的就是「当前筛选下所见」的那批分组行。
+ * R70 多选 → 复数数组参数（productTypes / storeIds / demandStatuses，后端 IN）；删单值发送，单值 fallback 在后端保留。
+ */
+function buildFilter(): DemandManageQuery {
+  const range = searchModel.demandDateRange as [string, string] | undefined;
+  const productTypes =
+    Array.isArray(searchModel.productType) && searchModel.productType.length ? (searchModel.productType as DemandProductType[]) : undefined;
+  const storeIds =
+    Array.isArray(searchModel.storeId) && searchModel.storeId.length ? searchModel.storeId.map((v: number | string) => String(v)) : undefined;
+  const demandStatuses =
+    Array.isArray(searchModel.demandStatus) && searchModel.demandStatus.length ? (searchModel.demandStatus as DemandGroupStatusCode[]) : undefined;
+  return {
+    productName: searchModel.productName,
+    productTypes,
+    storeIds,
+    demandStatuses,
+    beginDate: range && range[0] ? range[0] : undefined,
+    endDate: range && range[1] ? range[1] : undefined
+  };
+}
+
+/** row155：导出当前筛选下的全量汇总行（后端 /group-export，与列表 /group-list 同口径）。 */
+function handleExport() {
+  proxy?.download('djs/warehouse/demand/group-export', buildFilter(), `需求管理_${new Date().getTime()}.xlsx`);
+}
+
 async function fetchList() {
   loading.value = true;
   try {
-    const range = searchModel.demandDateRange as [string, string] | undefined;
-    // R70 多选 → 复数数组参数（productTypes / storeIds / demandStatuses，后端 IN）；删单值发送，单值 fallback 在后端保留
-    const productTypes =
-      Array.isArray(searchModel.productType) && searchModel.productType.length ? (searchModel.productType as DemandProductType[]) : undefined;
-    const storeIds =
-      Array.isArray(searchModel.storeId) && searchModel.storeId.length ? searchModel.storeId.map((v: number | string) => String(v)) : undefined;
-    const demandStatuses =
-      Array.isArray(searchModel.demandStatus) && searchModel.demandStatus.length ? (searchModel.demandStatus as DemandGroupStatusCode[]) : undefined;
     const query: DemandManageQuery = {
+      ...buildFilter(),
       pageNum: pageNum.value,
-      pageSize: pageSize.value,
-      productName: searchModel.productName,
-      productTypes,
-      storeIds,
-      demandStatuses,
-      beginDate: range && range[0] ? range[0] : undefined,
-      endDate: range && range[1] ? range[1] : undefined
+      pageSize: pageSize.value
     };
     const res: any = await listDemandGroup(query);
     const rows = (res.rows ?? res.data ?? []) as DemandGroupVO[];

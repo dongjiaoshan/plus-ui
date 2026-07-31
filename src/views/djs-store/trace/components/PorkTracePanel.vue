@@ -16,7 +16,10 @@
               @click="selectPig(p)"
             >
               {{ p.earNo || p.whiteBarNo }}
-              <text class="chip-weight">{{ chipWeightText(p) }}</text>
+              <!-- row159：去掉「（剩余x/到货ykg）」尾巴 —— 打包上限已改按门店盘点录入的原材料入库量
+                   卡（row161），白条到货/剩余不再是判定口径，挂在猪只ID后面反而误导。
+                   仅保留「已用完」提示（说明该 chip 为何不可点）。 -->
+              <text v-if="isExhausted(p)" class="chip-weight">（{{ t('storeTrace.pork.exhaustedTag') }}）</text>
             </el-tag>
             <el-empty v-if="!pigLoading && !pigs.length" :description="t('storeTrace.pork.noPig')" :image-size="60" />
           </div>
@@ -43,6 +46,9 @@
                 </div>
               </div>
               <div class="cut-name">{{ c.label }}</div>
+              <!-- row160：产品名下方显示该产品对应原材料的当日剩余可打包重量（单位 g）。
+                   取数 = 门店盘点录入的原材料入库量 − 当日已打包量；盘点未录入则为 0。 -->
+              <div class="cut-material">{{ t('storeTrace.pork.materialRemain') }} {{ materialRemainG(c.value) }}g</div>
             </div>
           </div>
         </el-card>
@@ -77,12 +83,7 @@
             <div class="section-label">{{ t('storeTrace.pork.weight') }}</div>
             <!-- DENGBO-R34：产品重量输入单位 g（零售部位按克，与列表实际重量 g 展示一致）；提交前 g→kg 换算给后端 -->
             <!-- row200-2：录重形式改为与仓库肉品打包一致的触屏数字键盘（WeightNumpad，g 整数 precision=0）。 -->
-            <WeightNumpad
-              v-model="form.weight"
-              unit="g"
-              :precision="0"
-              :placeholder="t('storeTrace.pork.weightPlaceholder')"
-            />
+            <WeightNumpad v-model="form.weight" unit="g" :precision="0" :placeholder="t('storeTrace.pork.weightPlaceholder')" />
           </div>
 
           <el-button
@@ -171,6 +172,26 @@ const cutOptions = computed<{ label: string; value: string; productThumb?: strin
   }
   return (djs_pork_cut_product?.value ?? []) as { label: string; value: string }[];
 });
+
+/**
+ * row160/161：产品名 → 该产品对应原材料的当日库存（后端 listPackProducts 已按当前门店 + 今日算好）。
+ * 部位字典兜底分支（后端无 workshop=5 产品）取不到，则按「盘点未录入」处理，剩余显 0。
+ */
+const packProductByName = computed<Record<string, StorePackProductVO>>(() =>
+  packProducts.value.reduce<Record<string, StorePackProductVO>>((acc, p) => {
+    acc[p.productName] = p;
+    return acc;
+  }, {})
+);
+/** kg → g 展示（最多 3 位小数，整数不带小数点）。 */
+function kgToG(kg: number | string | undefined | null): number {
+  const n = Number(kg ?? 0);
+  return Number.isFinite(n) ? Math.round(n * 1e6) / 1e3 : 0;
+}
+/** 卡片下方「原材料剩余 xxx g」的数值。 */
+function materialRemainG(productName: string): number {
+  return kgToG(packProductByName.value[productName]?.materialRemainingQty);
+}
 // admin row62：产品卡图优先取产品配置图（COALESCE(product_thumb, image_oss_id) → oss url）；
 // 回退部位字典分支无图字段则走本地部位抠图；都没有则模板占位。
 function cardImg(c: { label: string; productThumb?: string; imageOssId?: string }): string | undefined {
@@ -181,21 +202,12 @@ function cardImg(c: { label: string; productThumb?: string; imageOssId?: string 
 const canGen = computed(() => !!selectedKey.value && !!form.cutLabel && (form.weight ?? 0) > 0);
 
 // ---- 白条剩余可打包重量（到货 − 已现场打包；≤0 禁选） ----
-function fmtKg(v?: number): string {
-  // admin row63：白条 chip 重量（剩余/到货）显示 3 位小数（如 4.600/4.800kg）
-  const n = Number(v ?? 0);
-  return Number.isFinite(n) ? n.toFixed(3) : '0.000';
-}
+// row159 起 chip 不再显示「剩余x/到货ykg」，剩余量只用来判断该白条是否已用完（禁选 + 划线）。
 function remainingOf(p?: TraceablePigVO | null): number {
   return Number(p?.remainingWeight ?? 0);
 }
 function isExhausted(p: TraceablePigVO): boolean {
   return remainingOf(p) <= 0;
-}
-function chipWeightText(p: TraceablePigVO): string {
-  return isExhausted(p)
-    ? `（${t('storeTrace.pork.exhaustedTag')}）`
-    : `（${t('storeTrace.pork.remainOf', { remain: fmtKg(p.remainingWeight), arrived: fmtKg(p.arrivedWeight) })}）`;
 }
 
 async function loadPigs() {
@@ -257,11 +269,19 @@ async function handleGen() {
   if (!canGen.value) return;
   // 输入单位 g（DENGBO-R34），后端/白条剩余/标签均按 kg → g÷1000 换算
   const weightKg = (form.weight ?? 0) / 1000;
-  // 本次打包重量不得超过该白条剩余可打包重量（白条为 kg 口径）
-  const remaining = remainingOf(selectedPig.value);
-  if (remaining > 0 && weightKg > remaining) {
-    proxy?.$modal.msgWarning(t('storeTrace.pork.overWeight', { remain: fmtKg(remaining) }));
-    return;
+  // row161：打包上限口径改为「门店盘点里录入的该原材料当日入库量」（不再按白条到店总重）。
+  // 前端只做软拦提前反馈，后端 assertWithinMaterialInbound 是硬校验兜底（并发同时打包时以后端为准）。
+  const pack = packProductByName.value[form.cutLabel as string];
+  if (pack?.materialId) {
+    const materialName = pack.materialName || (form.cutLabel as string);
+    if (kgToG(pack.materialInboundQty) <= 0) {
+      proxy?.$modal.msgWarning(t('storeTrace.pork.materialNoInbound', { material: materialName }));
+      return;
+    }
+    if (weightKg > Number(pack.materialRemainingQty ?? 0)) {
+      proxy?.$modal.msgWarning(t('storeTrace.pork.materialOverWeight', { material: materialName, remain: kgToG(pack.materialRemainingQty) }));
+      return;
+    }
   }
   genLoading.value = true;
   try {
@@ -291,6 +311,8 @@ async function handleGen() {
     form.weight = undefined;
     // 刷新白条剩余可打包重量（本次打包后该白条剩余减少，用完则禁选）
     await loadPigs();
+    // row160：同步刷新各产品卡「原材料剩余」（本次打包已消耗对应原材料）
+    await loadPackProducts();
   } finally {
     genLoading.value = false;
   }
@@ -352,17 +374,22 @@ onMounted(async () => {
   }
 
   // row82：白条 chip 区固定高度、内部滚动，不撑高整页
+  // row159：猪只ID chip 加高（触屏更好点），故 min/max-height 一并放大一档
   .pig-chips {
     flex: none;
-    min-height: 48px;
-    max-height: 120px;
+    min-height: 60px;
+    max-height: 140px;
     overflow-y: auto;
     margin-bottom: 20px;
 
     .pig-chip {
       margin: 0 8px 8px 0;
       cursor: pointer;
-      font-size: 14px;
+      // row159：猪只ID 框加高 —— 高 44px（触屏最小热区）+ 字号放大到 16px
+      height: 44px;
+      padding: 0 16px;
+      font-size: 16px;
+      font-weight: 600;
 
       .chip-weight {
         margin-left: 4px;
@@ -444,6 +471,13 @@ onMounted(async () => {
         margin-top: 10px;
         font-size: 14px;
         font-weight: 500;
+      }
+
+      // row160：产品名下方的「原材料剩余 xxx g」
+      .cut-material {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #909399;
       }
     }
   }

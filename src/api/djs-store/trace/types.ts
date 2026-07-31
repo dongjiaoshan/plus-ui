@@ -54,4 +54,12 @@ export interface StorePackProductVO {
   productThumb?: string;
   /** 主图 OSS id（图库自动匹配，兜底） */
   imageOssId?: string;
+  /** 对应原材料产品 id（product_info.product_material；部位兜底分支即部位产品自身） */
+  materialId?: string;
+  /** 对应原材料产品名称 */
+  materialName?: string;
+  /** 门店盘点当日录入的该原材料入库量 kg（未录入 → 0） */
+  materialInboundQty?: number | string;
+  /** 该原材料当日剩余可打包重量 kg（入库量 − 已打包，下限 0） */
+  materialRemainingQty?: number | string;
 }

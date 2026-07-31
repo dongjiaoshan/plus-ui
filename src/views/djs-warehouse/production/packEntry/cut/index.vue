@@ -40,41 +40,42 @@
       <div class="station-right">
         <div class="panel-head">
           <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
+          <!-- row153：操作标题右侧刷新按钮，重拉待分割白条 / 分割产品。
+               尺寸与其它生产管理页（SkuPackForm 四类打包页 + 白条出库领用）一致：size=large + 44px 触屏热区。 -->
+          <el-button class="refresh-btn" size="large" :icon="Refresh" :loading="refreshing" @click="handleRefresh">
+            {{ t('common.refresh') }}
+          </el-button>
         </div>
 
         <div class="panel-scroll">
-        <!-- 猪只耳号 chip（当前选中分割单回显）+ 行尾「分割完成」按钮 -->
-        <div class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
-          <div class="ear-row">
-            <div v-if="selectedCut" class="ear-chip">
-              <el-icon><PriceTag /></el-icon>
-              <span>{{ selectedCut.earNo ?? selectedCut.markId ?? selectedCut.barId ?? selectedCut.cutId }}</span>
+          <!-- 猪只耳号 chip（当前选中分割单回显）+ 行尾「分割完成」按钮 -->
+          <div class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.earNo') }}</div>
+            <div class="ear-row">
+              <div v-if="selectedCut" class="ear-chip">
+                <el-icon><PriceTag /></el-icon>
+                <span>{{ selectedCut.earNo ?? selectedCut.markId ?? selectedCut.barId ?? selectedCut.cutId }}</span>
+              </div>
+              <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.cutRecordRequired') }}</span>
+              <el-button type="primary" :loading="cutDoneSubmitting" class="finish-cut-btn" @click="openCutDone">
+                {{ t('djs.warehouse.packEntry.finishCutShort') }}
+              </el-button>
             </div>
-            <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.cutRecordRequired') }}</span>
-            <el-button type="primary" :loading="cutDoneSubmitting" class="finish-cut-btn" @click="openCutDone">
-              {{ t('djs.warehouse.packEntry.finishCutShort') }}
-            </el-button>
           </div>
-        </div>
 
-        <!-- 产品重量 numpad -->
-        <div class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
-          <WeightNumpad v-model="curWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
-        </div>
-
-        <!-- 入库位置 button-toggle（冻品库/鲜品库 等冷库库位） -->
-        <div class="panel-section">
-          <div class="panel-label">{{ t('djs.warehouse.packEntry.inLocation') }}</div>
-          <div v-loading="locationLoading">
-            <DestToggle
-              v-model="form.locationId"
-              :options="locationOptions"
-              :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')"
-            />
+          <!-- 产品重量 numpad -->
+          <div class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
+            <WeightNumpad v-model="curWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
           </div>
-        </div>
+
+          <!-- 入库位置 button-toggle（冻品库/鲜品库 等冷库库位） -->
+          <div class="panel-section">
+            <div class="panel-label">{{ t('djs.warehouse.packEntry.inLocation') }}</div>
+            <div v-loading="locationLoading">
+              <DestToggle v-model="form.locationId" :options="locationOptions" :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')" />
+            </div>
+          </div>
         </div>
         <!-- /panel-scroll -->
 
@@ -101,7 +102,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ElMessage, ElNotification } from 'element-plus';
-import { PriceTag } from '@element-plus/icons-vue';
+import { PriceTag, Refresh } from '@element-plus/icons-vue';
 import ProductCardGrid from '../components/ProductCardGrid.vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
 import DestToggle from '../components/DestToggle.vue';
@@ -270,6 +271,27 @@ async function handleCutDone() {
   }
 }
 
+/**
+ * row153：刷新按钮 —— 重拉待分割白条 / 分割产品（复用已有加载函数，不清当前录入的产品和重量）。
+ * 与 pickup / SkuPackForm 的刷新语义一致：只更新选项数据，半途录入不丢。
+ *
+ * 注：库位走共享 composable {@code usePackEntryOptions.loadLocations}，它带「已加载则跳过」短路，
+ * 首次挂载后不会再发请求 —— 库位是静态主数据，这是既有设计，本按钮沿用，不额外破例重拉。
+ */
+const refreshing = ref(false);
+async function handleRefresh() {
+  refreshing.value = true;
+  try {
+    await Promise.all([loadLocations(), loadCuttable(), loadPorkProducts()]);
+    // 库位可能被停用导致当前选中失效 —— 兜底回落默认库位，避免刷新后确认入库因空库位被拦
+    if (!form.value.locationId) {
+      form.value.locationId = defaultLocationId();
+    }
+  } finally {
+    refreshing.value = false;
+  }
+}
+
 onMounted(async () => {
   await Promise.all([loadLocations(), loadCuttable(), loadPorkProducts()]);
   // row122②：入库位置默认选中猪肉鲜品库（库位加载完成后再取默认值）
@@ -370,9 +392,20 @@ onMounted(async () => {
   align-self: stretch;
   min-height: 0;
 }
+/* row153：标题在左、刷新按钮在右（与 pickup / SkuPackForm 的操作标题行同布局） */
 .panel-head {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 14px;
+}
+/* 触屏点击区：与 SkuPackForm .refresh-btn 同尺寸（44px 高 + 加宽内边距） */
+.refresh-btn {
+  flex: 0 0 auto;
+  height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
 }
 .panel-scroll {
   flex: 1 1 auto;
