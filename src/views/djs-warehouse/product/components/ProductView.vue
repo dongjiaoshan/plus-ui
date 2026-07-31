@@ -132,9 +132,9 @@
           <el-table-column :label="t('product.flow.bizType')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ bizTypeLabel(row.bizType) }}</template>
           </el-table-column>
-          <!-- row168：KG 保留 3 位小数，非 KG 计数单位取整 -->
+          <!-- row168：KG 保留 3 位小数，非 KG 去掉无意义尾零（吨 / 斤 / 升 等连续量单位的小数如实保留） -->
           <el-table-column prop="bizNum" :label="flowNumLabel" min-width="120" align="center" header-align="center">
-            <template #default="{ row }">{{ formatStockQtyByUnit(row.bizNum, row.bizUnit) || '-' }}</template>
+            <template #default="{ row }">{{ formatQtyByUnit(row.bizNum, row.bizUnit) || '-' }}</template>
           </el-table-column>
           <el-table-column prop="bizUnit" :label="t('product.flow.bizUnit')" width="100" align="center" header-align="center" />
           <!-- row25：单位列后加供应商，供应商后加操作人 -->
@@ -162,7 +162,7 @@ import { getProduct, listProductFlowRecords, listProductionRecords } from '@/api
 import type { ProductFlowRecordVO, ProductInfoVO, ProductionRecordVO } from '@/api/djs-warehouse/product/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { lastMonthRange } from '@/utils/ruoyi';
-import { formatStockQtyByUnit } from '@/utils/weight';
+import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

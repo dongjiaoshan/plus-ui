@@ -102,22 +102,6 @@ export function formatQtyByUnit(value: number | string | null | undefined, unit:
 }
 
 /**
- * 库存数量展示（不带单位文本，表格另有独立单位列）：
- * - kg / 公斤 → 恒 3 位小数补零（1g 精度：0.7 → '0.700'）；
- * - 其余单位（袋 / 桶 / 罐 / 枚 / 瓶 等计数单位）→ 四舍五入取整（80.000 → '80'）。
- *
- * 计数单位取整而非「去尾零」：这类单位不存在半个的实物，后端 DECIMAL 列统一带 3 位标度，
- * 直接透出会显示 `120.000 袋` 这种无意义精度；取整后 `120 袋` 才是仓管看得懂的口径。
- * @example formatStockQtyByUnit(0.7, 'kg') // '0.700'   formatStockQtyByUnit('80.000', '罐') // '80'
- * @returns 格式化文本；无效值（null / undefined / '' / NaN）返回 ''，由调用方决定空值占位符。
- */
-export function formatStockQtyByUnit(value: number | string | null | undefined, unit: string | null | undefined): string {
-  const n = toNumber(value);
-  if (n === null) return '';
-  return isKgUnit(unit) ? n.toFixed(3) : String(Math.round(n));
-}
-
-/**
  * 白条产品需求量 → 「头」数展示（去尾零，不带单位文本）。
  * 白条按「头」计：产品名含「半」（半扇 / 半只）每单位折 0.5 头，否则 1 头；需求量为件数 × 每件头数。
  * 口径与需求管理列表 KPI 一致（0.5 → '0.5'，22 → '22'，不补三位小数）。

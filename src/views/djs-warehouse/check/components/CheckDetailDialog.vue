@@ -23,14 +23,14 @@
         </template>
       </el-table-column>
       <el-table-column :label="t('djs.warehouse.check.sysStock')" prop="sysStock" width="100" align="center" header-align="center">
-        <template #default="{ row }">{{ formatStockQtyByUnit(row.sysStock, row.productUnit) }}</template>
+        <template #default="{ row }">{{ formatQtyByUnit(row.sysStock, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('djs.warehouse.check.checkStock')" prop="checkStock" width="120" align="center" header-align="center">
-        <template #default="{ row }">{{ formatStockQtyByUnit(row.checkStock, row.productUnit) }}</template>
+        <template #default="{ row }">{{ formatQtyByUnit(row.checkStock, row.productUnit) }}</template>
       </el-table-column>
       <el-table-column :label="t('djs.warehouse.check.diffStock')" width="90" align="center" header-align="center">
         <template #default="{ row }">
-          <span :class="diffClass(diffQty(row))">{{ formatStockQtyByUnit(diffQty(row), row.productUnit) }}</span>
+          <span :class="diffClass(diffQty(row))">{{ formatQtyByUnit(diffQty(row), row.productUnit) }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="t('djs.warehouse.check.createTime')" prop="createTime" width="160" align="center" header-align="center" />
@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import { listCheckLines } from '@/api/djs-warehouse/check';
 import type { StockCheckHeaderVO, StockCheckRecordVO } from '@/api/djs-warehouse/check/types';
-import { formatStockQtyByUnit } from '@/utils/weight';
+import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
