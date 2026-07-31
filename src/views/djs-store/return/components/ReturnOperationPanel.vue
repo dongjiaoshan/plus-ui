@@ -110,6 +110,18 @@ const currentRows = computed(() => (activeCat.value === 'pork' ? porkRows.value 
 // 流程性问题 row15：唯一录入项是退回量，已填 = 退回量 > 0。
 const filledCount = computed(() => [...porkRows.value, ...vegRows.value].filter((r) => (r.returnQuantity ?? 0) > 0).length);
 
+/**
+ * row178：礼盒（belong_type=gift_box）不可退回仓库。
+ *
+ * 礼盒是多种原料的组合装，退回入库拆不回单一原材料，仓库确认那一步必然报错（后端已硬拦）。
+ * 这里在选品列表就滤掉，工人根本选不到，不会白填一遍再被拒。
+ */
+const BELONG_TYPE_GIFT_BOX = 'gift_box';
+
+function isReturnable(belongType?: string): boolean {
+  return belongType !== BELONG_TYPE_GIFT_BOX;
+}
+
 /** 单位是否 kg（不区分大小写，兼容「公斤」）——决定退回量精度与是否派生退回产品重量。 */
 function isKg(unit?: string): boolean {
   const u = (unit ?? '').trim().toLowerCase();
@@ -149,7 +161,7 @@ async function loadPorkCandidates() {
   }
   try {
     const res = await listPorkReturnCandidates(storeId.value);
-    const list = res.data ?? [];
+    const list = (res.data ?? []).filter((p) => isReturnable(p.belongType));
     porkRows.value = list.map((p) => ({
       productId: String(p.productId),
       productName: p.productName ?? '',
@@ -175,7 +187,7 @@ async function loadVegRows() {
   loading.value = true;
   try {
     const res = await listVegReturnCandidates(storeId.value);
-    const list = res.data ?? [];
+    const list = (res.data ?? []).filter((p) => isReturnable(p.belongType));
     vegRows.value = list.map((p) => ({
       productId: String(p.productId),
       productName: p.productName ?? '',

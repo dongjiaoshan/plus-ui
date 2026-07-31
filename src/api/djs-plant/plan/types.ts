@@ -16,12 +16,12 @@ export interface PlantPlanQuery {
   /** 农作物名称模糊（原型「种植农作物」筛选，对 crop_info.crop_name like）。 */
   cropName?: string;
   plantStatus?: string;
-  /** 计划日期范围-起（导出/兼容保留，列表筛选已改为 planMonth）。 */
+  /** 计划日期范围-起（导出/兼容保留，列表筛选已改为 planMonths）。 */
   beginPlanDate?: string;
   /** 计划日期范围-止（导出/兼容保留）。 */
   endPlanDate?: string;
-  /** 计划月份（原型「计划月份」筛选，1-12；结合 planYear 查某年某月的计划）。 */
-  planMonth?: number;
+  /** 计划月份多选（原型「计划月份」筛选，1-12 可多选；结合 planYear 查某年若干月的计划）。 */
+  planMonths?: number[];
   /** 计划更新时间（按天，原型「计划更新时间」筛选）。 */
   queryUpdateTime?: string;
   /** 计划编制人 user_id（原型「计划编制人」筛选，对 create_by 精确，导出/兼容保留）。 */

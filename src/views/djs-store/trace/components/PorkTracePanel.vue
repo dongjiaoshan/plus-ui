@@ -45,7 +45,8 @@
                   <el-icon><Food /></el-icon>
                 </div>
               </div>
-              <div class="cut-name">{{ c.label }}</div>
+              <!-- row174：产品名单行显示，超出宽度用省略号（不再折行）；title 悬浮看全名 -->
+              <div class="cut-name" :title="c.label">{{ c.label }}</div>
               <!-- row160：产品名下方显示该产品对应原材料的当日剩余可打包重量（单位 g）。
                    取数 = 门店盘点录入的原材料入库量 − 当日已打包量；盘点未录入则为 0。 -->
               <div class="cut-material">{{ t('storeTrace.pork.materialRemain') }} {{ materialRemainG(c.value) }}g</div>
@@ -58,7 +59,13 @@
       <el-col :xs="24" :md="7" class="trace-col">
         <el-card shadow="never" class="op-card">
           <template #header>
-            <span class="title">{{ t('storeTrace.pork.opPanel') }}</span>
+            <!-- row175：操作面板标题右侧刷新按钮，重载可打包白条 + 门店打包产品（原材料剩余）+ 产品图 -->
+            <div class="op-head">
+              <span class="title">{{ t('storeTrace.pork.opPanel') }}</span>
+              <el-button class="op-refresh-btn" type="primary" plain :icon="Refresh" :loading="refreshing" @click="handleRefresh">
+                {{ t('common.refresh') }}
+              </el-button>
+            </div>
           </template>
 
           <div class="section-label">{{ t('storeTrace.pork.tracePig') }}</div>
@@ -86,9 +93,11 @@
             <WeightNumpad v-model="form.weight" unit="g" :precision="0" :placeholder="t('storeTrace.pork.weightPlaceholder')" />
           </div>
 
+          <!-- row175：触屏点按主操作，按钮加高 + 字号放大 -->
           <el-button
             v-hasPermi="['djs:store:trace:print']"
             type="primary"
+            size="large"
             class="gen-btn"
             :loading="genLoading"
             :disabled="!canGen"
@@ -106,7 +115,7 @@
 </template>
 
 <script setup name="PorkTracePanel" lang="ts">
-import { Food } from '@element-plus/icons-vue';
+import { Food, Refresh } from '@element-plus/icons-vue';
 import { listTraceablePig, genStoreTraceCode, listStorePackProducts } from '@/api/djs-store/trace';
 import type { TraceablePigVO, StorePackProductVO } from '@/api/djs-store/trace/types';
 import { listByIds as listOssByIds } from '@/api/system/oss';
@@ -134,6 +143,8 @@ const { djs_pig_sex, djs_pork_cut_product } = toRefs<Record<string, { label: str
 const pigs = ref<TraceablePigVO[]>([]);
 const pigLoading = ref(false);
 const genLoading = ref(false);
+// row175：操作面板右上角刷新按钮的 loading
+const refreshing = ref(false);
 // 选中键 = 白条流水号（半只级）；旧数据无 white_bar_no 时回落耳号（整猪一条）。同猪两半只 earNo 相同、靠 white_bar_no 区分。
 const selectedKey = ref<string>();
 function pigKey(p: TraceablePigVO): string {
@@ -257,6 +268,21 @@ async function loadProductImages() {
   }
 }
 
+/**
+ * row175：操作面板刷新 —— 重新拉取可打包白条（剩余量/已用完）、门店打包产品（原材料剩余）与产品图。
+ * 保留当前已选白条/产品，避免刷新后要重新点一遍。
+ */
+async function handleRefresh() {
+  refreshing.value = true;
+  try {
+    await loadPigs();
+    await loadPackProducts();
+    await loadProductImages();
+  } finally {
+    refreshing.value = false;
+  }
+}
+
 function selectPig(p: TraceablePigVO) {
   if (isExhausted(p)) {
     proxy?.$modal.msgWarning(t('storeTrace.pork.exhausted'));
@@ -364,13 +390,36 @@ onMounted(async () => {
 
   // 右侧操作面板固定不随内容撑高（白条信息 + 产品 + 重量 + 打印按钮，内容超出时自身滚动）
   .op-card {
+    // row175：操作面板内边距 20px → 10px，数字键盘与「追溯码打印」按钮横向各多出 20px。
+    // 头部横向内边距同步压到 10px，「操作」标题 / 刷新按钮才与下方内容左右对齐；
+    // 头部纵向仍 18px（Element Plus 默认 calc(padding - 2px)），头部高度不变。
+    // 只作用于右侧 op-card，左侧产品卡区 left-card 保持 20px 不受影响。
+    :deep(.el-card__header) {
+      padding: 18px 10px;
+    }
+
     :deep(.el-card__body) {
+      padding: 10px;
       overflow-y: auto;
     }
   }
 
   .title {
     font-weight: 600;
+  }
+
+  // row175：操作面板头部 —— 标题左、刷新按钮右
+  .op-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    .op-refresh-btn {
+      flex: 0 0 auto;
+      height: 36px;
+      padding: 0 16px;
+    }
   }
 
   // row82：白条 chip 区固定高度、内部滚动，不撑高整页
@@ -417,7 +466,11 @@ onMounted(async () => {
     min-height: 0;
     overflow-y: auto;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    // row174：卡片加宽到「一行能放约 15 个中文字」——
+    // 产品名 .cut-name 字号 14px，中文为全角（字宽 = 1em），15 字 ≈ 14 × 15 = 210px；
+    // 卡片左右内边距 8px × 2 = 16px、边框 1px × 2 = 2px；
+    // 故卡片最小宽 = 210 + 16 + 2 = 228px，取 230px 留 2px 余量。
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     grid-auto-rows: min-content;
     gap: 16px;
 
@@ -426,6 +479,8 @@ onMounted(async () => {
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      // row174：长产品名不得把卡片撑出 grid 轨道（省略号在卡内生效）
+      min-width: 0;
       padding: 16px 8px;
       border: 1px solid #e4e7ed;
       border-radius: 8px;
@@ -467,17 +522,28 @@ onMounted(async () => {
         }
       }
 
+      // row174：产品名单行 + 超出省略号（卡片宽度已按 15 个中文字算，见 .cut-grid 注释）
       .cut-name {
+        width: 100%;
         margin-top: 10px;
         font-size: 14px;
         font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       // row160：产品名下方的「原材料剩余 xxx g」
       .cut-material {
+        width: 100%;
         margin-top: 4px;
         font-size: 12px;
         color: #909399;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
@@ -492,8 +558,14 @@ onMounted(async () => {
       margin-bottom: 16px;
     }
 
+    // row175：追溯码打印是本页主操作（触屏点按），按钮加高 + 字号放大；
+    // 宽度已占满操作面板（与上方数字键盘同宽），不再另行外扩。
     .gen-btn {
       width: 100%;
+      height: 60px;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 2px;
     }
   }
 }
