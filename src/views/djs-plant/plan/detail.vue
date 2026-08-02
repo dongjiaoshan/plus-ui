@@ -129,6 +129,15 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
+        <!-- row184：操作列固定在最右，只提供删除；仅「种植未开始」的地块显示删除按钮 -->
+        <el-table-column :label="t('common.operate')" width="90" align="center" header-align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button v-if="canRemoveDetail(row)" link type="danger" size="small" @click="onRemoveDetail(row)">
+              {{ t('common.del') }}
+            </el-button>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
       </el-table>
 
       <!--
@@ -209,7 +218,7 @@ import { ref, onMounted, getCurrentInstance, computed, reactive } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { getPlan, getPlanGantt, updatePlan } from '@/api/djs-plant/plan';
+import { delPlanDetail, getPlan, getPlanGantt, updatePlan } from '@/api/djs-plant/plan';
 import { listAllTeam } from '@/api/djs-plant/team';
 import type {
   PlantPlanDetailVO,
@@ -381,6 +390,30 @@ async function onSave() {
   } finally {
     saving.value = false;
   }
+}
+
+/**
+ * row184：该地块明细能否从计划里删除。
+ *
+ * 只有「种植未开始」可删 —— 明细 plantStatus='pending'（字典 djs_plant_plan_status 的「待开始」）
+ * 且没有实际开始日期。已完成（completed）/ 进行中（ongoing）/ 已开工的都不显示删除按钮。
+ */
+function canRemoveDetail(row: PlantDetailsVO): boolean {
+  return row.plantStatus === 'pending' && !row.beginActualdate;
+}
+
+/** row184：确认后把该地块从计划里去除，成功后重拉详情 + 甘特（主表面积/地块数由后端重算） */
+async function onRemoveDetail(row: PlantDetailsVO) {
+  const planId = plan.value?.plan?.id;
+  if (!planId) return;
+  try {
+    await proxy?.$modal.confirm(t('plantPlan.detail.removeDetailConfirm', { plot: row.plotName || row.plotCode || '' }));
+  } catch {
+    return; // 用户取消
+  }
+  await delPlanDetail(row.id);
+  ElMessage.success(t('plantPlan.detail.removeDetailSuccess'));
+  await loadAll(planId);
 }
 
 /** 合并「种植月份 + 上中下旬」为「计划种植时间」展示，如 6月中旬 */

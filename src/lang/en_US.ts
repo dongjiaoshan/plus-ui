@@ -542,6 +542,7 @@ export default {
       sow: 'Sow Production',
       fatten: 'Fattening Production',
       slaughter: 'Slaughter Config',
+      medication: 'Medication Config',
       cycle: 'Production Cycle',
       boar: 'Sperm / Boar',
       med: 'Med Schedule'
@@ -569,6 +570,12 @@ export default {
     },
     slaughter: {
       slaughterAge: 'Slaughter Age'
+    },
+    medication: {
+      fattenMedMaxAge: 'Max Medication Age (fattening pigs)',
+      fattenMedMaxAgeTip: 'Fattening pigs older than this are hidden from the mini-program Vaccine & Medicine pig list (no medication close to slaughter)',
+      medPickUsableDays: 'Medicine Pick Usable Days',
+      medPickUsableDaysTip: 'The medicine picker in single / batch medication only lists medicines picked within this many days'
     },
     title: {
       addCycle: 'Add Cycle Item',
@@ -876,7 +883,8 @@ export default {
         earNo: 'Ear No.',
         eventType: 'Event type',
         newStatus: 'New state',
-        changeBy: 'Changed By'
+        changeBy: 'Changed By',
+        changeTime: 'Change Time'
       },
       placeholder: {
         earNo: 'Enter ear No.',
@@ -1378,6 +1386,7 @@ export default {
       productSpec: { required: 'Spec is required for production products' },
       storeLocation: { required: 'Please select storage location' },
       productAttr: { required: 'Please select product attribute' },
+      productMaterial: { required: 'Please select the linked raw material product' },
       productWorkshop: { required: 'Please select workshop' }
     },
     tip: {
@@ -1447,6 +1456,7 @@ export default {
     column: {
       locationName: 'Location',
       productName: 'Product',
+      productSpec: 'Spec',
       productCode: 'Product Code',
       productStock: 'Stock',
       productUnit: 'Unit',
@@ -1909,7 +1919,7 @@ export default {
       irrigationInterval: 'Irrigation Interval (days)',
       predictedPer: 'Predicted Yield (kg/mu)',
       qualityDesc: 'Quality Description',
-      pickUnitPrice: 'Performance Unit Price (yuan/jin)'
+      pickUnitPrice: 'Performance Unit Price (yuan/kg)'
     },
     placeholder: {
       cropCode: 'Enter crop code (e.g. C001)',
@@ -2149,7 +2159,9 @@ export default {
     detail: {
       title: 'Plan Detail',
       detailsTitle: 'Plot Details',
-      missingId: 'Missing plan id'
+      missingId: 'Missing plan id',
+      removeDetailConfirm: 'Remove plot "{plot}" from this plan?',
+      removeDetailSuccess: 'Plot removed from the plan'
     },
     gantt: {
       title: 'Harvest Plan Gantt',

@@ -542,6 +542,7 @@ export default {
       sow: '母猪生产配置',
       fatten: '育肥生产配置',
       slaughter: '出栏配置',
+      medication: '用药配置',
       cycle: '生产周期',
       boar: '精液公猪',
       med: '药品疫苗周期'
@@ -569,6 +570,12 @@ export default {
     },
     slaughter: {
       slaughterAge: '出栏日龄'
+    },
+    medication: {
+      fattenMedMaxAge: '育肥猪最大用药日龄',
+      fattenMedMaxAgeTip: '超过该日龄的育肥猪不再出现在小程序「疫苗药品」猪只列表里（临近出栏不再用药）',
+      medPickUsableDays: '药品领用可用天数',
+      medPickUsableDaysTip: '用药治疗 / 批量用药的「选择药品」只列最近该天数内已领用的药品'
     },
     title: {
       addCycle: '新增生产周期项',
@@ -875,7 +882,8 @@ export default {
         earNo: '耳号',
         eventType: '事件类型',
         newStatus: '变更后状态',
-        changeBy: '变更人'
+        changeBy: '变更人',
+        changeTime: '变更时间'
       },
       placeholder: {
         earNo: '请输入耳号',
@@ -1381,6 +1389,7 @@ export default {
       productSpec: { required: '生产产品必须填写规格' },
       storeLocation: { required: '请选择存储仓库' },
       productAttr: { required: '请选择产品属性' },
+      productMaterial: { required: '请选择关联的原材料产品' },
       productWorkshop: { required: '请选择生产车间' }
     },
     tip: {
@@ -1450,6 +1459,7 @@ export default {
     column: {
       locationName: '存储库位',
       productName: '产品名称',
+      productSpec: '产品规格',
       productCode: '产品编码',
       productStock: '当前库存',
       productUnit: '单位',
@@ -1913,7 +1923,7 @@ export default {
       irrigationInterval: '浇灌间隔(天)',
       predictedPer: '预计亩产(kg/亩)',
       qualityDesc: '品质描述',
-      pickUnitPrice: '绩效单价(元/斤)'
+      pickUnitPrice: '绩效单价(元/公斤)'
     },
     placeholder: {
       cropCode: '请输入作物编码（如 C001）',
@@ -2153,7 +2163,9 @@ export default {
     detail: {
       title: '种植计划详情',
       detailsTitle: '地块明细',
-      missingId: '缺少计划 ID'
+      missingId: '缺少计划 ID',
+      removeDetailConfirm: '确认将地块「{plot}」从本计划中删除？',
+      removeDetailSuccess: '地块已从计划中删除'
     },
     gantt: {
       title: '采摘计划甘特图',

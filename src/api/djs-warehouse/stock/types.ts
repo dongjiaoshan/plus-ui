@@ -22,6 +22,8 @@ export interface LocationStockVO extends BaseEntity {
   /** 产品属性（1 生产产品 / 2 原材料）：service JOIN product_info 回填；详情饲料 tab 显隐判定 */
   productAttr?: number;
   productName: string;
+  /** 产品规格（row183）：service JOIN product_info 回填；列表产品名称右侧展示 */
+  productSpec?: string;
   productStock: number | string;
   productUnit: string;
   isEnd: number;

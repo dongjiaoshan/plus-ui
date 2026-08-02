@@ -47,10 +47,11 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- row43②：存储仓库——产品属性=生产产品(product_attr=1)时非必填，其余维持必填；礼盒为独立成品不要求
+          <!-- row182②：产品属性=生产产品(product_attr=1)时整项不展示（生产产品不落固定库位，产出直接进对应产成品库）；
+               其余属性维持必填，礼盒为独立成品不要求
                （需求措辞「产品类别=生产产品」：djs_belong_type 字典无「生产产品」值，「生产产品」= djs_product_attr=1，故按 productAttr===1 判定）-->
-          <el-col :span="12">
-            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId" :required="!isGiftBoxForm() && form.productAttr !== 1">
+          <el-col v-if="form.productAttr !== 1" :span="12">
+            <el-form-item :label="t('product.field.storeLocation')" prop="storeLocationId" :required="!isGiftBoxForm()">
               <el-select
                 v-model="form.storeLocationId"
                 filterable
@@ -80,10 +81,13 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- 生产产品(product_attr=1)可关联一个原材料产品（FK→product.id）：成品→原材料映射，供毛菜/打包链路降级消费 -->
+          <!-- 生产产品(product_attr=1)关联一个原材料产品（FK→product.id）：成品→原材料映射，供毛菜/打包链路降级消费。
+               row181：生产产品下此项必填（成品缺原材料映射会让打包/需求换算拿不到来源）；
+               礼盒为独立成品不要求 —— 与产品属性/存储仓库/生产车间/规格四项同款豁免，
+               且 gift_box 类目本就没有对应的自产原材料候选，强制必填会让礼盒存量数据永远存不下去 -->
           <template v-if="form.productAttr === 1">
             <el-col :span="12">
-              <el-form-item :label="t('product.field.productMaterial')" prop="productMaterial">
+              <el-form-item :label="t('product.field.productMaterial')" prop="productMaterial" :required="!isGiftBoxForm()">
                 <el-select
                   v-model="form.productMaterial"
                   filterable
@@ -329,13 +333,26 @@ const rules = computed(() => ({
     }
   ],
   // row24/row29：存储仓库必填（自产 productType=1 / 外购 productType=2）；礼盒（自产 + 产品类别 gift_box）为独立成品不要求
-  // row43②：自产且产品属性=生产产品(product_attr=1)时非必填（需求「产品类别=生产产品」→ djs_belong_type 无此值，取 product_attr=1）
+  // row182②：自产且产品属性=生产产品(product_attr=1)时该项整个不展示，故也不校验
   storeLocationId: [
     {
       validator: (_rule: any, value: any, callback: any) => {
         const selfProducedExemptByAttr = form.value.productType === 1 && form.value.productAttr === 1;
         if (!isGiftBoxForm() && !selfProducedExemptByAttr && (form.value.productType === 1 || form.value.productType === 2) && !value) {
           callback(new Error(t('product.rule.storeLocation.required')));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  // row181：自产且产品属性=生产产品(product_attr=1)时关联原材料产品必填；其余属性该项不展示、不校验；礼盒为独立成品不要求
+  productMaterial: [
+    {
+      validator: (_rule: any, value: any, callback: any) => {
+        if (!isGiftBoxForm() && form.value.productType === 1 && form.value.productAttr === 1 && (value === undefined || value === null || value === '')) {
+          callback(new Error(t('product.rule.productMaterial.required')));
         } else {
           callback();
         }
@@ -469,6 +486,8 @@ const onTypeChange = (newType: number) => {
 
 /** 产品类别切换：原材料下拉按类别过滤，已选原材料若不在新类别候选内则清空，避免提交跨类别孤儿映射 */
 const onBelongTypeChange = () => {
+  // row181：切进/切出礼盒会翻转 productMaterial 等项的必填与否（isGiftBoxForm 依赖 belongType），清掉旧错误文案
+  formRef.value?.clearValidate(['productMaterial', 'storeLocationId', 'productWorkshop', 'productAttr', 'productSpec']);
   if (form.value.productMaterial == null) return;
   const stillValid = materialCandidates.value.some((m) => String(m.id) === String(form.value.productMaterial));
   if (!stillValid) {
@@ -482,9 +501,13 @@ const onProductAttrChange = (attr?: number) => {
   if (attr !== 1) {
     form.value.productMaterial = undefined;
     form.value.materialNum = undefined;
+  } else {
+    // row182②：切到「生产产品」后存储仓库整项不再展示，清掉已选值避免提交一个用户看不见也改不了的库位
+    form.value.storeLocationId = undefined;
   }
   // row69：切到原材料(2)后生产车间转非必填，清掉可能残留的旧必填错误文案
-  formRef.value?.clearValidate('productWorkshop');
+  // row181/row182②：productMaterial / storeLocationId 的必填与否随 attr 翻转，一并清掉旧错误文案
+  formRef.value?.clearValidate(['productWorkshop', 'productMaterial', 'storeLocationId']);
 };
 
 const loadSupplierOptions = async () => {
@@ -522,16 +545,21 @@ const loadLocationOptions = async () => {
 };
 
 /**
- * 原材料候选（product_attr=2）：生产产品关联原材料下拉，编辑态排除自身（不能关联自己当原材料）。
- * 后端 list 不按 product_attr 过滤，故全量拉取后前端筛。
+ * 原材料候选（自产 product_type=1 且 product_attr=2）：生产产品关联原材料下拉，
+ * 编辑态排除自身（不能关联自己当原材料）。
+ *
+ * row182①：外购商品（product_type=2）里也存在 product_attr=2 的行，只按 productAttr 过滤会把商品
+ * 混进候选池、能被搜到。原材料映射只在自产产品之间成立，故服务端再加 productType=1 收口。
  */
 const loadProductCandidates = async (excludeId?: number | string) => {
   try {
     // admin row19：产品总数 >500，原「拉前 500 混合再客户端筛 attr=2」会把排在 500 之后的 pork 原材料
     // （分割间精瘦肉/排骨等）截断，导致原材料下拉只剩少数。改为服务端 productAttr=2 过滤只拉原材料（≤500 一页装下）。
-    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0, productAttr: 2 });
+    const res = await listProduct({ pageNum: 1, pageSize: 500, productStatus: 0, productAttr: 2, productType: 1 });
     const rows = (res.rows ?? res.data ?? []) as ProductInfoVO[];
-    rawMaterialPool.value = rows.filter((r) => r.productAttr === 2 && (excludeId == null || String(r.id) !== String(excludeId)));
+    rawMaterialPool.value = rows.filter(
+      (r) => r.productAttr === 2 && r.productType === 1 && (excludeId == null || String(r.id) !== String(excludeId))
+    );
   } catch (e) {
     console.warn('[ProductInfoForm] loadProductCandidates failed', e);
     rawMaterialPool.value = [];

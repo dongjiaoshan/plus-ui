@@ -18,7 +18,7 @@ export interface PerfListRowVO {
   teamName?: string;
   /** service enrich：班组人数（该班组 t_plant_work_people 活动成员数） */
   teamMemberCount?: number;
-  /** 采摘总量（斤，= SUM(pick_weight)） */
+  /** 采摘总量（公斤，= SUM(pick_weight)） */
   totalPickWeight?: number | string;
   /** 该班组该月绩效总额（元，= SUM(performance_amount)） */
   teamMonthAmount?: number | string;
@@ -43,13 +43,13 @@ export interface PlantWorkPerformanceVO {
   cropId?: string;
   /** service enrich：作物名 */
   cropName?: string;
-  /** 采摘总量（斤） */
+  /** 采摘总量（公斤） */
   pickWeight?: number | string;
-  /** 单价快照（元/斤） */
+  /** 单价快照（元/公斤） */
   unitPriceSnapshot?: number | string;
   /** 应付绩效金额（元） */
   performanceAmount?: number | string;
-  /** 绩效规则描述（如 "1.00 元/斤"） */
+  /** 绩效规则描述（如 "1.00 元/公斤"） */
   performanceRule?: string;
   remark?: string;
   createTime?: string;

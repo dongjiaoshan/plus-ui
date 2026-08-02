@@ -17,7 +17,7 @@
             <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(3)} 公斤` : '-' }}</template>
           </el-table-column>
           <el-table-column :label="t('plantPerformance.detail.cropUnitPrice')" width="130" align="center" header-align="center">
-            <template #default="{ row }">{{ row.unitPriceSnapshot != null ? `${row.unitPriceSnapshot} 元/斤` : '-' }}</template>
+            <template #default="{ row }">{{ row.unitPriceSnapshot != null ? `${row.unitPriceSnapshot} 元/公斤` : '-' }}</template>
           </el-table-column>
           <el-table-column :label="t('plantPerformance.detail.cropAmount')" width="130" align="center" header-align="center">
             <template #default="{ row }">

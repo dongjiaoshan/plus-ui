@@ -103,6 +103,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productCode', label: t('stock.column.productCode'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'productName', label: t('stock.column.productName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+  // row183：产品规格列，紧挨产品名称右侧（后端 LocationStockVo JOIN product_info 回填 productSpec）
+  { prop: 'productSpec', label: t('stock.column.productSpec'), minWidth: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'locationName', label: t('stock.column.locationName'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   {
     prop: 'productStock',

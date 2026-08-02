@@ -30,6 +30,18 @@ export const saveSlaughterConfig = (data: Record<string, number>) => {
   return request({ url: '/djs/breed/production/cycle/slaughter/save', method: 'post', data });
 };
 
+// ============= 用药配置（medication，2 项整数天数表单；小程序 row251/row252）=============
+// fatten_med_max_age_days 育肥猪最大用药日龄（超龄育肥猪不进疫苗药品猪只列表，默认 300）
+// med_pick_usable_days   药品领用可用天数（用药治疗「使用药品」只列近 N 天已领，默认 15）
+
+export const getMedicationConfig = (): AxiosPromise<Record<string, number>> => {
+  return request({ url: '/djs/breed/production/cycle/medication/get', method: 'get' });
+};
+
+export const saveMedicationConfig = (data: Record<string, number>) => {
+  return request({ url: '/djs/breed/production/cycle/medication/save', method: 'post', data });
+};
+
 // ============= A1 育肥日龄阶段（fatten-stage，表格批量保存）=============
 
 export const listFattenStage = (): AxiosPromise<FattenAgeStageVO[]> => {
