@@ -1445,6 +1445,42 @@ export default {
     }
   },
   // Warehouse stock query (WMS-MD-001, read-only)
+  // Veg room outbound (admin row187)
+  vegOut: {
+    action: { create: 'Add', detail: 'Detail' },
+    field: { outDate: 'Out Date', outDest: 'Destination', operator: 'Operator' },
+    column: {
+      outDate: 'Out Date',
+      outDest: 'Destination',
+      productKinds: 'Kinds',
+      totalWeight: 'Total Weight',
+      operator: 'Operator'
+    },
+    detail: {
+      title: 'Outbound Detail',
+      productName: 'Product',
+      productSpec: 'Spec',
+      plotCode: 'Plot No.',
+      outWeight: 'Out Weight',
+      productNamePlaceholder: 'Enter product name'
+    },
+    create: {
+      title: 'New Veg Room Outbound',
+      outDate: 'Out Date',
+      outDest: 'Destination',
+      outDestPlaceholder: 'Select destination',
+      productName: 'Product',
+      productNamePlaceholder: 'Enter product name',
+      stockWeight: 'Stock',
+      plotCode: 'Plot No.',
+      outQuantity: 'Out Qty',
+      selected: 'Selected',
+      selectedEmpty: 'Enter a quantity on the left to add',
+      totalKinds: '{n} kinds',
+      confirm: 'Confirm Outbound',
+      rule: { outDate: 'Please select out date', outDest: 'Please select destination', items: 'Enter a quantity for at least one product' }
+    }
+  },
   stock: {
     field: {
       productName: 'Product',
@@ -1472,7 +1508,16 @@ export default {
       checkRecord: 'Check log',
       productOut: 'Stock Out',
       pigTransfer: 'Pork Location Transfer',
+      internalHandle: 'Internal Handling',
       viewDetail: 'View Detail'
+    },
+    internalDialog: {
+      title: 'Internal Handling',
+      outDate: 'Out Date',
+      quantity: 'Out Qty',
+      outDest: 'Destination',
+      destVegDock: 'Veg Dock',
+      destFeed: 'Feed'
     },
     outDialog: {
       title: 'Product Stock Out',

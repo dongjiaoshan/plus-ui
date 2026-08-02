@@ -81,3 +81,17 @@ export interface StockTransferForm {
   quantity?: number;
   remark?: string;
 }
+
+/** 毛菜间出库单项（row185 单条 / row187 批量共用） */
+export interface VegOutItem {
+  stockId: number | string;
+  quantity: number | undefined;
+}
+
+/** 毛菜间出库提交（row185 产品内部处理 / row187 批量出库） */
+export interface VegOutSubmitForm {
+  outDate: string;
+  outDest: string;
+  items: VegOutItem[];
+  remark?: string;
+}

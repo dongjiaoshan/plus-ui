@@ -1447,6 +1447,42 @@ export default {
       del: '是否确认删除选中的 {count} 条商品？删除前需先确保无库存且未被作为原材料引用。'
     }
   },
+  // 毛菜间出库管理（admin row187）
+  vegOut: {
+    action: { create: '新增', detail: '查看详情' },
+    field: { outDate: '出库日期', outDest: '出库去向', operator: '操作人' },
+    column: {
+      outDate: '出库日期',
+      outDest: '出库去向',
+      productKinds: '出库果蔬品类数',
+      totalWeight: '出库果蔬重量',
+      operator: '出库操作人'
+    },
+    detail: {
+      title: '出库明细',
+      productName: '产品名称',
+      productSpec: '规格',
+      plotCode: '地块编号',
+      outWeight: '出库重量',
+      productNamePlaceholder: '请输入产品名称'
+    },
+    create: {
+      title: '新增毛菜间出库',
+      outDate: '出库日期',
+      outDest: '出库去向',
+      outDestPlaceholder: '请选择出库去向',
+      productName: '产品名称',
+      productNamePlaceholder: '请输入产品名称',
+      stockWeight: '库存重量',
+      plotCode: '地块编号',
+      outQuantity: '出库量',
+      selected: '已选产品',
+      selectedEmpty: '在左侧填写出库量即可加入',
+      totalKinds: '共 {n} 个品类',
+      confirm: '确认出库',
+      rule: { outDate: '请选择出库日期', outDest: '请选择出库去向', items: '请至少为一个产品填写出库量' }
+    }
+  },
   // 库存查询（WMS-MD-001，只读列表）
   stock: {
     field: {
@@ -1475,7 +1511,16 @@ export default {
       checkRecord: '盘点记录',
       productOut: '产品出库',
       pigTransfer: '猪肉库位转移',
+      internalHandle: '产品内部处理',
       viewDetail: '查看详情'
+    },
+    internalDialog: {
+      title: '产品内部处理',
+      outDate: '出库日期',
+      quantity: '出库量',
+      outDest: '出库去向',
+      destVegDock: '果蔬月台',
+      destFeed: '饲料饲喂'
     },
     outDialog: {
       title: '产品出库',
