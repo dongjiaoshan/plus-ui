@@ -1450,6 +1450,8 @@ export default {
     action: { create: 'Add', detail: 'Detail' },
     field: { outDate: 'Out Date', outDest: 'Destination', operator: 'Operator' },
     column: {
+      batchNo: 'Outbound No.',
+      totalAmount: 'Amount',
       outDate: 'Out Date',
       outDest: 'Destination',
       productKinds: 'Kinds',
@@ -1457,6 +1459,9 @@ export default {
       operator: 'Operator'
     },
     detail: {
+      outUnitPrice: 'Unit Price',
+      reprint: 'Reprint',
+      outAmount: 'Amount',
       title: 'Outbound Detail',
       productName: 'Product',
       productSpec: 'Spec',
@@ -1465,6 +1470,11 @@ export default {
       productNamePlaceholder: 'Enter product name'
     },
     create: {
+      productSpec: 'Spec',
+      unitPrice: 'Unit Price',
+      lineAmount: 'Line Amount',
+      noAfterSubmit: 'Generated on submit',
+      confirmAndPrint: 'Confirm & Print',
       title: 'New Veg Room Outbound',
       outDate: 'Out Date',
       outDest: 'Destination',
@@ -2420,6 +2430,21 @@ export default {
       exceedRemaining: 'Quantity cannot exceed today picked remaining ({remaining})'
     }
   },
+  stockMonthly: {
+    action: {
+      detail: 'Detail'
+    },
+    field: {
+      statMonth: 'Month'
+    },
+    column: {
+      statMonth: 'Month',
+      productCount: 'Products'
+    },
+    detail: {
+      title: 'Monthly Stock Details'
+    }
+  },
   stockOverview: {
     action: {
       detail: 'Detail'
@@ -2537,7 +2562,9 @@ export default {
     action: {
       search: 'Search',
       reset: 'Reset',
-      export: 'Export'
+      export: 'Export',
+      detail: 'Detail',
+      close: 'Close'
     },
     field: {
       dateRange: 'Date Range',
@@ -2554,8 +2581,13 @@ export default {
       cropName: 'Crop Name',
       feedWeight: 'Feed Weight',
       feedType: 'Source',
-      operator: 'Operator'
-    }
+      operator: 'Operator',
+      totalWeight: 'Total Weight',
+      boxCount: 'Confirmed Crates',
+      confirmUser: 'Confirmed By',
+      operation: 'Action'
+    },
+    detailTitle: 'Daily Feeding Details'
   },
   djs: {
     placeholder: {
@@ -2786,7 +2818,6 @@ export default {
         measureBelowTitle: 'Weight below packing rule',
         measureBelowTip: 'Packing rule {rule}g, current weight {actual}g. It must not be less than the rule weight — please weigh again',
         measureDeviationTitle: 'Weight above packing rule',
-        measureDeviationTip: 'Packing rule {rule}g, current weight {actual}g (over {tolerance}% can still be submitted after confirmation)',
         measureDeviationConfirm: 'Actual {actual}g exceeds the {rule}g packing rule by more than {tolerance}%. Continue packing?',
         cutHint: 'Pick a picked cut record, enter cut-product weights and confirm inbound; click "Finish Cut" when all are weighed.',
         cutRecord: 'Cut Record (Ear No)',
@@ -2943,8 +2974,11 @@ export default {
         nonWeightReturnWeightTotal: 'Non-Weight Product Return Weight',
         detailDialogTitle: 'Return Detail',
         quantityDiff: 'Quantity Diff',
-        confirmProgress: 'Confirm Progress',
-        confirmProgressTip: 'Warehouse has not confirmed every return line of the day; unconfirmed lines are not stocked in'
+        confirmProgress: 'Inbound/Discarded',
+        confirmProgressTip: 'Warehouse has not confirmed every return line of the day; unconfirmed lines are not stocked in ({total} total, {pending} pending)',
+        isDiscard: 'Discarded',
+        discardYes: 'Yes',
+        discardNo: 'No'
       },
       check: {
         checkId: 'Check No.',
@@ -4022,7 +4056,8 @@ export default {
     },
     tab: {
       pork: 'Pork Products',
-      vegetable: 'Produce Products'
+      vegetable: 'Produce Products',
+      other: 'Other Products'
     },
     subCategory: {
       pork: 'Pork Product',

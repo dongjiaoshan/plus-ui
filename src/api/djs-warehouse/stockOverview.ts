@@ -85,3 +85,45 @@ export const getStockOverviewDetail = (query: StockOverviewDetailQuery): AxiosPr
     params: query
   });
 };
+
+// ==================== 库存月汇总（row190，compute-on-read 同构日汇总）====================
+
+/** 每月库存汇总行 */
+export interface StockOverviewMonthlyVO {
+  /** 统计月份 yyyy-MM */
+  statMonth: string;
+  /** 当月涉及的产品 distinct 数 */
+  productCount: number;
+}
+
+/** 月汇总列表查询（月首日 yyyy-MM-dd） */
+export interface StockMonthlyQuery {
+  monthFrom?: string;
+  monthTo?: string;
+}
+
+/** 月汇总明细查询 */
+export interface StockMonthlyDetailQuery {
+  /** 统计月首日 yyyy-MM-dd（必传） */
+  monthStart: string;
+  productName?: string;
+  locationId?: number | string;
+}
+
+/** 每月库存汇总列表（按月份倒序，不分页） */
+export const listStockMonthly = (query: StockMonthlyQuery): AxiosPromise<StockOverviewMonthlyVO[]> => {
+  return request({
+    url: '/djs/warehouse/stockOverview/monthly',
+    method: 'get',
+    params: query
+  });
+};
+
+/** 某月库存明细（详情弹窗，列与日汇总一致） */
+export const getStockMonthlyDetail = (query: StockMonthlyDetailQuery): AxiosPromise<StockOverviewDetailVO[]> => {
+  return request({
+    url: '/djs/warehouse/stockOverview/monthly/detail',
+    method: 'get',
+    params: query
+  });
+};

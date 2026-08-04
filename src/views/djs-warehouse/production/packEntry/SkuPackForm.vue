@@ -1232,46 +1232,12 @@ function isMeasureOverTolerance(rule: number, actual: number): boolean {
   return round6(actual) > round6(rule * PACK_MEASURE_UPPER_FACTOR);
 }
 
-// 客户要求「获取到产品重量时」就弹提示，而不是等点提交。
-// 秤回填（ScaleReader @fill）与手工录入都会改 form.productWeight，故直接盯该值。
-// ⚠️ 必须防抖：numpad 是逐键 emit 的（输入 500 会依次产生 5 / 50 / 500），
-// 不防抖会在 5g、50g 各误报一次。等用户停手 700ms 再判，且同一产品只在
-// 「由不违规变违规」时提示一次，避免退格重输时刷屏。
-const deviationNotified = ref(false);
-let measureRuleTimer: ReturnType<typeof setTimeout> | null = null;
-watch(
-  () => [form.value.productWeight, form.value.productId] as const,
-  () => {
-    if (measureRuleTimer) clearTimeout(measureRuleTimer);
-    measureRuleTimer = setTimeout(() => {
-      const rule = packMeasureRuleKg();
-      const actual = packWeightKg();
-      const below = rule != null && actual != null && isMeasureBelowRule(rule, actual);
-      const over = rule != null && actual != null && isMeasureOverTolerance(rule, actual);
-      if (!below && !over) {
-        deviationNotified.value = false;
-        return;
-      }
-      if (deviationNotified.value) return;
-      deviationNotified.value = true;
-      // 偏低是硬拒（提交会被拦），文案要说清「不能少于」；超出只是提示，说明确认后可继续
-      ElNotification.warning({
-        title: t(below ? 'djs.warehouse.packEntry.measureBelowTitle' : 'djs.warehouse.packEntry.measureDeviationTitle'),
-        message: below
-          ? t('djs.warehouse.packEntry.measureBelowTip', { rule: kgToG(rule as number), actual: kgToG(actual as number) })
-          : t('djs.warehouse.packEntry.measureDeviationTip', {
-              rule: kgToG(rule as number),
-              actual: kgToG(actual as number),
-              tolerance: PACK_MEASURE_OVER_TOLERANCE_PERCENT
-            })
-      });
-    }, 700);
-  }
-);
-
-onBeforeUnmount(() => {
-  if (measureRuleTimer) clearTimeout(measureRuleTimer);
-});
+// 称重是否满足打包规则，**只在点「确定」/「确认并打印追溯码」时判**（见 confirmPackMeasureRule），
+// 录入过程中不提醒 —— numpad 是逐键 emit 的，输入 300 会途经 3、30 两个「不足」中间态，
+// 边输边弹等于每次称重都先挨两次警告。
+//
+// ⚠️ 这条与更早一轮的要求相反（那轮要「拿到重量就提示」，实现是一个 700ms 防抖的 watch）。
+// 已按最新要求撤掉那个 watch，别再改回边输边提示。
 
 /**
  * 肉品、果蔬按产品 materialNum（单包规则重量 kg）校验称重：与后端 validatePackMeasureRule 同口径

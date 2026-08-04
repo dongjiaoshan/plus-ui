@@ -57,3 +57,36 @@ export const listFeedRecord = (query: FeedRecordQuery): AxiosPromise<FeedRecordV
     params: query
   });
 };
+
+/** 有机饲喂**按日汇总**行（一天一条；admin 行199 主列表 / mp 行268 卡片共用后端） */
+export interface FeedDailyVO {
+  /** 饲喂日期（yyyy-MM-dd，仅日期） */
+  feedDate: string;
+  /** 当日总重量(kg)，三位小数 */
+  totalWeight?: number | string;
+  /** 当日明细条数 */
+  detailCount?: number;
+  /** 仓库确认框数（未确认为 null → 展示 '—'） */
+  boxCount?: number | string | null;
+  /** 仓库确认人 user_id */
+  confirmUserId?: number | string;
+  /** 仓库确认人姓名（后端翻译 sys_user.nick_name） */
+  confirmUserName?: string;
+}
+
+/** 日汇总查询参数（只吃日期范围；作物名/提供位置是明细维度不参与汇总筛选） */
+export interface FeedDailyQuery {
+  dateFrom?: string;
+  dateTo?: string;
+  pageNum?: number;
+  pageSize?: number;
+}
+
+/** 有机饲喂按日汇总分页（按日期倒序） */
+export const listFeedDaily = (query: FeedDailyQuery): AxiosPromise<FeedDailyVO[]> => {
+  return request({
+    url: '/djs/warehouse/feedRecord/daily',
+    method: 'get',
+    params: query
+  });
+};

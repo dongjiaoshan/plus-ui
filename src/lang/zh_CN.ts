@@ -1452,6 +1452,8 @@ export default {
     action: { create: '新增', detail: '查看详情' },
     field: { outDate: '出库日期', outDest: '出库去向', operator: '操作人' },
     column: {
+      batchNo: '出库单号',
+      totalAmount: '出库金额',
       outDate: '出库日期',
       outDest: '出库去向',
       productKinds: '出库果蔬品类数',
@@ -1459,6 +1461,9 @@ export default {
       operator: '出库操作人'
     },
     detail: {
+      outUnitPrice: '出库单价',
+      reprint: '重打',
+      outAmount: '出库总价',
       title: '出库明细',
       productName: '产品名称',
       productSpec: '规格',
@@ -1467,6 +1472,11 @@ export default {
       productNamePlaceholder: '请输入产品名称'
     },
     create: {
+      productSpec: '规格',
+      unitPrice: '销售单价',
+      lineAmount: '销售总价',
+      noAfterSubmit: '提交后生成',
+      confirmAndPrint: '确认出库并打印',
       title: '新增毛菜间出库',
       outDate: '出库日期',
       outDest: '出库去向',
@@ -2424,6 +2434,21 @@ export default {
       exceedRemaining: '数量不能超过今日领用剩余（{remaining}）'
     }
   },
+  stockMonthly: {
+    action: {
+      detail: '查看详情'
+    },
+    field: {
+      statMonth: '月份'
+    },
+    column: {
+      statMonth: '月份',
+      productCount: '汇总产品数量'
+    },
+    detail: {
+      title: '库存月汇总明细'
+    }
+  },
   stockOverview: {
     action: {
       detail: '详情'
@@ -2541,7 +2566,9 @@ export default {
     action: {
       search: '查询',
       reset: '重置',
-      export: '导出'
+      export: '导出',
+      detail: '查看详情',
+      close: '关闭'
     },
     field: {
       dateRange: '日期范围',
@@ -2558,8 +2585,13 @@ export default {
       cropName: '作物名称',
       feedWeight: '饲喂饲料量',
       feedType: '提供位置',
-      operator: '操作人'
-    }
+      operator: '操作人',
+      totalWeight: '总重量',
+      boxCount: '仓库确认框数',
+      confirmUser: '仓库确认人',
+      operation: '操作'
+    },
+    detailTitle: '当日饲喂明细'
   },
   djs: {
     placeholder: {
@@ -2790,7 +2822,6 @@ export default {
         measureBelowTitle: '称重低于打包规则',
         measureBelowTip: '打包规则 {rule}g，当前称重 {actual}g，不能少于规则重量，请重新称重',
         measureDeviationTitle: '称重超出打包规则',
-        measureDeviationTip: '打包规则 {rule}g，当前称重 {actual}g（超出 {tolerance}% 仍可确认提交）',
         measureDeviationConfirm: '实称 {actual}g 比打包规则 {rule}g 超出 {tolerance}%，确认继续打包？',
         cutHint: '选择已领用的白条分割单，录入各分割产品重量后确认入库；全部称重完成后点「白条完成分割」。',
         cutRecord: '分割单（猪只耳号）',
@@ -2947,8 +2978,11 @@ export default {
         nonWeightReturnWeightTotal: '非重量产品退回重量',
         detailDialogTitle: '退回明细',
         quantityDiff: '差异量',
-        confirmProgress: '确认进度',
-        confirmProgressTip: '仓库尚未确认完当天全部退回行，未确认的没有入库'
+        confirmProgress: '入库数/丢弃数',
+        confirmProgressTip: '仓库尚未确认完当天全部退回行，未确认的没有入库（共 {total} 条，待确认 {pending} 条）',
+        isDiscard: '是否丢弃',
+        discardYes: '是',
+        discardNo: '否'
       },
       check: {
         checkId: '盘点单号',
@@ -4026,7 +4060,8 @@ export default {
     },
     tab: {
       pork: '猪肉产品',
-      vegetable: '果蔬产品'
+      vegetable: '果蔬产品',
+      other: '其他产品'
     },
     subCategory: {
       pork: '猪肉产品',

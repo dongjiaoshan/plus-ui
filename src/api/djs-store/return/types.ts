@@ -37,6 +37,11 @@ export interface StoreReturnVO {
   receivedQty?: number;
   /** 仓库实收重量(kg)（仓库确认时填） */
   receivedWeight?: number;
+  /**
+   * 仓库确认处置（row204）：0=退回入库 / 1=产品丢弃。
+   * 仅 returnStatus='received' 的行有意义；pending 行是建表默认 0，不能当「否」展示。
+   */
+  isDiscard?: number;
   /** 仓库确认时间 */
   confirmTime?: string;
   returnReason?: string;

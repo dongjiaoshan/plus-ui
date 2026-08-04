@@ -49,7 +49,15 @@ const { t } = useI18n();
 
 const tableRef = ref<BizTableExpose>();
 const createRef = ref<{ open: () => void }>();
-const detailRef = ref<{ open: (batchNo: string) => void }>();
+const detailRef = ref<{ open: (row: VegOutBatchVO, destLabel: string) => void }>();
+
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const { djs_stock_out_dest } = toRefs<any>(proxy?.useDict('djs_stock_out_dest'));
+
+/** 出库去向 code → 中文（打印单「客户名称」用），未命中回落原 code。 */
+function destLabel(code: string): string {
+  return (djs_stock_out_dest.value ?? []).find((d: any) => d.value === code)?.label ?? code;
+}
 
 const list = ref<VegOutBatchVO[]>([]);
 const total = ref(0);
@@ -80,19 +88,37 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'operatorId', label: t('vegOut.field.operator'), type: 'select', options: operatorOptions.value, clearable: true }
 ]);
 
+// row192：① 出库日期前加「出库单号」；② 出库重量后加「出库金额」；③ 各列同宽（统一 minWidth，
+// el-table 按比例均分剩余宽度，不再混用 width/minWidth 导致宽窄不一）。
+const COL_MIN_WIDTH = 130;
 const columns = computed<BizTableColumn[]>(() => [
-  { prop: 'outDate', label: t('vegOut.column.outDate'), width: 120, align: 'center', formatter: 'date' },
-  { prop: 'outDest', label: t('vegOut.column.outDest'), minWidth: 130, align: 'center', dictType: 'djs_stock_out_dest' },
-  { prop: 'productKinds', label: t('vegOut.column.productKinds'), width: 140, align: 'center' },
+  { prop: 'batchNo', label: t('vegOut.column.batchNo'), minWidth: COL_MIN_WIDTH, align: 'center' },
+  { prop: 'outDate', label: t('vegOut.column.outDate'), minWidth: COL_MIN_WIDTH, align: 'center', formatter: 'date' },
+  { prop: 'outDest', label: t('vegOut.column.outDest'), minWidth: COL_MIN_WIDTH, align: 'center', dictType: 'djs_stock_out_dest' },
+  { prop: 'productKinds', label: t('vegOut.column.productKinds'), minWidth: COL_MIN_WIDTH, align: 'center' },
   {
     prop: 'totalWeight',
     label: t('vegOut.column.totalWeight'),
-    width: 150,
+    minWidth: COL_MIN_WIDTH,
     align: 'center',
     formatter: (row: BizRow) => fmtKg(row.totalWeight)
   },
-  { prop: 'operatorName', label: t('vegOut.column.operator'), minWidth: 110, align: 'center' }
+  {
+    prop: 'totalAmount',
+    label: t('vegOut.column.totalAmount'),
+    minWidth: COL_MIN_WIDTH,
+    align: 'center',
+    formatter: (row: BizRow) => fmtMoney(row.totalAmount)
+  },
+  { prop: 'operatorName', label: t('vegOut.column.operator'), minWidth: COL_MIN_WIDTH, align: 'center' }
 ]);
+
+/** 金额展示：后端 BigDecimal 序列化成 string，统一 Number 强转保两位小数 + ¥ 前缀。 */
+function fmtMoney(v: number | string | undefined | null): string {
+  if (v === undefined || v === null || v === '') return '-';
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isNaN(n) ? String(v) : `¥${n.toFixed(2)}`;
+}
 
 function fmtKg(v: number | string | undefined | null): string {
   if (v === undefined || v === null || v === '') return '-';
@@ -139,7 +165,7 @@ function handleCreate() {
 }
 
 function handleDetail(row: VegOutBatchVO) {
-  detailRef.value?.open(row.batchNo);
+  detailRef.value?.open(row, destLabel(row.outDest));
 }
 
 function handleSearch(payload: Record<string, any>) {

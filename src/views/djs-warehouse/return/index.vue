@@ -28,12 +28,11 @@
       @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
     >
       <!--
-        确认进度 n/m（row178）：确认时间 / 确认人取的是「最近一条已确认行」，只要有 1 条确认过就填上，
-        部分确认（3/4）与全部确认在外层看不出差别 —— 未确认的行既没入库、外层也不留痕迹。
-        未确认完标警告色 + tooltip，避免看成已经完事。
+        确认进度 = 入库数/丢弃数（row203）。确认时间 / 确认人仍取「最近一条已确认行」。
+        还有行未确认时标警告色 + tooltip（tooltip 里给出总条数与待确认条数），避免看成已经完事。
       -->
       <template #cell-confirmProgress="{ row }">
-        <el-tooltip v-if="isPartiallyConfirmed(row as ReturnStoreDailyVO)" :content="t('djs.warehouse.return.confirmProgressTip')">
+        <el-tooltip v-if="isPartiallyConfirmed(row as ReturnStoreDailyVO)" :content="confirmProgressTip(row as ReturnStoreDailyVO)">
           <span class="confirm-progress--partial">{{ formatConfirmProgress(row as ReturnStoreDailyVO) }}</span>
         </el-tooltip>
         <span v-else>{{ formatConfirmProgress(row as ReturnStoreDailyVO) }}</span>
@@ -69,6 +68,10 @@
           <template #default="{ row }">
             <span :class="{ 'qty-diff': hasQuantityDiff(row) }">{{ formatQuantityDiff(row) }}</span>
           </template>
+        </el-table-column>
+        <!-- row204：差异量右侧「是否丢弃」。退回入库→否，产品丢弃→是；未确认行还没有处置结论，显 '—' -->
+        <el-table-column prop="isDiscard" :label="t('djs.warehouse.return.isDiscard')" min-width="100" align="center">
+          <template #default="{ row }">{{ formatDiscard(row) }}</template>
         </el-table-column>
         <el-table-column prop="returnStatus" :label="t('storeReturn.column.returnStatus')" min-width="110" align="center">
           <template #default="{ row }">
@@ -175,18 +178,32 @@ function formatQuantityDiff(row: StoreReturnVO): string {
   return `${((toNum(row.returnQuantity) ?? 0) - (toNum(row.receivedWeight) ?? 0)).toFixed(3)}kg`;
 }
 
-// 确认进度 n/m（row178）：n=已确认行数，m=当天该门店退回总行数
+// 确认进度（row203 起口径改为 **入库数/丢弃数**，只数已确认的行）。
+// 「还剩几条没确认」不再出现在主列，挪进 tooltip（见 confirmProgressTip），否则改完看不出进度。
 function formatConfirmProgress(row: ReturnStoreDailyVO): string {
   const total = row.totalCount;
   if (total === undefined || total === null) return EMPTY_TEXT;
-  return `${row.confirmedCount ?? 0}/${total}`;
+  return `${row.inboundCount ?? 0}/${row.discardCount ?? 0}`;
 }
 
-// 未确认完（含一条都没确认）→ 警告色 + tooltip
+// 未确认完（含一条都没确认）→ 警告色 + tooltip（tooltip 里给出「共 N 条 / 待确认 M 条」）
 function isPartiallyConfirmed(row: ReturnStoreDailyVO): boolean {
   const total = row.totalCount;
   if (!total) return false;
   return (row.confirmedCount ?? 0) < total;
+}
+
+// row204：是否丢弃。仅已确认行有处置结论（pending 行库里是建表默认 0，不能当成「否」展示）
+function formatDiscard(row: StoreReturnVO): string {
+  if (row.returnStatus !== 'received') return EMPTY_TEXT;
+  return Number(row.isDiscard) === 1 ? t('djs.warehouse.return.discardYes') : t('djs.warehouse.return.discardNo');
+}
+
+// tooltip 文案：主列只剩两个数，这里补回总数与待确认数
+function confirmProgressTip(row: ReturnStoreDailyVO): string {
+  const total = row.totalCount ?? 0;
+  const pending = total - (row.confirmedCount ?? 0);
+  return t('djs.warehouse.return.confirmProgressTip', { total, pending });
 }
 
 // 后端 BigDecimal 序列化成字符串，统一 Number 强转；无效值返 null（不当 0 用）

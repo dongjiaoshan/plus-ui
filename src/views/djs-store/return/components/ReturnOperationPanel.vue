@@ -5,6 +5,7 @@
       <el-radio-group v-model="activeCat" size="large">
         <el-radio-button value="pork">{{ t('storeReturn.tab.pork') }}</el-radio-button>
         <el-radio-button value="vegetable">{{ t('storeReturn.tab.vegetable') }}</el-radio-button>
+        <el-radio-button value="other">{{ t('storeReturn.tab.other') }}</el-radio-button>
       </el-radio-group>
     </div>
 
@@ -35,8 +36,31 @@
       </el-table-column>
     </el-table>
 
-    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row119 同上） -->
-    <el-table v-else v-loading="loading" :data="vegRows" border class="op-table">
+    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row202：上限 = 期初+入库−已退） -->
+    <el-table v-else-if="activeCat === 'vegetable'" v-loading="loading" :data="vegRows" border class="op-table">
+      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
+        <template #default="{ row }">
+          <el-input-number
+            v-model="row.returnQuantity"
+            :min="0"
+            :max="maxOf(row)"
+            :disabled="maxOf(row) === 0"
+            :precision="isKg(row.productUnit) ? 3 : 0"
+            :step="1"
+            :placeholder="placeholderOf(row)"
+            controls-position="right"
+            style="width: 180px"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('storeReturn.column.unit')" prop="productUnit" width="100" align="center" header-align="center">
+        <template #default="{ row }">{{ row.productUnit || '—' }}</template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 其他产品（row202：干货 / 鸡蛋 / 其他三业态，列与逻辑与果蔬完全一致） -->
+    <el-table v-else v-loading="loading" :data="otherRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
       <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
         <template #default="{ row }">
@@ -69,7 +93,7 @@
 </template>
 
 <script setup name="StoreReturnOperationPanel" lang="ts">
-import { batchCreateStoreReturn, listPorkReturnCandidates, listVegReturnCandidates } from '@/api/djs-store/return';
+import { batchCreateStoreReturn, listOtherReturnCandidates, listPorkReturnCandidates, listVegReturnCandidates } from '@/api/djs-store/return';
 import type { StoreReturnBatchItem, StoreReturnPorkSubCategory } from '@/api/djs-store/return/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
 import { storeToRefs } from 'pinia';
@@ -97,7 +121,7 @@ interface MatrixRow {
 const storeContext = useStoreContextStore();
 // 操作目标门店来自全局选择器（StoreSwitcher）；沿用 storeId 命名最小化改动
 const { currentStoreId: storeId } = storeToRefs(storeContext);
-const activeCat = ref<'pork' | 'vegetable'>('pork');
+const activeCat = ref<'pork' | 'vegetable' | 'other'>('pork');
 const loading = ref(false);
 const submitLoading = ref(false);
 
@@ -105,10 +129,25 @@ const submitLoading = ref(false);
 const porkRows = ref<MatrixRow[]>([]);
 /** 果蔬产品：该门店当天已确认到店的需求产品（按 product_id 去重）。 */
 const vegRows = ref<MatrixRow[]>([]);
+// row202：其他产品（干货 / 鸡蛋 / 其他）候选，结构与果蔬一致
+const otherRows = ref<MatrixRow[]>([]);
 
-const currentRows = computed(() => (activeCat.value === 'pork' ? porkRows.value : vegRows.value));
+const currentRows = computed(() => {
+  if (activeCat.value === 'pork') return porkRows.value;
+  if (activeCat.value === 'vegetable') return vegRows.value;
+  return otherRows.value;
+});
+/**
+ * 三个 tab 的全部行。
+ *
+ * ⚠️ 「已填统计 / 超额校验 / 提交体」三处**必须都用它**，不能只拼 pork + veg —— row202 新增
+ * 「其他产品」tab 后，漏掉 otherRows 会让干货 / 蛋类**填了也提交不出去**（按钮恒 disabled、
+ * 超额不拦、items 里根本没有这些行）。曾经三处全漏，接口级测试完全发现不了，只有 UI E2E 能抓。
+ */
+const allRows = computed(() => [...porkRows.value, ...vegRows.value, ...otherRows.value]);
+
 // 流程性问题 row15：唯一录入项是退回量，已填 = 退回量 > 0。
-const filledCount = computed(() => [...porkRows.value, ...vegRows.value].filter((r) => (r.returnQuantity ?? 0) > 0).length);
+const filledCount = computed(() => allRows.value.filter((r) => (r.returnQuantity ?? 0) > 0).length);
 
 /**
  * row178：礼盒（belong_type=gift_box）不可退回仓库。
@@ -202,10 +241,35 @@ async function loadVegRows() {
   }
 }
 
+/** 其他产品 tab（row202）：干货 / 鸡蛋 / 其他三业态，取数与果蔬同口径（台账 期初+入库）。 */
+async function loadOtherRows() {
+  if (!storeId.value) {
+    otherRows.value = [];
+    return;
+  }
+  loading.value = true;
+  try {
+    const res = await listOtherReturnCandidates(storeId.value);
+    const list = (res.data ?? []).filter((p) => isReturnable(p.belongType));
+    otherRows.value = list.map((p) => ({
+      productId: String(p.productId),
+      productName: p.productName ?? '',
+      productUnit: p.productUnit,
+      arrivedQuantity: p.arrivedQuantity,
+      returnedQuantity: p.returnedQuantity,
+      returnQuantity: undefined,
+      returnWeight: undefined
+    }));
+  } finally {
+    loading.value = false;
+  }
+}
+
 // 全局门店切换 → 重拉该门店猪肉/果蔬退回候选（navbar 切换会刷新页面，watch 兜底同页响应）
 watch(storeId, () => {
   loadPorkCandidates();
   loadVegRows();
+  loadOtherRows();
 });
 
 async function handleSubmit() {
@@ -213,14 +277,14 @@ async function handleSubmit() {
     return;
   }
   // row119：提交前再拦一次超限（input :max 挡键盘输入，粘贴 / 上限刷新后仍可能越界；后端同口径二次把关）。
-  const over = [...porkRows.value, ...vegRows.value].find((r) => (r.returnQuantity ?? 0) > maxOf(r));
+  const over = allRows.value.find((r) => (r.returnQuantity ?? 0) > maxOf(r));
   if (over) {
     proxy?.$modal.msgError(t('storeReturn.operation.overLimit', { name: over.productName, limit: limitText(over), unit: over.productUnit ?? '' }));
     return;
   }
   // 流程性问题 row15：唯一录入项是退回量。退回产品重量由前端按单位派生——
   //   产品单位为 kg → 退回产品重量 = 退回量；非 kg → 退回产品重量 = 0。
-  const items: StoreReturnBatchItem[] = [...porkRows.value, ...vegRows.value]
+  const items: StoreReturnBatchItem[] = allRows.value
     .filter((r) => (r.returnQuantity ?? 0) > 0)
     .map((r) => ({
       productId: r.productId,
@@ -244,7 +308,10 @@ async function handleSubmit() {
 
 onMounted(async () => {
   await loadPorkCandidates();
-  if (storeId.value) await loadVegRows();
+  if (storeId.value) {
+    await loadVegRows();
+    await loadOtherRows();
+  }
 });
 </script>
 
