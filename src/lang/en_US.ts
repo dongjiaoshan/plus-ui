@@ -1342,6 +1342,7 @@ export default {
       productAttr: 'Attribute',
       productWorkshop: 'Workshop',
       productMaterial: 'Raw Material Product',
+      salePrice: 'Sale price',
       materialNum: 'Packing measure',
       productThumb: 'Product Image',
       productImg: 'Images',
@@ -1366,6 +1367,7 @@ export default {
       supplierName: 'Supplier'
     },
     placeholder: {
+      salePrice: 'Enter sale price',
       productId: 'e.g. P0001 / SP-PORK-001 (manual)',
       productUnit: 'e.g. kg / pcs / box',
       productSpec: 'e.g. 500g/pack',
@@ -2977,6 +2979,7 @@ export default {
         confirmProgress: 'Inbound/Discarded',
         confirmProgressTip: 'Warehouse has not confirmed every return line of the day; unconfirmed lines are not stocked in ({total} total, {pending} pending)',
         isDiscard: 'Discarded',
+        statusDiscarded: 'Discarded',
         discardYes: 'Yes',
         discardNo: 'No'
       },

@@ -41,14 +41,14 @@
 
         <el-table v-loading="loading" :data="candidates" border size="small" height="calc(100vh - 320px)">
           <!-- row194：产品名称后加规格列；出库量后加销售单价、销售总价；各列同宽（统一 min-width） -->
-          <el-table-column :label="t('vegOut.create.productName')" prop="productName" min-width="140" show-overflow-tooltip />
-          <el-table-column :label="t('vegOut.create.productSpec')" prop="productSpec" min-width="110" align="center">
+          <el-table-column :label="t('vegOut.create.productName')" prop="productName" :min-width="COL_MIN_WIDTH" show-overflow-tooltip />
+          <el-table-column :label="t('vegOut.create.productSpec')" prop="productSpec" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">{{ row.productSpec || '-' }}</template>
           </el-table-column>
-          <el-table-column :label="t('vegOut.create.stockWeight')" prop="stockWeight" min-width="120" align="center">
+          <el-table-column :label="t('vegOut.create.stockWeight')" prop="stockWeight" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">{{ fmtStock(row) }}</template>
           </el-table-column>
-          <el-table-column :label="t('vegOut.create.outQuantity')" min-width="150" align="center">
+          <el-table-column :label="t('vegOut.create.outQuantity')" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">
               <el-input-number
                 v-model="quantityMap[row.stockId]"
@@ -63,7 +63,7 @@
               />
             </template>
           </el-table-column>
-          <el-table-column :label="t('vegOut.create.unitPrice')" min-width="140" align="center">
+          <el-table-column :label="t('vegOut.create.unitPrice')" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">
               <el-input-number
                 v-model="priceMap[row.stockId]"
@@ -76,7 +76,7 @@
               />
             </template>
           </el-table-column>
-          <el-table-column :label="t('vegOut.create.lineAmount')" min-width="120" align="center">
+          <el-table-column :label="t('vegOut.create.lineAmount')" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">{{ fmtMoney(lineAmount(row)) }}</template>
           </el-table-column>
         </el-table>
@@ -127,6 +127,9 @@ import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+/** r194「列表宽度保持一致」：候选表六列统一列宽（与出库单列表页 COL_MIN_WIDTH 同口径）。 */
+const COL_MIN_WIDTH = 130;
+
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 // 出库去向：甲方 row187 明确「下拉框为所有出库去向的字典项内容」，故不过滤 HIDDEN_OUT_DEST
 const { djs_stock_out_dest } = toRefs<any>(proxy?.useDict('djs_stock_out_dest'));

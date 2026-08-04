@@ -1345,6 +1345,7 @@ export default {
       productAttr: '产品属性',
       productWorkshop: '生产车间',
       productMaterial: '原材料产品',
+      salePrice: '销售价格',
       materialNum: '打包计量规则',
       productThumb: '产品图片',
       productImg: '详情图',
@@ -1369,6 +1370,7 @@ export default {
       supplierName: '供应商'
     },
     placeholder: {
+      salePrice: '请输入销售价格',
       productId: '例 P0001 / SP-PORK-001（用户手填）',
       productUnit: '例 kg / 个 / 盒',
       productSpec: '例 500g/包',
@@ -2981,6 +2983,7 @@ export default {
         confirmProgress: '入库数/丢弃数',
         confirmProgressTip: '仓库尚未确认完当天全部退回行，未确认的没有入库（共 {total} 条，待确认 {pending} 条）',
         isDiscard: '是否丢弃',
+        statusDiscarded: '已丢弃',
         discardYes: '是',
         discardNo: '否'
       },

@@ -75,7 +75,12 @@
         </el-table-column>
         <el-table-column prop="returnStatus" :label="t('storeReturn.column.returnStatus')" min-width="110" align="center">
           <template #default="{ row }">
-            <dict-tag :options="djs_store_return_status" :value="row.returnStatus" />
+            <!-- row204：丢弃行不能沿用字典的「已入库」—— 它压根没进库存，
+                 那样会和同一行的「是否丢弃=是」自相矛盾。丢弃单独出标签。 -->
+            <el-tag v-if="row.returnStatus === 'received' && Number(row.isDiscard) === 1" type="info">
+              {{ t('djs.warehouse.return.statusDiscarded') }}
+            </el-tag>
+            <dict-tag v-else :options="djs_store_return_status" :value="row.returnStatus" />
           </template>
         </el-table-column>
         <el-table-column prop="locationName" :label="t('storeReturn.column.returnLocation')" min-width="120" align="center">

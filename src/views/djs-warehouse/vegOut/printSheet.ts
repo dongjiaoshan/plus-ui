@@ -69,7 +69,7 @@ function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], page
         <td>${esc(r.productUnit || '')}</td>
         <td>${qtyText(r.quantity)}</td>
         <td>${money(r.unitPrice)}</td>
-        <td>${money(Math.round(r.quantity) * r.unitPrice)}</td>
+        <td>${money(r.quantity * r.unitPrice)}</td>
       </tr>`;
     })
     .join('');
@@ -79,10 +79,12 @@ function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], page
   // 「总合计」比各页小计还小，客户一加就发现对不上）。
   const isGrandTotal = pageCount === 1 || pageNo === pageCount;
   const sumRows = isGrandTotal ? allRows : pageRows;
-  // 与表格里逐行的显示口径保持一致：出库量按甲方要求取整打印，金额也用取整后的量算，
-  // 否则单据上「13 × 3.00」印出 37.80，客户拿计算器按是 39.00。
+  // 出库量按甲方要求取整打印，**但金额必须用真实量算**：这张三联单是财务凭证，
+  // 金额要跟系统里的「出库金额」对得上。用取整量算的话 2.5kg×¥12.50 会印成 ¥37.50，
+  // 而系统记的是 ¥31.25 —— 单据和账目对不上比「拿计算器按不整除」严重得多。
+  // 代价是整数列 × 单价 ≠ 打印金额，甲方看样张时需要知道这一点。
   const sumQty = sumRows.reduce((s, r) => s + Math.round(Number(r.quantity) || 0), 0);
-  const sumAmount = sumRows.reduce((s, r) => s + Math.round(Number(r.quantity) || 0) * (Number(r.unitPrice) || 0), 0);
+  const sumAmount = sumRows.reduce((s, r) => s + (Number(r.quantity) || 0) * (Number(r.unitPrice) || 0), 0);
   const totalLabel = pageCount > 1 ? (pageNo === pageCount ? '总合计' : '本页小计') : '合计';
 
   return `<section class="sheet">

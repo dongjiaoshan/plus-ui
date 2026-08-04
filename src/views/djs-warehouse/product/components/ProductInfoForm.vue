@@ -113,6 +113,23 @@
               </el-form-item>
             </el-col>
           </template>
+
+          <!-- row191：原材料专属「销售价格」= 该原材料对外出库时的单价。
+               毛菜间出库新增页的「销售单价」默认取它（可改，落库的是流水行上的快照）。 -->
+          <template v-if="form.productAttr === 2">
+            <el-col :span="12">
+              <el-form-item :label="t('product.field.salePrice')" prop="salePrice">
+                <el-input-number
+                  v-model="form.salePrice"
+                  :precision="2"
+                  :min="0"
+                  :step="0.1"
+                  style="width: 100%"
+                  :placeholder="t('product.placeholder.salePrice')"
+                />
+              </el-form-item>
+            </el-col>
+          </template>
         </el-row>
       </template>
 
@@ -498,6 +515,11 @@ const onBelongTypeChange = () => {
 
 /** 产品属性切换：离开「生产产品」(1) 时清空原材料关联，避免遗留孤儿映射 */
 const onProductAttrChange = (attr?: number) => {
+  // row191：销售价格是原材料(2)专属项，离开原材料就清 —— 否则会提交一个用户看不见也改不了的价，
+  // 而毛菜间出库又会拿它当默认单价带出来。
+  if (attr !== 2) {
+    form.value.salePrice = undefined;
+  }
   if (attr !== 1) {
     form.value.productMaterial = undefined;
     form.value.materialNum = undefined;
@@ -507,7 +529,7 @@ const onProductAttrChange = (attr?: number) => {
   }
   // row69：切到原材料(2)后生产车间转非必填，清掉可能残留的旧必填错误文案
   // row181/row182②：productMaterial / storeLocationId 的必填与否随 attr 翻转，一并清掉旧错误文案
-  formRef.value?.clearValidate(['productWorkshop', 'productMaterial', 'storeLocationId']);
+  formRef.value?.clearValidate(['productWorkshop', 'productMaterial', 'storeLocationId', 'salePrice']);
 };
 
 const loadSupplierOptions = async () => {
