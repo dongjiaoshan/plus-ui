@@ -40,6 +40,19 @@ const COMPANY_NAME = '鑫东生态农业有限公司';
 /** 模板表格固定 8 个数据行。 */
 const ROWS_PER_PAGE = 8;
 
+/**
+ * 六列列宽（%）：序号 / 产品及规格 / 单位 / 出库量 / 单价 / 总金额。
+ *
+ * 表格 colgroup 与页脚签名栏共用这一组宽度 —— 页脚「送货单位及经手人（盖章）」必须落在
+ * 「出库量」列左边界（前三列合计 52%），右侧留白供手写签名。改列宽只改这里，两处同步。
+ */
+const COL_WIDTHS = [8, 34, 10, 14, 14, 20] as const;
+
+/** 送货签名栏起始列（1-based，对应「出库量」）。 */
+const SIGN_START_COL = 4;
+
+const COLGROUP = `<colgroup>${COL_WIDTHS.map((w) => `<col style="width:${w}%" />`).join('')}</colgroup>`;
+
 function esc(v: unknown): string {
   return String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
@@ -65,7 +78,7 @@ function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], page
       const name = r.productSpec ? `${r.productName} ${r.productSpec}` : r.productName;
       return `<tr>
         <td>${i + 1}</td>
-        <td class="l">${esc(name)}</td>
+        <td>${esc(name)}</td>
         <td>${esc(r.productUnit || '')}</td>
         <td>${qtyText(r.quantity)}</td>
         <td>${money(r.unitPrice)}</td>
@@ -94,11 +107,13 @@ function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], page
       <div class="meta">
         <span>客户名称：${esc(payload.customerName)}</span>
         <span class="right">
-          出库单号：${esc(payload.batchNo)}<br />出货日期：${esc(payload.outDate)}
-          ${pageCount > 1 ? `<br />第 ${pageNo} / ${pageCount} 页` : ''}
+          <span class="k">出库单号：</span><span class="v">${esc(payload.batchNo)}</span>
+          <span class="k">出货日期：</span><span class="v">${esc(payload.outDate)}</span>
+          ${pageCount > 1 ? `<span class="pg">第 ${pageNo} / ${pageCount} 页</span>` : ''}
         </span>
       </div>
       <table>
+        ${COLGROUP}
         <thead>
           <tr><th>序号</th><th>产品及规格</th><th>单位</th><th>出库量</th><th>单价</th><th>总金额</th></tr>
         </thead>
@@ -108,8 +123,8 @@ function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], page
         </tbody>
       </table>
       <div class="sign">
-        <span>收货单位及经手人（盖章）</span>
-        <span>送货单位及经手人（盖章）</span>
+        <span class="recv">收货单位及经手人（盖章）</span>
+        <span class="send">送货单位及经手人（盖章）</span>
       </div>
     </div>
     <!-- 三联纸右侧竖排联次标识（Kevin D5：按模板 1:1 保留） -->
@@ -126,14 +141,20 @@ html, body { margin: 0; padding: 0; font-family: "Microsoft YaHei", "PingFang SC
 .main { flex: 1; min-width: 0; }
 h1 { margin: 0; font-size: 5mm; text-align: center; font-weight: 700; }
 h2 { margin: 1mm 0 2mm; font-size: 4.2mm; text-align: center; font-weight: 700; }
-.meta { display: flex; justify-content: space-between; font-size: 3mm; margin-bottom: 1.5mm; }
-.meta .right { text-align: right; line-height: 1.5; }
-table { width: 100%; border-collapse: collapse; font-size: 3mm; }
-th, td { border: 0.3mm solid #000; height: 8.5mm; text-align: center; padding: 0 1mm; }
+.meta { display: flex; justify-content: space-between; align-items: flex-start; font-size: 3mm; margin-bottom: 1.5mm; }
+/* 单号 / 日期两行：label 与 value 各占一列，冒号与值的左边界竖直对齐（不做右对齐，
+   否则「0000005」与「2026-08-04」长度不同会把两行的 label 挤成一前一后） */
+.meta .right { display: grid; grid-template-columns: max-content max-content; row-gap: 0.8mm; line-height: 1.3; }
+.meta .right .k, .meta .right .v { text-align: left; }
+.meta .right .pg { grid-column: 1 / -1; text-align: left; }
+table { width: 100%; border-collapse: collapse; font-size: 3mm; table-layout: fixed; }
+th, td { border: 0.3mm solid #000; height: 8.5mm; text-align: center; padding: 0 1mm; word-break: break-all; }
 th { font-weight: 700; }
-td.l { text-align: left; }
 tr.total td { font-weight: 700; }
-.sign { display: flex; justify-content: space-between; font-size: 3mm; margin-top: 3mm; }
+/* 签名栏与表格同列：送货栏从第 4 列（出库量）左边界起，右侧留白供手写签名 */
+.sign { display: grid; grid-template-columns: ${COL_WIDTHS.map((w) => `${w}%`).join(' ')}; font-size: 3mm; margin-top: 3mm; }
+.sign .recv { grid-column: 1 / ${SIGN_START_COL}; }
+.sign .send { grid-column: ${SIGN_START_COL} / ${COL_WIDTHS.length + 1}; white-space: nowrap; }
 /* 右侧竖排联次列 */
 .copies { width: 7mm; display: flex; flex-direction: column; justify-content: space-around; align-items: center;
           border-left: 0.3mm solid #000; font-size: 2.8mm; }

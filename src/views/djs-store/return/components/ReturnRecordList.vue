@@ -1,9 +1,11 @@
 <template>
   <div class="return-record-list">
-    <!-- 退回记录（只读 + 仓库确认入库）。猪肉/果蔬 tab 按产品归属过滤 -->
+    <!-- 退回记录（只读 + 仓库确认入库）。猪肉 / 果蔬 / 其他 三 tab 按产品归属下推后端过滤（row10）：
+         「其他」= 其余全部（干货 / 蛋类 / 礼盒 / 其他 / 归属为空），保证任何一条记录都能被看到 -->
     <el-tabs v-model="activeTab" class="return-tabs" @tab-change="handleTabChange">
       <el-tab-pane :label="t('storeReturn.tab.pork')" name="pork" />
       <el-tab-pane :label="t('storeReturn.tab.vegetable')" name="vegetable" />
+      <el-tab-pane :label="t('storeReturn.tab.other')" name="other" />
     </el-tabs>
     <BizTable
       ref="tableRef"
@@ -13,7 +15,7 @@
       :columns="columns"
       :search-schema="searchSchema"
       :search-model="searchModel"
-      :dict-types="['djs_store_return_status']"
+      :dict-types="['djs_store_return_status', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       row-key="id"
@@ -38,7 +40,7 @@ import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/compon
 import { listStoreReturn, exportStoreReturn } from '@/api/djs-store/return';
 import type { StoreReturnQuery, StoreReturnVO } from '@/api/djs-store/return/types';
 import { blobValidate } from '@/utils/ruoyi';
-import { formatNum3, formatQtyByUnit, isKgUnit } from '@/utils/weight';
+import { formatQtyByUnit, formatReceivedAmount } from '@/utils/weight';
 import FileSaver from 'file-saver';
 import { useI18n } from 'vue-i18n';
 
@@ -52,24 +54,20 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const activeTab = ref<'pork' | 'vegetable'>('pork');
-const PORK_BELONG_TYPES = ['pork', 'white_bar'];
+type ReturnTab = 'pork' | 'vegetable' | 'other';
+const activeTab = ref<ReturnTab>('pork');
 
-function categoryOf(belongType?: string): 'pork' | 'vegetable' {
-  return belongType && PORK_BELONG_TYPES.includes(belongType) ? 'pork' : 'vegetable';
-}
-
-// 归属类型/代码/单位由后端 VO 直接回填（belongType/productCode/productUnit）。
+// 归属类型/代码/单位/原材料单位由后端 VO 直接回填（belongType/productCode/productUnit/materialUnit）。
 // tab 过滤已下推后端（belongCategory 参数）——前端不再对当前页切片，分页 total/每页行数才正确。
+// row10：「退回产品类型」列不再贴二值 label（此前干货/蛋类/礼盒一律被写成「果蔬产品」），
+// 改按 belongType 走 djs_belong_type 字典显示真实业态；归属为空的行（归「其他」tab）显示为「其他」。
 const displayList = computed<StoreReturnVO[]>(() => {
   return list.value.map((row) => {
-    const cat = categoryOf(row.belongType);
     return {
       ...row,
       unit: row.productUnit,
-      productCategory: cat,
-      productTypeLabel: cat === 'pork' ? t('storeReturn.tab.pork') : t('storeReturn.tab.vegetable')
-    } as StoreReturnVO & { productCategory: 'pork' | 'vegetable'; productTypeLabel: string; unit?: string };
+      belongType: row.belongType || 'other'
+    } as StoreReturnVO & { unit?: string };
   });
 });
 
@@ -86,27 +84,23 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'returnStatus', label: t('storeReturn.column.returnStatus'), type: 'select', dictType: 'djs_store_return_status' }
 ]);
 
-// 仓库实收重量（row152）：单位跟在数值后面，空值 —。
-// 只有 kg 口径产品才补 kg —— 份 / 盒 / 枚等计件产品的 received_weight 落的是件数
-// （后端 receivedWeight 缺省回退 receivedQty），补 kg 会把「3 份」谎报成「3 公斤」。
-function formatReceivedWeight(row: { receivedWeight?: number | string | null; unit?: string | null }): string {
-  if (!isKgUnit(row.unit)) {
-    return formatQtyByUnit(row.receivedWeight, row.unit) || '—';
-  }
-  const n = formatNum3(row.receivedWeight);
-  return n ? `${n}kg` : '—';
+// 仓库实收量（row14 统一模型）：计量单位由**原材料单位**决定 —— 原材料按 kg 的产品（含 80g 干货礼盒
+// 这种「产品按份、原材料按 kg」）显 `X.XXXkg`；原材料非 kg 的显「整数 + 产品单位」（1枚 / 30份）。空值 —。
+function formatReceivedWeight(row: { receivedWeight?: number | string | null; unit?: string | null; materialUnit?: string | null }): string {
+  return formatReceivedAmount(row.receivedWeight, row.unit, row.materialUnit) || '—';
 }
 
-// 「退回记录」列：退回日期/产品类型/产品名称/退货量/单位/仓库实收重量/退货状态
+// 「退回记录」列：退回日期/产品类型/产品名称/退货量/单位/仓库实收量/退货状态
 // r86：去掉「产品代码」列；所有列统一 minWidth，宽度保持一致，由 el-table 均分富余宽度
 // row54：退货量按单位分流（KG→3 位小数 / 非 KG→整数）；去掉「货物重量」「仓库实收量」两列
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'returnDate', label: t('storeReturn.column.returnDate'), minWidth: 130, align: 'center', formatter: 'datetime' },
-  { prop: 'productTypeLabel', label: t('storeReturn.column.productType'), minWidth: 130, align: 'center' },
+  // row10：真实业态（djs_belong_type 字典），不再是「猪肉/果蔬」二值 label
+  { prop: 'belongType', label: t('storeReturn.column.productType'), minWidth: 130, align: 'center', dictType: 'djs_belong_type' },
   { prop: 'productName', label: t('storeReturn.column.productName'), minWidth: 130, align: 'center', showOverflowTooltip: true },
   { prop: 'returnQuantity', label: t('storeReturn.column.returnQuantity'), minWidth: 130, align: 'center', formatter: (row) => formatQtyByUnit(row.returnQuantity, row.unit) },
   { prop: 'unit', label: t('storeReturn.column.unit'), minWidth: 130, align: 'center' },
-  // row152：列头不带单位，kg 跟在每行数值后面
+  // row14：列头「仓库实收量」，单位跟在每行数值后面
   { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), minWidth: 130, align: 'center', formatter: (row) => formatReceivedWeight(row) },
   { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), minWidth: 130, align: 'center', dictType: 'djs_store_return_status' }
 ]);

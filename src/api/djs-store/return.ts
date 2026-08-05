@@ -81,7 +81,7 @@ export const listVegReturnCandidates = (storeId: string): AxiosPromise<StoreRetu
 
 /**
  * 退回操作「其他产品」tab 候选（row202）：干货 / 鸡蛋 / 其他三业态。
- * 取数与猪肉 / 果蔬同口径 —— 门店当日盘点台账「期初 + 入库 > 0」（不减损坏，损坏的货本身就要退回）。
+ * 取数与猪肉 / 果蔬同口径 —— 门店当日盘点台账「期初 + 入库 − 销售 − 赠送 > 0」（row205；不减损坏，损坏的货本身就要退回）。
  */
 export const listOtherReturnCandidates = (storeId: string): AxiosPromise<StoreReturnVegCandidateVO[]> => {
   return request({

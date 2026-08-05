@@ -66,12 +66,14 @@ export interface FeedDailyVO {
   totalWeight?: number | string;
   /** 当日明细条数 */
   detailCount?: number;
-  /** 仓库确认框数（未确认为 null → 展示 '—'） */
+  /** 仓库确认框数（整数；列是 DECIMAL 会序列化成 "5.00"，展示层取整。未确认为 null → 展示 '—'） */
   boxCount?: number | string | null;
   /** 仓库确认人 user_id */
   confirmUserId?: number | string;
   /** 仓库确认人姓名（后端翻译 sys_user.nick_name） */
   confirmUserName?: string;
+  /** 仓库确认（处理）日期 yyyy-MM-dd（未确认为 null；mp 卡片用，admin 列表暂不展示） */
+  confirmTime?: string | null;
 }
 
 /** 日汇总查询参数（只吃日期范围；作物名/提供位置是明细维度不参与汇总筛选） */

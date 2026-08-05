@@ -36,7 +36,7 @@
       </el-table-column>
     </el-table>
 
-    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row202：上限 = 期初+入库−已退） -->
+    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row205：上限 = 期初+入库−销售−赠送−今日已退） -->
     <el-table v-else-if="activeCat === 'vegetable'" v-loading="loading" :data="vegRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
       <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
@@ -241,7 +241,7 @@ async function loadVegRows() {
   }
 }
 
-/** 其他产品 tab（row202）：干货 / 鸡蛋 / 其他三业态，取数与果蔬同口径（台账 期初+入库）。 */
+/** 其他产品 tab（row202）：干货 / 鸡蛋 / 其他三业态，取数与果蔬同口径（台账 期初+入库−销售−赠送，row205）。 */
 async function loadOtherRows() {
   if (!storeId.value) {
     otherRows.value = [];
@@ -300,7 +300,10 @@ async function handleSubmit() {
     await batchCreateStoreReturn({ storeId: storeId.value, items });
     proxy?.$modal.msgSuccess(t('common.opSuccess'));
     // row119：重拉候选刷新「今日已退」→ 可退上限随之收缩，避免连续提交累计越界。
-    await Promise.all([loadPorkCandidates(), loadVegRows()]);
+    // 三个 tab 必须全刷：漏掉任一个，那个 tab 的输入框不清空、:max 也不收缩，
+    // 按钮继续亮着，再点一次就会把同一行重复提交出去（后端每次重算额度所以不会破顶，
+    // 但只要剩余额度够就会真生成第二条退回记录）。
+    await Promise.all([loadPorkCandidates(), loadVegRows(), loadOtherRows()]);
   } finally {
     submitLoading.value = false;
   }

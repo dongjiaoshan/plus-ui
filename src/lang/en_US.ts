@@ -1468,7 +1468,7 @@ export default {
       productName: 'Product',
       productSpec: 'Spec',
       plotCode: 'Plot No.',
-      outWeight: 'Out Weight',
+      outWeight: 'Out Qty',
       productNamePlaceholder: 'Enter product name'
     },
     create: {
@@ -2584,7 +2584,7 @@ export default {
       feedWeight: 'Feed Weight',
       feedType: 'Source',
       operator: 'Operator',
-      totalWeight: 'Total Weight',
+      totalWeight: 'Organic Feed Total Weight',
       boxCount: 'Confirmed Crates',
       confirmUser: 'Confirmed By',
       operation: 'Action'
@@ -4048,7 +4048,7 @@ export default {
       returnLimit: 'Returnable Limit',
       returnLocation: 'Return Location',
       receivedQty: 'Received Qty',
-      receivedWeight: 'Received Weight',
+      receivedWeight: 'Received Amount',
       returnStatus: 'Return Status',
       returnReason: 'Reason',
       traceCode: 'Trace Code',

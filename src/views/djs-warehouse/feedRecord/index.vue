@@ -27,7 +27,7 @@
           <template #default="{ row }">{{ formatWeight3(row.totalWeight) }}</template>
         </el-table-column>
         <el-table-column :label="t('feedRecord.column.boxCount')" prop="boxCount" min-width="160" align="center" header-align="center">
-          <template #default="{ row }">{{ row.boxCount ?? '—' }}</template>
+          <template #default="{ row }">{{ formatBoxCount(row.boxCount) }}</template>
         </el-table-column>
         <el-table-column
           :label="t('feedRecord.column.confirmUser')"
@@ -183,6 +183,17 @@ function formatWeight3(v: number | string | undefined | null): string {
   if (v === undefined || v === null || v === '') return '';
   const n = typeof v === 'number' ? v : Number(v);
   return Number.isNaN(n) ? String(v) : `${n.toFixed(3)} kg`;
+}
+
+/**
+ * 框数格式化：甲方要求显示整数。
+ * 列是 DECIMAL(10,2)、后端 BigDecimal 序列化成 string（"5.00"），直接渲染会带两位小数；
+ * 录入侧已限整数，存量值也都是整数值，取整不改变实际语义。未确认显 '—'。
+ */
+function formatBoxCount(v: number | string | undefined | null): string {
+  if (v === undefined || v === null || v === '') return '—';
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isNaN(n) ? String(v) : String(Math.round(n));
 }
 
 onMounted(() => {

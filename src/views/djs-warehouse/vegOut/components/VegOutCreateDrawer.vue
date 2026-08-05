@@ -59,7 +59,6 @@
                 size="small"
                 controls-position="right"
                 style="width: 130px"
-                @change="ensurePrice(row)"
               />
             </template>
           </el-table-column>
@@ -172,17 +171,29 @@ const previewNo = ref('');
 /** stockId → 销售单价（row194）。默认取产品 sale_price，用户可改；提交时逐行带上作快照。 */
 const priceMap = reactive<Record<string, number | undefined>>({});
 
-/** 首次填出库量时把销售单价带出来（已手改过的不覆盖）。 */
+/** 产品配置的销售价（t_warehouse_product_info.sale_price）；未配置 / 非数值返回 undefined。 */
+function defaultPrice(row: VegOutCandidateVO): number | undefined {
+  const v = row.salePrice;
+  if (v === undefined || v === null || v === '') return undefined;
+  const n = Number(v);
+  return Number.isNaN(n) ? undefined : n;
+}
+
+/**
+ * 按产品配置的销售价预填单价（已有值的不覆盖 —— 用户手改过的、或换搜索条件前填的都保留）。
+ * 候选列表每次加载完逐行调用，抽屉一打开单价列即有默认值，用户可再调整。
+ */
 function ensurePrice(row: VegOutCandidateVO) {
-  if (priceMap[row.stockId] === undefined && row.salePrice !== undefined && row.salePrice !== null) {
-    priceMap[row.stockId] = Number(row.salePrice);
+  if (priceMap[row.stockId] === undefined) {
+    const p = defaultPrice(row);
+    if (p !== undefined) priceMap[row.stockId] = p;
   }
 }
 
-/** 清掉一行（出库量与单价一起清，否则残留单价会在下次填量时盖掉默认值）。 */
+/** 清掉一行：出库量清空，单价回落产品默认销售价（与加载时预填同口径，不留空）。 */
 function clearLine(row: VegOutCandidateVO) {
   quantityMap[row.stockId] = undefined;
-  priceMap[row.stockId] = undefined;
+  priceMap[row.stockId] = defaultPrice(row);
 }
 
 /** 行销售总价 = 出库量 × 销售单价。 */
@@ -229,6 +240,8 @@ async function loadCandidates() {
   try {
     const res = await listVegOutCandidates(productName.value || undefined);
     candidates.value = (res.data ?? []) as VegOutCandidateVO[];
+    // 单价默认带出产品配置的销售价：加载即预填，不等用户先填出库量
+    candidates.value.forEach((row) => ensurePrice(row));
   } finally {
     loading.value = false;
   }

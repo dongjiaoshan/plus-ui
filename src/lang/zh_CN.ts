@@ -1464,13 +1464,13 @@ export default {
     },
     detail: {
       outUnitPrice: '出库单价',
-      reprint: '重打',
+      reprint: '重新打印',
       outAmount: '出库总价',
       title: '出库明细',
       productName: '产品名称',
       productSpec: '规格',
       plotCode: '地块编号',
-      outWeight: '出库重量',
+      outWeight: '出库量',
       productNamePlaceholder: '请输入产品名称'
     },
     create: {
@@ -2588,7 +2588,7 @@ export default {
       feedWeight: '饲喂饲料量',
       feedType: '提供位置',
       operator: '操作人',
-      totalWeight: '总重量',
+      totalWeight: '有机饲喂总重量',
       boxCount: '仓库确认框数',
       confirmUser: '仓库确认人',
       operation: '操作'
@@ -4052,7 +4052,7 @@ export default {
       returnLimit: '可退上限',
       returnLocation: '退回库位',
       receivedQty: '仓库实收量',
-      receivedWeight: '仓库实收重量',
+      receivedWeight: '仓库实收量',
       returnStatus: '退回状态',
       returnReason: '退回原因',
       traceCode: '追溯码',

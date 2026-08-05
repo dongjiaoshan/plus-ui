@@ -1,6 +1,7 @@
 <template>
   <!-- row187：出库单详情，弹框形式，可按产品名筛 -->
-  <el-dialog v-model="visible" :title="t('vegOut.detail.title')" width="640px" append-to-body destroy-on-close @closed="handleClosed">
+  <!-- 宽度 900px：5 列（含「出库总价」）在 640px 下最右列会被弹窗右边框裁掉半截 -->
+  <el-dialog v-model="visible" :title="t('vegOut.detail.title')" width="900px" append-to-body destroy-on-close @closed="handleClosed">
     <div class="mb-3 flex items-center gap-2">
       <el-input
         v-model="productName"
@@ -14,20 +15,28 @@
       <!-- row198：顶部右侧显示出库单号 -->
       <span class="ml-auto text-gray-500">{{ t('vegOut.column.batchNo') }}：{{ batchNo || '-' }}</span>
     </div>
-    <el-table v-loading="loading" :data="rows" border size="small" max-height="420">
-      <el-table-column :label="t('vegOut.detail.productName')" prop="productName" min-width="160" show-overflow-tooltip />
-      <el-table-column :label="t('vegOut.detail.productSpec')" prop="productSpec" width="120" align="center">
+    <!-- 五列统一 min-width（不用固定 width）：表格按弹窗宽度均分剩余空间，金额列不再被裁 -->
+    <el-table v-loading="loading" :data="rows" border size="small" max-height="500">
+      <el-table-column
+        :label="t('vegOut.detail.productName')"
+        prop="productName"
+        min-width="200"
+        align="center"
+        header-align="center"
+        show-overflow-tooltip
+      />
+      <el-table-column :label="t('vegOut.detail.productSpec')" prop="productSpec" min-width="150" align="center" header-align="center">
         <template #default="{ row }">{{ row.productSpec || '-' }}</template>
       </el-table-column>
       <!-- row193：去掉地块编号列（干货/蛋类本就没有地块，果蔬也按甲方要求不再显示） -->
-      <el-table-column :label="t('vegOut.detail.outWeight')" prop="outWeight" width="120" align="center">
+      <el-table-column :label="t('vegOut.detail.outWeight')" prop="outWeight" min-width="150" align="center" header-align="center">
         <template #default="{ row }">{{ fmtQty(row) }}</template>
       </el-table-column>
-      <el-table-column :label="t('vegOut.detail.outUnitPrice')" prop="outUnitPrice" width="110" align="center">
+      <el-table-column :label="t('vegOut.detail.outUnitPrice')" prop="outUnitPrice" min-width="140" align="center" header-align="center">
         <template #default="{ row }">{{ fmtMoney(row.outUnitPrice) }}</template>
       </el-table-column>
       <!-- 甲方原文「出库总价（出库单价*出库单价）」是笔误，按 单价 × 重量 算 -->
-      <el-table-column :label="t('vegOut.detail.outAmount')" prop="outAmount" width="110" align="center">
+      <el-table-column :label="t('vegOut.detail.outAmount')" prop="outAmount" min-width="140" align="center" header-align="center">
         <template #default="{ row }">{{ fmtMoney(row.outAmount) }}</template>
       </el-table-column>
     </el-table>

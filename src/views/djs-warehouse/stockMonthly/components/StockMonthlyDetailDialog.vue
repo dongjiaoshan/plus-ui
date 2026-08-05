@@ -19,6 +19,9 @@
       <el-form-item>
         <el-button type="primary" icon="Search" @click="fetchDetail">{{ t('stockOverview.detail.search') }}</el-button>
         <el-button icon="Refresh" @click="handleReset">{{ t('stockOverview.detail.reset') }}</el-button>
+        <el-button v-hasPermi="['djs:warehouse:stockMonthly:export']" type="warning" icon="Download" @click="handleExport">
+          {{ t('stockOverview.detail.export') }}
+        </el-button>
       </el-form-item>
     </el-form>
 
@@ -153,6 +156,21 @@ function handleReset() {
   query.productName = undefined;
   query.locationId = undefined;
   fetchDetail();
+}
+
+/** 导出当月库存明细（按当前搜索条件，与弹窗表格同一份数据）。 */
+function handleExport() {
+  if (!currentMonth.value) return;
+  proxy?.download(
+    'djs/warehouse/stockOverview/monthly/export',
+    {
+      monthStart: currentMonth.value,
+      productName: query.productName || undefined,
+      locationId: query.locationId || undefined
+    },
+    // currentMonth 为该月首日 yyyy-MM-01，文件名只取 yyyy-MM
+    `库存月汇总_${currentMonth.value.slice(0, 7)}.xlsx`
+  );
 }
 
 /** 数量格式化（按行单位分流）：kg/公斤 恒 3 位小数补零（与损耗总览明细同一数值同一显示），非 kg 去尾零；后端 BigDecimal 序列化为 string 统一 Number 强转。 */

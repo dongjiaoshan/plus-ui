@@ -103,7 +103,7 @@ import type { StoreVO } from '@/api/djs-common/store/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { lastMonthRange } from '@/utils/ruoyi';
-import { formatNum3, formatQtyByUnit, isKgUnit } from '@/utils/weight';
+import { formatQtyByUnit, formatReceivedAmount, isKgUnit, returnMetricUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -163,18 +163,26 @@ function formatWeight(v: number | undefined | null): string {
   return v === undefined || v === null ? EMPTY_TEXT : `${v}kg`;
 }
 
-// 仓库实收重量（admin row177）：不论产品单位是否 kg，实收落的都是过磅重量（kg），
-// 统一 3 位小数 + kg 单位展示，空值 —。
+// 仓库实收量（甲方 row14 统一模型）：计量单位由**原材料单位**决定（原材料单位为空则看产品单位）——
+// 原材料按 kg → 实收是重量，`X.XXXkg`（3 位小数）；原材料非 kg → 实收是件数，`整数 + 产品单位`（1枚 / 30份）。
+// 空值 —。
+// （旧口径「不论单位一律 toFixed(3)+kg」已作废：它把 30 枚礼盒的实收显示成 30.000kg。）
 function formatReceivedWeight(row: StoreReturnVO): string {
-  const n = formatNum3(row.receivedWeight);
-  return n ? `${n}kg` : EMPTY_TEXT;
+  return formatReceivedAmount(row.receivedWeight, row.productUnit, row.materialUnit) || EMPTY_TEXT;
 }
 
-// 差异量（admin row177）只对 kg 口径产品有意义：份 / 盒 / 枚等计件产品的退回量是件数，
-// 与实收重量不同量纲，相减无意义 → 显 —。
+// 差异量 = 退回量 − 仓库实收量，只有**两边同量纲**才有意义：
+//   · 退回量恒按产品单位计；实收量按原材料单位口径计（kg 或件数）。
+//   · 故仅当「产品单位 = kg 且原材料单位 = kg」两者才都是 kg 重量，可相减。
+//   · 产品按份/枚（如 80g 干货礼盒退 1 份、实收 0.080kg）→ 不同量纲，显 —。
 // 仓库还没确认（实收为空）的行同样显 — ：货还没收，谈不上差异；按实收 0 计会让整行红字像报错。
 function hasQuantityDiff(row: StoreReturnVO): boolean {
-  return isKgUnit(row.productUnit) && toNum(row.returnQuantity) !== null && toNum(row.receivedWeight) !== null;
+  return (
+    isKgUnit(row.productUnit) &&
+    isKgUnit(returnMetricUnit(row.productUnit, row.materialUnit)) &&
+    toNum(row.returnQuantity) !== null &&
+    toNum(row.receivedWeight) !== null
+  );
 }
 
 // 差异量 = 退回量 − 仓库实收重量
