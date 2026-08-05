@@ -1491,8 +1491,14 @@ export default {
       selected: '已选产品',
       selectedEmpty: '在左侧填写出库量即可加入',
       totalKinds: '共 {n} 个品类',
+      maxProductsTip: '一张出库单最多 {n} 个产品',
       confirm: '确认出库',
-      rule: { outDate: '请选择出库日期', outDest: '请选择出库去向', items: '请至少为一个产品填写出库量' }
+      rule: {
+        outDate: '请选择出库日期',
+        outDest: '请选择出库去向',
+        items: '请至少为一个产品填写出库量',
+        maxProducts: '一张出库单最多 {n} 个产品，请先把出库量清 0 去掉多余的产品'
+      }
     }
   },
   // 库存查询（WMS-MD-001，只读列表）
@@ -1900,7 +1906,17 @@ export default {
   // 种植 - 作物（PLT-MD-001）
   plantCrop: {
     title: { add: '新增作物', edit: '编辑作物', view: '作物详情', baseInfo: '基础信息' },
-    tab: { basic: '基础信息', growth: '生长周期', yield: '产量品质', planting: '种植信息', farmwork: '农事信息' },
+    tab: { basic: '基础信息', growth: '生长周期', yield: '产量品质', product: '产品配置', planting: '种植信息', farmwork: '农事信息' },
+    product: {
+      add: '新增产品配置',
+      edit: '修改产品配置',
+      productName: '产品名称',
+      perfPrice: '作物绩效(元/公斤)',
+      empty: '暂无产品配置，点击「新增」为该作物添加产出产品',
+      saveFirst: '请先保存作物基础信息，再配置产出产品',
+      confirmDelete: '确认删除产品「{name}」的配置？',
+      rule: { productId: '请选择关联产品' }
+    },
     label: {
       varietyOrigin: '品种来源',
       qualityDesc: '作物说明',
@@ -2362,6 +2378,7 @@ export default {
     column: {
       pickDate: '采摘日期',
       cropName: '作物名称',
+      productName: '产品名称',
       plotCode: '地块编号',
       pickWeight: '采摘量',
       teamName: '采摘班组',
@@ -4361,6 +4378,7 @@ export default {
       tabFarm: '农事记录',
       rule: '绩效规则',
       cropName: '作物',
+      productName: '产品',
       cropPickWeight: '采摘量',
       cropUnitPrice: '单价',
       cropAmount: '绩效额',

@@ -56,6 +56,7 @@
                 :max="Number(row.stockWeight)"
                 :precision="3"
                 :step="1"
+                :disabled="qtyDisabled(row)"
                 size="small"
                 controls-position="right"
                 style="width: 130px"
@@ -82,7 +83,13 @@
       </div>
 
       <div class="right">
-        <div class="right-title">{{ t('vegOut.create.selected') }}</div>
+        <div class="right-title">
+          {{ t('vegOut.create.selected') }}
+          <!-- 打印单一页只有 10 行，所以这里也只收 10 个：选满后左侧未选行的出库量输入框会禁用 -->
+          <span class="max-tip" :class="{ 'is-full': selectionFull }">
+            {{ t('vegOut.create.maxProductsTip', { n: MAX_SELECTED_PRODUCTS }) }}
+          </span>
+        </div>
         <el-empty v-if="!selectedRows.length" :description="t('vegOut.create.selectedEmpty')" :image-size="70" />
         <!-- row195：不显示地块；重量挪到原地块位置；原重量位置改显销售总价；汇总加总价之和 -->
         <div v-else class="selected-list">
@@ -120,7 +127,7 @@
 <script setup lang="ts">
 import { CircleClose } from '@element-plus/icons-vue';
 import { listVegOutCandidates, submitVegOutBatch } from '@/api/djs-warehouse/vegOut';
-import { printVegOutSheet } from '../printSheet';
+import { printVegOutSheet, ROWS_PER_PAGE } from '../printSheet';
 import type { VegOutCandidateVO } from '@/api/djs-warehouse/vegOut/types';
 import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
@@ -226,8 +233,23 @@ function fmtMoney(v: number | string | undefined | null): string {
   return Number.isNaN(n) ? String(v) : `¥${n.toFixed(2)}`;
 }
 
-/** 已选 = 填了正数出库量的行（右侧实时反映） */
+/** 已选 = 填了正数出库量的行（右侧实时反映）。量清 0 / 清空即视为不出库该产品。 */
 const selectedRows = computed(() => candidates.value.filter((r) => Number(quantityMap[r.stockId]) > 0));
+
+/**
+ * 一单最多 10 个产品 —— 与打印模板 {@link ROWS_PER_PAGE} 同一个数：
+ * 241×140mm 的三联单一页只印得下 10 行，超了就得分页，甲方不接受一单打两张纸。
+ */
+const MAX_SELECTED_PRODUCTS = ROWS_PER_PAGE;
+const selectionFull = computed(() => selectedRows.value.length >= MAX_SELECTED_PRODUCTS);
+
+/**
+ * 选满 10 个后，**未选中**行的出库量输入框禁用（不允许再录第 11 个）。
+ * 已选中的行不禁用 —— 否则用户既改不了量、也清不掉，会卡死在满员状态。
+ */
+function qtyDisabled(row: VegOutCandidateVO): boolean {
+  return selectionFull.value && !(Number(quantityMap[row.stockId]) > 0);
+}
 // row194 混单位（Kevin 2026-08-03 定 D7）：**重量合计只累加 kg 行**——干货有袋/桶/罐、蛋类是「枚」，
 // 「3 袋 + 2kg」加不到一起。金额是钱，三类都能加，故 totalAmount 全量累加。
 const totalWeight = computed(() =>
@@ -278,6 +300,11 @@ async function submit(print: boolean) {
   }
   if (!selectedRows.value.length) {
     proxy?.$modal.msgWarning(t('vegOut.create.rule.items'));
+    return;
+  }
+  // 输入框禁用只挡住了「继续录」，挡不住「先填满 10 个再换搜索条件又填」这类路径，提交前再拦一道
+  if (selectedRows.value.length > MAX_SELECTED_PRODUCTS) {
+    proxy?.$modal.msgWarning(t('vegOut.create.rule.maxProducts', { n: MAX_SELECTED_PRODUCTS }));
     return;
   }
   submitting.value = true;
@@ -337,6 +364,16 @@ async function submit(print: boolean) {
 .right-title {
   font-weight: 500;
   margin-bottom: 12px;
+}
+/* 满员前是灰色提示，满员后转警示色，让「为什么输入框不能填了」有个就近解释 */
+.max-tip {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--el-text-color-secondary);
+}
+.max-tip.is-full {
+  color: var(--el-color-warning);
 }
 .selected-list {
   display: flex;

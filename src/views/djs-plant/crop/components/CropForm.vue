@@ -42,19 +42,6 @@
                 <el-input v-model="form.cropGenus" :placeholder="t('plantCrop.placeholder.cropGenus')" maxlength="32" />
               </el-form-item>
             </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.relatedProduct')" prop="relatedProduct">
-                <el-select
-                  v-model="form.relatedProduct"
-                  filterable
-                  clearable
-                  :placeholder="t('plantCrop.placeholder.relatedProduct')"
-                  style="width: 100%"
-                >
-                  <el-option v-for="p in productOptions" :key="p.id" :label="p.productName" :value="p.id" />
-                </el-select>
-              </el-form-item>
-            </el-col>
           </el-row>
         </el-tab-pane>
 
@@ -103,11 +90,6 @@
                 <el-input-number v-model="form.predictedPer" :min="0" :precision="3" :step="100" style="width: 100%" />
               </el-form-item>
             </el-col>
-            <el-col :span="12">
-              <el-form-item :label="t('plantCrop.field.pickUnitPrice')" prop="pickUnitPrice">
-                <el-input-number v-model="form.pickUnitPrice" :min="0" :precision="2" :step="0.5" style="width: 100%" />
-              </el-form-item>
-            </el-col>
             <el-col :span="24">
               <el-form-item :label="t('plantCrop.field.qualityDesc')" prop="qualityDesc">
                 <el-input
@@ -121,8 +103,65 @@
             </el-col>
           </el-row>
         </el-tab-pane>
+
+        <!-- Tab 4：产品配置（V6 row16）—— 一个作物可产出多个产品，各自带绩效金额。
+             原「关联产品」（基础信息）与「绩效单价」（产量品质）合并到这里，一对一数据已迁成首行。 -->
+        <el-tab-pane :label="t('plantCrop.tab.product')" name="product">
+          <!-- 新增作物时还没有 cropId，配置行没处挂 —— 先存基础信息再回来配 -->
+          <el-alert v-if="!form.id" :title="t('plantCrop.product.saveFirst')" type="info" :closable="false" show-icon />
+          <template v-else>
+            <div class="mb-2">
+              <el-button type="primary" icon="Plus" size="small" @click="openProductRow()">{{ t('common.add') }}</el-button>
+            </div>
+            <el-table v-loading="productRowsLoading" :data="productRows" border size="small" max-height="320">
+              <el-table-column :label="t('plantCrop.product.productName')" prop="productName" align="center" show-overflow-tooltip />
+              <el-table-column :label="t('plantCrop.product.perfPrice')" prop="perfPrice" align="center" width="160">
+                <template #default="{ row }">{{ row.perfPrice == null || row.perfPrice === '' ? '—' : Number(row.perfPrice).toFixed(2) }}</template>
+              </el-table-column>
+              <el-table-column :label="t('common.operate')" align="center" width="140">
+                <template #default="{ row }">
+                  <el-button link type="primary" size="small" @click="openProductRow(row)">{{ t('common.edit') }}</el-button>
+                  <el-button link type="danger" size="small" @click="removeProductRow(row)">{{ t('common.delete') }}</el-button>
+                </template>
+              </el-table-column>
+              <template #empty>
+                <el-empty :description="t('plantCrop.product.empty')" :image-size="70" />
+              </template>
+            </el-table>
+          </template>
+        </el-tab-pane>
       </el-tabs>
     </el-form>
+
+    <!-- 产品配置行 新增 / 修改（弹框套弹框：append-to-body 让它盖在作物弹窗之上） -->
+    <el-dialog
+      v-model="productDialogVisible"
+      :title="productForm.id ? t('plantCrop.product.edit') : t('plantCrop.product.add')"
+      append-to-body
+      destroy-on-close
+      width="480px"
+    >
+      <el-form ref="productFormRef" :model="productForm" :rules="productRules" label-width="130px">
+        <el-form-item :label="t('plantCrop.field.relatedProduct')" prop="productId">
+          <el-select
+            v-model="productForm.productId"
+            filterable
+            clearable
+            :placeholder="t('plantCrop.placeholder.relatedProduct')"
+            style="width: 100%"
+          >
+            <el-option v-for="p in productOptions" :key="p.id" :label="p.productName" :value="String(p.id)" />
+          </el-select>
+        </el-form-item>
+        <el-form-item :label="t('plantCrop.product.perfPrice')" prop="perfPrice">
+          <el-input-number v-model="productForm.perfPrice" :min="0" :precision="2" :step="0.5" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button type="primary" :loading="productSubmitting" @click="submitProductRow">{{ t('common.confirm') }}</el-button>
+        <el-button @click="productDialogVisible = false">{{ t('common.cancel') }}</el-button>
+      </template>
+    </el-dialog>
 
     <template #footer>
       <div class="dialog-footer">
@@ -138,6 +177,8 @@ import { addCrop, getCrop, updateCrop } from '@/api/djs-plant/crop';
 import OssUpload from '@/components/OssUpload/index.vue';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import { listProduct } from '@/api/djs-warehouse/product';
+import { addCropProduct, delCropProduct, listCropProduct, updateCropProduct } from '@/api/djs-plant/cropProduct';
+import type { CropProductForm, CropProductVO } from '@/api/djs-plant/cropProduct';
 import type { ProductInfoVO, ProductInfoQuery } from '@/api/djs-warehouse/product/types';
 import type { CropInfoForm } from '@/api/djs-plant/crop/types';
 import { useI18n } from 'vue-i18n';
@@ -222,12 +263,72 @@ const rules = computed(() => ({
   ]
 }));
 
+// ===== 产品配置页签（V6 row16）：一个作物多个产品，每行一个产品 + 它自己的绩效金额 =====
+const productRows = ref<CropProductVO[]>([]);
+const productRowsLoading = ref(false);
+const productDialogVisible = ref(false);
+const productSubmitting = ref(false);
+const productFormRef = ref<ElFormInstance>();
+const productForm = ref<CropProductForm>({});
+
+const productRules = computed(() => ({
+  productId: [{ required: true, message: t('plantCrop.product.rule.productId'), trigger: 'change' }]
+}));
+
+const loadProductRows = async () => {
+  if (!form.value.id) {
+    productRows.value = [];
+    return;
+  }
+  productRowsLoading.value = true;
+  try {
+    const res = await listCropProduct(form.value.id);
+    productRows.value = (res.data ?? []) as CropProductVO[];
+  } finally {
+    productRowsLoading.value = false;
+  }
+};
+
+const openProductRow = (row?: CropProductVO) => {
+  productForm.value = row
+    ? { id: row.id, cropId: String(form.value.id), productId: String(row.productId), perfPrice: row.perfPrice == null ? undefined : Number(row.perfPrice) }
+    : { cropId: String(form.value.id) };
+  productDialogVisible.value = true;
+};
+
+const submitProductRow = () => {
+  productFormRef.value?.validate(async (valid: boolean) => {
+    if (!valid) return;
+    productSubmitting.value = true;
+    try {
+      if (productForm.value.id) {
+        await updateCropProduct(productForm.value);
+      } else {
+        await addCropProduct({ ...productForm.value, cropId: String(form.value.id) });
+      }
+      proxy?.$modal.msgSuccess(t('common.opSuccess'));
+      productDialogVisible.value = false;
+      await loadProductRows();
+    } finally {
+      productSubmitting.value = false;
+    }
+  });
+};
+
+const removeProductRow = async (row: CropProductVO) => {
+  await proxy?.$modal.confirm(t('plantCrop.product.confirmDelete', { name: row.productName ?? '' }));
+  await delCropProduct(row.id);
+  proxy?.$modal.msgSuccess(t('common.deleteSuccess'));
+  await loadProductRows();
+};
+
 const dialogTitle = computed(() => (form.value.id ? t('plantCrop.title.edit') : t('plantCrop.title.add')));
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
 const openCreate = () => {
   form.value = defaultForm();
+  productRows.value = [];
   activeTab.value = 'basic';
   visible.value = true;
   loadProductOptions();
@@ -245,6 +346,7 @@ const openEdit = async (id: number | string) => {
   };
   activeTab.value = 'basic';
   visible.value = true;
+  loadProductRows();
 
   await nextTick();
   // 回填单图：优先 cropImagePreview（新口径），兼容旧数据 imageOssId / cropImageUrl 首图
@@ -270,6 +372,7 @@ defineExpose({ openCreate, openEdit });
 const handleClosed = () => {
   formRef.value?.resetFields();
   form.value = defaultForm();
+  productRows.value = [];
 };
 
 const submit = () => {

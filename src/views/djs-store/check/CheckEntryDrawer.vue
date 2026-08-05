@@ -286,7 +286,11 @@ async function loadCandidates() {
         belongTab: c.belongTab ?? 'other',
         // 修改模式取已保存值（更正上次结果）；新增模式取候选预填。
         openingQty: saved ? nz(saved.openingQty) : nz(c.openingQty),
-        inboundQty: saved ? nz(saved.inboundQty) : nz(c.inboundQty),
+        // row23：**只读**的当日入库恒取候选实时值 —— 它是「当日发往该店」的客观聚合，
+        // 盘过一次之后仓库再送一批货，这个数必须跟着涨（口径同下面的 returnWhQty）。
+        // 走 saved 优先会把首次盘点时的快照钉死，后到的货永远统计不进来。
+        // 猪肉行（inboundReadonly=false）是用户按实重手填的，仍 saved 优先，否则上次的更正会被冲掉。
+        inboundQty: inboundReadonly ? nz(c.inboundQty) : saved ? nz(saved.inboundQty) : nz(c.inboundQty),
         inboundReadonly,
         saleQty: saved ? nz(saved.saleQty) : nz(c.saleQty),
         giftQty: saved ? nz(saved.giftQty) : 0,

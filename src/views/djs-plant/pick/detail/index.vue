@@ -90,6 +90,15 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.cropName != null && r.cropName !== '' ? String(r.cropName) : '-')
   },
   {
+    // V6 row19：作物右边跟产品名 = 该条毛菜间过磅记录选定的产品；采摘活动来源没有产品维度，显 '-'
+    prop: 'productName',
+    label: t('pickDetail.column.productName'),
+    minWidth: 130,
+    align: 'center',
+    showOverflowTooltip: true,
+    formatter: (r: BizRow) => (r.productName != null && r.productName !== '' ? String(r.productName) : '-')
+  },
+  {
     prop: 'statSource',
     label: t('pickDetail.column.statSource'),
     minWidth: 120,

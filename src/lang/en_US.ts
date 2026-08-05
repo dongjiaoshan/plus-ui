@@ -1489,8 +1489,14 @@ export default {
       selected: 'Selected',
       selectedEmpty: 'Enter a quantity on the left to add',
       totalKinds: '{n} kinds',
+      maxProductsTip: 'Up to {n} products per sheet',
       confirm: 'Confirm Outbound',
-      rule: { outDate: 'Please select out date', outDest: 'Please select destination', items: 'Enter a quantity for at least one product' }
+      rule: {
+        outDate: 'Please select out date',
+        outDest: 'Please select destination',
+        items: 'Enter a quantity for at least one product',
+        maxProducts: 'Up to {n} products per sheet — clear a quantity to drop a product first'
+      }
     }
   },
   stock: {
@@ -1896,7 +1902,17 @@ export default {
   // Planting - Crop (PLT-MD-001)
   plantCrop: {
     title: { add: 'Add Crop', edit: 'Edit Crop', view: 'Crop Detail', baseInfo: 'Basic Info' },
-    tab: { basic: 'Basic', growth: 'Growth Cycle', yield: 'Yield & Quality', planting: 'Planting Records', farmwork: 'Farm Work' },
+    tab: { basic: 'Basic', growth: 'Growth Cycle', yield: 'Yield & Quality', product: 'Products', planting: 'Planting Records', farmwork: 'Farm Work' },
+    product: {
+      add: 'Add Product',
+      edit: 'Edit Product',
+      productName: 'Product',
+      perfPrice: 'Performance Rate (CNY/kg)',
+      empty: 'No product configured yet — click Add to link a product to this crop',
+      saveFirst: 'Save the crop first, then configure its products',
+      confirmDelete: 'Delete the configuration for "{name}"?',
+      rule: { productId: 'Please select a product' }
+    },
     label: {
       varietyOrigin: 'Variety Source',
       qualityDesc: 'Crop Description',
@@ -2358,6 +2374,7 @@ export default {
     column: {
       pickDate: 'Pick Date',
       cropName: 'Crop',
+      productName: 'Product',
       plotCode: 'Plot Code',
       pickWeight: 'Pick Weight',
       teamName: 'Pick Team',
@@ -4357,6 +4374,7 @@ export default {
       tabFarm: 'Farm Records',
       rule: 'Rule',
       cropName: 'Crop',
+      productName: 'Product',
       cropPickWeight: 'Harvest',
       cropUnitPrice: 'Unit Price',
       cropAmount: 'Amount',

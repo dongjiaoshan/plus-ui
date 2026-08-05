@@ -52,9 +52,16 @@
       destroy-on-close
       append-to-body
       :close-on-click-modal="true"
-      width="1000px"
+      width="1200px"
     >
-      <div v-if="currentDaily" class="mb-2 text-gray-500">{{ currentDaily.storeName }} · {{ currentDaily.returnDate }}</div>
+      <!-- 九列 min-width 合计 1020px，弹窗 1000px 时表格必然横向溢出（确认时间列被切）。
+           1200px − 弹窗左右内边距 ≈ 1160px 可用宽，九列不再挤，横向滚动条消失。 -->
+      <div class="detail-head">
+        <span v-if="currentDaily" class="text-gray-500">{{ currentDaily.storeName }} · {{ currentDaily.returnDate }}</span>
+        <el-button type="warning" plain icon="Download" size="small" @click="handleDetailExport">
+          {{ t('biz.table.action.export') }}
+        </el-button>
+      </div>
       <el-table v-loading="detailLoading" :data="detailRows" border height="460">
         <el-table-column prop="productName" :label="t('djs.warehouse.return.returnProduct')" min-width="140" align="center" show-overflow-tooltip />
         <el-table-column prop="returnQuantity" :label="t('storeReturn.column.returnQuantity')" min-width="90" align="center">
@@ -325,6 +332,17 @@ function handleExport() {
   proxy?.download('djs/store/return/store-daily/export', buildQueryParams(), `退回记录_${new Date().getTime()}.xlsx`);
 }
 
+// 导出明细弹窗当前这一「门店 + 当日」的逐条明细（筛选条件与 loadDetailRows 完全一致，导的就是屏上这几行）
+function handleDetailExport() {
+  if (!currentDaily.value) return;
+  const { storeId, returnDate, storeName } = currentDaily.value;
+  proxy?.download(
+    'djs/store/return/detail/export',
+    { storeId, returnDateFrom: returnDate, returnDateTo: returnDate },
+    `退回明细_${storeName ?? ''}_${returnDate}.xlsx`
+  );
+}
+
 onMounted(() => {
   loadList();
   loadStoreOptions();
@@ -333,6 +351,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 明细弹窗抬头：左侧门店+日期，右侧导出按钮 */
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
 /* 差异量：统一红色，不按正负变色 */
 .qty-diff {
   color: var(--el-color-danger);
