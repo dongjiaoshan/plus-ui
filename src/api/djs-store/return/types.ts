@@ -24,6 +24,11 @@ export interface StoreReturnVO {
   productSpec?: string;
   /** 产品单位（后端内存聚合填，「单位」列） */
   productUnit?: string;
+  /**
+   * 产品**原材料单位**（后端内存聚合填；无原材料 / 原材料无单位时后端已回落产品自身单位）。
+   * 「仓库实收量」的计量口径由它决定：= KG → received_weight 是重量(kg,3 位小数)；≠ KG → 是件数(整数 + 产品单位)。
+   */
+  materialUnit?: string;
   /** 退回入库库位（K4 联动外购入库目标库位） */
   locationId?: string;
   /** 库位名称（后端内存聚合填） */
@@ -37,6 +42,11 @@ export interface StoreReturnVO {
   receivedQty?: number;
   /** 仓库实收重量(kg)（仓库确认时填） */
   receivedWeight?: number;
+  /**
+   * 仓库确认处置（row204）：0=退回入库 / 1=产品丢弃。
+   * 仅 returnStatus='received' 的行有意义；pending 行是建表默认 0，不能当「否」展示。
+   */
+  isDiscard?: number;
   /** 仓库确认时间 */
   confirmTime?: string;
   returnReason?: string;
@@ -66,7 +76,7 @@ export interface StoreReturnPorkCandidateVO {
   subCategory?: StoreReturnPorkSubCategory;
   /** 归属类型 djs_belong_type；gift_box 礼盒不可退回仓库（后端已剔除，前端二次过滤） */
   belongType?: string;
-  /** 到店量（退回量上限 row40）：猪肉产品=当日到店需求订购份数 / 材料外售=对应成品到店重 / 白条=max(当日盘点 期初+入库, 材料外售到店重) */
+  /** 可退量（退回量上限 row205）：三个 tab 统一取门店当日盘点台账 期初+入库−销售−赠送（不减损坏） */
   arrivedQuantity?: number;
   /** 今日已退量（row119）：剩余可退 = arrivedQuantity − returnedQuantity，即输入框 :max */
   returnedQuantity?: number;
@@ -138,6 +148,9 @@ export interface StoreReturnQuery {
   returnDateTo?: string;
   /** 产品名称模糊（后端下推产品 id 集过滤，跨页正确） */
   productName?: string;
-  /** 产品业态 tab：pork=猪肉类(含白条) / vegetable=其他(含 belong_type 空)，后端下推过滤 */
-  belongCategory?: 'pork' | 'vegetable';
+  /**
+   * 产品业态 tab（三值，后端下推过滤）：
+   * pork=猪肉类(含白条) / vegetable=果蔬(只认 vegetable) / other=其余全部(干货/蛋类/礼盒/其他/空归属)
+   */
+  belongCategory?: 'pork' | 'vegetable' | 'other';
 }

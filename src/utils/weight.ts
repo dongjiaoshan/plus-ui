@@ -102,6 +102,44 @@ export function formatQtyByUnit(value: number | string | null | undefined, unit:
 }
 
 /**
+ * 门店退回「仓库实收量」的计量口径单位：**产品原材料单位**，为空时回落产品自身单位。
+ *
+ * 后端 `StoreReturnVo.materialUnit` 已按同一规则回填（无原材料 / 原材料无单位 → 产品单位），
+ * 这里再兜一次是为了对付「老数据 / 后端未部署」时 materialUnit 缺失的过渡态。
+ */
+export function returnMetricUnit(productUnit: string | null | undefined, materialUnit: string | null | undefined): string {
+  const m = typeof materialUnit === 'string' ? materialUnit.trim() : '';
+  return m !== '' ? m : (productUnit ?? '');
+}
+
+/**
+ * 门店退回「仓库实收量」展示（甲方 row14 统一模型，admin 两处退回列表共用）。
+ *
+ * 计量单位由**原材料单位**决定（原材料单位为空则看产品单位）：
+ * - 原材料单位 = KG → `received_weight` 是重量，`X.XXXkg`（3 位小数）；
+ * - 原材料单位 ≠ KG → `received_weight` 是件数，`整数 + 产品单位`（如 `1枚` / `30份`）。
+ *
+ * @example formatReceivedAmount(2, 'kg', undefined)   // '2.000kg'   （里脊肉：无原材料，回落产品单位 kg）
+ * @example formatReceivedAmount(0.08, '份', 'kg')     // '0.080kg'   （干货礼盒：原材料按 kg）
+ * @example formatReceivedAmount(30, '份', '枚')       // '30份'      （蛋礼盒：原材料按枚 → 件数，显产品单位）
+ * @returns 格式化文本；无效值（null / undefined / '' / NaN）返回 ''，由调用方决定空值占位符。
+ */
+export function formatReceivedAmount(
+  value: number | string | null | undefined,
+  productUnit: string | null | undefined,
+  materialUnit: string | null | undefined
+): string {
+  const n = toNumber(value);
+  if (n === null) return '';
+  const metric = returnMetricUnit(productUnit, materialUnit);
+  if (isKgUnit(metric)) return `${n.toFixed(3)}kg`;
+  // 后缀必须跟判据同源：received_weight 本身就是按**原材料单位**计量的
+  // （干羊肚菌礼盒退 1 份 → 库存流水实写 0.080 到「干羊肚菌(kg)」），
+  // 用产品单位标会把 30 枚鸡蛋写成「30份」= 仓库收了 30 个礼盒，而门店只退了 1 个。
+  return `${Math.round(n)}${metric}`;
+}
+
+/**
  * 白条产品需求量 → 「头」数展示（去尾零，不带单位文本）。
  * 白条按「头」计：产品名含「半」（半扇 / 半只）每单位折 0.5 头，否则 1 头；需求量为件数 × 每件头数。
  * 口径与需求管理列表 KPI 一致（0.5 → '0.5'，22 → '22'，不补三位小数）。

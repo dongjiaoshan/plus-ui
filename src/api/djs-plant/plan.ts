@@ -66,6 +66,14 @@ export const delPlan = (ids: number | string | (number | string)[]) => {
   });
 };
 
+/** row184：把单个地块从计划里去除（仅种植未开始的明细可删，服务端同样兜底校验）。 */
+export const delPlanDetail = (detailId: number | string) => {
+  return request({
+    url: '/djs/plant/plan/detail/' + String(detailId),
+    method: 'delete'
+  });
+};
+
 export const getPlanGantt = (id: number | string): AxiosPromise<PlantPlanGanttVO> => {
   return request({
     url: '/djs/plant/plan/' + id + '/gantt',

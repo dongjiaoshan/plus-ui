@@ -75,6 +75,31 @@
           </el-form>
         </el-card>
       </el-tab-pane>
+
+      <!-- Tab4 用药配置（2 字段表单，小程序 row251/row252）-->
+      <el-tab-pane :label="t('productionConfig.tab.medication')" name="medication">
+        <el-card shadow="never" class="form-card">
+          <el-form :model="medicationForm" label-width="220px" class="config-form">
+            <el-form-item :label="t('productionConfig.medication.fattenMedMaxAge')">
+              <!-- 下限 1：最大用药日龄填 0 没有业务含义（等于一头育肥猪都不能用药），且后端 fattenMedMaxAge()
+                   把 0 当「未配置」回落默认 300，UI 放行 0 会造成「后台显示 0、小程序仍按 300」的两端不一致。 -->
+              <el-input-number v-model="medicationForm.fatten_med_max_age_days" :min="1" :max="9999" :step="1" :precision="0" controls-position="right" />
+              <span class="unit-suffix">{{ t('productionConfig.unit.day') }}</span>
+              <div class="field-tip">{{ t('productionConfig.medication.fattenMedMaxAgeTip') }}</div>
+            </el-form-item>
+            <el-form-item :label="t('productionConfig.medication.medPickUsableDays')">
+              <el-input-number v-model="medicationForm.med_pick_usable_days" :min="1" :max="365" :step="1" :precision="0" controls-position="right" />
+              <span class="unit-suffix">{{ t('productionConfig.unit.day') }}</span>
+              <div class="field-tip">{{ t('productionConfig.medication.medPickUsableDaysTip') }}</div>
+            </el-form-item>
+            <el-form-item>
+              <el-button v-hasPermi="['djs:breed:production-cycle:edit']" type="primary" :loading="medicationSaving" @click="onSaveMedication">
+                {{ t('common.save') }}
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -82,9 +107,11 @@
 <script setup name="ProductionConfig" lang="ts">
 import {
   batchSaveFattenStage,
+  getMedicationConfig,
   getSlaughterConfig,
   getSowConfig,
   listFattenStage,
+  saveMedicationConfig,
   saveSlaughterConfig,
   saveSowConfig
 } from '@/api/djs-breed/production-config';
@@ -94,7 +121,7 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-const activeTab = ref<'sow' | 'fatten' | 'slaughter'>('sow');
+const activeTab = ref<'sow' | 'fatten' | 'slaughter' | 'medication'>('sow');
 
 // ============= Tab1 母猪生产配置（6 字段表单）=============
 // key 与后端 ProductionCycleConfigController.SOW_DEFAULTS 严格对齐
@@ -240,10 +267,40 @@ async function onSaveSlaughter() {
   }
 }
 
+// ============= Tab4 用药配置（2 字段表单，小程序 row251/row252）=============
+const medicationForm = reactive<Record<string, number>>({ fatten_med_max_age_days: 300, med_pick_usable_days: 15 });
+const medicationSaving = ref(false);
+
+async function fetchMedication() {
+  const res = await getMedicationConfig();
+  const data = (res.data ?? {}) as Record<string, number>;
+  if (data.fatten_med_max_age_days != null) {
+    medicationForm.fatten_med_max_age_days = data.fatten_med_max_age_days;
+  }
+  if (data.med_pick_usable_days != null) {
+    medicationForm.med_pick_usable_days = data.med_pick_usable_days;
+  }
+}
+
+async function onSaveMedication() {
+  medicationSaving.value = true;
+  try {
+    await saveMedicationConfig({
+      fatten_med_max_age_days: medicationForm.fatten_med_max_age_days,
+      med_pick_usable_days: medicationForm.med_pick_usable_days
+    });
+    proxy?.$modal.msgSuccess(t('common.opSuccess'));
+    fetchMedication();
+  } finally {
+    medicationSaving.value = false;
+  }
+}
+
 onMounted(() => {
   fetchSow();
   fetchFatten();
   fetchSlaughter();
+  fetchMedication();
 });
 </script>
 
@@ -259,6 +316,14 @@ onMounted(() => {
 }
 .unit-suffix {
   margin-left: 8px;
+  color: var(--el-text-color-secondary);
+}
+/* 用药配置字段下的口径说明（这两个阈值影响小程序端可见范围，不写清楚容易配错） */
+.field-tip {
+  width: 100%;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--el-text-color-secondary);
 }
 .table-toolbar {

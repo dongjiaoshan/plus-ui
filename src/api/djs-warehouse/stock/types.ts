@@ -22,6 +22,8 @@ export interface LocationStockVO extends BaseEntity {
   /** 产品属性（1 生产产品 / 2 原材料）：service JOIN product_info 回填；详情饲料 tab 显隐判定 */
   productAttr?: number;
   productName: string;
+  /** 产品规格（row183）：service JOIN product_info 回填；列表产品名称右侧展示 */
+  productSpec?: string;
   productStock: number | string;
   productUnit: string;
   isEnd: number;
@@ -77,5 +79,19 @@ export interface StockTransferForm {
   transferDate: string;
   /** 转移量（> 0，≤ 当前库存） */
   quantity?: number;
+  remark?: string;
+}
+
+/** 毛菜间出库单项（row185 单条 / row187 批量共用） */
+export interface VegOutItem {
+  stockId: number | string;
+  quantity: number | undefined;
+}
+
+/** 毛菜间出库提交（row185 产品内部处理 / row187 批量出库） */
+export interface VegOutSubmitForm {
+  outDate: string;
+  outDest: string;
+  items: VegOutItem[];
   remark?: string;
 }

@@ -20,7 +20,7 @@
             data.predictedPer != null ? `${Number(data.predictedPer).toFixed(3)} kg/亩` : '-'
           }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.pickUnitPrice')">{{
-            data.pickUnitPrice != null ? `¥${data.pickUnitPrice}/斤` : '-'
+            data.pickUnitPrice != null ? `¥${data.pickUnitPrice}/公斤` : '-'
           }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.relatedProduct')">{{ data.relatedProductName ?? '-' }}</el-descriptions-item>
           <el-descriptions-item :label="t('plantCrop.field.cropImageUrl')" :span="2">

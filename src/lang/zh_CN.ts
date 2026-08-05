@@ -542,6 +542,7 @@ export default {
       sow: '母猪生产配置',
       fatten: '育肥生产配置',
       slaughter: '出栏配置',
+      medication: '用药配置',
       cycle: '生产周期',
       boar: '精液公猪',
       med: '药品疫苗周期'
@@ -569,6 +570,12 @@ export default {
     },
     slaughter: {
       slaughterAge: '出栏日龄'
+    },
+    medication: {
+      fattenMedMaxAge: '育肥猪最大用药日龄',
+      fattenMedMaxAgeTip: '超过该日龄的育肥猪不再出现在小程序「疫苗药品」猪只列表里（临近出栏不再用药）',
+      medPickUsableDays: '药品领用可用天数',
+      medPickUsableDaysTip: '用药治疗 / 批量用药的「选择药品」只列最近该天数内已领用的药品'
     },
     title: {
       addCycle: '新增生产周期项',
@@ -875,7 +882,8 @@ export default {
         earNo: '耳号',
         eventType: '事件类型',
         newStatus: '变更后状态',
-        changeBy: '变更人'
+        changeBy: '变更人',
+        changeTime: '变更时间'
       },
       placeholder: {
         earNo: '请输入耳号',
@@ -1337,6 +1345,7 @@ export default {
       productAttr: '产品属性',
       productWorkshop: '生产车间',
       productMaterial: '原材料产品',
+      salePrice: '销售价格',
       materialNum: '打包计量规则',
       productThumb: '产品图片',
       productImg: '详情图',
@@ -1361,6 +1370,7 @@ export default {
       supplierName: '供应商'
     },
     placeholder: {
+      salePrice: '请输入销售价格',
       productId: '例 P0001 / SP-PORK-001（用户手填）',
       productUnit: '例 kg / 个 / 盒',
       productSpec: '例 500g/包',
@@ -1381,6 +1391,7 @@ export default {
       productSpec: { required: '生产产品必须填写规格' },
       storeLocation: { required: '请选择存储仓库' },
       productAttr: { required: '请选择产品属性' },
+      productMaterial: { required: '请选择关联的原材料产品' },
       productWorkshop: { required: '请选择生产车间' }
     },
     tip: {
@@ -1438,6 +1449,52 @@ export default {
       del: '是否确认删除选中的 {count} 条商品？删除前需先确保无库存且未被作为原材料引用。'
     }
   },
+  // 毛菜间出库管理（admin row187）
+  vegOut: {
+    action: { create: '新增', detail: '查看详情' },
+    field: { outDate: '出库日期', outDest: '出库去向', operator: '操作人' },
+    column: {
+      batchNo: '出库单号',
+      totalAmount: '出库金额',
+      outDate: '出库日期',
+      outDest: '出库去向',
+      productKinds: '出库果蔬品类数',
+      totalWeight: '出库果蔬重量',
+      operator: '出库操作人'
+    },
+    detail: {
+      outUnitPrice: '出库单价',
+      reprint: '重新打印',
+      outAmount: '出库总价',
+      title: '出库明细',
+      productName: '产品名称',
+      productSpec: '规格',
+      plotCode: '地块编号',
+      outWeight: '出库量',
+      productNamePlaceholder: '请输入产品名称'
+    },
+    create: {
+      productSpec: '规格',
+      unitPrice: '销售单价',
+      lineAmount: '销售总价',
+      noAfterSubmit: '提交后生成',
+      confirmAndPrint: '确认出库并打印',
+      title: '新增毛菜间出库',
+      outDate: '出库日期',
+      outDest: '出库去向',
+      outDestPlaceholder: '请选择出库去向',
+      productName: '产品名称',
+      productNamePlaceholder: '请输入产品名称',
+      stockWeight: '库存重量',
+      plotCode: '地块编号',
+      outQuantity: '出库量',
+      selected: '已选产品',
+      selectedEmpty: '在左侧填写出库量即可加入',
+      totalKinds: '共 {n} 个品类',
+      confirm: '确认出库',
+      rule: { outDate: '请选择出库日期', outDest: '请选择出库去向', items: '请至少为一个产品填写出库量' }
+    }
+  },
   // 库存查询（WMS-MD-001，只读列表）
   stock: {
     field: {
@@ -1450,6 +1507,7 @@ export default {
     column: {
       locationName: '存储库位',
       productName: '产品名称',
+      productSpec: '产品规格',
       productCode: '产品编码',
       productStock: '当前库存',
       productUnit: '单位',
@@ -1465,7 +1523,16 @@ export default {
       checkRecord: '盘点记录',
       productOut: '产品出库',
       pigTransfer: '猪肉库位转移',
+      internalHandle: '产品内部处理',
       viewDetail: '查看详情'
+    },
+    internalDialog: {
+      title: '产品内部处理',
+      outDate: '出库日期',
+      quantity: '出库量',
+      outDest: '出库去向',
+      destVegDock: '果蔬月台',
+      destFeed: '饲料饲喂'
     },
     outDialog: {
       title: '产品出库',
@@ -1913,7 +1980,7 @@ export default {
       irrigationInterval: '浇灌间隔(天)',
       predictedPer: '预计亩产(kg/亩)',
       qualityDesc: '品质描述',
-      pickUnitPrice: '绩效单价(元/斤)'
+      pickUnitPrice: '绩效单价(元/公斤)'
     },
     placeholder: {
       cropCode: '请输入作物编码（如 C001）',
@@ -2153,7 +2220,9 @@ export default {
     detail: {
       title: '种植计划详情',
       detailsTitle: '地块明细',
-      missingId: '缺少计划 ID'
+      missingId: '缺少计划 ID',
+      removeDetailConfirm: '确认将地块「{plot}」从本计划中删除？',
+      removeDetailSuccess: '地块已从计划中删除'
     },
     gantt: {
       title: '采摘计划甘特图',
@@ -2367,6 +2436,21 @@ export default {
       exceedRemaining: '数量不能超过今日领用剩余（{remaining}）'
     }
   },
+  stockMonthly: {
+    action: {
+      detail: '查看详情'
+    },
+    field: {
+      statMonth: '月份'
+    },
+    column: {
+      statMonth: '月份',
+      productCount: '汇总产品数量'
+    },
+    detail: {
+      title: '库存月汇总明细'
+    }
+  },
   stockOverview: {
     action: {
       detail: '详情'
@@ -2484,7 +2568,9 @@ export default {
     action: {
       search: '查询',
       reset: '重置',
-      export: '导出'
+      export: '导出',
+      detail: '查看详情',
+      close: '关闭'
     },
     field: {
       dateRange: '日期范围',
@@ -2501,8 +2587,13 @@ export default {
       cropName: '作物名称',
       feedWeight: '饲喂饲料量',
       feedType: '提供位置',
-      operator: '操作人'
-    }
+      operator: '操作人',
+      totalWeight: '有机饲喂总重量',
+      boxCount: '仓库确认框数',
+      confirmUser: '仓库确认人',
+      operation: '操作'
+    },
+    detailTitle: '当日饲喂明细'
   },
   djs: {
     placeholder: {
@@ -2733,7 +2824,6 @@ export default {
         measureBelowTitle: '称重低于打包规则',
         measureBelowTip: '打包规则 {rule}g，当前称重 {actual}g，不能少于规则重量，请重新称重',
         measureDeviationTitle: '称重超出打包规则',
-        measureDeviationTip: '打包规则 {rule}g，当前称重 {actual}g（超出 {tolerance}% 仍可确认提交）',
         measureDeviationConfirm: '实称 {actual}g 比打包规则 {rule}g 超出 {tolerance}%，确认继续打包？',
         cutHint: '选择已领用的白条分割单，录入各分割产品重量后确认入库；全部称重完成后点「白条完成分割」。',
         cutRecord: '分割单（猪只耳号）',
@@ -2890,8 +2980,12 @@ export default {
         nonWeightReturnWeightTotal: '非重量产品退回重量',
         detailDialogTitle: '退回明细',
         quantityDiff: '差异量',
-        confirmProgress: '确认进度',
-        confirmProgressTip: '仓库尚未确认完当天全部退回行，未确认的没有入库'
+        confirmProgress: '入库数/丢弃数',
+        confirmProgressTip: '仓库尚未确认完当天全部退回行，未确认的没有入库（共 {total} 条，待确认 {pending} 条）',
+        isDiscard: '是否丢弃',
+        statusDiscarded: '已丢弃',
+        discardYes: '是',
+        discardNo: '否'
       },
       check: {
         checkId: '盘点单号',
@@ -3958,7 +4052,7 @@ export default {
       returnLimit: '可退上限',
       returnLocation: '退回库位',
       receivedQty: '仓库实收量',
-      receivedWeight: '仓库实收重量',
+      receivedWeight: '仓库实收量',
       returnStatus: '退回状态',
       returnReason: '退回原因',
       traceCode: '追溯码',
@@ -3969,7 +4063,8 @@ export default {
     },
     tab: {
       pork: '猪肉产品',
-      vegetable: '果蔬产品'
+      vegetable: '果蔬产品',
+      other: '其他产品'
     },
     subCategory: {
       pork: '猪肉产品',

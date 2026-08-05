@@ -38,6 +38,8 @@ export interface ProductInfoVO extends BaseEntity {
   productMaterialName?: string;
   productDesc?: string;
   materialNum?: number | string;
+  /** 销售价格（row191）：原材料对外出库单价 */
+  salePrice?: number | string;
   isDelivery: number;
   supplierId?: number | string;
   /** 供应商名称（row81：商品配置列表「供应商」列；后端按 supplierId 关联 t_md_supplier 回填） */
@@ -112,6 +114,8 @@ export interface ProductInfoForm {
   productMaterial?: number | string;
   productDesc?: string;
   materialNum?: number;
+  /** 销售价格（row191）：产品属性=原材料时可填 */
+  salePrice?: number;
   isDelivery: number;
   supplierId?: number | string;
   isBuyOut: number;

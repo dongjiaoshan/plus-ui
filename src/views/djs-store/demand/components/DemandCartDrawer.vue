@@ -303,6 +303,20 @@ const tabProducts = computed<ProductInfoVO[]>(() => {
       (p) => ((p.displayName || p.productName) ?? '').toLowerCase().includes(kw) || (p.productName ?? '').toLowerCase().includes(kw)
     );
   }
+  // 果蔬 tab 按「最早可采摘日期」升序：先能采的排前面，门店照着顺序下单不用自己找。
+  // 无日期的（列里渲染成 '—'，即没有关联作物 / 作物没有在种计划）一律沉底，不能插在有日期的中间。
+  // 日期是 'yyyy-MM-dd' 定长字符串，字典序 == 时间序，不必转 Date。
+  // sort 稳定（ES2019+），同日期的产品保持后端返回的原有顺序。
+  if (def.key === 'vegetable') {
+    list = [...list].sort((a, b) => {
+      const da = cropStatOf(a)?.earliestPickDate || '';
+      const db = cropStatOf(b)?.earliestPickDate || '';
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return da.localeCompare(db);
+    });
+  }
   return list;
 });
 

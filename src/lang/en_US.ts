@@ -542,6 +542,7 @@ export default {
       sow: 'Sow Production',
       fatten: 'Fattening Production',
       slaughter: 'Slaughter Config',
+      medication: 'Medication Config',
       cycle: 'Production Cycle',
       boar: 'Sperm / Boar',
       med: 'Med Schedule'
@@ -569,6 +570,12 @@ export default {
     },
     slaughter: {
       slaughterAge: 'Slaughter Age'
+    },
+    medication: {
+      fattenMedMaxAge: 'Max Medication Age (fattening pigs)',
+      fattenMedMaxAgeTip: 'Fattening pigs older than this are hidden from the mini-program Vaccine & Medicine pig list (no medication close to slaughter)',
+      medPickUsableDays: 'Medicine Pick Usable Days',
+      medPickUsableDaysTip: 'The medicine picker in single / batch medication only lists medicines picked within this many days'
     },
     title: {
       addCycle: 'Add Cycle Item',
@@ -876,7 +883,8 @@ export default {
         earNo: 'Ear No.',
         eventType: 'Event type',
         newStatus: 'New state',
-        changeBy: 'Changed By'
+        changeBy: 'Changed By',
+        changeTime: 'Change Time'
       },
       placeholder: {
         earNo: 'Enter ear No.',
@@ -1334,6 +1342,7 @@ export default {
       productAttr: 'Attribute',
       productWorkshop: 'Workshop',
       productMaterial: 'Raw Material Product',
+      salePrice: 'Sale price',
       materialNum: 'Packing measure',
       productThumb: 'Product Image',
       productImg: 'Images',
@@ -1358,6 +1367,7 @@ export default {
       supplierName: 'Supplier'
     },
     placeholder: {
+      salePrice: 'Enter sale price',
       productId: 'e.g. P0001 / SP-PORK-001 (manual)',
       productUnit: 'e.g. kg / pcs / box',
       productSpec: 'e.g. 500g/pack',
@@ -1378,6 +1388,7 @@ export default {
       productSpec: { required: 'Spec is required for production products' },
       storeLocation: { required: 'Please select storage location' },
       productAttr: { required: 'Please select product attribute' },
+      productMaterial: { required: 'Please select the linked raw material product' },
       productWorkshop: { required: 'Please select workshop' }
     },
     tip: {
@@ -1436,6 +1447,52 @@ export default {
     }
   },
   // Warehouse stock query (WMS-MD-001, read-only)
+  // Veg room outbound (admin row187)
+  vegOut: {
+    action: { create: 'Add', detail: 'Detail' },
+    field: { outDate: 'Out Date', outDest: 'Destination', operator: 'Operator' },
+    column: {
+      batchNo: 'Outbound No.',
+      totalAmount: 'Amount',
+      outDate: 'Out Date',
+      outDest: 'Destination',
+      productKinds: 'Kinds',
+      totalWeight: 'Total Weight',
+      operator: 'Operator'
+    },
+    detail: {
+      outUnitPrice: 'Unit Price',
+      reprint: 'Reprint',
+      outAmount: 'Amount',
+      title: 'Outbound Detail',
+      productName: 'Product',
+      productSpec: 'Spec',
+      plotCode: 'Plot No.',
+      outWeight: 'Out Qty',
+      productNamePlaceholder: 'Enter product name'
+    },
+    create: {
+      productSpec: 'Spec',
+      unitPrice: 'Unit Price',
+      lineAmount: 'Line Amount',
+      noAfterSubmit: 'Generated on submit',
+      confirmAndPrint: 'Confirm & Print',
+      title: 'New Veg Room Outbound',
+      outDate: 'Out Date',
+      outDest: 'Destination',
+      outDestPlaceholder: 'Select destination',
+      productName: 'Product',
+      productNamePlaceholder: 'Enter product name',
+      stockWeight: 'Stock',
+      plotCode: 'Plot No.',
+      outQuantity: 'Out Qty',
+      selected: 'Selected',
+      selectedEmpty: 'Enter a quantity on the left to add',
+      totalKinds: '{n} kinds',
+      confirm: 'Confirm Outbound',
+      rule: { outDate: 'Please select out date', outDest: 'Please select destination', items: 'Enter a quantity for at least one product' }
+    }
+  },
   stock: {
     field: {
       productName: 'Product',
@@ -1447,6 +1504,7 @@ export default {
     column: {
       locationName: 'Location',
       productName: 'Product',
+      productSpec: 'Spec',
       productCode: 'Product Code',
       productStock: 'Stock',
       productUnit: 'Unit',
@@ -1462,7 +1520,16 @@ export default {
       checkRecord: 'Check log',
       productOut: 'Stock Out',
       pigTransfer: 'Pork Location Transfer',
+      internalHandle: 'Internal Handling',
       viewDetail: 'View Detail'
+    },
+    internalDialog: {
+      title: 'Internal Handling',
+      outDate: 'Out Date',
+      quantity: 'Out Qty',
+      outDest: 'Destination',
+      destVegDock: 'Veg Dock',
+      destFeed: 'Feed'
     },
     outDialog: {
       title: 'Product Stock Out',
@@ -1909,7 +1976,7 @@ export default {
       irrigationInterval: 'Irrigation Interval (days)',
       predictedPer: 'Predicted Yield (kg/mu)',
       qualityDesc: 'Quality Description',
-      pickUnitPrice: 'Performance Unit Price (yuan/jin)'
+      pickUnitPrice: 'Performance Unit Price (yuan/kg)'
     },
     placeholder: {
       cropCode: 'Enter crop code (e.g. C001)',
@@ -2149,7 +2216,9 @@ export default {
     detail: {
       title: 'Plan Detail',
       detailsTitle: 'Plot Details',
-      missingId: 'Missing plan id'
+      missingId: 'Missing plan id',
+      removeDetailConfirm: 'Remove plot "{plot}" from this plan?',
+      removeDetailSuccess: 'Plot removed from the plan'
     },
     gantt: {
       title: 'Harvest Plan Gantt',
@@ -2363,6 +2432,21 @@ export default {
       exceedRemaining: 'Quantity cannot exceed today picked remaining ({remaining})'
     }
   },
+  stockMonthly: {
+    action: {
+      detail: 'Detail'
+    },
+    field: {
+      statMonth: 'Month'
+    },
+    column: {
+      statMonth: 'Month',
+      productCount: 'Products'
+    },
+    detail: {
+      title: 'Monthly Stock Details'
+    }
+  },
   stockOverview: {
     action: {
       detail: 'Detail'
@@ -2480,7 +2564,9 @@ export default {
     action: {
       search: 'Search',
       reset: 'Reset',
-      export: 'Export'
+      export: 'Export',
+      detail: 'Detail',
+      close: 'Close'
     },
     field: {
       dateRange: 'Date Range',
@@ -2497,8 +2583,13 @@ export default {
       cropName: 'Crop Name',
       feedWeight: 'Feed Weight',
       feedType: 'Source',
-      operator: 'Operator'
-    }
+      operator: 'Operator',
+      totalWeight: 'Organic Feed Total Weight',
+      boxCount: 'Confirmed Crates',
+      confirmUser: 'Confirmed By',
+      operation: 'Action'
+    },
+    detailTitle: 'Daily Feeding Details'
   },
   djs: {
     placeholder: {
@@ -2729,7 +2820,6 @@ export default {
         measureBelowTitle: 'Weight below packing rule',
         measureBelowTip: 'Packing rule {rule}g, current weight {actual}g. It must not be less than the rule weight — please weigh again',
         measureDeviationTitle: 'Weight above packing rule',
-        measureDeviationTip: 'Packing rule {rule}g, current weight {actual}g (over {tolerance}% can still be submitted after confirmation)',
         measureDeviationConfirm: 'Actual {actual}g exceeds the {rule}g packing rule by more than {tolerance}%. Continue packing?',
         cutHint: 'Pick a picked cut record, enter cut-product weights and confirm inbound; click "Finish Cut" when all are weighed.',
         cutRecord: 'Cut Record (Ear No)',
@@ -2886,8 +2976,12 @@ export default {
         nonWeightReturnWeightTotal: 'Non-Weight Product Return Weight',
         detailDialogTitle: 'Return Detail',
         quantityDiff: 'Quantity Diff',
-        confirmProgress: 'Confirm Progress',
-        confirmProgressTip: 'Warehouse has not confirmed every return line of the day; unconfirmed lines are not stocked in'
+        confirmProgress: 'Inbound/Discarded',
+        confirmProgressTip: 'Warehouse has not confirmed every return line of the day; unconfirmed lines are not stocked in ({total} total, {pending} pending)',
+        isDiscard: 'Discarded',
+        statusDiscarded: 'Discarded',
+        discardYes: 'Yes',
+        discardNo: 'No'
       },
       check: {
         checkId: 'Check No.',
@@ -3954,7 +4048,7 @@ export default {
       returnLimit: 'Returnable Limit',
       returnLocation: 'Return Location',
       receivedQty: 'Received Qty',
-      receivedWeight: 'Received Weight',
+      receivedWeight: 'Received Amount',
       returnStatus: 'Return Status',
       returnReason: 'Reason',
       traceCode: 'Trace Code',
@@ -3965,7 +4059,8 @@ export default {
     },
     tab: {
       pork: 'Pork Products',
-      vegetable: 'Produce Products'
+      vegetable: 'Produce Products',
+      other: 'Other Products'
     },
     subCategory: {
       pork: 'Pork Product',

@@ -63,6 +63,10 @@ export interface ReturnStoreDailyVO {
   confirmedCount?: number;
   /** 总行数（该组全部退回行，含未确认） */
   totalCount?: number;
+  /** 已确认且**退回入库**的行数（row203「确认进度」左侧数） */
+  inboundCount?: number;
+  /** 已确认且**产品丢弃**的行数（row203「确认进度」右侧数） */
+  discardCount?: number;
   /** 确认时间（该组最近一条已确认行；只要有 1 条确认过就有值 → 判断是否全部确认要看 confirmedCount/totalCount） */
   confirmTime?: string;
   confirmUser?: string;

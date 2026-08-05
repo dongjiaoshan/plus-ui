@@ -75,13 +75,22 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const searchModel = reactive<PigStatusRecordQuery>({
+/**
+ * 搜索模型。changeTime 是 daterange 控件的绑定值（`[起, 止]` 两个 `YYYY-MM-DD`），
+ * 提交前在 buildParams 里拆成后端 `changeTimeStart` / `changeTimeEnd` 两个 LocalDateTime，
+ * 自身不直传（后端无 changeTime 字段）。
+ */
+type LedgerSearchModel = Omit<PigStatusRecordQuery, 'changeTimeStart' | 'changeTimeEnd'> & {
+  /** daterange 绑定值 `[起, 止]`；未选时 undefined，只选一端时另一端为空串 */
+  changeTime?: string[];
+};
+
+const searchModel = reactive<LedgerSearchModel>({
   earNo: undefined,
   eventType: undefined,
   newStatus: undefined,
   createByName: undefined,
-  changeTimeStart: undefined,
-  changeTimeEnd: undefined
+  changeTime: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -100,7 +109,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
     type: 'input',
     placeholder: t('breedEvent.ledger.placeholder.changeBy'),
     clearable: true
-  }
+  },
+  { field: 'changeTime', label: t('breedEvent.ledger.field.changeTime'), type: 'daterange' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -116,14 +126,27 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'id', label: t('breedEvent.ledger.column.id'), minWidth: 180, align: 'center', visible: false }
 ]);
 
+/**
+ * 拼查询入参：daterange 的 `changeTime` 拆成后端 changeTimeStart / changeTimeEnd。
+ *
+ * 后端两字段是 `LocalDateTime` 且全局 date-time 格式为 `yyyy-MM-dd HH:mm:ss`，
+ * 裸日期串解析不了，故补时分秒；止端补 23:59:59 让当天记录含在闭区间内（后端用 le）。
+ */
+function buildParams(): PigStatusRecordQuery {
+  const { changeTime: range, ...rest } = searchModel;
+  return {
+    ...rest,
+    changeTimeStart: Array.isArray(range) && range[0] ? `${range[0]} 00:00:00` : undefined,
+    changeTimeEnd: Array.isArray(range) && range[1] ? `${range[1]} 23:59:59` : undefined,
+    pageNum: pageNum.value,
+    pageSize: pageSize.value
+  };
+}
+
 async function load() {
   loading.value = true;
   try {
-    const params: PigStatusRecordQuery = {
-      ...searchModel,
-      pageNum: pageNum.value,
-      pageSize: pageSize.value
-    };
+    const params = buildParams();
     const res = await listStatusRecord(params);
     list.value = (res.rows ?? []) as PigStatusRecordVO[];
     total.value = res.total ?? 0;
@@ -144,8 +167,7 @@ function handleReset() {
     eventType: undefined,
     newStatus: undefined,
     createByName: undefined,
-    changeTimeStart: undefined,
-    changeTimeEnd: undefined
+    changeTime: undefined
   });
   pageNum.value = 1;
   load();
