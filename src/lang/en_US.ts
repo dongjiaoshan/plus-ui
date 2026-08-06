@@ -1449,7 +1449,8 @@ export default {
   // Warehouse stock query (WMS-MD-001, read-only)
   // Veg room outbound (admin row187)
   vegOut: {
-    action: { create: 'Add', detail: 'Detail' },
+    pageTitle: 'Veg Room Outbound',
+    action: { create: 'Add', detail: 'Detail', export: 'Export' },
     field: { outDate: 'Out Date', outDest: 'Destination', operator: 'Operator' },
     column: {
       batchNo: 'Outbound No.',
@@ -2080,6 +2081,7 @@ export default {
       harvestStatus: 'Harvest Status',
       transplantAdjusted: 'Transplant Adjusted',
       transplantAdjustedTag: 'Transplant',
+      changeType: 'Change Type',
       plantTime: 'Plant Time',
       plantActualDate: 'Plant Date',
       beginHarvestdate: 'Harvest Start Date',
@@ -2159,6 +2161,29 @@ export default {
     },
     action: {
       detail: 'Details'
+    },
+    // V6-R36 back-office adjustment of a planted plot
+    adjust: {
+      btn: 'Modify',
+      title: 'Modify Planting Record',
+      field: {
+        plantState: 'Planting Status',
+        plantDate: 'Plant Date',
+        plantBy: 'Plant Team'
+      },
+      state: {
+        planted: 'Planted',
+        pending: 'To Be Planted'
+      },
+      placeholder: { plantDate: 'Select plant date' },
+      rule: {
+        plantState: 'Please select planting status',
+        plantDate: 'Please select plant date'
+      },
+      pendingTip:
+        'On save this plot goes back to "To Be Planted": planned harvest dates are cleared, the planting record (plant date and team) is removed, and the change type is recorded as "Back-office Adjustment".',
+      success: 'Planting record adjusted',
+      noChange: 'Planting status, plant date and team are unchanged; nothing was processed'
     },
     edit: {
       btn: {

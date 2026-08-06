@@ -12,6 +12,17 @@
         @clear="load"
       />
       <el-button type="primary" icon="Search" @click="load">{{ t('common.search') }}</el-button>
+      <!-- V6 row30：明细导出，位置在「搜索」右侧（甲方截图红框处）。空明细时禁用，免得导出一张空表 -->
+      <el-button
+        v-hasPermi="['djs:warehouse:vegOut:export']"
+        type="warning"
+        plain
+        icon="Download"
+        :disabled="!rows.length"
+        @click="handleExport"
+      >
+        {{ t('vegOut.action.export') }}
+      </el-button>
       <!-- row198：顶部右侧显示出库单号 -->
       <span class="ml-auto text-gray-500">{{ t('vegOut.column.batchNo') }}：{{ batchNo || '-' }}</span>
     </div>
@@ -58,11 +69,14 @@ import { printVegOutSheet } from '../printSheet';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const visible = ref(false);
 const loading = ref(false);
 const batchNo = ref('');
 const productName = ref('');
+/** 上一次真正拉出 rows 的产品名条件（导出跟它走，见 handleExport）。 */
+const appliedProductName = ref('');
 const rows = ref<VegOutDetailVO[]>([]);
 /** 重打需要的单头信息（明细接口只返行，单头由列表行带入）。 */
 const header = ref<{ outDate: string; customerName: string }>({ outDate: '', customerName: '' });
@@ -105,11 +119,28 @@ function handleReprint() {
   });
 }
 
+/**
+ * V6 row30：导出这张出库单的产品明细。
+ *
+ * 用 **appliedProductName**（上一次真正查出这张表的条件），不是搜索框里的实时值 ——
+ * 用户敲了「红薯」但没点搜索就点导出时，屏幕上还是 10 行、实时值却会让导出只出 3 行，
+ * 少的 7 行甲方对账时看不出来。与列表页导出（buildFilter，已应用态）同一个约定。
+ */
+function handleExport() {
+  proxy?.download(
+    'djs/warehouse/veg-out/detail/export',
+    { batchNo: batchNo.value, productName: appliedProductName.value || undefined },
+    `${t('vegOut.detail.title')}_${batchNo.value}.xlsx`
+  );
+}
+
 async function load() {
   loading.value = true;
   try {
     const res = await getVegOutDetail(batchNo.value, productName.value || undefined);
     rows.value = (res.data ?? []) as VegOutDetailVO[];
+    // 查成功才提升「已应用条件」——查失败时导出仍跟着屏幕上那份旧数据走
+    appliedProductName.value = productName.value;
   } finally {
     loading.value = false;
   }
@@ -119,6 +150,7 @@ const open = (row: VegOutBatchVO, destLabel: string) => {
   batchNo.value = row.batchNo;
   header.value = { outDate: String(row.outDate ?? '').slice(0, 10), customerName: destLabel };
   productName.value = '';
+  appliedProductName.value = '';
   rows.value = [];
   visible.value = true;
   load();
@@ -129,6 +161,7 @@ const handleClosed = () => {
   batchNo.value = '';
   header.value = { outDate: '', customerName: '' };
   productName.value = '';
+  appliedProductName.value = '';
   rows.value = [];
 };
 </script>

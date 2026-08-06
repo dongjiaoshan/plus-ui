@@ -40,6 +40,8 @@ export interface VegOutDetailVO {
   /** 出库总价（row193）= 出库量 × 出库单价 */
   outAmount?: number | string | null;
   plotCode?: string;
+  /** 出库量带单位展示串（导出专用，仅 xlsx 路径由后端派生；明细接口不返） */
+  outQtyLabel?: string;
 }
 
 export interface VegOutQuery {

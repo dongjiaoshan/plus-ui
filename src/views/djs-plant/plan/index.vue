@@ -51,6 +51,9 @@
         <el-button v-hasPermi="['djs:plant:plan:remove']" link type="danger" size="small" icon="Delete" @click="handleDelOne(row)" />
       </template>
     </BizTable>
+
+    <!-- V6-R35：详情改弹框（原来跳 tagsView 独立 tab，keep-alive 下拿不到最新数据） -->
+    <PlanDetailDialog v-model="detailVisible" :plan-id="detailPlanId" @changed="onDetailChanged" />
   </div>
 </template>
 
@@ -61,6 +64,7 @@ import { delPlan, listPlan, getPlanStats } from '@/api/djs-plant/plan';
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import type { PlantPlanQuery, PlantPlanStatsVO, PlantPlanVO } from '@/api/djs-plant/plan/types';
 import { PLAN_BASE } from './route';
+import PlanDetailDialog from './components/PlanDetailDialog.vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { getCurrentInstance } from 'vue';
@@ -82,6 +86,9 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 // 作物图片：cropImage(ossId) → 解析后的 url
 const thumbUrlMap = ref<Record<string, string>>({});
+// V6-R35 详情弹框
+const detailVisible = ref(false);
+const detailPlanId = ref<string>('');
 
 // ---- 顶部 KPI ----
 const stats = ref<PlantPlanStatsVO>({});
@@ -324,8 +331,22 @@ const handleEdit = (row: BizRow) => {
   router.push(`${PLAN_BASE}/detail?id=${row.id}&edit=1`);
 };
 
+/**
+ * V6-R35：详情改弹框。
+ *
+ * 原来 push 到 `plan/detail` 会在 admin 顶部 tagsView 开一个新 tab，该 tab 受 keep-alive 缓存，
+ * 数据变了再点进去看到的还是旧的（甲方原话「TAP 里点开的详情没有办法进行刷新」）。
+ * 弹框 + destroy-on-close 后，每次打开都是新面板、必然重新拉数据。
+ */
 const handleDetail = (row: BizRow) => {
-  router.push(`${PLAN_BASE}/detail?id=${row.id}`);
+  detailPlanId.value = String(row.id);
+  detailVisible.value = true;
+};
+
+/** 弹框内做了写操作（编辑保存 / 删明细 / 已种植地块调整）→ 列表与 KPI 同步刷新 */
+const onDetailChanged = () => {
+  loadList();
+  loadStats();
 };
 
 const handleDelOne = async (row: BizRow) => {

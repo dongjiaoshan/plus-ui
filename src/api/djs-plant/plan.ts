@@ -1,6 +1,7 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
 import type {
+  PlantDetailAdjustForm,
   PlantPlanQuery,
   PlantPlanVO,
   PlantPlanStatsVO,
@@ -71,6 +72,19 @@ export const delPlanDetail = (detailId: number | string) => {
   return request({
     url: '/djs/plant/plan/detail/' + String(detailId),
     method: 'delete'
+  });
+};
+
+/**
+ * V6-R36：已种植地块后台调整（改回待种植 / 改种植日期 / 仅改班组）。
+ *
+ * 返回 data：1=已调整；0=状态/日期/班组三项都没变，系统未做任何处理。
+ */
+export const adjustPlantedDetail = (data: PlantDetailAdjustForm): AxiosPromise<number> => {
+  return request({
+    url: '/djs/plant/plan/detail/adjust',
+    method: 'put',
+    data
   });
 };
 

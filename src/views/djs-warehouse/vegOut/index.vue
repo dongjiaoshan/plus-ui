@@ -17,9 +17,11 @@
       :show-batch-del="false"
       :show-row-edit="false"
       :show-row-del="false"
+      show-export
       @search="handleSearch"
       @reset="handleReset"
       @add="handleCreate"
+      @export="handleExport"
       @page-change="handlePageChange"
     >
       <template #action="{ row }">
@@ -126,17 +128,22 @@ function fmtKg(v: number | string | undefined | null): string {
   return Number.isNaN(n) ? String(v) : `${formatQtyByUnit(n, 'kg')}kg`;
 }
 
-/** daterange → 后端 beginDate / endDate；止端补 23:59:59 才包得住当天（后端用 ≤）。 */
-function buildQuery(): VegOutQuery {
+/**
+ * 搜索条件（不含分页）：daterange → 后端 beginDate / endDate；
+ * 止端补 23:59:59 才包得住当天（后端用 ≤）。
+ */
+function buildFilter(): Omit<VegOutQuery, 'pageNum' | 'pageSize'> {
   const range = searchModel.outDate as string[] | undefined;
   return {
-    pageNum: pageNum.value,
-    pageSize: pageSize.value,
     beginDate: Array.isArray(range) && range[0] ? `${range[0]} 00:00:00` : undefined,
     endDate: Array.isArray(range) && range[1] ? `${range[1]} 23:59:59` : undefined,
     outDest: searchModel.outDest || undefined,
     operatorId: searchModel.operatorId || undefined
   };
+}
+
+function buildQuery(): VegOutQuery {
+  return { pageNum: pageNum.value, pageSize: pageSize.value, ...buildFilter() };
 }
 
 async function fetchList() {
@@ -184,6 +191,16 @@ function handlePageChange(p: number, s: number) {
   pageNum.value = p;
   pageSize.value = s;
   fetchList();
+}
+
+/**
+ * V6 row31：按当前筛选条件导出出库单列表（全量，不受分页影响）。
+ *
+ * 用 buildFilter() 而不是 BizTable 透传的表单快照：导出必须跟屏幕上这张表严格对得上
+ * （甲方拿它对账），而表格数据来自最后一次「搜索」应用的 searchModel。
+ */
+function handleExport() {
+  proxy?.download('djs/warehouse/veg-out/export', { ...buildFilter() }, `${t('vegOut.pageTitle')}_${new Date().getTime()}.xlsx`);
 }
 
 onMounted(() => {

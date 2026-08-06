@@ -1451,7 +1451,8 @@ export default {
   },
   // 毛菜间出库管理（admin row187）
   vegOut: {
-    action: { create: '新增', detail: '查看详情' },
+    pageTitle: '毛菜间出库管理',
+    action: { create: '新增', detail: '查看详情', export: '导出' },
     field: { outDate: '出库日期', outDest: '出库去向', operator: '操作人' },
     column: {
       batchNo: '出库单号',
@@ -2084,6 +2085,7 @@ export default {
       harvestStatus: '采摘状态',
       transplantAdjusted: '移栽调整',
       transplantAdjustedTag: '移栽',
+      changeType: '变更类型',
       plantTime: '计划种植时间',
       plantActualDate: '种植日期',
       beginHarvestdate: '开始采摘日期',
@@ -2163,6 +2165,28 @@ export default {
     },
     action: {
       detail: '详情'
+    },
+    // V6-R36 已种植地块后台调整
+    adjust: {
+      btn: '修改',
+      title: '修改种植记录',
+      field: {
+        plantState: '种植状态',
+        plantDate: '种植日期',
+        plantBy: '种植班组'
+      },
+      state: {
+        planted: '已种植',
+        pending: '待种植'
+      },
+      placeholder: { plantDate: '请选择种植日期' },
+      rule: {
+        plantState: '请选择种植状态',
+        plantDate: '请选择种植日期'
+      },
+      pendingTip: '保存后该地块将改回「待种植」：清空计划采摘日期、删除对应的种植记录（种植日期与种植班组），变更类型记为「后台调整」。',
+      success: '种植记录已调整',
+      noChange: '种植状态、种植日期和班组都没有调整，未做任何处理'
     },
     edit: {
       btn: {

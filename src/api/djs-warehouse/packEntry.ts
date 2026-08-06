@@ -108,6 +108,12 @@ export interface DryPackBo {
   sourceInhouseId: number | string;
   productId: number | string;
   productWeight: number;
+  /**
+   * 本次打包的「成品数量」（V6 row34）：单位 = 成品自身单位（4 枚 / 2 份），后端按它扣门店需求。
+   * 与 productWeight 不同 —— productWeight 落库的是**原材料消耗量**（份数模式 = 打包量 × 每份规格）。
+   * 仅在录入框显示的就是「打包量」时回传；重量模式（录入的是重量）不传，后端回落「一次打包扣 1 份」。
+   */
+  packQuantity?: number;
   allowOverMeasure?: boolean;
   productUnit: string;
   locationId?: number | string;
