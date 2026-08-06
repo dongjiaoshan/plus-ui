@@ -668,6 +668,20 @@ export default {
       newPenPlaceholder: 'Select target pen',
       success: 'Converted to fattening pig'
     },
+    editEarNo: {
+      action: 'Edit Ear No.',
+      title: 'Edit Ear No.',
+      currentEarNo: 'Current Ear No.',
+      newEarNo: 'New Ear No.',
+      newEarNoPlaceholder: 'Format: strain-breed-sex-birthdate-seq, e.g. 01-01-2-260319-022',
+      newEarNoRequired: 'New ear number is required',
+      newEarNoPattern: 'Must match strain-breed-sex-birthdate-seq format (e.g. 01-01-2-260319-022)',
+      warning: 'Only the current ear number is changed; existing history records and trace codes are not updated. If this pig has offspring, their father/mother ear number fields need manual review.',
+      confirmTitle: 'Confirm ear number change?',
+      confirmMessage: 'Ear number will change from {old} to {new}, continue?',
+      success: 'Ear number updated',
+      unchanged: 'New ear number is the same as the current one'
+    },
     tab: {
       all: 'All',
       // 与 zh_CN 同步（DICT-PIG-TYPE-001）：sow/boar 指种用猪，与育肥猪区分

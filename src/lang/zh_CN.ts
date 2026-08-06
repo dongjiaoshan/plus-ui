@@ -667,6 +667,20 @@ export default {
       newPenPlaceholder: '请选择转移栏位',
       success: '已转为育肥猪'
     },
+    editEarNo: {
+      action: '修改耳号',
+      title: '修改耳号',
+      currentEarNo: '当前耳号',
+      newEarNo: '新耳号',
+      newEarNoPlaceholder: '格式：品系-品种-性别-出生日-序号，如 01-01-2-260319-022',
+      newEarNoRequired: '请输入新耳号',
+      newEarNoPattern: '格式须为 品系-品种-性别-出生日-序号（如 01-01-2-260319-022）',
+      warning: '仅修改当前耳号；已生成的历史记录、追溯码不会同步更新。若该猪已生育仔猪，其仔猪记录的父/母系耳号需另行核实。',
+      confirmTitle: '确认修改耳号？',
+      confirmMessage: '耳号将从 {old} 改为 {new}，确认继续？',
+      success: '耳号已修改',
+      unchanged: '新耳号与当前耳号相同，无需修改'
+    },
     tab: {
       all: '全部',
       // 与字典 djs_pig_type 的 dict_label 保持一致（DICT-PIG-TYPE-001）：

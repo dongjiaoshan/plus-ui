@@ -176,3 +176,11 @@ export interface PigEventForm {
   payload?: OestrusPayload | NullReturnPayload | TransferPayload | Record<string, unknown>;
   remark?: string;
 }
+
+/** 修改耳号入参（BRD-LIST-EDIT-001，对应后端 PigEarNoUpdateBo） */
+export interface PigEarNoUpdateForm {
+  /** 新耳号（全版，格式：品系-品种-性别-出生日-序号，如 01-01-2-260319-022） */
+  earNo: string;
+  /** 乐观锁版本（打开弹框时从 row.version 带入，防并发覆盖） */
+  version: number;
+}

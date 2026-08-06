@@ -34,11 +34,17 @@
         <span v-else>—</span>
       </template>
       <template #action="{ row }">
+        <el-button v-hasPermi="['djs:breed:pig:edit']" type="primary" link size="small" @click="openEditEarNo(row as unknown as PigVO)">
+          {{ t('pig.editEarNo.action') }}
+        </el-button>
         <el-button type="primary" link size="small" @click="openDetail(row.id)">
           {{ t('common.detail') }}
         </el-button>
       </template>
     </BizTable>
+
+    <!-- BRD-LIST-EDIT-001：修改耳号 -->
+    <EditEarNoDialog ref="editEarNoRef" @success="load" />
   </div>
 </template>
 
@@ -54,6 +60,8 @@ import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { listPig } from '@/api/djs-breed/pig';
 import { usePigListByType } from '../composables/usePigListByType';
+import EditEarNoDialog from '../components/EditEarNoDialog.vue';
+import type { PigVO } from '@/api/djs-breed/pig/types';
 import type { BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
 
 const { t } = useI18n();
@@ -105,6 +113,11 @@ async function openByEarNo(earNo: string) {
   } catch {
     // axios 拦截器统一处理
   }
+}
+
+const editEarNoRef = ref<{ open: (row: PigVO) => void }>();
+function openEditEarNo(row: PigVO) {
+  editEarNoRef.value?.open(row);
 }
 
 function handleExport() {
