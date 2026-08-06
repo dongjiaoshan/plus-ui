@@ -1691,7 +1691,17 @@ export default {
   },
   plantZone: {
     title: { add: '新增片区', edit: '编辑片区' },
-    column: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '说明', zoneBelong: '所属大区', zoneStatus: '状态', createTime: '创建时间', plotCount: '管理地块数量', updateTime: '更新时间', updateByName: '更新人员' },
+    column: {
+      zoneCode: '片区编码',
+      zoneName: '片区名称',
+      zoneDesc: '说明',
+      zoneBelong: '所属大区',
+      zoneStatus: '状态',
+      createTime: '创建时间',
+      plotCount: '管理地块数量',
+      updateTime: '更新时间',
+      updateByName: '更新人员'
+    },
     field: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '片区说明', zoneBelong: '所属大区', zoneStatus: '状态' },
     filter: { zoneBelong: '所属大区', zoneName: '片区名称', updateTime: '更新时间', updateBy: '更新人员' },
     placeholder: {
@@ -2014,7 +2024,11 @@ export default {
       organicWarning: '请选择证书是否预警',
       updateBy: '请输入更新人员ID'
     },
-    rule: { cropCode: { required: '作物编码不能为空' }, cropName: { required: '作物名称不能为空' }, maxCycle: { gtMin: '生长最大周期必须大于生长最小周期' } },
+    rule: {
+      cropCode: { required: '作物编码不能为空' },
+      cropName: { required: '作物名称不能为空' },
+      maxCycle: { gtMin: '生长最大周期必须大于生长最小周期' }
+    },
     confirm: { del: '是否确认删除选中的 {count} 个作物？' }
   },
   // 种植 - 班组（PLT-MD-002）
@@ -2083,8 +2097,6 @@ export default {
       lastHarvestdate: '最晚采摘日期',
       plantStatus: '种植计划状态',
       harvestStatus: '采摘状态',
-      transplantAdjusted: '移栽调整',
-      transplantAdjustedTag: '移栽',
       changeType: '变更类型',
       plantTime: '计划种植时间',
       plantActualDate: '种植日期',
@@ -4023,6 +4035,42 @@ export default {
       noCode: '该行无追溯码可补打'
     }
   },
+  burnAdjust: {
+    pageTitle: '燎毛间产品重量调整',
+    field: {
+      inboundDate: '入库日期',
+      productName: '产品名称',
+      isAdjusted: '是否调整',
+      arriveWeight: '猪只接收重量',
+      pendingWeight: '待入库重量',
+      productWeight: '产品入库重量'
+    },
+    placeholder: {
+      productName: '请输入产品名称',
+      isAdjusted: '请选择是否调整'
+    },
+    column: {
+      inboundTime: '入库时间',
+      productName: '产品名称',
+      productWeight: '产品入库重量',
+      earNo: '耳号',
+      burnFinished: '猪只燎毛间是否处理完成',
+      locationName: '入库库位',
+      isAdjusted: '是否调整',
+      operator: '入库人',
+      adjustTime: '调整时间',
+      adjustBy: '调整人'
+    },
+    action: {
+      adjust: '调整'
+    },
+    dialog: {
+      title: '调整产品入库重量'
+    },
+    rule: {
+      productWeight: '请输入调整后的产品入库重量'
+    }
+  },
   vegHandleRecord: {
     pageTitle: '毛菜间处理记录',
     field: {
@@ -4047,6 +4095,7 @@ export default {
     column: {
       handleDate: '处理日期',
       cropName: '作物名称',
+      productName: '产品名称',
       statSource: '统计来源',
       handleMethod: '处理方式',
       plotCode: '地块编号',

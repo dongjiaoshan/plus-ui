@@ -5,6 +5,10 @@
         <div class="flex items-center justify-between">
           <span class="text-base font-medium">{{ t('plantPlan.detail.title') }} · {{ plan?.plan?.planNo }}</span>
           <div class="flex items-center gap-2">
+            <!--
+              详情不给「编辑」入口（甲方 V6-R42）。编辑态本身保留：路由页 `?edit=1` 调 enterEdit() 进入，
+              进入后这里出「保存 / 取消」。
+            -->
             <template v-if="editMode">
               <el-button type="primary" :loading="saving" size="small" @click="onSave">
                 {{ t('plantPlan.edit.btn.save') }}
@@ -12,16 +16,6 @@
               <el-button :disabled="saving" size="small" @click="onCancel">
                 {{ t('plantPlan.edit.btn.cancel') }}
               </el-button>
-            </template>
-            <template v-else>
-              <el-button v-if="canEdit" type="primary" size="small" @click="onEnterEdit">
-                {{ t('plantPlan.edit.btn.edit') }}
-              </el-button>
-              <el-tooltip v-else placement="top" :content="lockTip">
-                <el-button size="small" disabled>
-                  {{ t('plantPlan.edit.btn.edit') }}
-                </el-button>
-              </el-tooltip>
             </template>
             <!-- 路由页在此塞「返回列表」；弹框形态不渲染 -->
             <slot name="header-extra" />
@@ -125,12 +119,6 @@
             <dict-tag :options="djs_pick_status" :value="row.harvestStatus" />
           </template>
         </el-table-column>
-        <el-table-column :label="t('plantPlan.field.transplantAdjusted')" width="90" align="center" header-align="center">
-          <template #default="{ row }">
-            <el-tag v-if="row.transplantAdjusted === 1" size="small" type="warning">{{ t('plantPlan.field.transplantAdjustedTag') }}</el-tag>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
         <!-- V6-R36：变更类型（种植记录最后一次由谁改：小程序操作 / 后台调整 / 后台班组调整） -->
         <el-table-column :label="t('plantPlan.field.changeType')" width="110" align="center" header-align="center">
           <template #default="{ row }">
@@ -153,7 +141,7 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <!-- 操作列固定在最右：已种植的地块给「修改」（V6-R36），种植未开始的给「删除」（row184） -->
+        <!-- 操作列固定在最右：已种植且采摘未开始的地块给「修改」（V6-R36 / R38），种植未开始的给「删除」（row184） -->
         <el-table-column :label="t('common.operate')" width="130" align="center" header-align="center" fixed="right">
           <template #default="{ row }">
             <el-button v-if="canAdjustDetail(row)" v-hasPermi="['djs:plant:plan:edit']" link type="primary" size="small" @click="onAdjustDetail(row)">
@@ -330,6 +318,9 @@ const teamOptions = ref<Array<{ id: string; teamName: string }>>([]);
 const adjustVisible = ref(false);
 const adjustRow = ref<PlantDetailsVO | null>(null);
 
+/** 采摘状态「待开始」的字典码值（djs_pick_status：pending/picking/completed/delayed） */
+const HARVEST_STATUS_PENDING = 'pending';
+
 // 只读明细行展示班组名列表（row36 多 tag）：优先 VO 全集名，回落旧单列名
 function teamNamesOf(row: PlantDetailsVO, role: 'plant' | 'harvest'): string[] {
   if (role === 'plant') {
@@ -353,19 +344,12 @@ const cellWidth = computed<number>(() => {
 });
 const ganttRows = computed<PlantPlanGanttRow[]>(() => gantt.value?.rows || []);
 
-/** 是否允许进入编辑态 */
+/** 是否允许进入编辑态（唯一入口是路由页 `?edit=1` → enterEdit()，界面上不再有编辑按钮） */
 const canEdit = computed(() => {
   const s = plan.value?.plan?.plantStatus;
   // V1：draft / planned / ongoing 允许进入编辑（受 service 端规则约束实际可改字段）
   // done / cancelled 禁止
   return s === 'draft' || s === 'planned' || s === 'ongoing';
-});
-
-const lockTip = computed(() => {
-  const s = plan.value?.plan?.plantStatus;
-  if (s === 'done') return t('plantPlan.edit.lockTip.done');
-  if (s === 'cancelled') return t('plantPlan.edit.lockTip.cancelled');
-  return t('plantPlan.edit.lockTip.other');
 });
 
 watch(
@@ -476,14 +460,19 @@ function canRemoveDetail(row: PlantDetailsVO): boolean {
 }
 
 /**
- * V6-R36：该地块明细能否后台调整。
+ * 该地块明细能否后台调整（V6-R36 入口 + V6-R38 采摘态收窄）。
  *
- * 判据用 `beginActualdate` 有值（= 已有种植记录）而不是 plantStatus 等于某个码值：
- * mp「一步落地」写 completed、历史「开工分步」写 ongoing，两种都是甲方口中的「已种植」，
- * 而两者共同、且唯一稳定的特征就是实际种植日期已落库。
+ * 两个条件同时满足才给「修改」：
+ *   1. `beginActualdate` 有值 = 已有种植记录。用日期而不是 plantStatus 码值判断，是因为
+ *      mp「一步落地」写 completed、历史「开工分步」写 ongoing，两种都是甲方口中的「已种植」，
+ *      唯一稳定的共同特征就是实际种植日期已落库。
+ *   2. 采摘状态是「待开始」（`djs_pick_status` = pending）。采摘一旦开始/完成/延期，该行下游已挂
+ *      采摘记录、毛菜处理、产量台账，后台不再给调整入口（甲方 2026-08-06）。
+ *
+ * 落不到「修改」的已种植行也不会掉进「删除」分支：canRemoveDetail 要求 `!beginActualdate`。
  */
 function canAdjustDetail(row: PlantDetailsVO): boolean {
-  return !!row.beginActualdate;
+  return !!row.beginActualdate && row.harvestStatus === HARVEST_STATUS_PENDING;
 }
 
 function onAdjustDetail(row: PlantDetailsVO) {

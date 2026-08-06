@@ -1205,12 +1205,37 @@ const PACK_MEASURE_OVER_TOLERANCE_PERCENT = 3;
 const PACK_MEASURE_UPPER_FACTOR = 1 + PACK_MEASURE_OVER_TOLERANCE_PERCENT / 100;
 
 /**
- * 当前所选产品的打包计量规则（kg）。
- * 仅肉品 / 果蔬按 materialNum 校验；未配置或非正数 → null（不校验）。
+ * 「其他产品打包」业态白名单，与后端 `ProductProductionServiceImpl.BELONG_TYPES_OTHER_PACK` 同集合。
+ */
+const OTHER_PACK_BELONG_TYPES = ['egg', 'dry_good', 'other'];
+
+/**
+ * 当前所选产品的打包计量规则（kg）。未配置 materialNum / 非正数 → null（不校验）。
+ *
+ * 生效业态：
+ * - 肉品(pork) / 果蔬(vegetable)：无条件按 materialNum 校验（原口径）。
+ * - 其他产品(egg/dry_good/other)：甲方 2026-08-06（V6 row45）「当产品的原材料单位是KG时，
+ *   其生产产品有计量规则时，在打包时判断逻辑和果蔬产品一致」→ 补上这道闸。
+ *
+ * ⚠️ 其他产品这一支的两条边界（改之前先读完）：
+ * 1. 判据用 `isKgUnit`（kg/公斤）而**不是** `isWeightUnit`（还认 g/克）。materialNum 的量纲是 kg，
+ *    而只有原料单位是 kg 时录入框才按克收、提交前 ÷1000 换算成 kg（见 dryWeightInGram / packWeightKg）；
+ *    原料单位写成 g/克 时录入的就是克且原样提交，拿克去比 kg 规则会把每次打包都判成「低于规则」硬拒。
+ *    后端 `isOtherPackKgMeasureMode` 用的是同一个 kg 口径，两侧必须一致。
+ * 2. 打包量/份数模式（dryNonKgAmountMode / shouldUnitByCopies）录的是**件数**不是重量，
+ *    绝不套这条重量规则。isKgUnit ⊂ isWeightUnit ⇒ 这两个模式在 kg 原料下本就为 false，
+ *    此处显式判一次是把「哪种模式走哪条」写死在代码里，别再靠推导。
  */
 function packMeasureRuleKg(): number | null {
   const product = selectedProduct.value;
-  if (!product || (product.belongType !== 'pork' && product.belongType !== 'vegetable')) return null;
+  if (!product) return null;
+  const isPorkOrVeg = product.belongType === 'pork' || product.belongType === 'vegetable';
+  const isOtherKgWeightMode =
+    OTHER_PACK_BELONG_TYPES.includes(product.belongType ?? '') &&
+    !dryNonKgAmountMode.value &&
+    !shouldUnitByCopies.value &&
+    isKgUnit(rawUnitOfSelected.value);
+  if (!isPorkOrVeg && !isOtherKgWeightMode) return null;
   const rule = Number(product.materialNum);
   return Number.isFinite(rule) && rule > 0 ? rule : null;
 }
