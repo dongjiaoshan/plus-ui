@@ -304,6 +304,18 @@ async function loadCandidates() {
       recalc(r);
       return r;
     });
+    // row23：只读入库量改成恒取实时值后，「上次盘完又到了货」的行会当场变大，而期末库存仍是上次
+    // 实盘的旧数 → recalc 出来的损耗跟着虚增（实测：鸡蛋 入库 1→4，损耗从 1 静默变 4）。
+    // 这个数一旦被原样保存，账上就凭空多出一笔损耗，货其实还在货架上。故必须提示用户重新核对期末。
+    const inboundChanged = candidateRows
+      .filter((r) => {
+        const saved = savedByProduct.get(r.productId);
+        return r.inboundReadonly && saved && nz(saved.inboundQty) !== r.inboundQty;
+      })
+      .map((r) => `${r.productName}（${nz(savedByProduct.get(r.productId)?.inboundQty)} → ${r.inboundQty}）`);
+    if (inboundChanged.length) {
+      proxy?.$modal.msgWarning(t('storeLedger.entry.inboundRefreshed', { list: inboundChanged.join('、') }));
+    }
     // 修改模式（DENGBO-R13）：已保存但当前已不在候选集里的产品（字典/库存/到货变化导致掉出候选）
     // 仍需能被更正 → 用已保存明细补齐成可编辑行，避免上次盘过的产品在修改时消失。
     const candidateIds = new Set(candidateRows.map((r) => r.productId));

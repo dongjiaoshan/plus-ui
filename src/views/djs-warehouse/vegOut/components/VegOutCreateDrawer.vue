@@ -233,8 +233,28 @@ function fmtMoney(v: number | string | undefined | null): string {
   return Number.isNaN(n) ? String(v) : `¥${n.toFixed(2)}`;
 }
 
-/** 已选 = 填了正数出库量的行（右侧实时反映）。量清 0 / 清空即视为不出库该产品。 */
-const selectedRows = computed(() => candidates.value.filter((r) => Number(quantityMap[r.stockId]) > 0));
+/**
+ * 见过的所有候选行（跨搜索累积，按首次出现顺序）。
+ *
+ * ⚠️ **「已选」绝不能从 `candidates` 里 filter** —— `candidates` 每次搜索都被整体替换，而
+ * `quantityMap` 是跨搜索保留的。用 candidates 去 filter 会让「已选」变成「当前候选 ∩ 已填量」：
+ * 换个搜索词，之前填的行就从已选里消失 → ① 每个搜索态各自能吃满 10 个，上限被绕过；
+ * ② 更糟的是提交时 `items` 也只带当前候选那几行，其它搜索态填过的量被静默丢弃，用户零感知。
+ * 故这里把见过的行快照留下来，已选一律以 `quantityMap` 全集为准。
+ */
+const knownRows = ref<VegOutCandidateVO[]>([]);
+function rememberRows(rows: VegOutCandidateVO[]) {
+  const seen = new Set(knownRows.value.map((r) => String(r.stockId)));
+  rows.forEach((r) => {
+    if (!seen.has(String(r.stockId))) {
+      knownRows.value.push(r);
+      seen.add(String(r.stockId));
+    }
+  });
+}
+
+/** 已选 = 填了正数出库量的行（跨搜索全集，右侧实时反映）。量清 0 / 清空即视为不出库该产品。 */
+const selectedRows = computed(() => knownRows.value.filter((r) => Number(quantityMap[r.stockId]) > 0));
 
 /**
  * 一单最多 10 个产品 —— 与打印模板 {@link ROWS_PER_PAGE} 同一个数：
@@ -262,6 +282,8 @@ async function loadCandidates() {
   try {
     const res = await listVegOutCandidates(productName.value || undefined);
     candidates.value = (res.data ?? []) as VegOutCandidateVO[];
+    // 记进跨搜索快照：换搜索词后「已选」与上限判定仍要看得见之前填过的行
+    rememberRows(candidates.value);
     // 单价默认带出产品配置的销售价：加载即预填，不等用户先填出库量
     candidates.value.forEach((row) => ensurePrice(row));
   } finally {
@@ -278,6 +300,7 @@ const open = async () => {
   previewNo.value = '';
   Object.keys(quantityMap).forEach((k) => delete quantityMap[k]);
   Object.keys(priceMap).forEach((k) => delete priceMap[k]);
+  knownRows.value = [];
   visible.value = true;
   loadCandidates();
 };
@@ -285,6 +308,7 @@ defineExpose({ open });
 
 const handleClosed = () => {
   candidates.value = [];
+  knownRows.value = [];
   Object.keys(quantityMap).forEach((k) => delete quantityMap[k]);
   Object.keys(priceMap).forEach((k) => delete priceMap[k]);
 };
@@ -302,7 +326,7 @@ async function submit(print: boolean) {
     proxy?.$modal.msgWarning(t('vegOut.create.rule.items'));
     return;
   }
-  // 输入框禁用只挡住了「继续录」，挡不住「先填满 10 个再换搜索条件又填」这类路径，提交前再拦一道
+  // 兜底：selectedRows 已改成跨搜索全集，输入框禁用理论上挡得住；这里再拦一道防边界情况
   if (selectedRows.value.length > MAX_SELECTED_PRODUCTS) {
     proxy?.$modal.msgWarning(t('vegOut.create.rule.maxProducts', { n: MAX_SELECTED_PRODUCTS }));
     return;

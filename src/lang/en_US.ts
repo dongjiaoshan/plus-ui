@@ -4187,6 +4187,7 @@ export default {
       editTitle: 'Edit Check - {date}',
       storePlaceholder: 'Select store',
       datePlaceholder: 'Select date',
+      inboundRefreshed: 'Inbound refreshed from latest deliveries: {list}. Re-check the closing stock before saving, otherwise loss will be overstated.',
       emptyCandidates: "No products to check for this store today (only products with remaining stock from yesterday's check, and products from confirmed-received demands).",
       submit: 'Finish Check',
       submitConfirm: 'Submit check data for {n} products?',

@@ -4191,6 +4191,7 @@ export default {
       editTitle: '修改盘点 - {date}',
       storePlaceholder: '请选择门店',
       datePlaceholder: '请选择盘点日期',
+      inboundRefreshed: '以下产品的当日入库量已按最新到货刷新：{list}。请重新核对期末库存后再保存，否则损耗会算多。',
       emptyCandidates: '该门店当日暂无可盘产品（仅显示昨日盘点尚有库存的产品，以及已确认收货的需求产品）',
       submit: '盘点完成',
       submitConfirm: '确认提交 {n} 个产品的盘点数据？',

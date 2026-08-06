@@ -153,7 +153,9 @@ h2 { margin: 1mm 0 2mm; font-size: 4.2mm; text-align: center; font-weight: 700; 
 .meta .left { text-align: left; }
 .meta .center { text-align: center; white-space: nowrap; }
 .meta .right { text-align: right; }
-.meta .pg { display: block; }
+/* 页码跟单号同一行（前面加个空格分隔），不独占一行：独占时抬头从 4.2mm 涨到 8.5mm，
+   把 132mm 可用高度的余量吃掉一半，长产品名一换行签名栏就被顶出纸外。 */
+.meta .pg { margin-left: 3mm; }
 table { width: 100%; border-collapse: collapse; font-size: 3mm; table-layout: fixed; }
 /* 行高 8mm：10 数据行 + 表头 + 合计 = 12 行 96mm，抬头与签名栏之后仍留得下 132mm 的可用高度。
    8.5mm 时 12 行 102mm，余量不到 4mm，产品名一换行就把签名栏顶出纸外。 */
