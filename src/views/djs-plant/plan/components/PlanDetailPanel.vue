@@ -466,13 +466,23 @@ function canRemoveDetail(row: PlantDetailsVO): boolean {
  *   1. `beginActualdate` 有值 = 已有种植记录。用日期而不是 plantStatus 码值判断，是因为
  *      mp「一步落地」写 completed、历史「开工分步」写 ongoing，两种都是甲方口中的「已种植」，
  *      唯一稳定的共同特征就是实际种植日期已落库。
- *   2. 采摘状态是「待开始」（`djs_pick_status` = pending）。采摘一旦开始/完成/延期，该行下游已挂
- *      采摘记录、毛菜处理、产量台账，后台不再给调整入口（甲方 2026-08-06）。
+ *   2. 尚未进入采摘环节。采摘一旦开始/完成，该行下游已挂采摘记录、毛菜处理、产量台账，
+ *      后台不再给调整入口（甲方 2026-08-06）。
+ *
+ * 判据必须与后端 `PlantPlanServiceImpl.isPicked` **逐条一致**（三判据并集），不能只看采摘状态：
+ * 「采摘活动」录产量那条写路径（`PlantActivityServiceImpl.accumulateActualYield`）只写 `actual_yield`，
+ * 不推 `harvest_status` 也不写 `begin_harvestdate`。只判状态的话，这类行前端显示「修改」、
+ * 点保存却被后端拒，是最难解释的一种坏体验。两边同进同出，改一处必须改另一处。
  *
  * 落不到「修改」的已种植行也不会掉进「删除」分支：canRemoveDetail 要求 `!beginActualdate`。
  */
 function canAdjustDetail(row: PlantDetailsVO): boolean {
-  return !!row.beginActualdate && row.harvestStatus === HARVEST_STATUS_PENDING;
+  if (!row.beginActualdate) return false;
+  const picked =
+    !!row.beginHarvestdate ||
+    (row.harvestStatus != null && row.harvestStatus !== HARVEST_STATUS_PENDING) ||
+    (row.actualYield != null && Number(row.actualYield) > 0);
+  return !picked;
 }
 
 function onAdjustDetail(row: PlantDetailsVO) {
