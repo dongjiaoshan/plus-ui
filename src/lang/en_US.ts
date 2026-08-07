@@ -2664,6 +2664,7 @@ export default {
       feedDate: 'Date',
       cropImage: 'Crop Image',
       cropName: 'Crop Name',
+      productName: 'Product Name',
       feedWeight: 'Feed Weight',
       feedType: 'Source',
       operator: 'Operator',

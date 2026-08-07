@@ -65,6 +65,17 @@
         >
           <template #default="{ row }">{{ row.cropName || '—' }}</template>
         </el-table-column>
+        <!-- row54：作物名称右边补产品名称（取 feed_log.product_id → product_name；导出同列同序） -->
+        <el-table-column
+          :label="t('feedRecord.column.productName')"
+          prop="productName"
+          min-width="150"
+          align="center"
+          header-align="center"
+          show-overflow-tooltip
+        >
+          <template #default="{ row }">{{ row.productName || '—' }}</template>
+        </el-table-column>
         <el-table-column :label="t('feedRecord.column.feedWeight')" prop="feedWeight" min-width="150" align="center" header-align="center">
           <template #default="{ row }">{{ formatWeight3(row.feedWeight) }}</template>
         </el-table-column>

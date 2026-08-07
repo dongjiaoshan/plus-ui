@@ -2652,6 +2652,7 @@ export default {
       feedDate: '日期',
       cropImage: '作物图片',
       cropName: '作物名称',
+      productName: '产品名称',
       feedWeight: '饲喂饲料量',
       feedType: '提供位置',
       operator: '操作人',
