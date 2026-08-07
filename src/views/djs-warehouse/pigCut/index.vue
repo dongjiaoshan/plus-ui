@@ -304,9 +304,12 @@ function handleReset() {
   handleSearch();
 }
 
-function handlePageChange(p: { pageNum: number; pageSize: number }) {
-  pageNum.value = p.pageNum;
-  pageSize.value = p.pageSize;
+// BizTable 的 page-change 是位置参数 emit('page-change', page, limit)，不是对象。
+// 按对象取属性会拿到两个 undefined，axios 丢掉 undefined 参数后后端收不到分页 →
+// PageQuery 的 DEFAULT_PAGE_SIZE 是 Integer.MAX_VALUE（默认查全部），于是整表返回（row59 同款）。
+function handlePageChange(pn: number, ps: number) {
+  pageNum.value = pn;
+  pageSize.value = ps;
   loadList();
 }
 

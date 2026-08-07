@@ -30,7 +30,16 @@
       @reset="handleReset"
       @export="handleExport"
       @page-change="handlePageChange"
-    />
+    >
+      <!-- row58：仓库确认时选了「丢弃」的行，货压根没进库，不能沿用字典里的「已入库」。
+           与仓库侧退回记录（djs-warehouse/return，row204）同一口径。 -->
+      <template #cell-returnStatus="{ row }">
+        <el-tag v-if="row.returnStatus === 'received' && Number(row.isDiscard) === 1" type="info">
+          {{ t('djs.warehouse.return.statusDiscarded') }}
+        </el-tag>
+        <dict-tag v-else :options="djs_store_return_status" :value="row.returnStatus" />
+      </template>
+    </BizTable>
   </div>
 </template>
 
@@ -46,6 +55,9 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// row58：状态列自渲染要在本组件里拿到字典（BizTable 的 dict-types 只喂它自己）。
+// 必须套 toRefs —— 本项目 useDict 直接解构会拿到恒空的 ref。
+const { djs_store_return_status } = toRefs<any>(proxy?.useDict('djs_store_return_status'));
 const tableRef = ref<BizTableExpose>();
 
 const list = ref<StoreReturnVO[]>([]);
@@ -102,7 +114,9 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'unit', label: t('storeReturn.column.unit'), minWidth: 130, align: 'center' },
   // row14：列头「仓库实收量」，单位跟在每行数值后面
   { prop: 'receivedWeight', label: t('storeReturn.column.receivedWeight'), minWidth: 130, align: 'center', formatter: (row) => formatReceivedWeight(row) },
-  { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), minWidth: 130, align: 'center', dictType: 'djs_store_return_status' }
+  // row58：状态列改走 cell slot 自渲染 —— BizTable 里 dictType 分支优先于 slot，
+  // 设了 dictType 就没机会对「丢弃」行做特判。筛选项那边仍用字典，不受影响。
+  { prop: 'returnStatus', label: t('storeReturn.column.returnStatus'), minWidth: 130, align: 'center' }
 ]);
 
 // 退回日期区间：daterange 回写 [from, to]，拆成后端两个字段
