@@ -43,6 +43,9 @@ export interface PlantWorkPerformanceVO {
   cropId?: string;
   /** service enrich：作物名 */
   cropName?: string;
+  productId?: string;
+  /** service enrich：产品名（V6 row20 绩效按「作物 × 产品」结算） */
+  productName?: string;
   /** 采摘总量（公斤） */
   pickWeight?: number | string;
   /** 单价快照（元/公斤） */

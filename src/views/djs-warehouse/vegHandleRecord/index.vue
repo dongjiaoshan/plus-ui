@@ -102,6 +102,15 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.cropName != null && r.cropName !== '' ? String(r.cropName) : '-')
   },
   {
+    // V6 row49：产品名称紧跟作物名称右侧。结算损耗行 / 采摘活动行无产品维度，显 '-'
+    prop: 'productName',
+    label: t('vegHandleRecord.column.productName'),
+    minWidth: 130,
+    align: 'center',
+    showOverflowTooltip: true,
+    formatter: (r: BizRow) => (r.productName != null && r.productName !== '' ? String(r.productName) : '-')
+  },
+  {
     prop: 'statSource',
     label: t('vegHandleRecord.column.statSource'),
     minWidth: 120,

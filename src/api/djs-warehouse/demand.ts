@@ -30,8 +30,15 @@ export const listDemand = (query: DemandManageQuery): AxiosPromise<DemandManageV
  *
  * 后端 GET /djs/warehouse/demand/group-list（仅按 productName / beginDate / endDate 过滤）。
  */
-export const listDemandGroup = (query: DemandManageQuery): AxiosPromise<DemandGroupVO[]> =>
-  request({ url: '/djs/warehouse/demand/group-list', method: 'get', params: query });
+/**
+ * 需求汇总分页。
+ *
+ * @param query  查询条件
+ * @param silent 静默模式（row32 自动刷新用）：失败时不弹全局红条 —— 页面挂着不动的用户
+ *               不该每分钟挨一次报错。手动查询不传，失败照弹。
+ */
+export const listDemandGroup = (query: DemandManageQuery, silent = false): AxiosPromise<DemandGroupVO[]> =>
+  request({ url: '/djs/warehouse/demand/group-list', method: 'get', params: query, suppressErrorMsg: silent } as any);
 
 /** 详情。 */
 export const getDemand = (id: string | number): AxiosPromise<DemandManageVO> =>

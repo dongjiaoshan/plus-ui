@@ -8,6 +8,11 @@
   点「查看需求」→ 跳需求确认页（携 demandDate + productId），逐门店明细 + 状态机操作在确认页内做。
   数据源：GET /djs/warehouse/demand/group-list（后端 queryGroupList，聚合 + 三态 + 确认率）。
   顶部保留今日全局 KPI（DemandKpiBar）+「新增需求」跨业态购物车（DemandCart）。
+
+  row32（甲方）两条：
+    · 默认排序 = 需求确认率升序 —— 排在后端 SQL（ORDER BY 确认率 ASC, 需求日期 DESC, 产品名 ASC），
+      前端不参与排序：列表是「后端聚合全量后分页」，前端只能排当前页，跨页会串。
+    · 每 60s 自动刷新列表 + 顶部 KPI（标签页不可见 / 有勾选 / 抽屉打开 / 切走本 tab 时跳过，见 autoRefreshTick）。
 -->
 <template>
   <div class="p-2">
@@ -103,9 +108,10 @@ async function loadStoreOptions() {
 }
 
 const tableRef = ref<BizTableExpose>();
-const cartRef = ref<{ open: () => void }>();
+// visible 由子组件 defineExpose 透出（抽屉开着时跳过自动刷新，见 autoRefreshTick）
+const cartRef = ref<{ open: () => void; visible: boolean }>();
 const kpiBarRef = ref<{ refresh: () => void }>();
-const confirmDrawerRef = ref<{ open: (row: DemandGroupVO) => void }>();
+const confirmDrawerRef = ref<{ open: (row: DemandGroupVO) => void; visible: boolean }>();
 
 const list = ref<DemandGroupVO[]>([]);
 const total = ref(0);
@@ -278,20 +284,26 @@ function handleExport() {
   proxy?.download('djs/warehouse/demand/group-export', buildFilter(), `需求管理_${new Date().getTime()}.xlsx`);
 }
 
-async function fetchList() {
-  loading.value = true;
+/**
+ * 拉当前页汇总行。
+ *
+ * silent = 自动刷新用（row32）：不打 loading 遮罩，否则每分钟整表闪一次白。
+ * 行序由后端 SQL 定（需求确认率升序），前端不再排序 —— 只排当前页会让第 2 页的 0% 掉在第 1 页 100% 之后。
+ */
+async function fetchList(silent = false) {
+  if (!silent) loading.value = true;
   try {
     const query: DemandManageQuery = {
       ...buildFilter(),
       pageNum: pageNum.value,
       pageSize: pageSize.value
     };
-    const res: any = await listDemandGroup(query);
+    const res: any = await listDemandGroup(query, silent);
     const rows = (res.rows ?? res.data ?? []) as DemandGroupVO[];
     list.value = rows.map((r) => ({ ...r, rowKey: rowKeyOf(r) })) as DemandGroupVO[];
     total.value = (res.total ?? 0) as number;
   } finally {
-    loading.value = false;
+    if (!silent) loading.value = false;
   }
 }
 
@@ -354,18 +366,69 @@ async function onBatchConfirm() {
 /** keep-alive 下首帧 onMounted + onActivated 都会触发，用此标记跳过 onActivated 的首次重复拉取。 */
 let firstActivate = true;
 
+// ── row32：页面开着时每 60s 自动刷新一次列表 ──────────────────────────────
+/** 自动刷新周期（甲方 row32：每隔 1 分钟）。 */
+const AUTO_REFRESH_INTERVAL_MS = 60 * 1000;
+let autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
+/** 浏览器标签页可见性（切走 / 最小化 → 'hidden'），后台不打接口。 */
+const documentVisibility = useDocumentVisibility();
+
+/**
+ * 自动刷新一轮。以下任一情形跳过本轮（等下一分钟），不做 location.reload，只重拉列表数据：
+ *  1. 标签页不可见 —— 后台标签不空打接口；
+ *  2. 手动查询还在飞 —— 不叠加请求；
+ *  3. 有勾选行 —— BizTable 的 selection 列没开 reserve-selection，重拉会把用户为「批量确认」勾的行清空；
+ *  4. 新增需求 / 查看需求抽屉开着 —— 不打断正在录入或确认的操作。
+ * （keep-alive 切走的情况由 onDeactivated 直接停表，不靠这里兜。）
+ */
+function autoRefreshTick() {
+  if (documentVisibility.value !== 'visible') return;
+  if (loading.value) return;
+  if (selection.value.length > 0) return;
+  if (cartRef.value?.visible || confirmDrawerRef.value?.visible) return;
+  // 静默刷新必须自己吞掉失败：axios 拦截器对 500 / 网络异常一律 ElMessage.error，
+  // 页面挂着不动的用户会每分钟挨一次红条 + 一个 unhandled rejection。手动查询那条路径不受影响，
+  // 报错照弹（用户点了搜索就该知道失败了）。
+  fetchList(true).catch(() => {
+    /* 自动刷新失败静默跳过，等下一分钟再试 */
+  });
+  try {
+    kpiBarRef.value?.refresh?.();
+  } catch {
+    /* 同上 */
+  }
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(autoRefreshTick, AUTO_REFRESH_INTERVAL_MS);
+}
+function stopAutoRefresh() {
+  if (autoRefreshTimer !== null) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+}
+
 onMounted(() => {
   loadStoreOptions();
   fetchList();
+  startAutoRefresh();
 });
 
 // 列表组件被 keep-alive 缓存，切回本 tab 时用 onActivated 重拉分组列表 + 顶部 KPI，
 // 保证从别处操作后回来状态/确认率是最新的（确认抽屉内的改动已由 @changed→reloadAll 即时刷新）。
 onActivated(() => {
+  // 切回本 tab → 重开定时器（离开时已停）
+  startAutoRefresh();
   if (firstActivate) {
     firstActivate = false;
     return;
   }
   reloadAll();
 });
+
+// keep-alive 下切到别的 tab：组件不卸载，必须在此停表，否则后台标签页仍每分钟打一次接口
+onDeactivated(stopAutoRefresh);
+onUnmounted(stopAutoRefresh);
 </script>

@@ -573,7 +573,8 @@ export default {
     },
     medication: {
       fattenMedMaxAge: 'Max Medication Age (fattening pigs)',
-      fattenMedMaxAgeTip: 'Fattening pigs older than this are hidden from the mini-program Vaccine & Medicine pig list (no medication close to slaughter)',
+      fattenMedMaxAgeTip:
+        'Fattening pigs older than this are hidden from the mini-program Vaccine & Medicine pig list (no medication close to slaughter)',
       medPickUsableDays: 'Medicine Pick Usable Days',
       medPickUsableDaysTip: 'The medicine picker in single / batch medication only lists medicines picked within this many days'
     },
@@ -666,6 +667,20 @@ export default {
       newPen: 'Target Pen',
       newPenPlaceholder: 'Select target pen',
       success: 'Converted to fattening pig'
+    },
+    editEarNo: {
+      action: 'Edit Ear No.',
+      title: 'Edit Ear No.',
+      currentEarNo: 'Current Ear No.',
+      newEarNo: 'New Ear No.',
+      newEarNoPlaceholder: 'Format: strain-breed-sex-birthdate-seq, e.g. 01-01-2-260319-022',
+      newEarNoRequired: 'New ear number is required',
+      newEarNoPattern: 'Must match strain-breed-sex-birthdate-seq format (e.g. 01-01-2-260319-022)',
+      warning: 'Only the current ear number is changed; existing history records and trace codes are not updated. If this pig has offspring, their father/mother ear number fields need manual review.',
+      confirmTitle: 'Confirm ear number change?',
+      confirmMessage: 'Ear number will change from {old} to {new}, continue?',
+      success: 'Ear number updated',
+      unchanged: 'New ear number is the same as the current one'
     },
     tab: {
       all: 'All',
@@ -1449,7 +1464,8 @@ export default {
   // Warehouse stock query (WMS-MD-001, read-only)
   // Veg room outbound (admin row187)
   vegOut: {
-    action: { create: 'Add', detail: 'Detail' },
+    pageTitle: 'Veg Room Outbound',
+    action: { create: 'Add', detail: 'Detail', export: 'Export' },
     field: { outDate: 'Out Date', outDest: 'Destination', operator: 'Operator' },
     column: {
       batchNo: 'Outbound No.',
@@ -1489,8 +1505,14 @@ export default {
       selected: 'Selected',
       selectedEmpty: 'Enter a quantity on the left to add',
       totalKinds: '{n} kinds',
+      maxProductsTip: 'Up to {n} products per sheet',
       confirm: 'Confirm Outbound',
-      rule: { outDate: 'Please select out date', outDest: 'Please select destination', items: 'Enter a quantity for at least one product' }
+      rule: {
+        outDate: 'Please select out date',
+        outDest: 'Please select destination',
+        items: 'Enter a quantity for at least one product',
+        maxProducts: 'Up to {n} products per sheet — clear a quantity to drop a product first'
+      }
     }
   },
   stock: {
@@ -1680,7 +1702,17 @@ export default {
   },
   plantZone: {
     title: { add: 'Add Zone', edit: 'Edit Zone' },
-    column: { zoneCode: 'Code', zoneName: 'Name', zoneDesc: 'Description', zoneBelong: 'Belong', zoneStatus: 'Status', createTime: 'Created', plotCount: 'Managed Plots', updateTime: 'Update Time', updateByName: 'Updated By' },
+    column: {
+      zoneCode: 'Code',
+      zoneName: 'Name',
+      zoneDesc: 'Description',
+      zoneBelong: 'Belong',
+      zoneStatus: 'Status',
+      createTime: 'Created',
+      plotCount: 'Managed Plots',
+      updateTime: 'Update Time',
+      updateByName: 'Updated By'
+    },
     field: { zoneCode: 'Zone Code', zoneName: 'Zone Name', zoneDesc: 'Description', zoneBelong: 'Belong Region', zoneStatus: 'Status' },
     filter: { zoneBelong: 'Region', zoneName: 'Zone Name', updateTime: 'Update Time', updateBy: 'Updated By' },
     placeholder: {
@@ -1700,7 +1732,14 @@ export default {
   plantPlot: {
     title: { add: 'Add Plot', edit: 'Edit Plot', view: 'Plot Detail', baseInfo: 'Basic Info', zoneInfo: 'Zone Info' },
     zoneEmpty: 'No zone linked',
-    tab: { basic: 'Basic', location: 'Location & Area', soil: 'Soil & Environment', planting: 'Planting', farmwork: 'Farm Work', cert: 'Certification' },
+    tab: {
+      basic: 'Basic',
+      location: 'Location & Area',
+      soil: 'Soil & Environment',
+      planting: 'Planting',
+      farmwork: 'Farm Work',
+      cert: 'Certification'
+    },
     planting: {
       plantDate: 'Planting Date',
       cropImage: 'Crop Image',
@@ -1896,7 +1935,24 @@ export default {
   // Planting - Crop (PLT-MD-001)
   plantCrop: {
     title: { add: 'Add Crop', edit: 'Edit Crop', view: 'Crop Detail', baseInfo: 'Basic Info' },
-    tab: { basic: 'Basic', growth: 'Growth Cycle', yield: 'Yield & Quality', planting: 'Planting Records', farmwork: 'Farm Work' },
+    tab: {
+      basic: 'Basic',
+      growth: 'Growth Cycle',
+      yield: 'Yield & Quality',
+      product: 'Products',
+      planting: 'Planting Records',
+      farmwork: 'Farm Work'
+    },
+    product: {
+      add: 'Add Product',
+      edit: 'Edit Product',
+      productName: 'Product',
+      perfPrice: 'Performance Rate (CNY/kg)',
+      empty: 'No product configured yet — click Add to link a product to this crop',
+      saveFirst: 'Save the crop first, then configure its products',
+      confirmDelete: 'Delete the configuration for "{name}"?',
+      rule: { productId: 'Please select a product' }
+    },
     label: {
       varietyOrigin: 'Variety Source',
       qualityDesc: 'Crop Description',
@@ -1993,7 +2049,11 @@ export default {
       organicWarning: 'Select cert warning status',
       updateBy: 'Enter updater ID'
     },
-    rule: { cropCode: { required: 'Crop code is required' }, cropName: { required: 'Crop name is required' }, maxCycle: { gtMin: 'Max growth cycle must be greater than min growth cycle' } },
+    rule: {
+      cropCode: { required: 'Crop code is required' },
+      cropName: { required: 'Crop name is required' },
+      maxCycle: { gtMin: 'Max growth cycle must be greater than min growth cycle' }
+    },
     confirm: { del: 'Delete {count} crops?' }
   },
   // Plant - Work team (PLT-MD-002)
@@ -2062,8 +2122,7 @@ export default {
       lastHarvestdate: 'Last Harvest Date',
       plantStatus: 'Planting Plan Status',
       harvestStatus: 'Harvest Status',
-      transplantAdjusted: 'Transplant Adjusted',
-      transplantAdjustedTag: 'Transplant',
+      changeType: 'Change Type',
       plantTime: 'Plant Time',
       plantActualDate: 'Plant Date',
       beginHarvestdate: 'Harvest Start Date',
@@ -2143,6 +2202,29 @@ export default {
     },
     action: {
       detail: 'Details'
+    },
+    // V6-R36 back-office adjustment of a planted plot
+    adjust: {
+      btn: 'Modify',
+      title: 'Modify Planting Record',
+      field: {
+        plantState: 'Planting Status',
+        plantDate: 'Plant Date',
+        plantBy: 'Plant Team'
+      },
+      state: {
+        planted: 'Planted',
+        pending: 'To Be Planted'
+      },
+      placeholder: { plantDate: 'Select plant date' },
+      rule: {
+        plantState: 'Please select planting status',
+        plantDate: 'Please select plant date'
+      },
+      pendingTip:
+        'On save this plot goes back to "To Be Planted": planned harvest dates are cleared, the planting record (plant date and team) is removed, and the change type is recorded as "Back-office Adjustment".',
+      success: 'Planting record adjusted',
+      noChange: 'Planting status, plant date and team are unchanged; nothing was processed'
     },
     edit: {
       btn: {
@@ -2358,6 +2440,7 @@ export default {
     column: {
       pickDate: 'Pick Date',
       cropName: 'Crop',
+      productName: 'Product',
       plotCode: 'Plot Code',
       pickWeight: 'Pick Weight',
       teamName: 'Pick Team',
@@ -2581,6 +2664,7 @@ export default {
       feedDate: 'Date',
       cropImage: 'Crop Image',
       cropName: 'Crop Name',
+      productName: 'Product Name',
       feedWeight: 'Feed Weight',
       feedType: 'Source',
       operator: 'Operator',
@@ -2805,7 +2889,7 @@ export default {
         demandCopiesExceed: 'Exceeds remaining store demand portions ({max})',
         weightBelowDemand: 'Weight does not meet the demand, please resolve and retry',
         storeRequired: 'Please select a store first',
-        storeDemandFulfilled: 'This store\'s demand is fully packed',
+        storeDemandFulfilled: "This store's demand is fully packed",
         remainingCopiesLabel: 'Remaining packable copies',
         noDemand: 'No pending store demand for this product',
         confirmPrintTrace: 'Confirm & Print Trace Code',
@@ -2913,7 +2997,8 @@ export default {
         vegLossFeed: 'Feed',
         vegLossValue: 'Loss',
         vegLossUnit: 'kg',
-        vegLossHint: 'Loss = Issued (material pick-out) − Packed (veg pack-in) − Returned − Feed (by calendar day; Feed comes from the material-issue module, absent in V1 so always 0)'
+        vegLossHint:
+          'Loss = Issued (material pick-out) − Packed (veg pack-in) − Returned − Feed (by calendar day; Feed comes from the material-issue module, absent in V1 so always 0)'
       },
       shipment: {
         title: 'Shipment',
@@ -2977,7 +3062,8 @@ export default {
         detailDialogTitle: 'Return Detail',
         quantityDiff: 'Quantity Diff',
         confirmProgress: 'Inbound/Discarded',
-        confirmProgressTip: 'Warehouse has not confirmed every return line of the day; unconfirmed lines are not stocked in ({total} total, {pending} pending)',
+        confirmProgressTip:
+          'Warehouse has not confirmed every return line of the day; unconfirmed lines are not stocked in ({total} total, {pending} pending)',
         isDiscard: 'Discarded',
         statusDiscarded: 'Discarded',
         discardYes: 'Yes',
@@ -3978,6 +4064,42 @@ export default {
       noCode: 'No trace code to reprint for this row'
     }
   },
+  burnAdjust: {
+    pageTitle: 'Singeing Product Weight Adjustment',
+    field: {
+      inboundDate: 'Inbound Date',
+      productName: 'Product Name',
+      isAdjusted: 'Adjusted',
+      arriveWeight: 'Pig Received Weight',
+      pendingWeight: 'Pending Inbound Weight',
+      productWeight: 'Product Inbound Weight'
+    },
+    placeholder: {
+      productName: 'Please enter product name',
+      isAdjusted: 'Please select'
+    },
+    column: {
+      inboundTime: 'Inbound Time',
+      productName: 'Product Name',
+      productWeight: 'Product Inbound Weight',
+      earNo: 'Ear No.',
+      burnFinished: 'Singeing Finished',
+      locationName: 'Inbound Location',
+      isAdjusted: 'Adjusted',
+      operator: 'Inbound By',
+      adjustTime: 'Adjusted At',
+      adjustBy: 'Adjusted By'
+    },
+    action: {
+      adjust: 'Adjust'
+    },
+    dialog: {
+      title: 'Adjust Product Inbound Weight'
+    },
+    rule: {
+      productWeight: 'Please enter the adjusted product inbound weight'
+    }
+  },
   vegHandleRecord: {
     pageTitle: 'Veg Handling Records',
     field: {
@@ -4002,6 +4124,7 @@ export default {
     column: {
       handleDate: 'Handle Date',
       cropName: 'Crop Name',
+      productName: 'Product Name',
       statSource: 'Source',
       handleMethod: 'Handling Method',
       plotCode: 'Plot Code',
@@ -4159,7 +4282,7 @@ export default {
       newEntry: 'New Daily Check',
       detail: 'Detail',
       edit: 'Edit',
-      todayExists: "Today's check already exists. Use \"Edit\" in the list to correct it."
+      todayExists: 'Today\'s check already exists. Use "Edit" in the list to correct it.'
     },
     detail: {
       title: '{store} {date} Check Detail',
@@ -4170,7 +4293,10 @@ export default {
       editTitle: 'Edit Check - {date}',
       storePlaceholder: 'Select store',
       datePlaceholder: 'Select date',
-      emptyCandidates: "No products to check for this store today (only products with remaining stock from yesterday's check, and products from confirmed-received demands).",
+      inboundRefreshed:
+        'Inbound refreshed from latest deliveries: {list}. Re-check the closing stock before saving, otherwise loss will be overstated.',
+      emptyCandidates:
+        "No products to check for this store today (only products with remaining stock from yesterday's check, and products from confirmed-received demands).",
       submit: 'Finish Check',
       submitConfirm: 'Submit check data for {n} products?',
       editConfirm: 'Correct check data for {n} products?',
@@ -4350,13 +4476,15 @@ export default {
       monthRequired: 'Please select a settle month first',
       generateSuccess: 'Settlement generated, {count} rows'
     },
-    emptyHint: 'No performance data yet. Pick a settle month above and click “Generate” — the system computes each team’s amount from monthly harvest weight × crop unit-price snapshot.',
+    emptyHint:
+      'No performance data yet. Pick a settle month above and click “Generate” — the system computes each team’s amount from monthly harvest weight × crop unit-price snapshot.',
     detail: {
       title: 'Performance Detail',
       tabYield: 'Yield Performance',
       tabFarm: 'Farm Records',
       rule: 'Rule',
       cropName: 'Crop',
+      productName: 'Product',
       cropPickWeight: 'Harvest',
       cropUnitPrice: 'Unit Price',
       cropAmount: 'Amount',

@@ -13,6 +13,10 @@
       <el-tab-pane :label="t('plantPerformance.detail.tabYield')" name="yield">
         <el-table v-loading="loading" :data="cropRows" border size="small" show-summary :summary-method="yieldSummary">
           <el-table-column prop="cropName" :label="t('plantPerformance.detail.cropName')" min-width="120" show-overflow-tooltip align="center" header-align="center" />
+          <!-- V6 row20：作物旁边跟产品 —— 绩效已按「作物 × 产品」结算，单价取该产品配置的绩效金额 -->
+          <el-table-column prop="productName" :label="t('plantPerformance.detail.productName')" min-width="120" show-overflow-tooltip align="center" header-align="center">
+            <template #default="{ row }">{{ row.productName || '-' }}</template>
+          </el-table-column>
           <el-table-column :label="t('plantPerformance.detail.cropPickWeight')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(3)} 公斤` : '-' }}</template>
           </el-table-column>

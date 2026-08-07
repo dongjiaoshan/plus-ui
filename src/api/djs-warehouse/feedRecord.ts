@@ -17,6 +17,8 @@ export interface FeedRecordVO {
   cropId?: number | string;
   /** 作物名称（仓库来源行为空） */
   cropName?: string;
+  /** 产品名称（row54；取 feed_log.product_id → product_name。仓库来源行与 cropName 同名，那类流水没有作物维度） */
+  productName?: string;
   /** 作物图 ossId（仓库来源行为空，前端走 oss listByIds 转 url） */
   cropImageOssId?: string;
   /** 饲喂饲料量(kg) */

@@ -143,6 +143,8 @@ export interface PlantDetailsVO {
   isPick: number;
   /** 是否移栽调整（PLT-TRANSPLANT-REDO-001）：1=该明细由育苗移栽落地生成（plot_id=目标地块）。 */
   transplantAdjusted?: number;
+  /** 变更类型（dict djs_plant_change_type，V6-R36）：mp=小程序操作 / admin=后台调整 / admin_team=后台班组调整。 */
+  changeType?: string;
   plotName?: string;
   plotCode?: string;
   cropName?: string;
@@ -161,6 +163,21 @@ export interface PlantDetailsVO {
 export interface PlantPlanDetailVO {
   plan: PlantPlanVO;
   details: PlantDetailsVO[];
+}
+
+/**
+ * 已种植地块后台调整表单（V6-R36 计划详情·地块明细「修改」）。
+ *
+ * 对齐后端 org.dromara.djs.plant.plan.domain.bo.PlantDetailAdjustBo。
+ */
+export interface PlantDetailAdjustForm {
+  detailId: string;
+  /** planted=保持已种植 / pending=改回待种植（选 pending 时后两项不提交）。 */
+  plantState: 'planted' | 'pending';
+  /** 种植日期（yyyy-MM-dd）。 */
+  beginActualdate?: string;
+  /** 种植班组全集（多选）。 */
+  plantByIds?: string[];
 }
 
 export interface PlotByZoneRow {

@@ -15,6 +15,11 @@ export interface VegHandleRecordVO {
   handleDate?: string;
   /** 作物名称 */
   cropName?: string;
+  /**
+   * 产品名称（V6 row49）。
+   * 仅「毛菜处理间·处理流水」行有值；「结算损耗」行是地块级跨产品结算、「采摘活动」行无产品维度，两者恒空。
+   */
+  productName?: string;
   /** 统计来源 1=毛菜处理间 / 2=采摘活动 */
   statSource?: VegHandleStatSource;
   /** 处理方式原始值（字典 djs_pick_dest：sale/veg_fresh/platform/loss/feed） */

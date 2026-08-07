@@ -55,10 +55,14 @@
           </template>
 
           <!-- 操作：详情（D7 BRD-LIST-001 起 admin 只读，无事件录入）
-               + row162「转为育肥猪」（仅后备状态的种母猪出现） -->
+               + row162「转为育肥猪」（仅后备状态的种母猪出现）
+               + BRD-LIST-EDIT-001「修改耳号」（小程序录入手误纠错专用，权限收紧到 breed_admin+） -->
           <template #action="{ row }">
             <el-button v-if="canToFatten(row as unknown as PigVO)" type="warning" link size="small" @click="openToFatten(row as unknown as PigVO)">
               {{ t('pig.toFatten.action') }}
+            </el-button>
+            <el-button v-hasPermi="['djs:breed:pig:edit']" type="primary" link size="small" @click="openEditEarNo(row as unknown as PigVO)">
+              {{ t('pig.editEarNo.action') }}
             </el-button>
             <el-button type="primary" link size="small" @click="openDetail(row.id)">
               {{ t('common.detail') }}
@@ -83,6 +87,8 @@
 
     <!-- row162：后备种母猪转为育肥猪 -->
     <ToFattenDialog ref="toFattenRef" @success="load" />
+    <!-- BRD-LIST-EDIT-001：修改耳号 -->
+    <EditEarNoDialog ref="editEarNoRef" @success="load" />
   </div>
 </template>
 
@@ -108,6 +114,7 @@ import PigListBoar from './boar/index.vue';
 import PigListPiglet from './piglet/index.vue';
 import PigListFattening from './fattening/index.vue';
 import ToFattenDialog from './components/ToFattenDialog.vue';
+import EditEarNoDialog from './components/EditEarNoDialog.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -251,6 +258,11 @@ function canToFatten(row: PigVO): boolean {
 const toFattenRef = ref<{ open: (row: PigVO) => void }>();
 function openToFatten(row: PigVO) {
   toFattenRef.value?.open(row);
+}
+
+const editEarNoRef = ref<{ open: (row: PigVO) => void }>();
+function openEditEarNo(row: PigVO) {
+  editEarNoRef.value?.open(row);
 }
 
 function openDetail(id: number | string) {

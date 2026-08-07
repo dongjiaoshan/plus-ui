@@ -153,7 +153,11 @@ const handleReset = () => {
   handleSearch();
 };
 
-const handlePageChange = ({ pageNum: pn, pageSize: ps }: { pageNum: number; pageSize: number }) => {
+// BizTable 的 page-change 发的是**位置参数** emit('page-change', page, limit)，不是一个对象。
+// 之前按 { pageNum, pageSize } 解构，等于从一个 number 上取属性 → 两个都是 undefined，
+// buildQueryParams 于是不带 pageNum/pageSize，axios 又会把 undefined 参数整个丢掉，
+// 后端收不到分页参数就返回全量 —— 表现就是「换页后页面显示了全部条数」（row59）。
+const handlePageChange = (pn: number, ps: number) => {
   pageNum.value = pn;
   pageSize.value = ps;
   loadList();

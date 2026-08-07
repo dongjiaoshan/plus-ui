@@ -970,12 +970,17 @@ function isKgUnit(u?: string): boolean {
 /** 当前选中成品的「领用来源原材料」单位：其他产品打包 wipStockUnitMap 给原料单位（鸡蛋=枚），回落 form.productUnit。 */
 const rawUnitOfSelected = computed<string>(() => wipStockUnitMap.value[String(form.value.productId)] || form.value.productUnit);
 /**
- * 其他产品打包（dry 非礼盒/非肉品）且原材料单位非 kg（枚/份/袋…）→「打包量」计量模式：
+ * 其他产品打包（dry 非礼盒/非肉品）且原材料是**计件**单位（枚/份/袋…）→「打包量」计量模式：
  * label / placeholder 显「打包量」、单位显所选成品单位（而非原材料单位）。
- * KG 原料（isKgUnit，如干羊肚菌 70g 的原料按 kg 领用）走克(g)重量模式、label 显「产品重量」——
+ * 重量原料（isWeightUnit，如干羊肚菌 70g 的原料按 kg 领用）走重量模式、label 显「产品重量」——
  * 文案跟着「实际录入的是什么」走（原材料是重量就录重量），不看成品单位（成品「份」不代表录的是份数）。
+ *
+ * ⚠️ 判据必须是 `isWeightUnit`（kg/千克/公斤/g/克）而**不是** `isKgUnit`（只认 kg/公斤）——
+ * 单位是人手填的自由文本，库里已经同时存在 `kg` 和 `Kg`。原料单位写成「千克」「g」「克」时，
+ * 用 isKgUnit 会判成「计件」→ 录入框仍按重量收（shouldUnitByCopies 用的是 isWeightUnit，两者不一致），
+ * 却把录的克数当打包量回传给后端扣需求，工人会撞上「剩余 1，本次 500」而根本打不了这个包。
  */
-const dryNonKgAmountMode = computed<boolean>(() => dryReqMode.value && !!selectedProduct.value && !isKgUnit(rawUnitOfSelected.value));
+const dryNonKgAmountMode = computed<boolean>(() => dryReqMode.value && !!selectedProduct.value && !isWeightUnit(rawUnitOfSelected.value));
 /**
  * 每份规格（每份消耗的原材料量）：优先 materialNum（30 枚礼盒=30）；为空时**仅当 productSpec 里的数字紧跟原料单位**
  * （如「8枚」原料=枚 → 8）才解析。防「5000g/袋」「5L/桶」这类规格（原料=袋/桶，数字是克/升不是每份袋数/桶数）
@@ -1052,7 +1057,12 @@ const selectedUnit = computed<string>(() => {
 /**
  * numpad 小数位：份数计量整数（0）；克(g)录入整数（124#6，肉品按克整数录入）；其余重量按 3 位小数。
  */
-const numpadPrecision = computed<number>(() => (shouldUnitByCopies.value || effWeightInGram.value ? 0 : 3));
+const numpadPrecision = computed<number>(
+  // 打包量模式（dryNonKgAmountMode，含份数模式）录的是**件数**，只收整数：
+  // 不设 0 位时罐/桶/袋这一档会落到 3 位小数，工人能敲「1.5 桶」，而这个数直接进 shipped_count 扣需求。
+  // 克(g)录入同样整数。其余（重量模式）保留 3 位小数。
+  () => (dryNonKgAmountMode.value || shouldUnitByCopies.value || effWeightInGram.value ? 0 : 3)
+);
 
 /**
  * 果蔬录入量 g → 系统权威量纲 kg（÷1000）。其余业态 numpad 录入本就是 kg，原样透传。
@@ -1151,15 +1161,17 @@ function validate(): boolean {
         notifyMissing(t('djs.warehouse.packEntry.copiesExceed', { max }));
         return false;
       }
-      // row53：份数不得超过所选门店剩余需求份数（demand-driven 上限，FE 拦）。
-      // 组件打包（发送位置=礼盒，无门店）跳过；门店需求缺失时不前端拦截，交后端校验。
-      if (!isGiftComponent && form.value.storeId) {
-        const demand = visibleStoreDemands.value.find((sd) => String(sd.storeId) === String(form.value.storeId));
-        const remainDemand = demand ? Number(demand.copies) : null;
-        if (remainDemand != null && Number.isFinite(remainDemand) && Number(form.value.productWeight) > remainDemand) {
-          notifyMissing(t('djs.warehouse.packEntry.demandCopiesExceed', { max: remainDemand }));
-          return false;
-        }
+    }
+    // row53 + row34：录入框显示「打包量」时（dryNonKgAmountMode，含份数模式与按件直录如鸡蛋），
+    // 打包量即需求扣减量 → 不得超过所选门店剩余需求量（demand-driven 上限，FE 先拦给友好提示，
+    // 后端 deductDemandOnPack 仍有硬拦 + DB 原子守卫）。
+    // 组件打包（发送位置=礼盒，无门店）跳过；门店需求缺失时不前端拦截，交后端校验。
+    if (dryNonKgAmountMode.value && !isGiftComponent && form.value.storeId) {
+      const demand = visibleStoreDemands.value.find((sd) => String(sd.storeId) === String(form.value.storeId));
+      const remainDemand = demand ? Number(demand.copies) : null;
+      if (remainDemand != null && Number.isFinite(remainDemand) && Number(form.value.productWeight) > remainDemand) {
+        notifyMissing(t('djs.warehouse.packEntry.demandCopiesExceed', { max: remainDemand }));
+        return false;
       }
     }
     // 果蔬：按重量超量校验（量纲对齐 row12 点3）——录入 g 换算成 kg 后，与领用剩余重量（vegStockMap，kg）比对，
@@ -1193,12 +1205,37 @@ const PACK_MEASURE_OVER_TOLERANCE_PERCENT = 3;
 const PACK_MEASURE_UPPER_FACTOR = 1 + PACK_MEASURE_OVER_TOLERANCE_PERCENT / 100;
 
 /**
- * 当前所选产品的打包计量规则（kg）。
- * 仅肉品 / 果蔬按 materialNum 校验；未配置或非正数 → null（不校验）。
+ * 「其他产品打包」业态白名单，与后端 `ProductProductionServiceImpl.BELONG_TYPES_OTHER_PACK` 同集合。
+ */
+const OTHER_PACK_BELONG_TYPES = ['egg', 'dry_good', 'other'];
+
+/**
+ * 当前所选产品的打包计量规则（kg）。未配置 materialNum / 非正数 → null（不校验）。
+ *
+ * 生效业态：
+ * - 肉品(pork) / 果蔬(vegetable)：无条件按 materialNum 校验（原口径）。
+ * - 其他产品(egg/dry_good/other)：甲方 2026-08-06（V6 row45）「当产品的原材料单位是KG时，
+ *   其生产产品有计量规则时，在打包时判断逻辑和果蔬产品一致」→ 补上这道闸。
+ *
+ * ⚠️ 其他产品这一支的两条边界（改之前先读完）：
+ * 1. 判据用 `isKgUnit`（kg/公斤）而**不是** `isWeightUnit`（还认 g/克）。materialNum 的量纲是 kg，
+ *    而只有原料单位是 kg 时录入框才按克收、提交前 ÷1000 换算成 kg（见 dryWeightInGram / packWeightKg）；
+ *    原料单位写成 g/克 时录入的就是克且原样提交，拿克去比 kg 规则会把每次打包都判成「低于规则」硬拒。
+ *    后端 `isOtherPackKgMeasureMode` 用的是同一个 kg 口径，两侧必须一致。
+ * 2. 打包量/份数模式（dryNonKgAmountMode / shouldUnitByCopies）录的是**件数**不是重量，
+ *    绝不套这条重量规则。isKgUnit ⊂ isWeightUnit ⇒ 这两个模式在 kg 原料下本就为 false，
+ *    此处显式判一次是把「哪种模式走哪条」写死在代码里，别再靠推导。
  */
 function packMeasureRuleKg(): number | null {
   const product = selectedProduct.value;
-  if (!product || (product.belongType !== 'pork' && product.belongType !== 'vegetable')) return null;
+  if (!product) return null;
+  const isPorkOrVeg = product.belongType === 'pork' || product.belongType === 'vegetable';
+  const isOtherKgWeightMode =
+    OTHER_PACK_BELONG_TYPES.includes(product.belongType ?? '') &&
+    !dryNonKgAmountMode.value &&
+    !shouldUnitByCopies.value &&
+    isKgUnit(rawUnitOfSelected.value);
+  if (!isPorkOrVeg && !isOtherKgWeightMode) return null;
   const rule = Number(product.materialNum);
   return Number.isFinite(rule) && rule > 0 ? rule : null;
 }
@@ -1353,6 +1390,10 @@ async function handleSubmit(printTrace: boolean) {
           sourceInhouseId: form.value.sourceInhouseId as number | string,
           productId: form.value.productId as number | string,
           productWeight: dryWeight,
+          // row34：录入框显示的是「打包量」时（原材料按件计量，如鸡蛋=枚），把**成品数量**单独回传给后端扣需求。
+          // productWeight 在份数模式下已被换算成原材料消耗量（2 份 × 30 枚 = 60），拿它扣需求会扣错量纲。
+          // 重量模式（录入的是重量）不传 → 后端回落原口径「一次打包扣 1 份」。
+          packQuantity: dryNonKgAmountMode.value ? copies : undefined,
           allowOverMeasure,
           productUnit: dryUnit,
           storeId: form.value.storeId || undefined,

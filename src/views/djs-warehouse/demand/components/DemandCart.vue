@@ -293,7 +293,8 @@ function handleClosed(): void {
   reset();
 }
 
-defineExpose({ open });
+// visible 暴露给父页：需求管理列表的 60s 自动刷新在抽屉打开期间跳过本轮（row32），不打断正在录的购物车
+defineExpose({ open, visible });
 </script>
 
 <style scoped>

@@ -56,6 +56,7 @@
                 :max="Number(row.stockWeight)"
                 :precision="3"
                 :step="1"
+                :disabled="qtyDisabled(row)"
                 size="small"
                 controls-position="right"
                 style="width: 130px"
@@ -82,7 +83,13 @@
       </div>
 
       <div class="right">
-        <div class="right-title">{{ t('vegOut.create.selected') }}</div>
+        <div class="right-title">
+          {{ t('vegOut.create.selected') }}
+          <!-- 打印单一页只有 10 行，所以这里也只收 10 个：选满后左侧未选行的出库量输入框会禁用 -->
+          <span class="max-tip" :class="{ 'is-full': selectionFull }">
+            {{ t('vegOut.create.maxProductsTip', { n: MAX_SELECTED_PRODUCTS }) }}
+          </span>
+        </div>
         <el-empty v-if="!selectedRows.length" :description="t('vegOut.create.selectedEmpty')" :image-size="70" />
         <!-- row195：不显示地块；重量挪到原地块位置；原重量位置改显销售总价；汇总加总价之和 -->
         <div v-else class="selected-list">
@@ -120,7 +127,7 @@
 <script setup lang="ts">
 import { CircleClose } from '@element-plus/icons-vue';
 import { listVegOutCandidates, submitVegOutBatch } from '@/api/djs-warehouse/vegOut';
-import { printVegOutSheet } from '../printSheet';
+import { printVegOutSheet, ROWS_PER_PAGE } from '../printSheet';
 import type { VegOutCandidateVO } from '@/api/djs-warehouse/vegOut/types';
 import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
@@ -226,8 +233,43 @@ function fmtMoney(v: number | string | undefined | null): string {
   return Number.isNaN(n) ? String(v) : `¥${n.toFixed(2)}`;
 }
 
-/** 已选 = 填了正数出库量的行（右侧实时反映） */
-const selectedRows = computed(() => candidates.value.filter((r) => Number(quantityMap[r.stockId]) > 0));
+/**
+ * 见过的所有候选行（跨搜索累积，按首次出现顺序）。
+ *
+ * ⚠️ **「已选」绝不能从 `candidates` 里 filter** —— `candidates` 每次搜索都被整体替换，而
+ * `quantityMap` 是跨搜索保留的。用 candidates 去 filter 会让「已选」变成「当前候选 ∩ 已填量」：
+ * 换个搜索词，之前填的行就从已选里消失 → ① 每个搜索态各自能吃满 10 个，上限被绕过；
+ * ② 更糟的是提交时 `items` 也只带当前候选那几行，其它搜索态填过的量被静默丢弃，用户零感知。
+ * 故这里把见过的行快照留下来，已选一律以 `quantityMap` 全集为准。
+ */
+const knownRows = ref<VegOutCandidateVO[]>([]);
+function rememberRows(rows: VegOutCandidateVO[]) {
+  const seen = new Set(knownRows.value.map((r) => String(r.stockId)));
+  rows.forEach((r) => {
+    if (!seen.has(String(r.stockId))) {
+      knownRows.value.push(r);
+      seen.add(String(r.stockId));
+    }
+  });
+}
+
+/** 已选 = 填了正数出库量的行（跨搜索全集，右侧实时反映）。量清 0 / 清空即视为不出库该产品。 */
+const selectedRows = computed(() => knownRows.value.filter((r) => Number(quantityMap[r.stockId]) > 0));
+
+/**
+ * 一单最多 10 个产品 —— 与打印模板 {@link ROWS_PER_PAGE} 同一个数：
+ * 241×140mm 的三联单一页只印得下 10 行，超了就得分页，甲方不接受一单打两张纸。
+ */
+const MAX_SELECTED_PRODUCTS = ROWS_PER_PAGE;
+const selectionFull = computed(() => selectedRows.value.length >= MAX_SELECTED_PRODUCTS);
+
+/**
+ * 选满 10 个后，**未选中**行的出库量输入框禁用（不允许再录第 11 个）。
+ * 已选中的行不禁用 —— 否则用户既改不了量、也清不掉，会卡死在满员状态。
+ */
+function qtyDisabled(row: VegOutCandidateVO): boolean {
+  return selectionFull.value && !(Number(quantityMap[row.stockId]) > 0);
+}
 // row194 混单位（Kevin 2026-08-03 定 D7）：**重量合计只累加 kg 行**——干货有袋/桶/罐、蛋类是「枚」，
 // 「3 袋 + 2kg」加不到一起。金额是钱，三类都能加，故 totalAmount 全量累加。
 const totalWeight = computed(() =>
@@ -240,6 +282,8 @@ async function loadCandidates() {
   try {
     const res = await listVegOutCandidates(productName.value || undefined);
     candidates.value = (res.data ?? []) as VegOutCandidateVO[];
+    // 记进跨搜索快照：换搜索词后「已选」与上限判定仍要看得见之前填过的行
+    rememberRows(candidates.value);
     // 单价默认带出产品配置的销售价：加载即预填，不等用户先填出库量
     candidates.value.forEach((row) => ensurePrice(row));
   } finally {
@@ -256,6 +300,7 @@ const open = async () => {
   previewNo.value = '';
   Object.keys(quantityMap).forEach((k) => delete quantityMap[k]);
   Object.keys(priceMap).forEach((k) => delete priceMap[k]);
+  knownRows.value = [];
   visible.value = true;
   loadCandidates();
 };
@@ -263,6 +308,7 @@ defineExpose({ open });
 
 const handleClosed = () => {
   candidates.value = [];
+  knownRows.value = [];
   Object.keys(quantityMap).forEach((k) => delete quantityMap[k]);
   Object.keys(priceMap).forEach((k) => delete priceMap[k]);
 };
@@ -278,6 +324,11 @@ async function submit(print: boolean) {
   }
   if (!selectedRows.value.length) {
     proxy?.$modal.msgWarning(t('vegOut.create.rule.items'));
+    return;
+  }
+  // 兜底：selectedRows 已改成跨搜索全集，输入框禁用理论上挡得住；这里再拦一道防边界情况
+  if (selectedRows.value.length > MAX_SELECTED_PRODUCTS) {
+    proxy?.$modal.msgWarning(t('vegOut.create.rule.maxProducts', { n: MAX_SELECTED_PRODUCTS }));
     return;
   }
   submitting.value = true;
@@ -337,6 +388,16 @@ async function submit(print: boolean) {
 .right-title {
   font-weight: 500;
   margin-bottom: 12px;
+}
+/* 满员前是灰色提示，满员后转警示色，让「为什么输入框不能填了」有个就近解释 */
+.max-tip {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--el-text-color-secondary);
+}
+.max-tip.is-full {
+  color: var(--el-color-warning);
 }
 .selected-list {
   display: flex;

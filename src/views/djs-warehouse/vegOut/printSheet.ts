@@ -9,8 +9,9 @@
  * 文字保持矢量、清晰可读；仍复用那套「隐藏 iframe + @page + cw.print()」骨架
  * （含 --kiosk-printing 静默打印兼容）。</p>
  *
- * <p><b>分页</b>（Kevin D6）：模板表格是固定 8 个数据行 + 合计行。超过 8 行自动分页，
- * 每页重复表头与单号，合计出现在**每页末尾**（本页小计）与**最后一页**（总合计）。</p>
+ * <p><b>分页</b>（Kevin D6）：模板表格是固定 10 个数据行 + 合计行。超过 10 行自动分页，
+ * 每页重复表头与单号，合计出现在**每页末尾**（本页小计）与**最后一页**（总合计）。
+ * 新增出库弹窗侧同步限死最多 10 个产品，正常业务一单一页。</p>
  */
 
 /** 打印单一行。 */
@@ -37,8 +38,13 @@ export interface VegOutPrintPayload {
 /** 公司抬头，甲方指定固定文案。 */
 const COMPANY_NAME = '鑫东生态农业有限公司';
 
-/** 模板表格固定 8 个数据行。 */
-const ROWS_PER_PAGE = 8;
+/**
+ * 模板表格固定 10 个数据行。
+ *
+ * 与 `VegOutCreateDrawer` 的 `MAX_SELECTED_PRODUCTS` 是同一个数：一张 241×140mm 的纸放得下几行，
+ * 就只让人选几个产品。改这里必须同时改那里，否则要么单据分页要么表格印不下。
+ */
+export const ROWS_PER_PAGE = 10;
 
 /**
  * 六列列宽（%）：序号 / 产品及规格 / 单位 / 出库量 / 单价 / 总金额。
@@ -68,7 +74,7 @@ function money(v: number): string {
 }
 
 function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], pageNo: number, pageCount: number, allRows: VegOutPrintRow[]): string {
-  // 不足 8 行补空行，保持表格高度与模板一致（针式纸走纸位置固定）
+  // 不足 10 行补空行，保持表格高度与模板一致（针式纸走纸位置固定）
   const padded: (VegOutPrintRow | null)[] = [...pageRows];
   while (padded.length < ROWS_PER_PAGE) padded.push(null);
 
@@ -105,10 +111,10 @@ function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], page
       <h1>${esc(COMPANY_NAME)}</h1>
       <h2>销售出货单</h2>
       <div class="meta">
-        <span>客户名称：${esc(payload.customerName)}</span>
+        <span class="left">出库日期：${esc(payload.outDate)}</span>
+        <span class="center">客户名称：${esc(payload.customerName)}</span>
         <span class="right">
-          <span class="k">出库单号：</span><span class="v">${esc(payload.batchNo)}</span>
-          <span class="k">出货日期：</span><span class="v">${esc(payload.outDate)}</span>
+          出库单号：${esc(payload.batchNo)}
           ${pageCount > 1 ? `<span class="pg">第 ${pageNo} / ${pageCount} 页</span>` : ''}
         </span>
       </div>
@@ -141,14 +147,19 @@ html, body { margin: 0; padding: 0; font-family: "Microsoft YaHei", "PingFang SC
 .main { flex: 1; min-width: 0; }
 h1 { margin: 0; font-size: 5mm; text-align: center; font-weight: 700; }
 h2 { margin: 1mm 0 2mm; font-size: 4.2mm; text-align: center; font-weight: 700; }
-.meta { display: flex; justify-content: space-between; align-items: flex-start; font-size: 3mm; margin-bottom: 1.5mm; }
-/* 单号 / 日期两行：label 与 value 各占一列，冒号与值的左边界竖直对齐（不做右对齐，
-   否则「0000005」与「2026-08-04」长度不同会把两行的 label 挤成一前一后） */
-.meta .right { display: grid; grid-template-columns: max-content max-content; row-gap: 0.8mm; line-height: 1.3; }
-.meta .right .k, .meta .right .v { text-align: left; }
-.meta .right .pg { grid-column: 1 / -1; text-align: left; }
+/* 抬头信息一行三段：日期靠左 / 客户名称居中 / 单号靠右。
+   用 grid 1fr-max-content-1fr 而不是 flex space-between —— 后者三段宽度不等时中段落不到纸面正中。 */
+.meta { display: grid; grid-template-columns: 1fr max-content 1fr; align-items: start; font-size: 3mm; margin-bottom: 1.5mm; }
+.meta .left { text-align: left; }
+.meta .center { text-align: center; white-space: nowrap; }
+.meta .right { text-align: right; }
+/* 页码跟单号同一行（前面加个空格分隔），不独占一行：独占时抬头从 4.2mm 涨到 8.5mm，
+   把 132mm 可用高度的余量吃掉一半，长产品名一换行签名栏就被顶出纸外。 */
+.meta .pg { margin-left: 3mm; }
 table { width: 100%; border-collapse: collapse; font-size: 3mm; table-layout: fixed; }
-th, td { border: 0.3mm solid #000; height: 8.5mm; text-align: center; padding: 0 1mm; word-break: break-all; }
+/* 行高 8mm：10 数据行 + 表头 + 合计 = 12 行 96mm，抬头与签名栏之后仍留得下 132mm 的可用高度。
+   8.5mm 时 12 行 102mm，余量不到 4mm，产品名一换行就把签名栏顶出纸外。 */
+th, td { border: 0.3mm solid #000; height: 8mm; text-align: center; padding: 0 1mm; word-break: break-all; }
 th { font-weight: 700; }
 tr.total td { font-weight: 700; }
 /* 签名栏与表格同列：送货栏从第 4 列（出库量）左边界起，右侧留白供手写签名 */

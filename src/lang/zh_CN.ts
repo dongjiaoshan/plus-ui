@@ -667,6 +667,20 @@ export default {
       newPenPlaceholder: '请选择转移栏位',
       success: '已转为育肥猪'
     },
+    editEarNo: {
+      action: '修改耳号',
+      title: '修改耳号',
+      currentEarNo: '当前耳号',
+      newEarNo: '新耳号',
+      newEarNoPlaceholder: '格式：品系-品种-性别-出生日-序号，如 01-01-2-260319-022',
+      newEarNoRequired: '请输入新耳号',
+      newEarNoPattern: '格式须为 品系-品种-性别-出生日-序号（如 01-01-2-260319-022）',
+      warning: '仅修改当前耳号；已生成的历史记录、追溯码不会同步更新。若该猪已生育仔猪，其仔猪记录的父/母系耳号需另行核实。',
+      confirmTitle: '确认修改耳号？',
+      confirmMessage: '耳号将从 {old} 改为 {new}，确认继续？',
+      success: '耳号已修改',
+      unchanged: '新耳号与当前耳号相同，无需修改'
+    },
     tab: {
       all: '全部',
       // 与字典 djs_pig_type 的 dict_label 保持一致（DICT-PIG-TYPE-001）：
@@ -1451,7 +1465,8 @@ export default {
   },
   // 毛菜间出库管理（admin row187）
   vegOut: {
-    action: { create: '新增', detail: '查看详情' },
+    pageTitle: '毛菜间出库管理',
+    action: { create: '新增', detail: '查看详情', export: '导出' },
     field: { outDate: '出库日期', outDest: '出库去向', operator: '操作人' },
     column: {
       batchNo: '出库单号',
@@ -1491,8 +1506,14 @@ export default {
       selected: '已选产品',
       selectedEmpty: '在左侧填写出库量即可加入',
       totalKinds: '共 {n} 个品类',
+      maxProductsTip: '一张出库单最多 {n} 个产品',
       confirm: '确认出库',
-      rule: { outDate: '请选择出库日期', outDest: '请选择出库去向', items: '请至少为一个产品填写出库量' }
+      rule: {
+        outDate: '请选择出库日期',
+        outDest: '请选择出库去向',
+        items: '请至少为一个产品填写出库量',
+        maxProducts: '一张出库单最多 {n} 个产品，请先把出库量清 0 去掉多余的产品'
+      }
     }
   },
   // 库存查询（WMS-MD-001，只读列表）
@@ -1684,7 +1705,17 @@ export default {
   },
   plantZone: {
     title: { add: '新增片区', edit: '编辑片区' },
-    column: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '说明', zoneBelong: '所属大区', zoneStatus: '状态', createTime: '创建时间', plotCount: '管理地块数量', updateTime: '更新时间', updateByName: '更新人员' },
+    column: {
+      zoneCode: '片区编码',
+      zoneName: '片区名称',
+      zoneDesc: '说明',
+      zoneBelong: '所属大区',
+      zoneStatus: '状态',
+      createTime: '创建时间',
+      plotCount: '管理地块数量',
+      updateTime: '更新时间',
+      updateByName: '更新人员'
+    },
     field: { zoneCode: '片区编码', zoneName: '片区名称', zoneDesc: '片区说明', zoneBelong: '所属大区', zoneStatus: '状态' },
     filter: { zoneBelong: '所属大区', zoneName: '片区名称', updateTime: '更新时间', updateBy: '更新人员' },
     placeholder: {
@@ -1900,7 +1931,17 @@ export default {
   // 种植 - 作物（PLT-MD-001）
   plantCrop: {
     title: { add: '新增作物', edit: '编辑作物', view: '作物详情', baseInfo: '基础信息' },
-    tab: { basic: '基础信息', growth: '生长周期', yield: '产量品质', planting: '种植信息', farmwork: '农事信息' },
+    tab: { basic: '基础信息', growth: '生长周期', yield: '产量品质', product: '产品配置', planting: '种植信息', farmwork: '农事信息' },
+    product: {
+      add: '新增产品配置',
+      edit: '修改产品配置',
+      productName: '产品名称',
+      perfPrice: '作物绩效(元/公斤)',
+      empty: '暂无产品配置，点击「新增」为该作物添加产出产品',
+      saveFirst: '请先保存作物基础信息，再配置产出产品',
+      confirmDelete: '确认删除产品「{name}」的配置？',
+      rule: { productId: '请选择关联产品' }
+    },
     label: {
       varietyOrigin: '品种来源',
       qualityDesc: '作物说明',
@@ -1997,7 +2038,11 @@ export default {
       organicWarning: '请选择证书是否预警',
       updateBy: '请输入更新人员ID'
     },
-    rule: { cropCode: { required: '作物编码不能为空' }, cropName: { required: '作物名称不能为空' }, maxCycle: { gtMin: '生长最大周期必须大于生长最小周期' } },
+    rule: {
+      cropCode: { required: '作物编码不能为空' },
+      cropName: { required: '作物名称不能为空' },
+      maxCycle: { gtMin: '生长最大周期必须大于生长最小周期' }
+    },
     confirm: { del: '是否确认删除选中的 {count} 个作物？' }
   },
   // 种植 - 班组（PLT-MD-002）
@@ -2066,8 +2111,7 @@ export default {
       lastHarvestdate: '最晚采摘日期',
       plantStatus: '种植计划状态',
       harvestStatus: '采摘状态',
-      transplantAdjusted: '移栽调整',
-      transplantAdjustedTag: '移栽',
+      changeType: '变更类型',
       plantTime: '计划种植时间',
       plantActualDate: '种植日期',
       beginHarvestdate: '开始采摘日期',
@@ -2147,6 +2191,28 @@ export default {
     },
     action: {
       detail: '详情'
+    },
+    // V6-R36 已种植地块后台调整
+    adjust: {
+      btn: '修改',
+      title: '修改种植记录',
+      field: {
+        plantState: '种植状态',
+        plantDate: '种植日期',
+        plantBy: '种植班组'
+      },
+      state: {
+        planted: '已种植',
+        pending: '待种植'
+      },
+      placeholder: { plantDate: '请选择种植日期' },
+      rule: {
+        plantState: '请选择种植状态',
+        plantDate: '请选择种植日期'
+      },
+      pendingTip: '保存后该地块将改回「待种植」：清空计划采摘日期、删除对应的种植记录（种植日期与种植班组），变更类型记为「后台调整」。',
+      success: '种植记录已调整',
+      noChange: '种植状态、种植日期和班组都没有调整，未做任何处理'
     },
     edit: {
       btn: {
@@ -2362,6 +2428,7 @@ export default {
     column: {
       pickDate: '采摘日期',
       cropName: '作物名称',
+      productName: '产品名称',
       plotCode: '地块编号',
       pickWeight: '采摘量',
       teamName: '采摘班组',
@@ -2585,6 +2652,7 @@ export default {
       feedDate: '日期',
       cropImage: '作物图片',
       cropName: '作物名称',
+      productName: '产品名称',
       feedWeight: '饲喂饲料量',
       feedType: '提供位置',
       operator: '操作人',
@@ -3982,6 +4050,42 @@ export default {
       noCode: '该行无追溯码可补打'
     }
   },
+  burnAdjust: {
+    pageTitle: '燎毛间产品重量调整',
+    field: {
+      inboundDate: '入库日期',
+      productName: '产品名称',
+      isAdjusted: '是否调整',
+      arriveWeight: '猪只接收重量',
+      pendingWeight: '待入库重量',
+      productWeight: '产品入库重量'
+    },
+    placeholder: {
+      productName: '请输入产品名称',
+      isAdjusted: '请选择是否调整'
+    },
+    column: {
+      inboundTime: '入库时间',
+      productName: '产品名称',
+      productWeight: '产品入库重量',
+      earNo: '耳号',
+      burnFinished: '猪只燎毛间是否处理完成',
+      locationName: '入库库位',
+      isAdjusted: '是否调整',
+      operator: '入库人',
+      adjustTime: '调整时间',
+      adjustBy: '调整人'
+    },
+    action: {
+      adjust: '调整'
+    },
+    dialog: {
+      title: '调整产品入库重量'
+    },
+    rule: {
+      productWeight: '请输入调整后的产品入库重量'
+    }
+  },
   vegHandleRecord: {
     pageTitle: '毛菜间处理记录',
     field: {
@@ -4006,6 +4110,7 @@ export default {
     column: {
       handleDate: '处理日期',
       cropName: '作物名称',
+      productName: '产品名称',
       statSource: '统计来源',
       handleMethod: '处理方式',
       plotCode: '地块编号',
@@ -4174,6 +4279,7 @@ export default {
       editTitle: '修改盘点 - {date}',
       storePlaceholder: '请选择门店',
       datePlaceholder: '请选择盘点日期',
+      inboundRefreshed: '以下产品的当日入库量已按最新到货刷新：{list}。请重新核对期末库存后再保存，否则损耗会算多。',
       emptyCandidates: '该门店当日暂无可盘产品（仅显示昨日盘点尚有库存的产品，以及已确认收货的需求产品）',
       submit: '盘点完成',
       submitConfirm: '确认提交 {n} 个产品的盘点数据？',
@@ -4361,6 +4467,7 @@ export default {
       tabFarm: '农事记录',
       rule: '绩效规则',
       cropName: '作物',
+      productName: '产品',
       cropPickWeight: '采摘量',
       cropUnitPrice: '单价',
       cropAmount: '绩效额',
