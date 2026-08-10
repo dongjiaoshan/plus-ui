@@ -9,7 +9,9 @@
         <!-- 左：页标题 + 待领用白条卡片网格（FIX-WMS-CUTPICKUP-SPLIT-001：按燎毛产出行逐条出卡，半只/半扇各一张，可分次领） -->
         <div class="station-left">
           <!-- 页标题放在左列：右操作台才能顶到可视区最上沿（标题本身保留，不缩小） -->
-          <div class="station-title">{{ t('djs.warehouse.packEntry.pickupPageTitle') }}</div>
+          <div class="station-title">
+            {{ t('djs.warehouse.packEntry.pickupPageTitle') }}<span v-if="isPreviewMode()" class="preview-badge">{{ PREVIEW_BADGE }}</span>
+          </div>
 
           <div class="card-scroll">
             <div v-loading="itemLoading" class="bar-grid">
@@ -151,7 +153,7 @@ import { ElMessage, ElNotification } from 'element-plus';
 import { PriceTag, Refresh } from '@element-plus/icons-vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
 // 【临时】一体秤验收预览数据；秤上验收通过后连同 _preview.ts 一起删
-import { isPreviewMode, previewBars } from '../_preview';
+import { PREVIEW_BADGE, blockSubmitInPreview, isPreviewMode, previewBars } from '../_preview';
 import ScaleFillBar from '../components/ScaleFillBar.vue';
 import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
@@ -312,6 +314,9 @@ async function loadItems() {
 }
 
 async function handleSubmit() {
+  // 预览态用的是假 id，提交会打到后端真实写库路径 —— 直接拦下（见 _preview.ts）
+  if (blockSubmitInPreview()) return;
+
   const it = selectedItem.value;
   if (!it) {
     notifyMissing(t('djs.warehouse.packEntry.barRequired'));
@@ -666,5 +671,17 @@ onMounted(async () => {
 }
 .station-right :deep(.ship-store-select .el-select__wrapper) {
   min-height: 44px;
+}
+/* 【临时】模拟数据角标：免得有人把预览态当真数据报 bug。随 _preview.ts 一起删 */
+.preview-badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-color-warning-dark-2);
+  background: var(--el-color-warning-light-9);
+  border: 1px solid var(--el-color-warning-light-5);
+  vertical-align: middle;
 }
 </style>

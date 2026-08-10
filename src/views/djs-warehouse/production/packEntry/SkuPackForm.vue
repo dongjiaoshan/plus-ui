@@ -6,7 +6,9 @@
       <!-- 左：产品卡片网格（可滚动）+ 底部固定需求门店 tags -->
       <div class="station-left">
         <!-- dense 一体秤小屏：页标题挪进左列，右操作台才能顶到可视区最上沿（标题本身保留，不缩小） -->
-        <div v-if="dense" class="station-title">{{ title }}</div>
+        <div v-if="dense" class="station-title">
+          {{ title }}<span v-if="isPreviewMode()" class="preview-badge">{{ PREVIEW_BADGE }}</span>
+        </div>
 
         <!-- 果蔬打包：未匹配到领用原料对应成品时回退展示全部果蔬成品，给一行轻提示（doc#12） -->
         <div v-if="kind === 'veg' && vegMaterialFallback" class="veg-fallback-tip">
@@ -223,7 +225,7 @@ import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
 import ScaleFillBar from './components/ScaleFillBar.vue';
 // 【临时】一体秤验收预览数据；秤上验收通过后连同 _preview.ts 一起删（清理清单在该文件末尾）
-import { isPreviewMode, previewDemand, previewProducts, previewSources } from './_preview';
+import { PREVIEW_BADGE, blockSubmitInPreview, isPreviewMode, previewDemand, previewProducts, previewSources } from './_preview';
 import ScaleReader from './components/ScaleReader.vue';
 import ScaleWeightInput from './components/ScaleWeightInput.vue';
 import DestToggle from './components/DestToggle.vue';
@@ -1364,6 +1366,9 @@ function handleReset() {
 
 /** printTrace=true：提交后弹出追溯码供「打印」展示（仅肉品/果蔬有此按钮）。 */
 async function handleSubmit(printTrace: boolean) {
+  // 预览态用的是假 id，提交会打到后端真实写库路径 —— 直接拦下（见 _preview.ts）
+  if (blockSubmitInPreview()) return;
+
   // 确认框也属于一次提交事务：在打开确认框前就获取 single-flight 锁，
   // 防双击“确定”或与“确认并打印”交叉点击生成两条生产记录。
   if (submitting.value) return;
@@ -1975,5 +1980,17 @@ onActivated(() => {
 }
 .pack-station--dense .demand-tags :deep(.el-tag) {
   height: 32px;
+}
+/* 【临时】模拟数据角标：免得有人把预览态当真数据报 bug。随 _preview.ts 一起删 */
+.preview-badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-color-warning-dark-2);
+  background: var(--el-color-warning-light-9);
+  border: 1px solid var(--el-color-warning-light-5);
+  vertical-align: middle;
 }
 </style>

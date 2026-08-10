@@ -4,7 +4,9 @@
       <!-- 左：页标题 + 待分割白条 + 分割产品卡片；右操作台顶到可视区最上沿（一体秤 dense 范式，同肉品打包）。 -->
       <div class="station-left">
         <!-- 一体秤小屏：页标题挪进左列，右操作台才能顶到可视区最上沿（标题本身保留，不缩小） -->
-        <div class="station-title">{{ t('djs.warehouse.packEntry.cutTitle') }}</div>
+        <div class="station-title">
+          {{ t('djs.warehouse.packEntry.cutTitle') }}<span v-if="isPreviewMode()" class="preview-badge">{{ PREVIEW_BADGE }}</span>
+        </div>
 
         <!-- 分割单 chip 行（猪只耳号；来源 cut_record picked/cutting）；白条多时本行内部滚动，不侵占下方产品卡片区 -->
         <div v-loading="cuttableLoading" class="chip-row">
@@ -124,7 +126,7 @@ import WeightNumpad from '../components/WeightNumpad.vue';
 import ScaleFillBar from '../components/ScaleFillBar.vue';
 import DestToggle from '../components/DestToggle.vue';
 // 【临时】一体秤验收预览数据；秤上验收通过后连同 _preview.ts 一起删
-import { isPreviewMode, previewCutProducts, previewCuttable } from '../_preview';
+import { PREVIEW_BADGE, blockSubmitInPreview, isPreviewMode, previewCutProducts, previewCuttable } from '../_preview';
 import { usePackEntryOptions } from '../useOptions';
 import { listCuttable, submitCutDone, submitCutOut } from '@/api/djs-warehouse/packEntry';
 import type { PigCutRecordVO } from '@/api/djs-warehouse/packEntry';
@@ -229,6 +231,9 @@ function notifyMissing(message: string) {
 }
 
 async function handleCutOut() {
+  // 预览态用的是假 id，提交会打到后端真实写库路径 —— 直接拦下（见 _preview.ts）
+  if (blockSubmitInPreview()) return;
+
   if (!form.value.cutRecordId) {
     notifyMissing(t('djs.warehouse.packEntry.cutRecordRequired'));
     return;
@@ -281,6 +286,9 @@ function openCutDone() {
 }
 
 async function handleCutDone() {
+  // 预览态用的是假 id，提交会打到后端真实写库路径 —— 直接拦下（见 _preview.ts）
+  if (blockSubmitInPreview()) return;
+
   // 滴水损耗由后端自动计算（白条入库重量 − 出库重量），前端不再录入
   cutDoneSubmitting.value = true;
   try {
@@ -540,5 +548,17 @@ onMounted(async () => {
 /* 本页卡片只有品名、没有数据行（show-stock=false、无 demandMap），比通用 dense 卡还能再窄一档 */
 .cut-card-grid.card-grid--dense {
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+/* 【临时】模拟数据角标：免得有人把预览态当真数据报 bug。随 _preview.ts 一起删 */
+.preview-badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-color-warning-dark-2);
+  background: var(--el-color-warning-light-9);
+  border: 1px solid var(--el-color-warning-light-5);
+  vertical-align: middle;
 }
 </style>

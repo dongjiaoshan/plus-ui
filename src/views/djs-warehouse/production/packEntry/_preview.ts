@@ -10,12 +10,31 @@
  * ② URL 带 `?preview=1`；不带就是真实数据，本地/staging 都照常验真实行为。
  */
 
+import { ElMessage } from 'element-plus';
+
 /** 是否处于模拟数据预览态。故意用普通函数不用 computed —— `location.search` 不是响应式依赖，
  *  computed 会把首次结果永久缓存，配合 keep-alive 后在已打开的页面上补 `?preview=1` 永远不生效。 */
 export function isPreviewMode(): boolean {
   const envOk = import.meta.env.DEV || /-staging\./i.test(window.location.hostname);
   return envOk && new URLSearchParams(window.location.search).get('preview') === '1';
 }
+
+/**
+ * 预览态**禁止提交**：这里造的 id 全是假雪花号（成品/来源/白条/分割单都是），
+ * 一旦点「确定 / 确认出库 / 分割完成」就会把假 id POST 给后端 —— 能不能写进去取决于后端校验，
+ * 不该赌。所有写库入口开头调一次，返回 true 表示已拦下、调用方直接 return。
+ *
+ * @returns true=处于预览态且已提示用户（调用方必须中止）
+ */
+export function blockSubmitInPreview(): boolean {
+  if (!isPreviewMode()) return false;
+  ElMessage.warning(PREVIEW_BLOCK_TIP);
+  return true;
+}
+
+/** 预览态角标文案 / 拦截提示。刻意不进 i18n：本模块整体是临时的，删的时候不想在 lang 文件里留残渣。 */
+export const PREVIEW_BADGE = '模拟数据';
+const PREVIEW_BLOCK_TIP = '当前是模拟数据预览，已拦截提交。去掉网址里的 ?preview=1 再操作真实数据。';
 
 /** 真实产品图（staging OSS `djs/product_image/`，公开可读）。带 resize 参数：
  *  原图 1.2-3.6MB 的 1024×768 PNG 直接塞进 76px 缩略图要好几秒才画出来，resize 后 ~35KB。
@@ -276,6 +295,7 @@ export function previewCutProducts(): Record<string, unknown>[] {
 }
 
 /* ============================ 清理清单（秤上验收通过后执行）============================
+ * 0. 各页提交函数开头的 `if (blockSubmitInPreview()) return;`（共 4 处）和标题旁的 PREVIEW_BADGE 角标
  * 1. 删除本文件 `_preview.ts`
  * 2. SkuPackForm.vue：删 import、删 performReload 开头那段 `if (isPreviewMode()) {...}`
  * 3. pickup/index.vue：删 import、删 loadItems() 里那段 preview 分支
