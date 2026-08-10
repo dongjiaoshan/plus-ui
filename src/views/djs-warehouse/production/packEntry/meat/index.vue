@@ -1,6 +1,9 @@
 <template>
-  <!-- 不加外层 padding：dense 要求右操作台贴住可视区上沿，留白全由 pack-station--dense 自己控 -->
   <div>
+    <!-- ⚠️ 注释一律写在根 div 之内：写在根节点外面会让 SFC 编译成 Fragment（多根），
+         AppMain 的 transition mode="out-in" 解析不出唯一过渡子节点 → leave 永不完成，
+         从本页切走后 .app-main 只剩一个注释占位节点、后续所有页面全白（仅 vite dev 复现，
+         build:prod 会剥注释）。另：不加外层 padding —— 留白全由 .pack-station--dense 自己控。 -->
     <!-- 肉品打包：仅猪肉成品（belong_type=pork + product_attr=1 生产产品，取数逻辑 doc#13）；
          发送位置仅「发货月台」（去掉邮寄/礼盒）；卡片库存=成品 product_material 指向的原材料实时库存（与扣减口径一致）；
          顶部按已领用出库猪肉来源耳号去重列出耳号选择条（row107）；来源产品区隐藏，只按猪只耳号溯源（门店做溯源码），

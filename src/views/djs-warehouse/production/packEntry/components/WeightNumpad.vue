@@ -91,6 +91,9 @@ function press(key: string) {
   if (key === '.' && buffer.value.includes('.')) return;
   let next = buffer.value;
   if (key === '.' && next === '') next = '0';
+  // 秤空盘自动填入会把框写成 "0"，工人关掉自动填入改手输时首个数字键要顶掉这个 0，
+  // 否则敲 1 . 5 显示成 "01.5"（值对但秤屏上看着像按错，会反复清零重敲）。
+  else if (next === '0' && key !== '.') next = '';
   buffer.value = sanitize(next + key);
   emitFromBuffer();
 }

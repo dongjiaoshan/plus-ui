@@ -57,8 +57,21 @@ export function useScaleAutoFill(opts: UseScaleAutoFillOptions) {
   const following = computed<boolean>(() => cfg.autoFill && scale.connected.value && scale.code.value === 1 && !toValue(opts.disabled));
 
   const lastPushed = ref<number | null>(null);
+  // ⚠️ watch 源里**必须**带上 `opts.current?.()` —— 它让「当前录入值」成为响应式依赖，
+  // 于是外部把值改掉/清空（如选卡片时程序化置 undefined、提交后 reset）也会重新触发镜像纠回来。
+  // 少了这一项就只在「秤读数变化」时才推：秤上放着东西读数恒定时，被清空的框永远填不回来
+  // （2026-08-10 独立 QA 在 pickup 页实测复现：秤 20.5kg 稳定，点卡片后框空 5s 不回填）。
+  // 不会死循环：回填后 `cur === v` 直接早退；本项目所有消费方都是把值原样赋给父级，不做变换。
   watch(
-    () => [scale.weightKg.value, scale.connected.value, scale.code.value, cfg.autoFill, toValue(opts.disabled)] as const,
+    () =>
+      [
+        scale.weightKg.value,
+        scale.connected.value,
+        scale.code.value,
+        cfg.autoFill,
+        toValue(opts.disabled),
+        opts.current ? opts.current() : null
+      ] as const,
     () => {
       if (!following.value) return;
       const kg = scale.weightKg.value;

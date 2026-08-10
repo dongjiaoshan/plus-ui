@@ -1,62 +1,69 @@
 <template>
-  <div class="p-2">
+  <div>
+    <!-- 注释一律写在根 div 之内：写在根节点外面会让 SFC 编译成 Fragment（多根），
+         AppMain 的 transition mode="out-in" 解析不出唯一过渡子节点 → leave 永不完成，
+         从本页切走后 .app-main 只剩一个注释占位节点，后续所有页面全白（vite dev comments=true 才复现）。
+         另：不加外层 padding —— 一体秤小屏要求右操作台贴住可视区上沿，留白全由 .pack-station 自己控。 -->
     <div class="pack-station">
-      <div class="station-title">{{ t('djs.warehouse.packEntry.pickupPageTitle') }}</div>
-
       <div class="station-body">
-        <!-- 左：待领用白条卡片网格（FIX-WMS-CUTPICKUP-SPLIT-001：按燎毛产出行逐条出卡，半只/半扇各一张，可分次领） -->
+        <!-- 左：页标题 + 待领用白条卡片网格（FIX-WMS-CUTPICKUP-SPLIT-001：按燎毛产出行逐条出卡，半只/半扇各一张，可分次领） -->
         <div class="station-left">
-          <div v-loading="itemLoading" class="bar-grid">
-            <button
-              v-for="it in items"
-              :key="itemKey(it)"
-              type="button"
-              class="bar-card"
-              :class="{ active: selectedKey === itemKey(it) }"
-              @click="selectItem(it)"
-            >
-              <div class="bar-card-head">
-                <span class="bar-card-title">{{ it.productName || t('djs.warehouse.packEntry.barCardTitle') }}</span>
-                <span class="bar-chip">
-                  <el-icon><PriceTag /></el-icon>
-                  <span>{{ it.earNo ?? it.markId ?? it.barId }}</span>
-                </span>
-              </div>
-              <div class="bar-card-body">
-                <div v-if="it.whiteBarNo" class="bar-row">
-                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.whiteBarNoLabel') }}</span>
-                  <span class="bar-row-value bar-row-value--strong">{{ it.whiteBarNo }}</span>
+          <!-- 页标题放在左列：右操作台才能顶到可视区最上沿（标题本身保留，不缩小） -->
+          <div class="station-title">{{ t('djs.warehouse.packEntry.pickupPageTitle') }}</div>
+
+          <div class="card-scroll">
+            <div v-loading="itemLoading" class="bar-grid">
+              <button
+                v-for="it in items"
+                :key="itemKey(it)"
+                type="button"
+                class="bar-card"
+                :class="{ active: selectedKey === itemKey(it) }"
+                @click="selectItem(it)"
+              >
+                <div class="bar-card-head">
+                  <span class="bar-card-title">{{ it.productName || t('djs.warehouse.packEntry.barCardTitle') }}</span>
+                  <span class="bar-chip">
+                    <el-icon><PriceTag /></el-icon>
+                    <span>{{ it.earNo ?? it.markId ?? it.barId }}</span>
+                  </span>
                 </div>
-                <div class="bar-row">
-                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inTimeLabel') }}</span>
-                  <span class="bar-row-value">{{ it.inTime ?? '-' }}</span>
+                <div class="bar-card-body">
+                  <div v-if="it.whiteBarNo" class="bar-row">
+                    <span class="bar-row-label">{{ t('djs.warehouse.packEntry.whiteBarNoLabel') }}</span>
+                    <span class="bar-row-value bar-row-value--strong">{{ it.whiteBarNo }}</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inTimeLabel') }}</span>
+                    <span class="bar-row-value">{{ it.inTime ?? '-' }}</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-row-label">{{ t('djs.warehouse.packEntry.agingDurationLabel') }}</span>
+                    <span class="bar-row-value">{{ agingDuration(it.inTime) }}</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-row-label">{{ t('djs.warehouse.packEntry.marketingWeightLabel') }}</span>
+                    <span class="bar-row-value">{{ it.marketingWeight != null ? `${Number(it.marketingWeight)}kg` : '-' }}</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-row-label">{{ t('djs.warehouse.packEntry.outputWeightLabel') }}</span>
+                    <span class="bar-row-value bar-row-value--strong">{{
+                      it.productWeight != null ? `${Number(it.productWeight)}${it.productUnit ?? 'kg'}` : '-'
+                    }}</span>
+                  </div>
                 </div>
-                <div class="bar-row">
-                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.agingDurationLabel') }}</span>
-                  <span class="bar-row-value">{{ agingDuration(it.inTime) }}</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.marketingWeightLabel') }}</span>
-                  <span class="bar-row-value">{{ it.marketingWeight != null ? `${Number(it.marketingWeight)}kg` : '-' }}</span>
-                </div>
-                <div class="bar-row">
-                  <span class="bar-row-label">{{ t('djs.warehouse.packEntry.outputWeightLabel') }}</span>
-                  <span class="bar-row-value bar-row-value--strong">{{
-                    it.productWeight != null ? `${Number(it.productWeight)}${it.productUnit ?? 'kg'}` : '-'
-                  }}</span>
-                </div>
-              </div>
-            </button>
-            <span v-if="!itemLoading && items.length === 0" class="bar-empty">{{ t('djs.warehouse.packEntry.noBars') }}</span>
+              </button>
+              <span v-if="!itemLoading && items.length === 0" class="bar-empty">{{ t('djs.warehouse.packEntry.noBars') }}</span>
+            </div>
           </div>
         </div>
 
         <!-- 右：操作 panel（收银台风格；三段式：头部固定 + 中部可滚动 + 底部按钮区常驻） -->
         <div class="station-right">
+          <!-- 「操作」标题去掉，整个 head 绝对定位到右台右上角：不占行高，视觉上与首段标签（猪只耳号）同排。
+               刷新是本页唯一的重拉数据入口（白条卡 / 来源 / 发货门店），只缩小不删除。 -->
           <div class="panel-head">
-            <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
-            <!-- row141/142：操作标题右侧刷新按钮（带文字「刷新」、触屏友好尺寸），重新加载待领用白条 / 来源 / 发货门店 -->
-            <el-button class="panel-refresh-btn" type="primary" plain :icon="Refresh" :loading="refreshing || itemLoading" @click="handleRefresh">
+            <el-button class="refresh-btn" type="primary" plain :icon="Refresh" :loading="refreshing || itemLoading" @click="handleRefresh">
               {{ t('common.refresh') }}
             </el-button>
           </div>
@@ -73,9 +80,15 @@
               <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.barRequired') }}</span>
             </div>
 
-            <!-- 产品重量数字键盘 -->
+            <!-- 产品重量数字键盘。标签行右侧挂秤状态条：连接状态 + 稳定/晃动 + 自动填入开关；
+                 自动填入开时录入值完全镜像秤读数（放上=实重、取下回 0），关掉才是纯手输 numpad。
+                 本页录入单位是 kg（numpad unit="kg" / precision=3），故 in-gram=false。
+                 ⚠️ ScaleFillBar 内部持有秤连接，整页只准放这一个。 -->
             <div class="panel-section">
-              <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
+              <div class="weight-label-row">
+                <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
+                <ScaleFillBar v-model="pickupForm.productWeight" :in-gram="false" />
+              </div>
               <WeightNumpad
                 v-model="pickupForm.productWeight"
                 :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')"
@@ -135,14 +148,21 @@ import { useI18n } from 'vue-i18n';
 import { ElMessage, ElNotification } from 'element-plus';
 import { PriceTag, Refresh } from '@element-plus/icons-vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
+// 【临时】一体秤验收预览数据；秤上验收通过后连同 _preview.ts 一起删
+import { isPreviewMode, previewBars } from '../_preview';
+import ScaleFillBar from '../components/ScaleFillBar.vue';
 import DestToggle from '../components/DestToggle.vue';
 import { usePackEntryOptions } from '../useOptions';
 import { listPickupItems, submitPickup, submitWhiteBarOut, submitWarehouseOut } from '@/api/djs-warehouse/packEntry';
 import type { BarPickupItemVO } from '@/api/djs-warehouse/packEntry';
 import { filterManualOutDest } from '@/views/djs-warehouse/constants';
+import { useScaleConfigStore } from '@/store/modules/scaleConfig';
 import request from '@/utils/request';
 
 const { t } = useI18n();
+// 只读「自动填入」开关（不调 useScaleWeight——那是工厂函数，再调一次就多开一条 WS + 轮询，
+// 整页只准 ScaleFillBar 持有唯一连接）。选卡是否清空录入重量以它为准，见 selectItem。
+const scaleCfg = useScaleConfigStore();
 const { proxy } = getCurrentInstance()!;
 
 // 出库去向复用系统已有字典 djs_stock_out_dest（矿山/厨房/大冶门店/各收货单位…）；toRefs 解构保响应式（否则冷 store 挂载恒空）
@@ -220,10 +240,22 @@ function resolveSourceInhouseId(it: BarPickupItemVO): number | string | undefine
   return src?.id;
 }
 
-/** 选中一张卡：仅高亮。row203：产品重量不自动预填，由用户现场过磅手工输入。 */
+/**
+ * 选中一张卡：仅高亮 + 按录入模式决定要不要清空已录重量。
+ *
+ * 二选一（不做两边兼容）：
+ * - **自动填入关（手输模式）**：清空。row203 口径——产品重量不自动预填，由用户现场过磅手工输入；
+ *   不清会把上一张卡的手输重量带到新卡上，工人直接点确认就串了卡。
+ * - **自动填入开（秤是唯一权威源）**：不清。工人的自然顺序是「白条先放上秤 → 再点卡片 → 确认出库」，
+ *   此时清空会把秤读数抹掉，而 useScaleAutoFill 的 watch 只跟秤读数变化走——秤上东西没动就不会再回填，
+ *   录入框恒空、提交被「请录入产品重量」拦死，必须把肉搬下来再放上去才有值。
+ *   放弃的是「换卡自动归零」这层保护：此模式下值本来就完全镜像秤读数（取下即回 0），由秤兜底。
+ */
 function selectItem(it: BarPickupItemVO) {
   selectedKey.value = itemKey(it);
-  pickupForm.value.productWeight = undefined;
+  if (!scaleCfg.autoFill) {
+    pickupForm.value.productWeight = undefined;
+  }
 }
 
 /** 排酸时长：now - inTime，前端按入库时间算（无后端字段）。 */
@@ -247,6 +279,11 @@ function notifyMissing(message: string) {
 async function loadItems() {
   itemLoading.value = true;
   try {
+    // 【临时】一体秤验收预览：造几张待领用白条卡看版式（见 _preview.ts 两道闸与清理清单）
+    if (isPreviewMode()) {
+      items.value = previewBars() as unknown as BarPickupItemVO[];
+      return;
+    }
     const res = await listPickupItems();
     items.value = ((res as any).data ?? []) as BarPickupItemVO[];
     // 刷新后若当前选中卡已不在列表（已领满/被领走）→ 清空选中
@@ -345,17 +382,28 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* row137：整页定高，右操作台三段式（头部固定 + 中部可滚动 + 底部按钮常驻），与 SkuPackForm / cut 统一 */
+/* ===== 一体秤 dense 版式（ACLAS 安卓一体秤：navbar 50 + tagsview 34 占掉后，浏览器真可视高仅 ~634-84=550px）=====
+   目标：功能一个不减（numpad / 刷新 / 卡片数据行全保留），整页零滚动、底部「确认领用」完整可见。
+   ① 整页贴顶：外层不加 padding，本容器只留左右 8px + 底 8px
+   ② 页高按 dvh 算 —— Android Chrome 的 100vh 是「地址栏隐藏时」的高度，比真可视区大 ~90px，
+      多出来的部分被 .app-main{overflow:hidden} 直接裁掉，底部按钮被切一半就是这么来的；
+      旧内核不支持 dvh 时回落到上一条 100vh 声明
+   ③ 页标题挪进左列（模板里已换位），右操作台才能顶到可视区最上沿
+   ④ 「操作」标题去掉、刷新绝对定位到右台右上角 → 不占行高
+   ⑤ numpad 12 键由 3 列 ×4 行改 4 列 ×3 行 —— 少一行 ~52px，键位反而更宽更好点
+   标签与内容一律上下两行（把每段标签内联到左侧省不下高度、还难看），只收紧间距。 */
 .pack-station {
-  padding: 12px;
-  height: calc(100vh - 120px);
+  padding: 0 8px 8px;
+  height: calc(100vh - 84px);
+  height: calc(100dvh - 84px);
   display: flex;
   flex-direction: column;
 }
 .station-title {
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  padding-top: 6px;
   flex: 0 0 auto;
 }
 /* 右操作面板随左侧白条卡网格拉伸到等高（红框到底） */
@@ -363,26 +411,41 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: stretch;
 }
+/* 左列 = 页标题（固定） + 卡片滚动区 */
 .station-left {
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
+.card-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+/* 245px 下限按「最长数据行不折行」反推，不是拍脑袋（1472×634 秤屏实测）：
+   最长数据行「入库时间 2026-08-06 19:51:19」= label 88 + 值 121 = 209px，
+   卡头「品名 + 耳号 chip」= 192px，取大者 209 + 左右内边距及边框 26 = 235px 是折行临界，取 245 留余量。
+   秤屏左列净宽 800px（侧栏展开）/ 950px（收起）→ 两种情况都落 3 列：
+   4 列需 ≤191px(展开) / ≤228px(收起)，都低于 235 的折行临界，硬挤只会让数据行折行、卡片反而变高。
+   卡片数据行一行都不删（甲方明确要求），宁可滚动也不压小压密。 */
 .bar-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  gap: 12px;
+  align-content: start;
   min-height: 120px;
 }
 .bar-card {
   display: flex;
   flex-direction: column;
   text-align: left;
-  padding: 16px;
+  padding: 10px 12px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
   background: var(--el-bg-color);
@@ -401,10 +464,10 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 .bar-card-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--el-text-color-primary);
 }
@@ -412,7 +475,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 12px;
+  padding: 2px 10px;
   border-radius: 6px;
   background: var(--el-color-warning);
   color: #fff;
@@ -422,12 +485,13 @@ onMounted(async () => {
 .bar-card-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 .bar-row {
   display: flex;
   align-items: center;
   font-size: 13px;
+  line-height: 1.6;
 }
 .bar-row-label {
   /* r80：加宽到容纳最长 6 字 label「白条入库重量」单行不折 */
@@ -448,34 +512,33 @@ onMounted(async () => {
   font-size: 13px;
   line-height: 40px;
 }
-/* row137：面板撑满卡片网格等高，头部固定 + 中部滚动 + 底部按钮常驻（不再靠 space-between 均分留白） */
-/* row157：内边距收紧 24→16，把省下的纵向空间让给中部内容，减少内部滚动 */
+/* 右台三段式：头部（绝对定位、不占行高） + 中部滚动 + 底部按钮常驻。
+   position:relative 是 .panel-head 绝对定位的参照；内边距顶部只留 6px 不贴边框。 */
 .station-right {
+  position: relative;
   flex: 0 0 440px;
   width: 440px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 16px;
+  padding: 6px 12px 10px;
   background: var(--el-bg-color);
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-/* row141：操作标题行 —— 标题在左、刷新按钮在右 */
+/* 刷新（本页唯一的重拉数据入口：白条卡 / 来源 / 发货门店）——缩小 + 绝对定位到右台右上角，
+   不占行高，与首段标签（猪只耳号）同排。只准缩小，不准删。 */
 .panel-head {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  z-index: 2;
+  margin-bottom: 0;
 }
-/* row153：与其它生产管理页（SkuPackForm / 白条分割）的刷新按钮统一到 44px 触屏热区，
-   本页原为 38px，是 7 个生产管理页里唯一的例外。 */
-.panel-refresh-btn {
-  flex: 0 0 auto;
-  height: 44px;
-  padding: 0 20px;
-  font-size: 15px;
+.refresh-btn {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 13px;
 }
 /* 中部：头部之下、按钮之上的可滚动区 */
 .panel-scroll {
@@ -483,36 +546,43 @@ onMounted(async () => {
   min-height: 0;
   overflow-y: auto;
 }
-.panel-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--el-text-color-secondary);
-}
-/* row157：段间距 22→12、label 下间距 10→6 —— 四段（耳号/重量/出库位置/联动项）累计省出约 56px，
-   让「发货月台→发货门店」「仓库出库→出库方式」的联动项不用滚动就能看到。 */
 .panel-section {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .panel-label {
-  font-size: 15px;
+  font-size: 13px;
+  line-height: 26px;
   color: var(--el-text-color-regular);
-  margin-bottom: 6px;
+  margin-bottom: 2px;
+}
+/* 重量段标签行：左=标签、右=秤状态条（连接状态 / 稳定-晃动 / 自动填入开关），
+   秤条并进标签行不多占一行；标签与 numpad 仍是上下两行。 */
+.weight-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.weight-label-row > .panel-label {
+  margin-bottom: 0;
 }
 .ear-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 8px;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
   background: var(--el-color-warning-light-9);
   color: var(--el-color-warning-dark-2);
   border: 1px solid var(--el-color-warning-light-5);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
 }
 .ear-chip-sub {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   opacity: 0.85;
 }
 .panel-actions {
@@ -520,23 +590,24 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-top: 12px;
+  padding-top: 10px;
 }
 .action-btn {
   width: 100%;
-  height: 50px;
-  font-size: 18px;
+  height: 46px;
+  font-size: 16px;
 }
-/* 触屏放大：数字键盘 / 出库位置按钮（组件内默认偏小，本台面页面级放大）。
-   row157：整体压矮一档（键 56→46 / 录入框 56→48 / 去向按钮 52→44），仍 ≥44px 触屏最小热区（row147 标准）。 */
+/* 触屏尺寸：键位 / 去向按钮仍 ≥40px 热区，只压掉多余留白。
+   numpad 12 键 4 列 ×3 行（少一行 ~52px）。 */
 .station-right :deep(.numpad-display) {
-  height: 48px;
+  height: 40px;
   margin-bottom: 8px;
 }
 .station-right :deep(.numpad-input) {
   font-size: 20px;
 }
 .station-right :deep(.numpad-keys) {
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
 .station-right :deep(.numpad-key) {
@@ -544,14 +615,14 @@ onMounted(async () => {
   font-size: 20px;
 }
 .station-right :deep(.dest-btn) {
-  min-width: 96px;
-  height: 44px;
-  font-size: 16px;
+  min-width: 90px;
+  height: 40px;
+  font-size: 15px;
 }
 .ship-store-select {
   width: 100%;
 }
 .station-right :deep(.ship-store-select .el-select__wrapper) {
-  min-height: 52px;
+  min-height: 44px;
 }
 </style>

@@ -2830,7 +2830,7 @@ export default {
       },
       packEntry: {
         meatTitle: '肉品打包',
-        otherTitle: '产品打包',
+        otherTitle: '其他产品打包',
         vegTitle: '果蔬打包',
         giftTitle: '礼盒打包',
         cutTitle: '白条分割管理',

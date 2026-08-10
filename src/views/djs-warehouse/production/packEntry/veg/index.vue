@@ -1,6 +1,12 @@
 <template>
-  <div class="p-2">
-    <!-- 果蔬打包：发送位置仅「发货月台」（去掉邮寄/礼盒，row110）；plot-group 顶部地块来源选择 -->
+  <div>
+    <!-- ⚠️ 注释一律写在根 div 之内：写在根节点外面会让 SFC 编译成 Fragment（多根），
+         AppMain 的 transition mode="out-in" 解析不出唯一过渡子节点 → leave 永不完成，
+         从本页切走后 .app-main 只剩一个注释占位节点、后续所有页面全白（仅 vite dev 复现，
+         build:prod 会剥注释）。另：不加外层 padding —— 留白全由 .pack-station--dense 自己控。 -->
+    <!-- 果蔬打包：发送位置仅「发货月台」（去掉邮寄/礼盒，row110）；plot-group 顶部地块来源选择；
+         dense=一体秤小屏紧凑布局（贴顶 + 页标题挪左列 + 刷新缩小绝对定位 + numpad 4×3 + dvh 页高），整页零滚动；
+         scaleFill=重量录入接本机电子秤（果蔬按克录入，状态条 + 自动填入，开时录入值镜像秤读数、取下回 0） -->
     <SkuPackForm
       ref="packFormRef"
       kind="veg"
@@ -12,6 +18,8 @@
       :show-source="false"
       wide
       :hide-pack-no="true"
+      dense
+      scale-fill
       @submitted="handleSubmitted"
     />
   </div>

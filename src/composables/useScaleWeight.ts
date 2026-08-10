@@ -79,10 +79,27 @@ export function useScaleWeight() {
     }
   };
 
+  // 连不上时的退避（Kevin 2026-08-10）：没有秤桥的机器（如 Kevin 的 Mac 开 staging 页）原先是
+  // 300ms 轮询 + 1.5s WS 无限重连 —— 每分钟约 200 个失败请求刷满 Network 面板和控制台。
+  // 改成：连续失败满 DEGRADE_AFTER_MS 就把轮询降到慢档，收到任一有效帧立刻回快档。
+  // 不做「彻底停止」是因为秤上 ScaleAdapterTool 可能比浏览器起得晚、或中途重启，
+  // 停死了工人就得手动点重试；慢档 10s 一次既把噪声降到 1/33，又能自愈。
+  const POLL_FAST_MS = 300;
+  const POLL_SLOW_MS = 10_000;
+  const DEGRADE_AFTER_MS = 30_000;
+  const pollMs = ref<number>(POLL_FAST_MS);
+  /** 第一次连续失败的时刻（成功即清空）；null = 当前不处于失败串 */
+  let firstFailureAt: number | null = null;
+
   // —— 通道 1：WebSocket 推送（无 CORS 限制；帧可能是 text / Blob / ArrayBuffer，全解一遍）——
-  const { data, open: wsOpen, close: wsClose } = useWebSocket(wsUrl, {
+  // retries 有限：秤桥不在时无限重连同样是噪声源。轮询恢复（收到有效帧）时会重新 open 一次。
+  const {
+    data,
+    open: wsOpen,
+    close: wsClose
+  } = useWebSocket(wsUrl, {
     immediate: false,
-    autoReconnect: { retries: () => true, delay: 1500 }
+    autoReconnect: { retries: 3, delay: 1500 }
   });
   watch(data, (raw) => {
     if (typeof raw === 'string') tryApply(raw);
@@ -100,16 +117,30 @@ export function useScaleWeight() {
     try {
       const res = await fetch(`${httpBase.value}/api/Weight?scaleId=${encodeURIComponent(cfg.scaleId)}`, { signal: ctrl.signal });
       applyFrame((await res.json()) as ScaleWeightFrame);
+      // 恢复：回快档；若之前退避过，顺手把 WS 也重新拉起来（它的 retries 可能已经用尽）
+      firstFailureAt = null;
+      if (pollMs.value !== POLL_FAST_MS) {
+        pollMs.value = POLL_FAST_MS;
+        wsOpen();
+      }
     } catch {
-      // 本次拉取失败（网络/CORS/超时），等下次；失联由 staleTimer 收敛为 connected=false
+      // 本次拉取失败（网络/CORS/超时），等下次；失联由 staleTimer 收敛为 connected=false。
+      // 连续失败超过 DEGRADE_AFTER_MS → 降到慢档，别再每 300ms 刷一条失败请求。
+      if (firstFailureAt === null) firstFailureAt = Date.now();
+      else if (Date.now() - firstFailureAt >= DEGRADE_AFTER_MS) pollMs.value = POLL_SLOW_MS;
     } finally {
       clearTimeout(timer);
       inFlight = false;
     }
   };
-  const { pause: pollPause, resume: pollResume, isActive: pollActive } = useIntervalFn(pollOnce, 300, { immediate: false });
+  // interval 传 ref：VueUse 会在值变化时按新周期重启定时器（快档 ↔ 慢档切换靠它）
+  const { pause: pollPause, resume: pollResume, isActive: pollActive } = useIntervalFn(pollOnce, pollMs, { immediate: false });
 
   const connect = (): void => {
+    // 每次进页面（onMounted / keep-alive onActivated）都从快档重来：上一轮退避的状态不带过来，
+    // 否则切走时秤没插、切回来插好了却要等 10s 才发现。
+    firstFailureAt = null;
+    pollMs.value = POLL_FAST_MS;
     wsOpen();
     if (!pollActive.value) pollResume();
     void pollOnce(); // 立即拉一次，首帧不等 300ms

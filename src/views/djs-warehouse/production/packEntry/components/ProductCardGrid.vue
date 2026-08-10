@@ -272,15 +272,17 @@ function select(id: number | string) {
   gap: 10px;
   padding: 10px 12px;
 }
+/* 76px 而不是常规 56px：卡片高度由右边文字栏（名称 + 三行数据 ≈ 82px）决定，
+   缩略图放大到 76 仍矮于文字栏，**一点高度都不多占**，白拿一张更看得清的图 */
 .prod-card--dense .prod-thumb,
 .prod-card--dense .thumb-img,
 .prod-card--dense .thumb-fallback {
-  flex-basis: 56px;
-  width: 56px;
-  height: 56px;
+  flex-basis: 76px;
+  width: 76px;
+  height: 76px;
 }
 .prod-card--dense .thumb-fallback {
-  font-size: 24px;
+  font-size: 30px;
 }
 /* 名称两行截断而不是一行省略号：这批成品只有末尾规格不同（…五花肉250g/份 vs …500g/份），
    一行省略号正好把唯一区分点吃掉，整屏卡片看起来全一样 */

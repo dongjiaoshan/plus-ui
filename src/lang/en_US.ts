@@ -2842,7 +2842,7 @@ export default {
       },
       packEntry: {
         meatTitle: 'Meat Packing',
-        otherTitle: 'Product Packing',
+        otherTitle: 'Other Product Packing',
         vegTitle: 'Vegetable Packing',
         giftTitle: 'Gift Box Packing',
         cutTitle: 'White Bar Cutting',
