@@ -4,9 +4,7 @@
     <div class="si-head">
       <span class="si-label">{{ label || t('djs.warehouse.packEntry.productWeight') }}</span>
       <span class="si-ctrl">
-        <span class="si-status" :class="connected ? 'on' : 'off'">
-          <span class="dot" />{{ statusText }}
-        </span>
+        <span class="si-status" :class="connected ? 'on' : 'off'"> <span class="dot" />{{ statusText }} </span>
         <span v-if="connected" class="si-badge" :class="isSteady ? 'ok' : 'warn'">
           {{ isSteady ? t('djs.warehouse.scale.steady') : t('djs.warehouse.scale.unstable') }}
         </span>
@@ -35,15 +33,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useScaleWeight } from '@/composables/useScaleWeight';
+import { useScaleAutoFill } from '@/composables/useScaleAutoFill';
 import { useScaleConfigStore } from '@/store/modules/scaleConfig';
 
 /**
  * 小屏用「秤重量可编辑输入框」（替代触屏 numpad + ScaleReader）：
  * - 带边框卡片，头部一排放标签 + 秤状态 + 自动填入开关；下面是重量输入框。
- * - 用户可手动输入 / 修改；秤稳定且有值(≥MIN)时自动填入覆盖；空秤(<MIN)不覆盖手输。
+ * - 自动填入开时值完全镜像秤推送重量（放上=实重、取下=0，口径见 useScaleAutoFill）；
+ *   要手输/改数就关掉「自动填入」。
  * v-model 绑父级 productWeight（单位与录入口径一致：肉品/果蔬=克整数，其余=kg 3 位）。
  */
 const props = withDefaults(
@@ -63,15 +62,12 @@ const emit = defineEmits<{ 'update:modelValue': [v: number | undefined] }>();
 
 const { t } = useI18n();
 const cfg = useScaleConfigStore();
-const { connected, weightKg, isSteady, unitName, code, lastError, connect, close } = useScaleWeight();
+const { connected, isSteady, unitName, code, lastError } = useScaleAutoFill({
+  inGram: () => props.inGram,
+  current: () => props.modelValue,
+  onFill: (v) => emit('update:modelValue', v)
+});
 
-onMounted(connect);
-onActivated(connect);
-onDeactivated(close);
-onUnmounted(close);
-
-const MIN_KG = 0.005;
-const REFILL_DELTA_KG = 0.005;
 const precision = computed<number>(() => (props.inGram ? 0 : 3));
 const displayUnit = computed<string>(() => props.unit || (props.inGram ? 'g' : unitName.value || 'kg'));
 
@@ -80,7 +76,9 @@ watch(
   () => props.modelValue,
   (v) => {
     const s = v == null || Number.isNaN(v) ? '' : String(v);
-    if (Number(buffer.value || '0') !== Number(s || '0') || (s === '' && buffer.value !== '')) buffer.value = s;
+    // 末条：外部给 0 而框内为空时也写「0」——秤镜像空秤读数时，空框与 0 数值相等会被判"一致"而不回灌，
+    // 工人就看不到归零（口径同 WeightNumpad）。
+    if (Number(buffer.value || '0') !== Number(s || '0') || (s === '' && buffer.value !== '') || (s === '0' && buffer.value === '')) buffer.value = s;
   }
 );
 
@@ -114,38 +112,12 @@ function normalize(): void {
   emitFromBuffer();
 }
 
-const statusText = computed<string>(() =>
-  connected.value ? t('djs.warehouse.scale.connected') : t('djs.warehouse.scale.disconnected')
-);
+const statusText = computed<string>(() => (connected.value ? t('djs.warehouse.scale.connected') : t('djs.warehouse.scale.disconnected')));
 const offlineTip = computed<string>(() => {
   if (!connected.value) return t('djs.warehouse.scale.offlineTip');
   if (code.value === 0) return lastError.value || t('djs.warehouse.scale.scaleError');
   return '';
 });
-
-const convert = (kg: number): number => (props.inGram ? Math.round(kg * 1000) : Number(kg.toFixed(3)));
-
-const lastFilledKg = ref<number | null>(null);
-watch(
-  () => [weightKg.value, isSteady.value, connected.value, code.value, cfg.autoFill] as const,
-  () => {
-    const kg = weightKg.value;
-    if (kg === null || kg < MIN_KG) {
-      lastFilledKg.value = null;
-      return;
-    }
-    if (
-      cfg.autoFill &&
-      connected.value &&
-      isSteady.value &&
-      code.value === 1 &&
-      (lastFilledKg.value === null || Math.abs(kg - lastFilledKg.value) >= REFILL_DELTA_KG)
-    ) {
-      emit('update:modelValue', convert(kg));
-      lastFilledKg.value = kg;
-    }
-  }
-);
 </script>
 
 <style scoped>

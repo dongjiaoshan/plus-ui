@@ -1,14 +1,7 @@
 <template>
   <div class="numpad">
     <div class="numpad-display">
-      <input
-        class="numpad-input"
-        :value="buffer"
-        :placeholder="placeholder"
-        inputmode="decimal"
-        @input="onInput"
-        @blur="normalize"
-      />
+      <input class="numpad-input" :value="buffer" :placeholder="placeholder" inputmode="decimal" @input="onInput" @blur="normalize" />
       <span v-if="unit" class="numpad-unit">{{ unit }}</span>
     </div>
     <div class="numpad-keys">
@@ -58,8 +51,11 @@ watch(
   () => props.modelValue,
   (v) => {
     const asStr = v == null || Number.isNaN(v) ? '' : String(v);
-    // 仅当外部值与 buffer 当前数值不一致时回灌（避免「5.」中间态被自身 emit 冲掉）
-    if (Number(buffer.value || '0') !== Number(asStr || '0') || (asStr === '' && buffer.value !== '')) {
+    // 仅当外部值与 buffer 当前数值不一致时回灌（避免「5.」中间态被自身 emit 冲掉）。
+    // 末条：外部给 0 而框内为空时也要写「0」——秤自动填入镜像空秤读数时，
+    // 空框和 0 数值相等会被前两条判为"一致"而不回灌，工人就看不到归零（本项目只有秤会显式给 0，
+    // 其余调用方重置一律给 undefined，不受影响）。
+    if (Number(buffer.value || '0') !== Number(asStr || '0') || (asStr === '' && buffer.value !== '') || (asStr === '0' && buffer.value === '')) {
       buffer.value = asStr;
     }
   }
