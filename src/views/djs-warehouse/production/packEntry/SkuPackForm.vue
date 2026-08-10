@@ -23,8 +23,9 @@
             :stock-unit="kind === 'veg' ? 'kg' : undefined"
             :stock-unit-map="sourceFilterActive ? wipStockUnitMap : undefined"
             :show-stock="showStock"
-            :large="wide && !mini"
+            :large="wide && !mini && !dense"
             :compact="mini"
+            :dense="dense"
             :weight-in-gram="weightInGram"
             @change="onProductChange"
           />
@@ -1548,12 +1549,104 @@ async function refreshAfterPack() {
 }
 
 /**
+ * 【本地布局预览】写死一批成品 + 来源 + 需求，仅用于在「今天没有领用记录」时看卡片区排版效果。
+ *
+ * 两道闸，缺一不生效：① `import.meta.env.DEV`（生产/staging 构建里恒为 false，推上去也永远走不到这条分支，
+ * 秤上不可能看到这批假数据）② URL 带 `?preview=1`（不带就是真实数据，本地照常验真实行为）。
+ * 用法：http://localhost/djs-warehouse/wh-production/packEntry/meat?preview=1
+ *
+ * 数据取自 staging 真实的猪肉成品名，覆盖满 46 个（全量上限）——真实一天只领几个部位、卡片远少于此，
+ * 这里灌满是为了看最坏情况下会不会滚。看完把 ?preview=1 去掉即可，不用改代码。
+ */
+const PREVIEW_NAMES = [
+  '黑毛猪五花肉250g/份',
+  '黑毛猪五花肉500g/份',
+  '黑毛猪前腿肉1000g/份',
+  '黑毛猪前腿肉250g/份',
+  '黑毛猪前腿肉500g/份',
+  '黑毛猪后腿肉1000g/份',
+  '黑毛猪后腿肉250g/份',
+  '黑毛猪后腿肉500g/份',
+  '黑毛猪扇子骨1000g/份',
+  '黑毛猪扇子骨500g/份',
+  '黑毛猪扇子骨750g/份',
+  '黑毛猪板油1000g/份',
+  '黑毛猪板油1500g/份',
+  '黑毛猪板油2000g/份',
+  '黑毛猪板油500g/份',
+  '黑毛猪猪尾巴',
+  '黑毛猪猪心',
+  '黑毛猪猪肚',
+  '黑毛猪猪肝',
+  '黑毛猪猪肠',
+  '黑毛猪猪脚1000g/份',
+  '黑毛猪猪脚500g/份',
+  '黑毛猪猪脚750g/份',
+  '黑毛猪猪腰子',
+  '黑毛猪筒子骨500g/份',
+  '黑毛猪筒子骨700g/份',
+  '黑毛猪精梅花肉250g/份',
+  '黑毛猪精梅花肉500g/份',
+  '黑毛猪精肋排骨1000g/份',
+  '黑毛猪精肋排骨250g/份',
+  '黑毛猪精肋排骨500g/份',
+  '黑毛猪纯瘦肉250g/份',
+  '黑毛猪纯瘦肉500g/份',
+  '黑毛猪肥肉1000g/份',
+  '黑毛猪肥肉500g/份',
+  '黑毛猪腰柳肉250g/份',
+  '黑毛猪腰柳肉400g/份',
+  '黑毛猪蹄髈1000g/份',
+  '黑毛猪蹄髈750g/份',
+  '黑毛猪通排1000g/份',
+  '黑毛猪通排500g/份',
+  '黑毛猪里脊肉250g/份',
+  '黑毛猪里脊肉500g/份',
+  '黑毛猪龙骨500g/份',
+  '黑毛猪龙骨750g/份',
+  '黑猪腊肉'
+];
+
+// 故意用普通函数不用 computed：location.search 不是响应式依赖，computed 会把首次结果永久缓存，
+// 在已打开的页面上补 ?preview=1 就再也不生效（keep-alive 下 onActivated 重跑也拿到旧值）。
+const isPreviewMode = (): boolean => import.meta.env.DEV && props.dense && new URLSearchParams(window.location.search).get('preview') === '1';
+
+function fillPreviewData(): void {
+  const materialId = '900000000000000001';
+  // 雪花 id 必须字符串拼：数值超 Number.MAX_SAFE_INTEGER，相加会把不同 id 算成同一个
+  const mocked = PREVIEW_NAMES.map((productName, i) => ({
+    id: '90000000000000' + String(1000 + i),
+    productName,
+    productCode: 'PREVIEW' + String(i).padStart(3, '0'),
+    productSpec: /(\d+g\/份)$/.exec(productName)?.[1] ?? '散装',
+    productUnit: productName.includes('g/份') ? '份' : 'kg',
+    productType: 1,
+    belongType: 'pork',
+    productAttr: 1,
+    productMaterial: materialId
+  })) as unknown as ProductInfoVO[];
+  products.value = mocked;
+  sources.value = [
+    { id: '80000000000000001', productId: materialId, productName: '黑毛猪白条', productUnit: 'kg', productWeight: 42.5, earNo: '2026-08-10-001' },
+    { id: '80000000000000002', productId: materialId, productName: '黑毛猪白条', productUnit: 'kg', productWeight: 31.2, earNo: '2026-08-10-002' }
+  ] as unknown as PackSourceVO[];
+  const demand: Record<string, number> = {};
+  mocked.forEach((p, i) => (demand[String(p.id)] = (i % 7) + 2));
+  demandMap.value = demand;
+}
+
+/**
  * 全量重新拉取页面数据（来源 / 成品 / 门店需求 / 原材料库存）——与 onMounted 初始加载等价。
  * 供父页「刷新」按钮（row130#2）+ 提交成功后自动刷新（refreshAfterPack）调用。
  * row125/128/130#5「打包后需求量不减」根因是前端不刷新：后端 fulfillDirectDemandOnPack/deductDemandOnPack
  * 各打包路径均已扣 shipped_count（无需改后端），此处 reload 重拉最新 demandMap / loadStoreDemand 即呈现减后需求量。
  */
 async function performReload() {
+  // 本地布局预览：灌写死数据后直接返回，不打任何接口（dev + ?preview=1 才会进这里）
+  if (isPreviewMode()) {
+    fillPreviewData();
+    return;
+  }
   await loadStores();
   if (props.kind === 'veg') {
     // 果蔬打包：先拉来源（推导本次领用原料 id），再按 product_material 命中加载成品（doc#12）

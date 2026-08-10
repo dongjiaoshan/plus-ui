@@ -1,5 +1,9 @@
 <template>
-  <div v-loading="loading" class="card-grid" :class="{ 'card-grid--large': large, 'card-grid--compact': compact, 'card-grid--empty': items.length === 0 }">
+  <div
+    v-loading="loading"
+    class="card-grid"
+    :class="{ 'card-grid--large': large, 'card-grid--compact': compact, 'card-grid--dense': dense, 'card-grid--empty': items.length === 0 }"
+  >
     <template v-if="items.length > 0">
       <div
         v-for="item in items"
@@ -8,7 +12,8 @@
         :class="{
           active: String(modelValue) === String(item.id),
           'prod-card--large': large,
-          'prod-card--compact': compact
+          'prod-card--compact': compact,
+          'prod-card--dense': dense
         }"
         @click="select(item.id)"
       >
@@ -71,6 +76,12 @@ const props = withDefaults(
     /** 超紧凑版（小屏 mini：卡片+缩略图更小、文字更小、一排放更多）；缺省 false */
     compact?: boolean;
     /**
+     * 一体秤小屏版（dense）：缩略图和三行数据（规格 / 需求量 / 领用剩余重量）全保留，只把卡片
+     * 从 large 版收回常规尺寸 —— 秤屏一排放 4 个，放不下的滚动（Kevin 2026-08-10：宁可滚，
+     * 不要为了一屏塞完把卡片压到又小又密）。缺省 false，其他打包页零影响。
+     */
+    dense?: boolean;
+    /**
      * 「领用剩余重量」单位强制覆盖（果蔬打包传 'kg'）：系统权威量纲=kg，
      * stockMap 的数值是 kg；果蔬成品 product_unit 可能是「份」，若按产品单位渲染会出现
      * 「kg 值贴份单位」错位（row12 点1）。传此 prop → 库存行固定显该单位，不用产品 product_unit。
@@ -95,6 +106,7 @@ const props = withDefaults(
     showStock: true,
     large: false,
     compact: false,
+    dense: false,
     stockUnit: undefined,
     stockUnitMap: () => ({}),
     weightInGram: false
@@ -244,6 +256,46 @@ function select(id: number | string) {
 .prod-card--large .prod-row {
   font-size: 14px;
   line-height: 1.9;
+}
+
+/* ===== 一体秤小屏版（dense）：卡片从 large 收回常规尺寸，秤屏一排 4 个 =====
+   缩略图和三行数据全保留（Kevin 2026-08-10 定：宁可滚动，不要为了一屏塞完把卡片压到又小又密）。
+   245px 下限：卡片再窄，「领用剩余重量：42500 g」(~156px) 就放不下要折行 —— 实测秤屏排 4 列(191px)时
+   46 张卡的数据行全部折行、卡片反而从 104 长到 143，一屏可见数量和 3 列一样都是 12 个，纯亏。
+   所以下限按「数据行不折行」反推：156 + 内边距24 + 缩略图56 + 间隙10 = 246px，秤屏落 3 列。 */
+.card-grid--dense {
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+.prod-card--dense {
+  gap: 10px;
+  padding: 10px 12px;
+}
+.prod-card--dense .prod-thumb,
+.prod-card--dense .thumb-img,
+.prod-card--dense .thumb-fallback {
+  flex-basis: 56px;
+  width: 56px;
+  height: 56px;
+}
+.prod-card--dense .thumb-fallback {
+  font-size: 24px;
+}
+/* 名称两行截断而不是一行省略号：这批成品只有末尾规格不同（…五花肉250g/份 vs …500g/份），
+   一行省略号正好把唯一区分点吃掉，整屏卡片看起来全一样 */
+.prod-card--dense .prod-name {
+  font-size: 14px;
+  margin-bottom: 4px;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.prod-card--dense .prod-row {
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 /* ===== 紧凑版（小屏 mini）：比大卡片小、一排放更多，仍保持可读与设计感 ===== */
