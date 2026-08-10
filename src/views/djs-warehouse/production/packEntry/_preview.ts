@@ -205,17 +205,21 @@ export function previewDemand(products: Record<string, unknown>[]): Record<strin
 
 /** 白条出库领用页：待领用白条卡（BarPickupItemVO 鸭子类型）。 */
 export function previewBars(n = 9): Record<string, unknown>[] {
+  // 形态照抄 staging 真实数据：bar_id 13 字符 `BAR2608060005`、ear_no 18 字符 `01-01-1-251003-004`、
+  // 重量是 DECIMAL(x,3)。⚠️ 早期版本用 `78.4 - i * 2.5` 造重量，浮点误差直接渲染成
+  // `63.4000000000000006kg`；数值一律 toFixed(3) 再转回 Number。
+  const w = (v: number): number => Number(v.toFixed(3));
   return Array.from({ length: n }, (_, i) => ({
     inhouseId: mid(200 + i),
     barInfoId: mid(300 + i),
-    whiteBarNo: `BAR2026081000${i + 1}`,
-    barId: `BAR2026081000${i + 1}`,
-    earNo: `2026-08-0${(i % 8) + 1}-00${(i % 5) + 1}`,
+    whiteBarNo: `BAR26081${String(i + 1).padStart(5, '0')}`,
+    barId: `BAR26081${String(i + 1).padStart(5, '0')}`,
+    earNo: `01-0${(i % 3) + 1}-1-25100${(i % 5) + 1}-00${(i % 6) + 1}`,
     productName: i % 3 === 0 ? '黑毛猪白条（整只）' : '黑毛猪白条（半只）',
-    marketingWeight: 110.5 - i * 3.5,
-    inWeight: 78.4 - i * 2.5,
+    marketingWeight: w(110.5 - i * 3.5),
+    inWeight: w(78.4 - i * 2.5),
     inTime: `2026-08-0${(i % 8) + 1} 0${(i % 6) + 3}:${String((i * 7) % 60).padStart(2, '0')}:00`,
-    productWeight: 78.4 - i * 2.5,
+    productWeight: w(78.4 - i * 2.5),
     productUnit: 'kg'
   }));
 }

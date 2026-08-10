@@ -31,11 +31,13 @@
                 <div class="bar-card-body">
                   <div v-if="it.whiteBarNo" class="bar-row">
                     <span class="bar-row-label">{{ t('djs.warehouse.packEntry.whiteBarNoLabel') }}</span>
-                    <span class="bar-row-value bar-row-value--strong">{{ it.whiteBarNo }}</span>
+                    <span class="bar-row-value bar-row-value--strong bar-row-value--nowrap">{{ it.whiteBarNo }}</span>
                   </div>
                   <div class="bar-row">
                     <span class="bar-row-label">{{ t('djs.warehouse.packEntry.inTimeLabel') }}</span>
-                    <span class="bar-row-value">{{ it.inTime ?? '-' }}</span>
+                    <!-- 秤屏窄卡放不下完整时间戳；年对当日作业无意义、秒也没人看（排酸时长那行才是要看的数），
+                         去掉年和秒后 11 字符可单行显示。完整时间在白条详情/追溯里仍可查。 -->
+                    <span class="bar-row-value">{{ shortTime(it.inTime) }}</span>
                   </div>
                   <div class="bar-row">
                     <span class="bar-row-label">{{ t('djs.warehouse.packEntry.agingDurationLabel') }}</span>
@@ -43,12 +45,12 @@
                   </div>
                   <div class="bar-row">
                     <span class="bar-row-label">{{ t('djs.warehouse.packEntry.marketingWeightLabel') }}</span>
-                    <span class="bar-row-value">{{ it.marketingWeight != null ? `${Number(it.marketingWeight)}kg` : '-' }}</span>
+                    <span class="bar-row-value">{{ it.marketingWeight != null ? `${fmtKg(it.marketingWeight)}kg` : '-' }}</span>
                   </div>
                   <div class="bar-row">
                     <span class="bar-row-label">{{ t('djs.warehouse.packEntry.outputWeightLabel') }}</span>
                     <span class="bar-row-value bar-row-value--strong">{{
-                      it.productWeight != null ? `${Number(it.productWeight)}${it.productUnit ?? 'kg'}` : '-'
+                      it.productWeight != null ? `${fmtKg(it.productWeight)}${it.productUnit ?? 'kg'}` : '-'
                     }}</span>
                   </div>
                 </div>
@@ -220,6 +222,20 @@ const pickupDefault = () => ({
 const pickupForm = ref(pickupDefault());
 
 /** 卡片唯一键：产出行卡用 inhouseId，整只兜底卡用 barInfoId。 */
+/** 重量展示：最多 3 位小数并去掉尾随 0（后端是 DECIMAL(x,3)，但计算值会带 63.4000000000000006 这种浮点尾巴）。 */
+function fmtKg(v: number | string | null | undefined): string {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '-';
+  return String(Number(n.toFixed(3)));
+}
+
+/** 入库时间展示：去掉年和秒 —— `2026-08-01 03:00:00` → `08-01 03:00`，秤屏窄卡可单行。 */
+function shortTime(v: string | null | undefined): string {
+  if (!v) return '-';
+  const m = /^\d{4}-(\d{2}-\d{2})[ T](\d{2}:\d{2})/.exec(v);
+  return m ? `${m[1]} ${m[2]}` : v;
+}
+
 function itemKey(it: BarPickupItemVO): string {
   return it.inhouseId != null ? `row-${it.inhouseId}` : `bar-${it.barInfoId}`;
 }
@@ -436,7 +452,12 @@ onMounted(async () => {
    卡片数据行一行都不删（甲方明确要求），宁可滚动也不压小压密。 */
 .bar-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  /* 下限按「最长数据行不折行」反推：本页卡片是「标签 + 值」两栏行，最长的是
+     「白条入库重量  78.4kg」≈150px，+ 内边距24 + 标签值间距 = 180px。
+     旧值 245px 在真机（秤屏左区 ~600px）只能排 2 列 —— 甲方 2026-08-10 反馈的就是这个。 */
+  /* 185px 是按「白条流水号单行不截断」反推的硬下限（甲方 2026-08-10 明确要求不换行）：
+     标签66 + 间距4 + 13 字符流水号 ≈87 + 内边距20 = 177，取 185 留余量。 */
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
   gap: 12px;
   align-content: start;
   min-height: 120px;
@@ -463,7 +484,10 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  /* 窄卡（秤屏 3 列 ≈195px）时品名与耳号 chip 一行放不下，允许 chip 整体换到下一行，
+     而不是两边互相挤成竖排单字 */
+  flex-wrap: wrap;
+  gap: 4px 8px;
   margin-bottom: 8px;
 }
 .bar-card-title {
@@ -489,19 +513,37 @@ onMounted(async () => {
 }
 .bar-row {
   display: flex;
-  align-items: center;
-  font-size: 13px;
+  /* 值换行时标签跟第一行对齐，别垂直居中飘到中间 */
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 12px;
   line-height: 1.6;
 }
 .bar-row-label {
   /* r80：加宽到容纳最长 6 字 label「白条入库重量」单行不折 */
-  width: 88px;
-  flex: 0 0 88px;
+  /* 标签 11px × 6 字「白条入库重量」= 66px（值仍 12px）。这 6px 是留给流水号的：
+     实测 191px 卡片下标签占 72px 时，13 字符流水号会被省略号截掉，66px 才刚好单行。 */
+  width: 66px;
+  flex: 0 0 66px;
+  font-size: 11px;
   white-space: nowrap;
   color: var(--el-text-color-secondary);
 }
 .bar-row-value {
+  /* 必须能收缩 + 折行：窄卡下「BAR20260810001」「2026-08-01 03:00:00」比可用宽度长，
+     不给 min-width:0 就会溢出卡片被裁掉（数据直接看不见，比折行严重得多）。 */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--el-text-color-regular);
+}
+/* 白条流水号不许换行（甲方 2026-08-10）：它是工人核对的主键，断成两行最难认。
+   窄到放不下时宁可省略号——但按上面的 12px + 72px 标签列，真实 13 字符是放得下的。 */
+.bar-row-value--nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
 }
 .bar-row-value--strong {
   color: var(--el-color-warning-dark-2);

@@ -537,8 +537,8 @@ onMounted(async () => {
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
-/* 见模板处注释：本页卡片无数据行，245px 下限的前提不成立 → 4 列，14 个产品一屏排完 */
+/* 本页卡片只有品名、没有数据行（show-stock=false、无 demandMap），比通用 dense 卡还能再窄一档 */
 .cut-card-grid.card-grid--dense {
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 </style>
