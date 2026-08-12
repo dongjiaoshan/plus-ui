@@ -4135,6 +4135,50 @@ export default {
       kg: 'kg'
     }
   },
+  thirdPhaseIn: {
+    pageTitle: 'Third-Phase Crop Inbound',
+    action: {
+      add: 'New Inbound'
+    },
+    field: {
+      inTime: 'Date',
+      cropName: 'Crop Name',
+      product: 'Product',
+      stockNum: 'Inbound Qty',
+      location: 'Inbound Location'
+    },
+    placeholder: {
+      cropName: 'Enter crop name',
+      product: 'Search product name',
+      stockNum: 'Enter inbound quantity'
+    },
+    column: {
+      inTime: 'Date',
+      cropName: 'Crop Name',
+      productName: 'Product Name',
+      stockNum: 'Inbound Qty',
+      locationName: 'Inbound Location',
+      operatorName: 'Operator',
+      plotNames: 'Marked plots'
+    },
+    noPlotMarked: 'Not marked (crop has no active plot)',
+    dialog: {
+      title: 'New Inbound'
+    },
+    fixedLocation: 'Fresh Vegetable Warehouse',
+    rule: {
+      product: 'Please select a product',
+      stockNum: 'Please enter the inbound quantity',
+      stockNumPositive: 'Inbound quantity must be greater than 0',
+      stockNumScale: 'Inbound quantity supports at most 3 decimals'
+    },
+    tip: {
+      addSuccess: 'Inbound recorded'
+    },
+    unit: {
+      kg: 'kg'
+    }
+  },
   storeReturn: {
     export: {
       failed: 'Export failed, please try again later'

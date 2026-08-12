@@ -57,6 +57,8 @@ const FLOW_TYPE_IN_VALUES = [
   // pack_in（打包入库）不在入库记录展示，下拉同步移除（D-row7）
   'veg_receive_in',
   'veg_purchase_in',
+  // 三期作物入库（V6 row88）—— 新入库方式必须同步进这个白名单，否则「入库记录」页筛不出来
+  'third_phase_in',
   'receive_in',
   'return_goods_in',
   'other'

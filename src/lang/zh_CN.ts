@@ -4121,6 +4121,52 @@ export default {
       kg: 'kg'
     }
   },
+  thirdPhaseIn: {
+    pageTitle: '三期作物入库管理',
+    action: {
+      add: '新增入库'
+    },
+    field: {
+      inTime: '日期',
+      cropName: '作物名称',
+      product: '入库产品',
+      stockNum: '入库量',
+      location: '入库库位'
+    },
+    placeholder: {
+      cropName: '请输入作物名称',
+      product: '请输入产品名称搜索',
+      stockNum: '请输入入库量'
+    },
+    column: {
+      inTime: '日期',
+      cropName: '作物名称',
+      productName: '产品名称',
+      stockNum: '入库量',
+      locationName: '入库库位',
+      operatorName: '入库人',
+      plotNames: '标识地块'
+    },
+    /** 打不上标识时列里的占位（后端降级放行时 plotNames 为空） */
+    noPlotMarked: '未打标识（该作物无在种地块）',
+    dialog: {
+      title: '新增入库'
+    },
+    /** 入库库位锁死毛菜鲜品库（甲方口径「毛菜保鲜室」，库位编码 L0006） */
+    fixedLocation: '毛菜鲜品库',
+    rule: {
+      product: '请选择入库产品',
+      stockNum: '请输入入库量',
+      stockNumPositive: '入库量必须大于 0',
+      stockNumScale: '入库量最多 3 位小数'
+    },
+    tip: {
+      addSuccess: '入库成功'
+    },
+    unit: {
+      kg: 'kg'
+    }
+  },
   storeReturn: {
     export: {
       failed: '导出失败，请稍后重试'
