@@ -4135,6 +4135,15 @@ export default {
       kg: 'kg'
     }
   },
+  plotTag: {
+    column: 'Plot',
+    thirdPhase: 'Phase III',
+    filter: {
+      label: 'Phase III',
+      all: 'All',
+      only: 'Phase III only'
+    }
+  },
   thirdPhaseIn: {
     pageTitle: 'Third-Phase Crop Inbound',
     action: {
@@ -4159,9 +4168,13 @@ export default {
       stockNum: 'Inbound Qty',
       locationName: 'Inbound Location',
       operatorName: 'Operator',
-      plotNames: 'Marked plots'
+      plotTag: 'Plot Tag'
     },
-    noPlotMarked: 'Not marked (crop has no active plot)',
+    summary: {
+      totalIn: 'Phase III Total Inbound',
+      totalOut: 'Phase III Total Outbound',
+      loadFailed: 'Failed to load totals, please refresh'
+    },
     dialog: {
       title: 'New Inbound'
     },

@@ -4121,6 +4121,19 @@ export default {
       kg: 'kg'
     }
   },
+  /**
+   * 「地块」列与「三期」筛选（甲方 row92）：库存查询 / 入库记录 / 出库记录三页共用。
+   * 三期只是打在库存行 / 流水行上的标识文案，系统里没有对应的真实地块。
+   */
+  plotTag: {
+    column: '地块',
+    thirdPhase: '三期',
+    filter: {
+      label: '三期',
+      all: '全部',
+      only: '仅看三期'
+    }
+  },
   thirdPhaseIn: {
     pageTitle: '三期作物入库管理',
     action: {
@@ -4145,10 +4158,14 @@ export default {
       stockNum: '入库量',
       locationName: '入库库位',
       operatorName: '入库人',
-      plotNames: '标识地块'
+      /** 本次入库打的标识（恒为「三期」，非真实地块名） */
+      plotTag: '地块标识'
     },
-    /** 打不上标识时列里的占位（后端降级放行时 plotNames 为空） */
-    noPlotMarked: '未打标识（该作物无在种地块）',
+    summary: {
+      totalIn: '三期总入库',
+      totalOut: '三期总出库',
+      loadFailed: '合计加载失败，请刷新重试'
+    },
     dialog: {
       title: '新增入库'
     },

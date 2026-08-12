@@ -29,6 +29,10 @@ export interface StockFlowVO {
   plotId?: number;
   /** 地块编号（= t_plant_plot_info.plot_code，后端 JOIN 回填） */
   blockNo?: string;
+  /** 三期标识（甲方 row92）：1 = 三期，「地块」列渲染成「三期」；无对应真实地块 */
+  thirdPhase?: number;
+  /** 真实地块名（后端 JOIN 回填，无则为空）；非三期行的「地块」列取此值 */
+  plotName?: string;
   operatorId?: number;
   operatorName?: string;
   remark?: string;
@@ -58,6 +62,8 @@ export interface StockFlowQuery {
   plotId?: number;
   /** 地块编号模糊匹配 */
   blockNo?: string;
+  /** 三期筛选（甲方 row92）：1 = 只看三期标识的流水；不传 = 全部 */
+  thirdPhase?: number;
   warehouseId?: number;
   /** 库位/仓库多选（R70 库位下拉多选）；非空时后端按 IN 过滤 */
   warehouseIds?: number[];

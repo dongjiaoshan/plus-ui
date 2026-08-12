@@ -28,11 +28,12 @@
 
 <script setup name="WarehouseFlowIn" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
-import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
+import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listFlowIn } from '@/api/djs-warehouse/stockFlow';
 import type { StockFlowQuery, StockFlowVO } from '@/api/djs-warehouse/stockFlow/types';
 import { listLocation } from '@/api/djs-warehouse/location';
 import { formatQtyByUnit } from '@/utils/weight';
+import { formatPlotLabel, thirdPhaseFilterOptions, toThirdPhaseParam } from '@/utils/plotTag';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
@@ -92,7 +93,8 @@ const searchModel = reactive<Record<string, any>>({
   warehouseId: [],
   operatorName: undefined,
   blockNo: undefined,
-  earNo: undefined
+  earNo: undefined,
+  thirdPhase: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -103,7 +105,9 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'warehouseId', label: t('djs.warehouse.flowIn.location'), type: 'select', multiple: true, options: locationOptions.value },
   { field: 'operatorName', label: t('djs.warehouse.flowIn.operator'), type: 'input' },
   { field: 'blockNo', label: t('djs.warehouse.flowIn.blockNo'), type: 'input' },
-  { field: 'earNo', label: t('djs.warehouse.flowIn.earNo'), type: 'input' }
+  { field: 'earNo', label: t('djs.warehouse.flowIn.earNo'), type: 'input' },
+  // 三期筛选（甲方 row92）：选「仅看三期」传 thirdPhase=1，全部不传
+  { field: 'thirdPhase', label: t('plotTag.filter.label'), type: 'select', options: thirdPhaseFilterOptions() }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -122,6 +126,15 @@ const columns = computed<BizTableColumn[]>(() => [
   },
   { prop: 'productUnit', label: t('djs.warehouse.flowIn.productUnit'), minWidth: 80, align: 'center' },
   { prop: 'blockNo', label: t('djs.warehouse.flowIn.blockNo'), minWidth: 110, align: 'center' },
+  {
+    // 「地块」列（甲方 row92）：三期标识优先显示「三期」，否则真实地块名；三页共用 formatPlotLabel
+    prop: 'plotName',
+    label: t('plotTag.column'),
+    minWidth: 110,
+    align: 'center',
+    showOverflowTooltip: true,
+    formatter: (row: BizRow) => formatPlotLabel(row)
+  },
   { prop: 'earNo', label: t('djs.warehouse.flowIn.earNo'), minWidth: 120, align: 'center' },
   { prop: 'operatorName', label: t('djs.warehouse.flowIn.operator'), minWidth: 100, align: 'center' }
 ]);
@@ -139,6 +152,7 @@ function buildQuery(): StockFlowQuery {
     operatorName: searchModel.operatorName || undefined,
     blockNo: searchModel.blockNo || undefined,
     earNo: searchModel.earNo || undefined,
+    thirdPhase: toThirdPhaseParam(searchModel.thirdPhase),
     dateFrom: from || undefined,
     dateTo: to || undefined,
     pageNum: pageNum.value,

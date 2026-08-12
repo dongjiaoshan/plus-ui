@@ -17,6 +17,10 @@ export interface LocationStockVO extends BaseEntity {
   plotId?: number | string;
   /** service 层 JOIN 地块表回填的地块编号（plot_code） */
   blockNo?: string;
+  /** 三期标识（甲方 row92）：1 = 三期，「地块」列渲染成「三期」；无对应真实地块 */
+  thirdPhase?: number;
+  /** 真实地块名（service 层 JOIN 地块表回填，无则为空）；非三期行的「地块」列取此值 */
+  plotName?: string;
   /** 业态归属（djs_belong_type）：service JOIN product_info 回填；详情饲料 tab 显隐判定 */
   belongType?: string;
   /** 产品属性（1 生产产品 / 2 原材料）：service JOIN product_info 回填；详情饲料 tab 显隐判定 */
@@ -48,6 +52,8 @@ export interface LocationStockQuery extends PageQuery {
   earNo?: string;
   plotId?: number | string;
   blockNo?: string;
+  /** 三期筛选（甲方 row92）：1 = 只看三期标识的库存行；不传 = 全部 */
+  thirdPhase?: number;
   isEnd?: number;
 }
 

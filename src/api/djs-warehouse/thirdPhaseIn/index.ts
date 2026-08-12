@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { ThirdPhaseInForm, ThirdPhaseInQuery, ThirdPhaseInVO } from './types';
+import type { ThirdPhaseInForm, ThirdPhaseInQuery, ThirdPhaseInVO, ThirdPhaseSummaryVO } from './types';
 
 /**
  * 三期作物入库 API（V6 row88，仓库-库存管理「三期作物入库管理」）。
@@ -17,7 +17,19 @@ export const listThirdPhaseIn = (query: ThirdPhaseInQuery): AxiosPromise<ThirdPh
   });
 };
 
-/** 新增三期作物入库（产品入库 + 入库记录 + 地块打【三期】标识由后端一次事务完成） */
+/**
+ * 三期合计（总入库 / 总出库，kg）。
+ *
+ * 甲方 row92「通过三期标识可以统计三期的总入库和总出库」：按流水行的 third_phase 标记聚合，全量口径、不带筛选。
+ */
+export const getThirdPhaseSummary = (): AxiosPromise<ThirdPhaseSummaryVO> => {
+  return request({
+    url: '/djs/warehouse/thirdPhaseIn/summary',
+    method: 'get'
+  });
+};
+
+/** 新增三期作物入库（产品入库 + 入库记录 + 打三期标识由后端一次事务完成） */
 export const addThirdPhaseIn = (data: ThirdPhaseInForm) => {
   return request({
     url: '/djs/warehouse/thirdPhaseIn',

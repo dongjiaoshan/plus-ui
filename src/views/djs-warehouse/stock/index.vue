@@ -71,6 +71,7 @@ import { listStock } from '@/api/djs-warehouse/stock';
 import type { LocationStockQuery, LocationStockVO } from '@/api/djs-warehouse/stock/types';
 import { listLocation } from '@/api/djs-warehouse/location';
 import { formatQtyByUnit } from '@/utils/weight';
+import { formatPlotLabel, thirdPhaseFilterOptions, toThirdPhaseParam } from '@/utils/plotTag';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -101,7 +102,8 @@ const searchModel = reactive<Record<string, any>>({
   earNo: undefined,
   blockNo: undefined,
   // 库位多选（R70，库位实体下拉天然 > 2 → 多选）
-  locationId: []
+  locationId: [],
+  thirdPhase: undefined
 });
 
 /** 库位下拉选项（按 id/locationName 拉取，供搜索精确过滤 locationId）。 */
@@ -113,7 +115,9 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'belongType', label: t('stock.field.belongType'), type: 'select', multiple: true, dictType: 'djs_belong_type', clearable: true },
   { field: 'earNo', label: t('stock.field.earNo'), type: 'input' },
   { field: 'blockNo', label: t('stock.field.blockNo'), type: 'input' },
-  { field: 'locationId', label: t('stock.field.locationName'), type: 'select', multiple: true, options: locationOptions.value, clearable: true }
+  { field: 'locationId', label: t('stock.field.locationName'), type: 'select', multiple: true, options: locationOptions.value, clearable: true },
+  // 三期筛选（甲方 row92）：选「仅看三期」传 thirdPhase=1，全部不传
+  { field: 'thirdPhase', label: t('plotTag.filter.label'), type: 'select', options: thirdPhaseFilterOptions() }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
@@ -133,6 +137,15 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'earNo', label: t('stock.column.earNo'), minWidth: 120, align: 'center' },
   { prop: 'whiteBarNo', label: t('stock.column.whiteBarNo'), minWidth: 130, align: 'center' },
   { prop: 'blockNo', label: t('stock.column.blockNo'), minWidth: 120, align: 'center' },
+  {
+    // 「地块」列（甲方 row92）：三期标识优先显示「三期」，否则真实地块名；三页共用 formatPlotLabel
+    prop: 'plotName',
+    label: t('plotTag.column'),
+    minWidth: 110,
+    align: 'center',
+    showOverflowTooltip: true,
+    formatter: (row: BizRow) => formatPlotLabel(row)
+  },
   { prop: 'latestCheckTime', label: t('stock.column.latestCheckTime'), minWidth: 170, align: 'center', formatter: 'datetime' },
   { prop: 'checkResult', label: t('stock.column.checkResult'), minWidth: 120, align: 'center', dictType: 'djs_check_result' }
 ]);
@@ -155,7 +168,8 @@ async function fetchList() {
       belongTypes: Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType : undefined,
       earNo: searchModel.earNo || undefined,
       blockNo: searchModel.blockNo || undefined,
-      locationIds: Array.isArray(searchModel.locationId) && searchModel.locationId.length ? searchModel.locationId : undefined
+      locationIds: Array.isArray(searchModel.locationId) && searchModel.locationId.length ? searchModel.locationId : undefined,
+      thirdPhase: toThirdPhaseParam(searchModel.thirdPhase)
     };
     const res = await listStock(query);
     list.value = (res.rows ?? res.data ?? []) as LocationStockVO[];
@@ -233,7 +247,8 @@ function handleExport() {
       belongTypes: Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType : undefined,
       earNo: searchModel.earNo || undefined,
       blockNo: searchModel.blockNo || undefined,
-      locationIds: Array.isArray(searchModel.locationId) && searchModel.locationId.length ? searchModel.locationId : undefined
+      locationIds: Array.isArray(searchModel.locationId) && searchModel.locationId.length ? searchModel.locationId : undefined,
+      thirdPhase: toThirdPhaseParam(searchModel.thirdPhase)
     },
     `stock_${new Date().getTime()}.xlsx`
   );

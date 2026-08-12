@@ -3,7 +3,8 @@
  *
  * 后端：org.dromara.djs.warehouse.thirdphase.controller.ThirdPhaseInController  /djs/warehouse/thirdPhaseIn
  *
- * 「三期」= 甲方作物的第三茬/第三期（不是开发三期）；保存后在产品对应的地块上打【三期】标识。
+ * 「三期」= 甲方作物的第三茬/第三期（不是开发三期）；系统里没有对应的真实地块，入库行只打一个
+ * `third_phase` 标记 + 展示文案（甲方 row92）。
  * 入库方式固定 djs_flow_type = third_phase_in；入库库位固定毛菜鲜品库（甲方口径「毛菜保鲜室」，L0006）。
  */
 
@@ -30,10 +31,16 @@ export interface ThirdPhaseInVO {
   operatorId?: number | string;
   /** 入库人姓名 */
   operatorName?: string;
-  /** 本次打了【三期】标识的地块名，多个逗号拼接 */
-  plotNames?: string;
   /** 备注 */
   remark?: string;
+}
+
+/** 三期合计（甲方 row92：通过三期标识统计三期的总入库 / 总出库） */
+export interface ThirdPhaseSummaryVO {
+  /** 三期总入库量(kg；BigDecimal 序列化为字符串，渲染前必须 Number() 转换) */
+  totalIn?: number | string;
+  /** 三期总出库量(kg；同上) */
+  totalOut?: number | string;
 }
 
 /** 列表查询参数 */
