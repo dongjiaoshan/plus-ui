@@ -62,18 +62,21 @@
         </el-form-item>
 
         <el-form-item :label="t('thirdPhaseIn.field.stockNum')" prop="stockNum">
-          <!-- precision=3 由 el-input-number 强制截断到 3 位小数（不是只提示）。
+          <!-- 这里**故意不用 el-input-number**（row96）：它底层是 <input type="number">，浏览器会静默丢弃
+               中文输入法全角态下句号键产生的 `。`，于是「12。345」直接变成 12345 —— 用户以为小数点打不出来，
+               值却已经放大 1000 倍且能过校验；而且那种框不派发 beforeinput，拦截补丁没有触发点。
+               改用 el-input + inputmode=decimal（一样出数字键盘）+ sanitizeDecimalInput 归一，
+               原本 :controls="false" 就没有步进器，外观零变化。
                单位跟输入框同一行（row91）：.el-form-item__content 是 flex-wrap:wrap，输入框写死
                width:100% 会把 kg 挤到第二行 —— 改成 flex:1 让它吃剩余宽，kg 用 flex:none 占尾。 -->
           <div class="unit-field">
-            <el-input-number
-              v-model="form.stockNum"
-              :precision="3"
-              :min="0.001"
-              :step="1"
-              :controls="false"
+            <el-input
+              :model-value="stockNumText"
+              inputmode="decimal"
               :placeholder="t('thirdPhaseIn.placeholder.stockNum')"
               class="unit-field__input"
+              @update:model-value="onStockNumInput"
+              @blur="onStockNumBlur"
             />
             <span class="unit-field__unit">{{ t('thirdPhaseIn.unit.kg') }}</span>
           </div>
@@ -103,6 +106,7 @@ import type { ThirdPhaseInQuery, ThirdPhaseInVO, ThirdPhaseSummaryVO } from '@/a
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
 import { VEG_FRESH_LOCATION_ID } from '../constants';
+import { sanitizeDecimalInput, toDecimalValue } from '@/utils/decimal-input';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -303,6 +307,28 @@ interface ThirdPhaseInFormModel {
 const defaultForm = (): ThirdPhaseInFormModel => ({ productId: '', stockNum: undefined });
 const form = ref<ThirdPhaseInFormModel>(defaultForm());
 
+/** 入库量最多 3 位小数：与 DDL `DECIMAL(12,3)` + Bo `@Digits(fraction = 3)` 对齐。 */
+const STOCK_NUM_FRACTION_DIGITS = 3;
+
+/**
+ * 入库量输入框的显示文本。数值模型仍是 `form.stockNum`（校验与提交都用它），
+ * 这里单独留一份文本是因为「12.」这类中间态没有对应数值 —— 直接绑数值会让用户一敲小数点就被清掉。
+ */
+const stockNumText = ref('');
+
+function onStockNumInput(raw: string) {
+  const text = sanitizeDecimalInput(raw, STOCK_NUM_FRACTION_DIGITS);
+  stockNumText.value = text;
+  form.value.stockNum = toDecimalValue(text);
+}
+
+/** 失焦时把「12.」这种没打完的中间态收成「12」，否则点确定会看到「请填写入库量」这种对不上号的提示。 */
+function onStockNumBlur() {
+  const text = stockNumText.value.replace(/\.$/, '');
+  stockNumText.value = text;
+  form.value.stockNum = toDecimalValue(text);
+}
+
 const productLoading = ref(false);
 const productOptions = ref<Array<{ label: string; value: string }>>([]);
 
@@ -350,7 +376,7 @@ const rules = computed<ElFormRules>(() => ({
           callback(new Error(t('thirdPhaseIn.rule.stockNumPositive')));
           return;
         }
-        // el-input-number precision=3 已截断，这里兜底拦住粘贴 / 程序化赋值的超精度值
+        // sanitizeDecimalInput 已截到 3 位，这里兜底拦住程序化赋值的超精度值
         const decimals = String(n).split('.')[1]?.length ?? 0;
         if (decimals > 3) {
           callback(new Error(t('thirdPhaseIn.rule.stockNumScale')));
@@ -364,6 +390,7 @@ const rules = computed<ElFormRules>(() => ({
 
 function handleAdd() {
   form.value = defaultForm();
+  stockNumText.value = '';
   dialogVisible.value = true;
   searchProducts();
 }
@@ -371,6 +398,7 @@ function handleAdd() {
 function handleClosed() {
   formRef.value?.resetFields();
   form.value = defaultForm();
+  stockNumText.value = '';
   productOptions.value = [];
 }
 
