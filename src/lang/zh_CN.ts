@@ -2830,7 +2830,7 @@ export default {
       },
       packEntry: {
         meatTitle: '肉品打包',
-        otherTitle: '产品打包',
+        otherTitle: '其他产品打包',
         vegTitle: '果蔬打包',
         giftTitle: '礼盒打包',
         cutTitle: '白条分割管理',
@@ -4116,6 +4116,69 @@ export default {
       plotCode: '地块编号',
       handleWeight: '处理量',
       recorder: '记录人'
+    },
+    unit: {
+      kg: 'kg'
+    }
+  },
+  /**
+   * 「地块」列与「三期」筛选（甲方 row92）：库存查询 / 入库记录 / 出库记录三页共用。
+   * 三期只是打在库存行 / 流水行上的标识文案，系统里没有对应的真实地块。
+   */
+  plotTag: {
+    column: '地块',
+    thirdPhase: '三期',
+    filter: {
+      label: '三期',
+      all: '全部',
+      only: '仅看三期'
+    }
+  },
+  thirdPhaseIn: {
+    pageTitle: '三期作物入库管理',
+    action: {
+      add: '新增入库'
+    },
+    field: {
+      inTime: '日期',
+      cropName: '作物名称',
+      product: '入库产品',
+      stockNum: '入库量',
+      location: '入库库位'
+    },
+    placeholder: {
+      cropName: '请输入作物名称',
+      product: '请输入产品名称搜索',
+      stockNum: '请输入入库量'
+    },
+    column: {
+      inTime: '日期',
+      cropName: '作物名称',
+      productName: '产品名称',
+      stockNum: '入库量',
+      locationName: '入库库位',
+      operatorName: '入库人',
+      /** 本次入库打的标识（恒为「三期」，非真实地块名） */
+      plotTag: '地块标识'
+    },
+    summary: {
+      totalIn: '三期总入库',
+      totalOut: '三期总出库',
+      loadFailed: '合计加载失败，请刷新重试'
+    },
+    dialog: {
+      title: '新增入库'
+    },
+    /** 入库库位锁死毛菜鲜品库（甲方口径「毛菜保鲜室」，库位编码 L0006） */
+    fixedLocation: '毛菜鲜品库',
+    rule: {
+      product: '请选择入库产品',
+      stockNum: '请输入入库量',
+      stockNumPositive: '入库量必须大于 0',
+      stockNumScale: '入库量最多 3 位小数'
+    },
+    tip: {
+      addSuccess: '入库成功'
     },
     unit: {
       kg: 'kg'

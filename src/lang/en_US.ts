@@ -2842,7 +2842,7 @@ export default {
       },
       packEntry: {
         meatTitle: 'Meat Packing',
-        otherTitle: 'Product Packing',
+        otherTitle: 'Other Product Packing',
         vegTitle: 'Vegetable Packing',
         giftTitle: 'Gift Box Packing',
         cutTitle: 'White Bar Cutting',
@@ -4130,6 +4130,63 @@ export default {
       plotCode: 'Plot Code',
       handleWeight: 'Handled Weight',
       recorder: 'Recorder'
+    },
+    unit: {
+      kg: 'kg'
+    }
+  },
+  plotTag: {
+    column: 'Plot',
+    thirdPhase: 'Phase III',
+    filter: {
+      label: 'Phase III',
+      all: 'All',
+      only: 'Phase III only'
+    }
+  },
+  thirdPhaseIn: {
+    pageTitle: 'Third-Phase Crop Inbound',
+    action: {
+      add: 'New Inbound'
+    },
+    field: {
+      inTime: 'Date',
+      cropName: 'Crop Name',
+      product: 'Product',
+      stockNum: 'Inbound Qty',
+      location: 'Inbound Location'
+    },
+    placeholder: {
+      cropName: 'Enter crop name',
+      product: 'Search product name',
+      stockNum: 'Enter inbound quantity'
+    },
+    column: {
+      inTime: 'Date',
+      cropName: 'Crop Name',
+      productName: 'Product Name',
+      stockNum: 'Inbound Qty',
+      locationName: 'Inbound Location',
+      operatorName: 'Operator',
+      plotTag: 'Plot Tag'
+    },
+    summary: {
+      totalIn: 'Phase III Total Inbound',
+      totalOut: 'Phase III Total Outbound',
+      loadFailed: 'Failed to load totals, please refresh'
+    },
+    dialog: {
+      title: 'New Inbound'
+    },
+    fixedLocation: 'Fresh Vegetable Warehouse',
+    rule: {
+      product: 'Please select a product',
+      stockNum: 'Please enter the inbound quantity',
+      stockNumPositive: 'Inbound quantity must be greater than 0',
+      stockNumScale: 'Inbound quantity supports at most 3 decimals'
+    },
+    tip: {
+      addSuccess: 'Inbound recorded'
     },
     unit: {
       kg: 'kg'

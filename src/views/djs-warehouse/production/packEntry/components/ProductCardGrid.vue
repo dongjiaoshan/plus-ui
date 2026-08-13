@@ -1,5 +1,9 @@
 <template>
-  <div v-loading="loading" class="card-grid" :class="{ 'card-grid--large': large, 'card-grid--compact': compact, 'card-grid--empty': items.length === 0 }">
+  <div
+    v-loading="loading"
+    class="card-grid"
+    :class="{ 'card-grid--large': large, 'card-grid--compact': compact, 'card-grid--dense': dense, 'card-grid--empty': items.length === 0 }"
+  >
     <template v-if="items.length > 0">
       <div
         v-for="item in items"
@@ -8,24 +12,30 @@
         :class="{
           active: String(modelValue) === String(item.id),
           'prod-card--large': large,
-          'prod-card--compact': compact
+          'prod-card--compact': compact,
+          'prod-card--dense': dense
         }"
         @click="select(item.id)"
       >
-        <div class="prod-thumb">
-          <el-image v-if="imageOf(item)" :src="imageOf(item)" fit="cover" class="thumb-img">
-            <template #error>
-              <div class="thumb-fallback">
-                <el-icon><Goods /></el-icon>
-              </div>
-            </template>
-          </el-image>
-          <div v-else class="thumb-fallback">
-            <el-icon><Goods /></el-icon>
+        <!-- dense（一体秤小屏）：缩略图与品名同排、数据行落到下面通栏 —— 数据行不再被缩略图挤占宽度，
+             卡片下限从 246px 降到 ~180px，一排能多放一列（卡片高约 +20px，换一整列很划算）。
+             非 dense 仍是「图左 / 文字右」的原布局，其他打包页零影响。 -->
+        <div class="prod-head">
+          <div class="prod-thumb">
+            <el-image v-if="imageOf(item)" :src="imageOf(item)" fit="cover" class="thumb-img">
+              <template #error>
+                <div class="thumb-fallback">
+                  <el-icon><Goods /></el-icon>
+                </div>
+              </template>
+            </el-image>
+            <div v-else class="thumb-fallback">
+              <el-icon><Goods /></el-icon>
+            </div>
           </div>
+          <div class="prod-name">{{ item.productName }}</div>
         </div>
         <div class="prod-meta">
-          <div class="prod-name">{{ item.productName }}</div>
           <div v-if="item.productSpec" class="prod-row">{{ t('djs.warehouse.packEntry.specLabel') }}：{{ item.productSpec }}</div>
           <!-- 流程性问题 row9：需求量单位取产品自身单位（productUnit），非固定「份」；缺省回退「份」 -->
           <div v-if="demandOf(item) != null" class="prod-row">
@@ -71,6 +81,12 @@ const props = withDefaults(
     /** 超紧凑版（小屏 mini：卡片+缩略图更小、文字更小、一排放更多）；缺省 false */
     compact?: boolean;
     /**
+     * 一体秤小屏版（dense）：缩略图和三行数据（规格 / 需求量 / 领用剩余重量）全保留，只把卡片
+     * 从 large 版收回常规尺寸 —— 秤屏一排放 4 个，放不下的滚动（Kevin 2026-08-10：宁可滚，
+     * 不要为了一屏塞完把卡片压到又小又密）。缺省 false，其他打包页零影响。
+     */
+    dense?: boolean;
+    /**
      * 「领用剩余重量」单位强制覆盖（果蔬打包传 'kg'）：系统权威量纲=kg，
      * stockMap 的数值是 kg；果蔬成品 product_unit 可能是「份」，若按产品单位渲染会出现
      * 「kg 值贴份单位」错位（row12 点1）。传此 prop → 库存行固定显该单位，不用产品 product_unit。
@@ -95,6 +111,7 @@ const props = withDefaults(
     showStock: true,
     large: false,
     compact: false,
+    dense: false,
     stockUnit: undefined,
     stockUnitMap: () => ({}),
     weightInGram: false
@@ -166,8 +183,11 @@ function select(id: number | string) {
 }
 .prod-card {
   position: relative;
-  display: flex;
-  gap: 10px;
+  /* DOM 里 thumb 与 name 被 .prod-head 包了一层（dense 要它们同排）。非 dense 用 grid + display:contents
+     还原原来的「图左 / 名称+数据行在右」——视觉与改造前逐像素一致。 */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
   padding: 10px;
   border: 1px solid var(--el-border-color);
   border-radius: 8px;
@@ -183,8 +203,12 @@ function select(id: number | string) {
   border-color: var(--el-color-primary);
   box-shadow: 0 0 0 1px var(--el-color-primary);
 }
+.prod-head {
+  display: contents;
+}
 .prod-thumb {
-  flex: 0 0 56px;
+  grid-column: 1;
+  grid-row: 1 / span 2;
   width: 56px;
   height: 56px;
 }
@@ -205,10 +229,14 @@ function select(id: number | string) {
   font-size: 24px;
 }
 .prod-meta {
-  flex: 1;
+  grid-column: 2;
+  grid-row: 2;
   min-width: 0;
 }
 .prod-name {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 4px;
@@ -244,6 +272,61 @@ function select(id: number | string) {
 .prod-card--large .prod-row {
   font-size: 14px;
   line-height: 1.9;
+}
+
+/* ===== 一体秤小屏版（dense）：卡片从 large 收回常规尺寸，秤屏一排 4 个 =====
+   缩略图和三行数据全保留（Kevin 2026-08-10 定：宁可滚动，不要为了一屏塞完把卡片压到又小又密）。
+   下限 155px 是**量出来的**不是估的（1375 视口实测）：
+     · 最长数据行「领用剩余重量：42500 g」= 132px（12px 字号）
+     · 品名折两行后 head 只需 缩略图44 + 间距8 + 品名半宽65 ≈ 117px
+   → max(132,117) + 内边距20 = 152，取 155 留余量。品名一行放不下就折两行（line-clamp:2），
+   这正是甲方 2026-08-10 要的「标题两行换更窄的卡」。
+   （历史：旧版图左文右要 246px，秤屏只能排 2 列；改上下两段后 180px；量准后 155px。） */
+.card-grid--dense {
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+/* 整卡改成上下两段：上=缩略图+品名同排、下=数据行通栏（Kevin 2026-08-10 在真机上提）。
+   数据行不再被缩略图挤占宽度，卡片下限从 246px 降到 180px —— 卡片高约 +20px，换来一整列。 */
+.prod-card--dense {
+  display: block;
+  padding: 8px 10px;
+}
+.prod-card--dense .prod-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+/* 缩略图缩到 44px：它现在与品名同排、不再决定卡片高度，小一点能把宽度让给品名 */
+.prod-card--dense .prod-thumb,
+.prod-card--dense .thumb-img,
+.prod-card--dense .thumb-fallback {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+}
+.prod-card--dense .thumb-fallback {
+  font-size: 20px;
+}
+/* 名称两行截断而不是一行省略号：这批成品只有末尾规格不同（…五花肉250g/份 vs …500g/份），
+   一行省略号正好把唯一区分点吃掉，整屏卡片看起来全一样 */
+.prod-card--dense .prod-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  margin-bottom: 0;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.prod-card--dense .prod-row {
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 /* ===== 紧凑版（小屏 mini）：比大卡片小、一排放更多，仍保持可读与设计感 ===== */

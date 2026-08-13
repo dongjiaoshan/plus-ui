@@ -101,8 +101,7 @@ export function usePackEntryOptions() {
   async function loadSources(kind: 'dry' | 'meat' | 'veg' | 'whiteBar') {
     sourceLoading.value = true;
     try {
-      const fn =
-        kind === 'veg' ? listSourceVeg : kind === 'whiteBar' ? listSourceWhiteBar : kind === 'meat' ? listSourceMeat : listSourceDry;
+      const fn = kind === 'veg' ? listSourceVeg : kind === 'whiteBar' ? listSourceWhiteBar : kind === 'meat' ? listSourceMeat : listSourceDry;
       const res = await fn();
       sources.value = ((res as any).data ?? []) as PackSourceVO[];
     } finally {

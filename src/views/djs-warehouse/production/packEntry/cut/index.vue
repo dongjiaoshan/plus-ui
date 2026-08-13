@@ -1,11 +1,14 @@
 <template>
   <div class="pack-station">
-    <div class="station-title">{{ t('djs.warehouse.packEntry.cutTitle') }}</div>
-
     <div class="station-body">
-      <!-- 左：待分割白条 + 分割产品卡片；右操作列从标题下方起撑满整高，与其它打包页几何一致。 -->
+      <!-- 左：页标题 + 待分割白条 + 分割产品卡片；右操作台顶到可视区最上沿（一体秤 dense 范式，同肉品打包）。 -->
       <div class="station-left">
-        <!-- 分割单 chip 行（猪只耳号；来源 cut_record picked/cutting） -->
+        <!-- 一体秤小屏：页标题挪进左列，右操作台才能顶到可视区最上沿（标题本身保留，不缩小） -->
+        <div class="station-title">
+          {{ t('djs.warehouse.packEntry.cutTitle') }}<span v-if="isPreviewMode()" class="preview-badge">{{ PREVIEW_BADGE }}</span>
+        </div>
+
+        <!-- 分割单 chip 行（猪只耳号；来源 cut_record picked/cutting）；白条多时本行内部滚动，不侵占下方产品卡片区 -->
         <div v-loading="cuttableLoading" class="chip-row">
           <template v-if="cuttable.length > 0">
             <button
@@ -32,17 +35,26 @@
           <span v-else class="text-gray-400">{{ t('djs.warehouse.packEntry.noCuttable') }}</span>
         </div>
         <div class="card-scroll">
-          <ProductCardGrid v-model="selectedProductId" :items="porkProducts" :loading="porkProductLoading" :show-stock="false" />
+          <!-- card-grid--dense 的 245px 下限是按肉品卡「领用剩余重量：42500 g」不折行反推的，
+               本页卡片只有品名一行（show-stock=false、无 demandMap），那个前提不成立 →
+               本页覆盖成 4 列，14 个分割产品一屏排完不用滚（Kevin 2026-08-10 定）。 -->
+          <ProductCardGrid
+            v-model="selectedProductId"
+            :items="porkProducts"
+            :loading="porkProductLoading"
+            :show-stock="false"
+            dense
+            class="cut-card-grid"
+          />
         </div>
       </div>
 
       <!-- 右：操作 panel（三段式：头部固定 + 中部可滚动 + 底部按钮区常驻，与 SkuPackForm / pickup 统一） -->
       <div class="station-right">
+        <!-- 一体秤 dense：「操作」标题去掉，整个 head 绝对定位到右台右上角 —— 刷新不占行高，与首段标签（猪只耳号）同排 -->
         <div class="panel-head">
-          <div class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</div>
-          <!-- row153：操作标题右侧刷新按钮，重拉待分割白条 / 分割产品。
-               尺寸与其它生产管理页（SkuPackForm 四类打包页 + 白条出库领用）一致：size=large + 44px 触屏热区。 -->
-          <el-button class="refresh-btn" size="large" :icon="Refresh" :loading="refreshing" @click="handleRefresh">
+          <!-- row153：刷新按钮，重拉待分割白条 / 分割产品。这是本页唯一的重拉数据入口，不可去掉。 -->
+          <el-button class="refresh-btn" :icon="Refresh" :loading="refreshing" @click="handleRefresh">
             {{ t('common.refresh') }}
           </el-button>
         </div>
@@ -63,14 +75,20 @@
             </div>
           </div>
 
-          <!-- 产品重量 numpad -->
+          <!-- 产品重量 numpad；标签行右侧挂电子秤状态条（连接状态 / 稳定-晃动 / 自动填入）。
+               本页录入单位是 kg（precision 3），故 in-gram=false —— 秤读数(kg)原样填入，不做 ×1000。
+               ⚠️ ScaleFillBar 内部持有秤连接，本页只放这一个。 -->
           <div class="panel-section">
-            <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
+            <div class="weight-label-row">
+              <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
+              <ScaleFillBar v-model="curWeight" :in-gram="false" />
+            </div>
             <WeightNumpad v-model="curWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
           </div>
 
-          <!-- 入库位置 button-toggle（冻品库/鲜品库 等冷库库位） -->
-          <div class="panel-section">
+          <!-- 入库位置 button-toggle（冻品库/鲜品库 等冷库库位）。
+               只有两个短选项，标签与按钮横排省一行（dense 范式里「一行放得下的短选项组」例外）。 -->
+          <div class="panel-section in-location-toggle">
             <div class="panel-label">{{ t('djs.warehouse.packEntry.inLocation') }}</div>
             <div v-loading="locationLoading">
               <DestToggle v-model="form.locationId" :options="locationOptions" :empty-text="t('djs.warehouse.packEntry.locationPlaceholder')" />
@@ -105,7 +123,10 @@ import { ElMessage, ElNotification } from 'element-plus';
 import { PriceTag, Refresh } from '@element-plus/icons-vue';
 import ProductCardGrid from '../components/ProductCardGrid.vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
+import ScaleFillBar from '../components/ScaleFillBar.vue';
 import DestToggle from '../components/DestToggle.vue';
+// 【临时】一体秤验收预览数据；秤上验收通过后连同 _preview.ts 一起删
+import { PREVIEW_BADGE, blockSubmitInPreview, isPreviewMode, previewCutProducts, previewCuttable } from '../_preview';
 import { usePackEntryOptions } from '../useOptions';
 import { listCuttable, submitCutDone, submitCutOut } from '@/api/djs-warehouse/packEntry';
 import type { PigCutRecordVO } from '@/api/djs-warehouse/packEntry';
@@ -148,6 +169,11 @@ const porkProductLoading = ref(false);
 async function loadPorkProducts() {
   porkProductLoading.value = true;
   try {
+    // 【临时】一体秤验收预览（见 _preview.ts 两道闸与清理清单）
+    if (isPreviewMode()) {
+      porkProducts.value = previewCutProducts() as unknown as ProductInfoVO[];
+      return;
+    }
     // 分割车间(productWorkshop=2) 的猪肉**原材料**(productAttr=2)：分割产出入冷库的是原料，不是成品。
     // 成品(attr=1)由打包产出、不可被分割/领用（领用都是原材料，doc/14 §1）。
     const res = await listProduct({ pageNum: 1, pageSize: 500, belongType: 'pork', productWorkshop: '2', productAttr: 2, productStatus: 0 } as any);
@@ -170,8 +196,10 @@ const sortedCuttable = computed<PigCutRecordVO[]>(() =>
 async function loadCuttable() {
   cuttableLoading.value = true;
   try {
-    const res = await listCuttable();
-    cuttable.value = ((res as any).data ?? []) as PigCutRecordVO[];
+    // 【临时】一体秤验收预览：造几条待分割白条 chip（见 _preview.ts 两道闸与清理清单）
+    cuttable.value = isPreviewMode()
+      ? (previewCuttable() as unknown as PigCutRecordVO[])
+      : ((((await listCuttable()) as any).data ?? []) as PigCutRecordVO[]);
     // row93①：默认选中「最早进分割库」的白条 —— sortedCuttable 按 cutId 升序（= 进分割库先后），取首项。
     // 仅在当前未选中有效分割单时补选（已手选不覆盖；所选已完成/移出列表则改选最早一条）。
     const stillValid = form.value.cutRecordId && cuttable.value.some((r) => String(r.id) === String(form.value.cutRecordId));
@@ -203,6 +231,9 @@ function notifyMissing(message: string) {
 }
 
 async function handleCutOut() {
+  // 预览态用的是假 id，提交会打到后端真实写库路径 —— 直接拦下（见 _preview.ts）
+  if (blockSubmitInPreview()) return;
+
   if (!form.value.cutRecordId) {
     notifyMissing(t('djs.warehouse.packEntry.cutRecordRequired'));
     return;
@@ -255,6 +286,9 @@ function openCutDone() {
 }
 
 async function handleCutDone() {
+  // 预览态用的是假 id，提交会打到后端真实写库路径 —— 直接拦下（见 _preview.ts）
+  if (blockSubmitInPreview()) return;
+
   // 滴水损耗由后端自动计算（白条入库重量 − 出库重量），前端不再录入
   cutDoneSubmitting.value = true;
   try {
@@ -302,27 +336,41 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* 收银系统风格：整页定高，白条 chip 行 + 标题固定，中部 station-body 占满剩余高度，
-   右操作面板内容超视口时内部滚动到底（对齐 SkuPackForm 果蔬/肉品打包页 row127 修法） */
+/* ===== 一体秤 dense 布局（顶尖 ACLAS 安卓一体秤：可视区 1472×634，navbar 50 + tagsview 34 已占 84）=====
+   目标：整页零滚动，底部「确认入库」完整可见。范式与已定稿的肉品打包页（SkuPackForm .pack-station--dense）逐条对齐：
+   ① 贴顶：容器 padding 顶部 0；页标题挪进左列，右操作台顶到可视区最上沿
+   ② 「操作」标题去掉，panel-head 绝对定位到右台右上角（刷新按钮 26px 不占行高）
+   ③ 段间距 / 标签行高 / 按钮高度收紧；标签与内容仍上下两行（只有入库位置这种短选项组横排）
+   ④ numpad 12 键由 3 列 ×4 行改 4 列 ×3 行 —— 少一行 ~52px，键位反而更宽好点
+   ⑤ 页高用 dvh：Android Chrome 的 100vh 是「地址栏隐藏时」的高度，比真可视区大 ~90px，
+      多出来的部分被 .app-main{overflow:hidden} 裁掉 → 底部按钮被切一半。旧内核不支持 dvh 时回落到上一条 vh 声明 */
 .pack-station {
-  padding: 12px;
-  height: calc(100vh - 120px);
+  padding: 0 8px 8px;
+  height: calc(100vh - 84px);
+  height: calc(100dvh - 84px);
   display: flex;
   flex-direction: column;
 }
 .station-title {
   font-size: 16px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  padding-top: 6px;
   flex: 0 0 auto;
 }
+/* 白条 chip 行：允许被压缩并在行内滚动（flex: 0 1 auto + max-height）——
+   待分割白条多时原先 flex:0 0 auto 会一直往下长，把产品卡片区挤没、并被 .app-main 裁掉。
+   卡片本身不压小（三行数据全留），超出两排就在本行内滚。 */
 .chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 8px;
   min-height: 40px;
-  flex: 0 0 auto;
+  max-height: 184px;
+  flex: 0 1 auto;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 .cut-chip {
   display: flex;
@@ -330,7 +378,8 @@ onMounted(async () => {
   align-items: flex-start;
   gap: 4px;
   width: 200px;
-  padding: 10px 14px;
+  flex: 0 0 auto;
+  padding: 8px 12px;
   border: 1px solid var(--el-color-warning);
   border-radius: 8px;
   background: var(--el-color-warning-light-9);
@@ -363,7 +412,7 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: stretch;
 }
 .station-left {
@@ -377,53 +426,61 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  padding-right: 4px;
 }
 /* row137：三段式操作台（头部固定 + 中部可滚动 + 底部按钮常驻），撑满卡片网格等高，
-   内容超高只在中部 .panel-scroll 内滚动，确认出库按钮常驻面板底部不被截断，与 SkuPackForm / pickup 统一。 */
+   内容超高只在中部 .panel-scroll 内滚动，确认入库按钮常驻面板底部不被截断，与 SkuPackForm / pickup 统一。
+   position:relative 供绝对定位的 .panel-head（刷新）挂到右上角。 */
 .station-right {
+  position: relative;
   flex: 0 0 440px;
   width: 440px;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
-  padding: 20px;
+  padding: 6px 12px 10px;
   background: var(--el-bg-color);
   display: flex;
   flex-direction: column;
   align-self: stretch;
   min-height: 0;
 }
-/* row153：标题在左、刷新按钮在右（与 pickup / SkuPackForm 的操作标题行同布局） */
+/* 刷新绝对定位到右台右上角：不占行高，与首段标签（猪只耳号）同排 */
 .panel-head {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  z-index: 2;
 }
-/* 触屏点击区：与 SkuPackForm .refresh-btn 同尺寸（44px 高 + 加宽内边距） */
 .refresh-btn {
-  flex: 0 0 auto;
-  height: 44px;
-  padding: 0 20px;
-  font-size: 15px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 13px;
 }
 .panel-scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
 }
-.panel-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--el-text-color-secondary);
-}
 .panel-section {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 .panel-label {
-  font-size: 15px;
+  font-size: 13px;
+  line-height: 26px;
   color: var(--el-text-color-regular);
-  margin-bottom: 8px;
+  margin-bottom: 2px;
+}
+/* 重量段标签行：左标签 + 右秤状态条（同 SkuPackForm .weight-label-row） */
+.weight-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.weight-label-row > .panel-label {
+  margin-bottom: 0;
 }
 .ear-row {
   display: flex;
@@ -433,49 +490,75 @@ onMounted(async () => {
 }
 .finish-cut-btn {
   flex: 0 0 auto;
+  height: 36px;
 }
 .ear-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 16px;
+  padding: 6px 12px;
   border-radius: 8px;
   background: var(--el-color-warning-light-9);
   color: var(--el-color-warning-dark-2);
   border: 1px solid var(--el-color-warning-light-5);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
 }
 .panel-actions {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 20px;
+  padding-top: 10px;
 }
 .action-btn {
   width: 100%;
-  height: 52px;
-  font-size: 17px;
+  height: 46px;
+  font-size: 16px;
 }
-/* r81：触屏数字键盘 / 入库位置按钮放大到 pickup 页那档，不再过度紧凑 */
+/* 入库位置：只有「猪肉鲜品库 / 冻品库」两个短选项，标签与按钮横排省一行，按钮回落 36 高 */
+.in-location-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.in-location-toggle > .panel-label {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+.in-location-toggle > *:not(.panel-label) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.in-location-toggle :deep(.dest-btn) {
+  min-width: 90px;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+/* numpad：12 键 4 列 ×3 行（少一行 ~52px，键位更宽更好点），键高沿用组件默认 44px */
 .station-right :deep(.numpad-display) {
-  height: 56px;
-  margin-bottom: 10px;
-}
-.station-right :deep(.numpad-input) {
-  font-size: 22px;
+  height: 40px;
+  margin-bottom: 8px;
 }
 .station-right :deep(.numpad-keys) {
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
-.station-right :deep(.numpad-key) {
-  height: 56px;
-  font-size: 22px;
+/* 本页卡片只有品名、没有数据行（show-stock=false、无 demandMap），比通用 dense 卡还能再窄一档 */
+.cut-card-grid.card-grid--dense {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
-.station-right :deep(.dest-btn) {
-  min-width: 96px;
-  height: 52px;
-  font-size: 16px;
+/* 【临时】模拟数据角标：免得有人把预览态当真数据报 bug。随 _preview.ts 一起删 */
+.preview-badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-color-warning-dark-2);
+  background: var(--el-color-warning-light-9);
+  border: 1px solid var(--el-color-warning-light-5);
+  vertical-align: middle;
 }
 </style>

@@ -1,10 +1,15 @@
 <template>
-  <div class="pack-station" :class="{ 'pack-station--mini': mini }">
-    <div class="station-title">{{ title }}</div>
+  <div class="pack-station" :class="{ 'pack-station--mini': mini, 'pack-station--dense': dense }">
+    <div v-if="!dense" class="station-title">{{ title }}</div>
 
     <div class="station-body">
       <!-- 左：产品卡片网格（可滚动）+ 底部固定需求门店 tags -->
       <div class="station-left">
+        <!-- dense 一体秤小屏：页标题挪进左列，右操作台才能顶到可视区最上沿（标题本身保留，不缩小） -->
+        <div v-if="dense" class="station-title">
+          {{ title }}<span v-if="isPreviewMode()" class="preview-badge">{{ PREVIEW_BADGE }}</span>
+        </div>
+
         <!-- 果蔬打包：未匹配到领用原料对应成品时回退展示全部果蔬成品，给一行轻提示（doc#12） -->
         <div v-if="kind === 'veg' && vegMaterialFallback" class="veg-fallback-tip">
           <el-icon><InfoFilled /></el-icon>
@@ -20,8 +25,9 @@
             :stock-unit="kind === 'veg' ? 'kg' : undefined"
             :stock-unit-map="sourceFilterActive ? wipStockUnitMap : undefined"
             :show-stock="showStock"
-            :large="wide && !mini"
+            :large="wide && !mini && !dense"
             :compact="mini"
+            :dense="dense"
             :weight-in-gram="weightInGram"
             @change="onProductChange"
           />
@@ -52,14 +58,15 @@
 
       <!-- 右：操作 panel（三段式：头部固定 + 中部可滚动 + 底部按钮区常驻，按钮绝不被底部门店需求条遮挡） -->
       <div class="station-right" :class="{ 'station-right--wide': wide }">
+        <!-- dense 下「操作」标题去掉，整个 head 绝对定位到右台右上角：不占行高，视觉上与首段标签同排 -->
         <div class="panel-head">
-          <span class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</span>
+          <span v-if="!dense" class="panel-title">{{ t('djs.warehouse.packEntry.operation') }}</span>
           <div class="panel-head-actions">
             <!-- 124#5：肉品打包隐藏右上角「打包序号 NO.x」（hidePackNo=true）；其他打包页仍显示 -->
             <span v-if="!hidePackNo" class="pack-no">{{ t('djs.warehouse.packEntry.packNo') }} NO.{{ packNo }}</span>
             <!-- admin row79-82：四类打包页共用刷新入口，重拉来源、成品、库存和需求。 -->
-            <!-- admin row147：打包站是触屏作业，按钮放大到 large 并加宽点击区，方便手指点中。 -->
-            <el-button class="refresh-btn" size="large" :icon="Refresh" :loading="refreshing" @click="handleRefresh">
+            <!-- admin row147：打包站是触屏作业，按钮放大到 large 并加宽点击区，方便手指点中（dense 小屏回落到 default）。 -->
+            <el-button class="refresh-btn" :size="dense ? 'default' : 'large'" :icon="Refresh" :loading="refreshing" @click="handleRefresh">
               {{ t('common.refresh') }}
             </el-button>
           </div>
@@ -122,46 +129,53 @@
 
           <!-- 重量 numpad（普通打包）/ 盒数 numpad（礼盒）/ 份数 numpad（其他产品按份数计量） -->
           <div class="panel-section">
-            <!-- mini 称重页由 ScaleWeightInput 自带标签头，隐藏此外层标签避免重复 -->
-            <div v-if="!(mini && kind !== 'gift' && !shouldUnitByCopies)" class="panel-label">
-              {{
-                kind === 'gift'
-                  ? t('djs.warehouse.packEntry.packAmount')
-                  : dryNonKgAmountMode
+            <!-- 标签行：左=标签、右=秤状态条（接秤的页才有）；标签与录入内容始终上下两行，不做左右分栏 -->
+            <div class="weight-label-row">
+              <!-- mini 称重页由 ScaleWeightInput 自带标签头，隐藏此外层标签避免重复 -->
+              <div v-if="!(mini && kind !== 'gift' && !shouldUnitByCopies)" class="panel-label">
+                {{
+                  kind === 'gift'
                     ? t('djs.warehouse.packEntry.packAmount')
-                    : t('djs.warehouse.packEntry.productWeight')
-              }}
+                    : dryNonKgAmountMode
+                      ? t('djs.warehouse.packEntry.packAmount')
+                      : t('djs.warehouse.packEntry.productWeight')
+                }}
+              </div>
+              <!-- 接秤的页（scaleFill）：秤状态 + 自动填入；自动填入开时录入值实时镜像秤读数 -->
+              <ScaleFillBar v-if="showScaleBar" v-model="form.productWeight" :in-gram="kind === 'veg' || effWeightInGram" />
             </div>
-            <!-- mini 小屏：秤重量做成可编辑输入框（替代触屏 numpad，自动填入 + 可手改） -->
-            <ScaleWeightInput
-              v-if="mini && kind !== 'gift' && !shouldUnitByCopies"
-              v-model="form.productWeight"
-              :in-gram="kind === 'veg' || effWeightInGram"
-              :unit="selectedUnit"
-              :label="t('djs.warehouse.packEntry.productWeight')"
-            />
-            <WeightNumpad
-              v-else-if="kind === 'gift'"
-              v-model="form.packBoxCount"
-              :placeholder="t('djs.warehouse.packEntry.packAmount')"
-              :unit="selectedProduct?.productUnit || t('djs.warehouse.packEntry.box')"
-              :precision="0"
-            />
-            <WeightNumpad
-              v-else
-              v-model="form.productWeight"
-              :placeholder="
-                dryNonKgAmountMode
-                  ? t('djs.warehouse.packEntry.packAmount')
-                  : shouldUnitByCopies
-                    ? t('djs.warehouse.packEntry.packCopies')
-                    : t('djs.warehouse.packEntry.weightPlaceholder')
-              "
-              :unit="selectedUnit"
-              :precision="numpadPrecision"
-            />
-            <!-- row74（Kevin 2026-07-14）：所有打包一律不展示「剩余可打包份数」提示。
-               remainingPackableCopies computed 仍保留，供份数模式提交前的 copiesExceed 前端软校验用（见 submit 校验）。 -->
+            <div class="weight-col">
+              <!-- mini 小屏：秤重量做成可编辑输入框（替代触屏 numpad，自动填入 + 可手改） -->
+              <ScaleWeightInput
+                v-if="mini && kind !== 'gift' && !shouldUnitByCopies"
+                v-model="form.productWeight"
+                :in-gram="kind === 'veg' || effWeightInGram"
+                :unit="selectedUnit"
+                :label="t('djs.warehouse.packEntry.productWeight')"
+              />
+              <WeightNumpad
+                v-else-if="kind === 'gift'"
+                v-model="form.packBoxCount"
+                :placeholder="t('djs.warehouse.packEntry.packAmount')"
+                :unit="selectedProduct?.productUnit || t('djs.warehouse.packEntry.box')"
+                :precision="0"
+              />
+              <WeightNumpad
+                v-else
+                v-model="form.productWeight"
+                :placeholder="
+                  dryNonKgAmountMode
+                    ? t('djs.warehouse.packEntry.packAmount')
+                    : shouldUnitByCopies
+                      ? t('djs.warehouse.packEntry.packCopies')
+                      : t('djs.warehouse.packEntry.weightPlaceholder')
+                "
+                :unit="selectedUnit"
+                :precision="numpadPrecision"
+              />
+              <!-- row74（Kevin 2026-07-14）：所有打包一律不展示「剩余可打包份数」提示。
+                 remainingPackableCopies computed 仍保留，供份数模式提交前的 copiesExceed 前端软校验用（见 submit 校验）。 -->
+            </div>
           </div>
 
           <!-- 电子秤实时重量（非 mini：大显示 + 填入/归零/去皮）；mini 已并入 ScaleWeightInput 输入框 -->
@@ -209,6 +223,9 @@ import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import { InfoFilled, PriceTag, Refresh } from '@element-plus/icons-vue';
 import ProductCardGrid from './components/ProductCardGrid.vue';
 import WeightNumpad from './components/WeightNumpad.vue';
+import ScaleFillBar from './components/ScaleFillBar.vue';
+// 【临时】一体秤验收预览数据；秤上验收通过后连同 _preview.ts 一起删（清理清单在该文件末尾）
+import { PREVIEW_BADGE, blockSubmitInPreview, isPreviewMode, previewDemand, previewProducts, previewSources } from './_preview';
 import ScaleReader from './components/ScaleReader.vue';
 import ScaleWeightInput from './components/ScaleWeightInput.vue';
 import DestToggle from './components/DestToggle.vue';
@@ -292,8 +309,20 @@ const props = withDefaults(
     autoSelectFirst?: boolean;
     /** 是否显示电子秤实时重量小部件（enableScale 的页试点，如肉品打包）；缺省 false，其他页零影响 */
     enableScale?: boolean;
+    /**
+     * 重量录入接电子秤（numpad 上方加一条：连接状态 + 稳定/晃动 + 自动填入开关）。
+     * 自动填入开时录入值完全镜像秤推送重量（放上=实重、取下=0），关掉才是纯手输 numpad。
+     * 与 mini（ScaleWeightInput 自带头）互斥；缺省 false，其他打包页零影响。
+     */
+    scaleFill?: boolean;
     /** 小屏 mini 模式（TSX-615 一体秤适配试点）：右台上移 / 卡片缩小一排多个 / 去 numpad / 秤重量做成可编辑输入框；缺省 false，其他页零影响 */
     mini?: boolean;
+    /**
+     * dense 小屏紧凑模式（一体秤浏览器可视高 ~600px，整页零滚动）：保留 numpad 与全部功能，只压高度——
+     * 「操作」头去掉（打包序号+刷新上提到页标题行）/ 各段标签内联到控件左侧 / 段间距收紧 /
+     * numpad 12 键改 4 列 ×3 行 / 页高按 dvh 算。缺省 false，其他打包页零影响。
+     */
+    dense?: boolean;
   }>(),
   {
     productType: undefined,
@@ -314,7 +343,9 @@ const props = withDefaults(
     hidePackNo: false,
     autoSelectFirst: false,
     enableScale: false,
-    mini: false
+    scaleFill: false,
+    mini: false,
+    dense: false
   }
 );
 
@@ -1065,6 +1096,15 @@ const numpadPrecision = computed<number>(
 );
 
 /**
+ * 是否在重量录入框上方挂秤状态条（连接 / 稳定 / 自动填入）。
+ * 只在「按重量录入」的形态下才有意义：礼盒录盒数、份数模式录件数，都不是秤上的重量；
+ * mini 的 ScaleWeightInput 自带同款头，不重复挂。
+ */
+const showScaleBar = computed<boolean>(
+  () => props.scaleFill && !props.mini && props.kind !== 'gift' && !shouldUnitByCopies.value && !dryNonKgAmountMode.value
+);
+
+/**
  * 果蔬录入量 g → 系统权威量纲 kg（÷1000）。其余业态 numpad 录入本就是 kg，原样透传。
  * 提交（VegPackBo.productWeight）+ 前端超量校验 + 追溯标签重量均用此 kg 值，避免 g/kg 混用差 1000 倍。
  */
@@ -1326,6 +1366,9 @@ function handleReset() {
 
 /** printTrace=true：提交后弹出追溯码供「打印」展示（仅肉品/果蔬有此按钮）。 */
 async function handleSubmit(printTrace: boolean) {
+  // 预览态用的是假 id，提交会打到后端真实写库路径 —— 直接拦下（见 _preview.ts）
+  if (blockSubmitInPreview()) return;
+
   // 确认框也属于一次提交事务：在打开确认框前就获取 single-flight 锁，
   // 防双击“确定”或与“确认并打印”交叉点击生成两条生产记录。
   if (submitting.value) return;
@@ -1519,6 +1562,15 @@ async function refreshAfterPack() {
  * 各打包路径均已扣 shipped_count（无需改后端），此处 reload 重拉最新 demandMap / loadStoreDemand 即呈现减后需求量。
  */
 async function performReload() {
+  // 【临时】一体秤验收预览：灌前端模拟数据后直接返回，不打任何接口（见 _preview.ts 的两道闸与清理清单）
+  if (isPreviewMode()) {
+    if (props.plotGroup) await loadPlots();
+    const mocked = previewProducts(props.kind, props.belongType) as unknown as ProductInfoVO[];
+    products.value = mocked;
+    sources.value = previewSources(props.kind, props.belongType, Object.keys(plotMap.value).slice(0, 3)) as unknown as PackSourceVO[];
+    demandMap.value = previewDemand(mocked as unknown as Record<string, unknown>[]);
+    return;
+  }
   await loadStores();
   if (props.kind === 'veg') {
     // 果蔬打包：先拉来源（推导本次领用原料 id），再按 product_material 命中加载成品（doc#12）
@@ -1723,6 +1775,18 @@ onActivated(() => {
   color: var(--el-text-color-regular);
   margin-bottom: 8px;
 }
+/* 重量段标签行：左标签 + 右秤状态条（无秤时就是一行纯标签，与其他段一致） */
+.weight-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.weight-label-row > .panel-label {
+  margin-bottom: 0;
+}
 /* row137：底部按钮区常驻在面板内（flex-shrink:0），中部滚动不影响它，按钮永远可见不被页脚遮挡 */
 .panel-actions {
   flex: 0 0 auto;
@@ -1779,7 +1843,11 @@ onActivated(() => {
 
 /* ===== 小屏 mini 模式（TSX-615 一体秤适配试点）：右台上移、间距收紧 ===== */
 .pack-station--mini {
-  height: calc(100vh - 60px);
+  /* 与 dense 同口径：84 = navbar 50 + tagsview 34；dvh 修 Android Chrome 的 100vh 比真可视区大的问题。
+     旧值 calc(100vh - 60px) + 外层 p-2 会让整页比视口高 40px（实测 docOverflow=40）。 */
+  padding: 0 8px 8px;
+  height: calc(100vh - 84px);
+  height: calc(100dvh - 84px);
 }
 /* 隐藏右台「操作」头，右台上移（#1）；页标题保留（Kevin：标题不能省略、不缩小） */
 .pack-station--mini .panel-head {
@@ -1793,5 +1861,136 @@ onActivated(() => {
 }
 .pack-station--mini .panel-section {
   margin-bottom: 8px;
+}
+
+/* ===== 小屏 dense 模式（一体秤 Android 浏览器：地址栏+标签栏挤占后可视高仅 ~600px）=====
+   目标：功能一个不减（numpad 保留），整页零滚动。五处压缩：
+   ① 右台「操作」头整行去掉，打包序号 + 刷新上提到页标题行（省 ~58px），右台内容顶到顶部
+   ② 每段标签内联到控件左侧，不再各占一行（每段省 ~22px）
+   ③ 段间距 / 内边距 / 按钮高度收紧
+   ④ numpad 12 键由 3 列 ×4 行改 4 列 ×3 行 —— 少一行 ~52px，且键位反而变宽更好点
+   ⑤ 页高用 dvh：Android Chrome 的 100vh 是「地址栏隐藏时」的高度，比实际可视区大，
+      按 vh 算会把底部确认按钮裁掉（截图里两个蓝按钮被切一半就是这个）；不支持 dvh 的旧内核回落到上一条 vh 声明 */
+/* 整页贴住可视区上沿（顶部零留白），高度按导航头 84px（navbar 50 + tagsview 34）扣 */
+.pack-station--dense {
+  padding: 0 8px 8px;
+  height: calc(100vh - 84px);
+  height: calc(100dvh - 84px);
+}
+/* 页标题在左列（模板里换了位置），右台才能顶到最上沿 */
+.pack-station--dense .station-title {
+  margin-bottom: 8px;
+  padding-top: 6px;
+}
+.pack-station--dense .station-body {
+  gap: 12px;
+}
+/* 右台顶到顶部：去掉原 20px 内边距留白，只留 6px 不贴边框 */
+.pack-station--dense .station-right {
+  position: relative;
+  padding: 6px 12px 10px;
+}
+/* 刷新：缩小 + 绝对定位到右台右上角，不占行高，与首段标签（猪只耳号）同排 */
+.pack-station--dense .panel-head {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  z-index: 2;
+  margin-bottom: 0;
+}
+.pack-station--dense .refresh-btn {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+/* 段：标签与内容仍是上下两行（左右分栏省不下高度、还难看）——只收紧间距。
+   例外是发送位置，选项少、横排更省一行（见下） */
+.pack-station--dense .panel-section {
+  margin-bottom: 8px;
+}
+.pack-station--dense .panel-label {
+  font-size: 13px;
+  line-height: 26px;
+  margin-bottom: 2px;
+}
+.pack-station--dense .weight-label-row {
+  margin-bottom: 2px;
+}
+/* 首段标签行给绝对定位的刷新按钮让出右侧空位。
+   刷新按钮贴在右台右上角（top:6 right:12，实测 67×26），占的正是 panel-scroll 第一段标签行那一行；
+   第二段起已在按钮下沿之外，不会撞。肉品/果蔬/礼盒首段是「猪只耳号 / 地块 / 打包量」这类左对齐短标签，
+   本来就撞不上；但**其他产品打包**没有耳号/地块/来源段，首段直接就是重量段，而重量段标签行右侧
+   还挂着右对齐的秤状态条（已连接 / 稳定 / 自动填入，实测 192px 宽、右边缘与按钮同在 1451）——
+   两者完全重叠，「自动填入」开关被刷新按钮盖死点不到。
+   100px = 按钮 67 + 余量（含 en_US「Refresh」比「刷新」宽）；让出后标签行仍有 314px，
+   放得下「产品重量 + 秤状态条」(~252px) 不折行。 */
+.pack-station--dense .panel-scroll > .panel-section:first-child > .weight-label-row {
+  padding-right: 100px;
+}
+/* 发送位置：标签与按钮横排，按钮回落到 36 高（选项只有 2 个，不需要大热区） */
+.pack-station--dense .send-dest-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pack-station--dense .send-dest-toggle > .panel-label {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+.pack-station--dense .send-dest-toggle > *:not(.panel-label) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pack-station--dense .send-dest-toggle :deep(.dest-btn) {
+  min-width: 90px;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+/* numpad：4 列 ×3 行 */
+.pack-station--dense :deep(.numpad-keys) {
+  grid-template-columns: repeat(4, 1fr);
+}
+.pack-station--dense :deep(.numpad-display) {
+  height: 40px;
+  margin-bottom: 8px;
+}
+.pack-station--dense .station-right .action-btn {
+  height: 46px;
+  font-size: 16px;
+}
+.pack-station--dense .panel-actions {
+  padding-top: 10px;
+}
+/* 左侧底部门店需求条同步收紧，把省下的高度让给产品卡片区 */
+.pack-station--dense .demand-bar {
+  padding: 8px 12px;
+  gap: 10px;
+}
+/* 门店数一多，tags 会无上限纵向长高、把左侧产品卡片区挤没（当前 8 家门店不触发，加门店就会）。
+   限高两排 + 内滚：卡片区高度不再被门店数绑架。 */
+.pack-station--dense .demand-tags {
+  max-height: 72px;
+  overflow-y: auto;
+}
+.pack-station--dense .demand-label,
+.pack-station--dense .demand-tags .text-gray-400 {
+  font-size: 14px;
+  line-height: 32px;
+}
+.pack-station--dense .demand-tags :deep(.el-tag) {
+  height: 32px;
+}
+/* 【临时】模拟数据角标：免得有人把预览态当真数据报 bug。随 _preview.ts 一起删 */
+.preview-badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-color-warning-dark-2);
+  background: var(--el-color-warning-light-9);
+  border: 1px solid var(--el-color-warning-light-5);
+  vertical-align: middle;
 }
 </style>

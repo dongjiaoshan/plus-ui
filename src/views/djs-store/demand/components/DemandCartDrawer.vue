@@ -117,11 +117,12 @@
             <!-- 需求量 stepper -->
             <el-table-column :label="t('storeDemand.create.demandQuantity')" width="180" align="center" header-align="center" fixed="right">
               <template #default="{ row }">
+                <!-- kg 产品可填 3 位小数（row94），白条/按件产品仍整数 —— 见 quantityPrecisionOf -->
                 <el-input-number
                   :model-value="quantityOf(row)"
                   :min="0"
                   :step="1"
-                  :precision="0"
+                  :precision="quantityPrecisionOf(row)"
                   size="small"
                   @update:model-value="(v: number | undefined) => onQuantityChange(row, v)"
                 />
@@ -182,7 +183,7 @@ import { listCropPlotStat, buildCropPlotStatByProduct, type CropPlotStatByProduc
 import type { CropPlotStatVO } from '@/api/djs-plant/cropStat/types';
 import { useStoreContextStore } from '@/store/modules/storeContext';
 import { useI18n } from 'vue-i18n';
-import { WHITE_BAR_DEMAND_UNIT } from '@/utils/weight';
+import { isKgUnit, WHITE_BAR_DEMAND_UNIT } from '@/utils/weight';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -362,6 +363,27 @@ function expectYieldText(row: ProductInfoVO): string {
 function quantityOf(row: ProductInfoVO): number {
   const line = cart.value.find((c) => c.productId === String(row.id));
   return line ? Number(line.demandQuantity) : 0;
+}
+
+/**
+ * 需求量输入精度（row94）：product_unit 是公斤口径的按重量产品可填 3 位小数，其余仍是整数件数。
+ *
+ * 白条**必须先排除**：它的 product_unit 也是 'kg'（产品主数据按重量维护），但门店是按「头」下单的
+ * ——同一列的单位展示也走这条例外（见上面 `activeTab === 'white_bar' ? WHITE_BAR_DEMAND_UNIT : …`），
+ * 两处口径必须一致，否则会出现「单位显示头、却能填 0.001 头」。
+ *
+ * ⚠️ **录入谓词必须与展示谓词是同一个函数**（都用 `isKgUnit`），不准在这里另写正则。
+ * `product_unit` 是自由文本（`djs-warehouse/product/.../ProductInfoForm.vue` 的 `el-input`），
+ * 一旦有人建出 `kg/箱` 这种值：子串正则会放行 3 位小数、而展示侧 `formatOrderQuantity` 的
+ * `isKgUnit('kg/箱')=false` 会把它 `Math.round` 掉 —— 用户填 2.555、列表显 3，账面对不上。
+ * 落库列 `demand_quantity DECIMAL(12,3)`，后端 `StoreDemandBatchBo` / `DemandManageBo` 均校验
+ * `@Digits(integer = 9, fraction = 3)`。
+ */
+function quantityPrecisionOf(row: ProductInfoVO): number {
+  if (activeTab.value === 'white_bar') {
+    return 0;
+  }
+  return isKgUnit(row.productUnit) ? 3 : 0;
 }
 
 function onQuantityChange(row: ProductInfoVO, value: number | undefined) {

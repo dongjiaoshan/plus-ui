@@ -50,9 +50,10 @@
         </el-col>
         <el-col :span="12">
           <el-form-item :label="t('storeDemand.field.demandQuantity')" prop="demandQuantity">
+            <!-- kg 产品 3 位小数（row94），白条/按件产品整数 —— 与购物车 quantityPrecisionOf 同口径 -->
             <el-input-number
               v-model="form.demandQuantity"
-              :precision="0"
+              :precision="demandQuantityPrecision"
               :min="0"
               :step="1"
               :placeholder="t('storeDemand.placeholder.demandQuantity')"
@@ -88,7 +89,7 @@ import { addStoreDemand, getStoreDemand, updateStoreDemand } from '@/api/djs-sto
 import type { StoreDemandForm, StoreDemandProductType } from '@/api/djs-store/demand/types';
 import { listProduct } from '@/api/djs-warehouse/product';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
-import { WHITE_BAR_DEMAND_UNIT } from '@/utils/weight';
+import { isKgUnit, WHITE_BAR_DEMAND_UNIT } from '@/utils/weight';
 import { useStoreContextStore } from '@/store/modules/storeContext';
 import { storeToRefs } from 'pinia';
 
@@ -125,6 +126,20 @@ const effectiveType = computed<StoreDemandProductType>(() => form.productType ??
 const displayProductUnit = computed<string>(() =>
   effectiveType.value === 'white_bar' ? WHITE_BAR_DEMAND_UNIT : (form.productUnit ?? '')
 );
+
+/**
+ * 需求量输入精度（row94）：公斤口径产品 3 位小数、其余整数；白条虽是 kg 但按「头」下单，故排除。
+ *
+ * 两条「必须同口径」：
+ * 1. 跟 `DemandCartDrawer.quantityPrecisionOf` —— 新增走购物车、编辑走本弹框，两处不一致的话，
+ *    购物车下的 2.5kg 一进编辑框就被 precision=0 静默四舍五入成 3 再保存回去。
+ * 2. 跟展示侧的 `isKgUnit`（`utils/weight.ts`）—— **录入与展示必须是同一个谓词**，
+ *    否则 `kg/箱` 这种自由文本单位会「能填 2.555、列表显示 3」。
+ */
+const demandQuantityPrecision = computed<number>(() => {
+  if (effectiveType.value === 'white_bar') return 0;
+  return isKgUnit(form.productUnit) ? 3 : 0;
+});
 
 // 门店选项 = 当前登录人有权限的门店（全局门店上下文，不再 listStore 拉全部）
 const { myStores: storeOptions } = storeToRefs(useStoreContextStore());

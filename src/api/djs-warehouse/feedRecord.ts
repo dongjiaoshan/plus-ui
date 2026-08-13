@@ -68,7 +68,7 @@ export interface FeedDailyVO {
   totalWeight?: number | string;
   /** 当日明细条数 */
   detailCount?: number;
-  /** 仓库确认框数（整数；列是 DECIMAL 会序列化成 "5.00"，展示层取整。未确认为 null → 展示 '—'） */
+  /** 仓库确认框数（最多 1 位小数；列是 DECIMAL 会序列化成 "1.50"，展示层去尾零。未确认为 null → 展示 '—'） */
   boxCount?: number | string | null;
   /** 仓库确认人 user_id */
   confirmUserId?: number | string;

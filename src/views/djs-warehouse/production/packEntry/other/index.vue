@@ -1,5 +1,9 @@
 <template>
-  <div class="p-2">
+  <div>
+    <!-- ⚠️ 注释一律写在根 div 之内：写在根节点外面会让 SFC 编译成 Fragment（多根），
+         AppMain 的 transition mode="out-in" 解析不出唯一过渡子节点 → leave 永不完成，
+         从本页切走后 .app-main 只剩一个注释占位节点、后续所有页面全白（仅 vite dev 复现，
+         build:prod 会剥注释）。另：不加外层 padding —— 留白全由 .pack-station--dense 自己控。 -->
     <!-- 其他产品打包管理：纯领用驱动（领用其他业态原料 → 反查命中成品），对齐肉品/果蔬口径。
          发送位置仅「发货月台」（去掉邮寄，row111）；隐藏猪只耳号 chip（其他产品无耳号，row111）；
          只有「确认」无追溯码打印。
@@ -11,7 +15,10 @@
          否则原料本身（如土鸡蛋）会和它对应的成品一起出现在卡片里（重复「土鸡蛋」），对齐肉品打包 attr=1 口径。
          卡片库存（show-stock）= 成品有效原料的「今天领用待打包 inhouse」余量（= 后端 consumeInhouse 扣减口径），
          按原料单位展示；不取仓库 location_stock 全量（那是仓库总余额、会误导）。
-         门店需求只在底部「门店(N份)」标签做参考展示，不参与决定列表里出现哪些成品（领用驱动，不混排礼盒）。 -->
+         门店需求只在底部「门店(N份)」标签做参考展示，不参与决定列表里出现哪些成品（领用驱动，不混排礼盒）。
+         dense=一体秤小屏紧凑布局（贴顶 + 页标题挪左列 + 刷新缩小绝对定位 + numpad 4×3 + dvh 页高），整页零滚动；
+         scaleFill=接本机电子秤：仅「重量模式」的成品（原料按 kg/g 领用，如干货腊肉）出秤条；
+         份数/打包量模式（鸡蛋按枚等计件原料）录的是件数不是重量，showScaleBar 自己判掉不出条。 -->
     <SkuPackForm
       kind="dry"
       :product-type="1"
@@ -26,6 +33,8 @@
       :show-ear="false"
       wide
       :hide-pack-no="true"
+      dense
+      scale-fill
     />
   </div>
 </template>
