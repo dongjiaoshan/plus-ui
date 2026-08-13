@@ -23,9 +23,10 @@
           <el-table-column :label="t('demand.field.productUnit')" prop="productUnit" width="80" align="center" header-align="center" />
           <el-table-column :label="t('demand.cart.qtyToAdd')" width="180" align="center" header-align="center">
             <template #default="{ row }">
+              <!-- 公斤口径产品 3 位小数、其余整数（row94）—— 与门店端需求下单同一把尺 -->
               <el-input-number
                 v-model="rowQty[String(row.id)]"
-                :precision="2"
+                :precision="quantityPrecisionOf(activeType, row.productUnit)"
                 :min="0"
                 :step="1"
                 size="small"
@@ -59,7 +60,7 @@
             </div>
             <el-input-number
               v-model="item.demandQuantity"
-              :precision="2"
+              :precision="quantityPrecisionOf(item.productType, item.productUnit)"
               :min="0.01"
               :step="1"
               size="small"
@@ -103,6 +104,7 @@ import { Search } from '@element-plus/icons-vue';
 import { addDemand } from '@/api/djs-warehouse/demand';
 import type { DemandManageForm, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import type { ProductInfoVO } from '@/api/djs-warehouse/product/types';
+import { isKgUnit } from '@/utils/weight';
 import { useDemandProducts } from '../composables/useDemandProducts';
 import {
   DEMAND_PRODUCT_TYPES,
@@ -137,6 +139,20 @@ const footerFormRef = ref();
 
 /** 当前候选区业态 tab（默认白条）。 */
 const activeType = ref<DemandProductType>('white_bar');
+
+/**
+ * 需求量输入精度（row94）：公斤口径产品 3 位小数、其余整数；**白条先排除**（product_unit 虽是 kg，
+ * 但白条是按头/份下单的整件，不能填 0.001 头）。
+ *
+ * 与门店端 `djs-store/demand/components/{DemandCartDrawer,StoreDemandForm}.vue` 同一把尺
+ * ——同一个 `demand_quantity` 字段不能因为入口不同就有两种精度。
+ * 谓词恒用 `isKgUnit`（与展示侧 `formatQtyByKgRule` / `formatOrderQuantity` 同源），不许另写正则：
+ * 录入与展示不同源，`kg/箱` 这类自由文本单位就会「能填 2.555、列表显示 3」。
+ */
+function quantityPrecisionOf(productType: DemandProductType | string | undefined, productUnit: string | null | undefined): number {
+  if (productType === 'white_bar') return 0;
+  return isKgUnit(productUnit) ? 3 : 0;
+}
 
 const { storeOptions, productOptions, loadStoreOptions, loadProductOptions } = useDemandProducts();
 

@@ -197,14 +197,16 @@ function formatWeight3(v: number | string | undefined | null): string {
 }
 
 /**
- * 框数格式化：甲方要求显示整数。
- * 列是 DECIMAL(10,2)、后端 BigDecimal 序列化成 string（"5.00"），直接渲染会带两位小数；
- * 录入侧已限整数，存量值也都是整数值，取整不改变实际语义。未确认显 '—'。
+ * 框数格式化：最多 1 位小数、去尾零（5 / 1.5，不显 5.00）。未确认显 '—'。
+ *
+ * 列是 DECIMAL(10,2)、后端 BigDecimal 序列化成 string（"5.00" / "1.50"），直接渲染会带两位小数。
+ * row98 起 mp 录入侧放开到 1 位小数，**不能再 Math.round**——那会把 1.5 的那天显示成 2 框，
+ * 与 mp 卡片上看到的数对不上。两端展示口径同源：miniapp `pages/breed/feed/list/box-input.ts#formatBoxCount`。
  */
 function formatBoxCount(v: number | string | undefined | null): string {
   if (v === undefined || v === null || v === '') return '—';
   const n = typeof v === 'number' ? v : Number(v);
-  return Number.isNaN(n) ? String(v) : String(Math.round(n));
+  return Number.isNaN(n) ? String(v) : String(Number(n.toFixed(1)));
 }
 
 onMounted(() => {
