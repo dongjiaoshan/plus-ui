@@ -45,6 +45,13 @@
           <el-table-column :label="t('vegOut.create.productSpec')" prop="productSpec" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">{{ row.productSpec || '-' }}</template>
           </el-table-column>
+          <!-- row99：规格与库存重量之间加「地块」列。列名与取值都走 plotTag —— 与库存查询 / 入库记录 /
+               出库记录三页同一个真相源，别在这里另起 key（同一个 label 两处定义早晚会分叉）。
+               三期货无 plot_id、显示「三期」；干货 / 蛋类本就没有地块，显示占位符。
+               长地块名（线上最长 11 字「长廊1（水泥长廊）1号」）在 130px 列宽下会折行，故与产品名称列同样挂 tooltip。 -->
+          <el-table-column :label="t('plotTag.column')" :min-width="COL_MIN_WIDTH" align="center" show-overflow-tooltip>
+            <template #default="{ row }">{{ formatPlotLabel(row) }}</template>
+          </el-table-column>
           <el-table-column :label="t('vegOut.create.stockWeight')" prop="stockWeight" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">{{ fmtStock(row) }}</template>
           </el-table-column>
@@ -129,6 +136,7 @@ import { CircleClose } from '@element-plus/icons-vue';
 import { listVegOutCandidates, submitVegOutBatch } from '@/api/djs-warehouse/vegOut';
 import { printVegOutSheet, ROWS_PER_PAGE } from '../printSheet';
 import type { VegOutCandidateVO } from '@/api/djs-warehouse/vegOut/types';
+import { formatPlotLabel } from '@/utils/plotTag';
 import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 

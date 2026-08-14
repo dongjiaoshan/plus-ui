@@ -9,6 +9,10 @@ export interface VegOutCandidateVO {
   productUnit?: string;
   plotId?: string;
   plotCode?: string;
+  /** 地块名称（「地块」列展示值；无地块时为空） */
+  plotName?: string;
+  /** 三期标识（1 = 三期）：三期货无 plot_id，「地块」列靠它显示「三期」 */
+  thirdPhase?: number | string | null;
   /** 产品业态（vegetable / dry_good / egg / other）—— 干货与蛋类没有地块 */
   belongType?: string;
   /** 产品销售价格（row191）：新增页「销售单价」默认值，可改 */

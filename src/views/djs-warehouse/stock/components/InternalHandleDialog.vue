@@ -39,8 +39,11 @@
       </el-form-item>
       <el-form-item :label="t('stock.internalDialog.outDest')" prop="outDest">
         <el-select v-model="form.outDest" :placeholder="t('stock.outDialog.stockOutDestPlaceholder')" style="width: 100%">
-          <el-option v-for="d in destOptions" :key="d.value" :label="d.label" :value="d.value" />
+          <el-option v-for="d in destOptions" :key="d.value" :label="d.label" :value="d.value" :disabled="d.disabled" />
         </el-select>
+        <!-- 三期货选不了果蔬月台时就地说明原因：不写这句，用户只会看到一个点不动的选项，
+             或者（后端拦截时）一句提交后才蹦出来的报错。 -->
+        <div v-if="isThirdPhase" class="dest-tip">{{ t('stock.internalDialog.thirdPhaseNoDock') }}</div>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -55,6 +58,7 @@
 <script setup lang="ts">
 import { submitInternalHandle } from '@/api/djs-warehouse/vegOut';
 import type { LocationStockVO } from '@/api/djs-warehouse/stock/types';
+import { THIRD_PHASE_FLAG } from '@/utils/plotTag';
 import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
@@ -65,10 +69,14 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
  * 出库去向固定两项（row185 甲方明确「保留为两项」）：
  * 果蔬月台 veg_dock / 饲料饲喂 feed。不走字典全量下拉，也不复用 filterManualOutDest
  * （feed 在 HIDDEN_OUT_DEST 里被隐藏，但本场景甲方要它可选）。
+ *
+ * 三期货（row101）：「果蔬月台」**保留可见但禁选** —— 甲方报的原话就是「不显示果蔬月台」，
+ * 直接删掉这一项会让人以为功能又没了；禁选 + 下方就地写明原因，才回答得了「为什么选不了」。
+ * 后端 `VegOutServiceImpl` 另有同口径守卫，这里只是让人不用提交就知道。
  */
 const destOptions = computed(() => [
-  { value: 'veg_dock', label: t('stock.internalDialog.destVegDock') },
-  { value: 'feed', label: t('stock.internalDialog.destFeed') }
+  { value: 'veg_dock', label: t('stock.internalDialog.destVegDock'), disabled: isThirdPhase.value },
+  { value: 'feed', label: t('stock.internalDialog.destFeed'), disabled: false }
 ]);
 
 const visible = ref(false);
@@ -77,6 +85,8 @@ const formRef = ref<ElFormInstance>();
 const unit = ref('');
 const stockId = ref<string>('');
 const currentStock = ref<number | string | null>(null);
+/** 当前行是否三期货（`location_stock.third_phase`；与地块列同一个标识，不另判「有没有地块」）。 */
+const isThirdPhase = ref(false);
 
 const currentStockText = computed(() => {
   const v = currentStock.value;
@@ -112,6 +122,7 @@ const open = (row: LocationStockVO) => {
   stockId.value = String(row.id);
   unit.value = row.productUnit ?? '';
   currentStock.value = row.productStock ?? null;
+  isThirdPhase.value = Number(row.thirdPhase) === THIRD_PHASE_FLAG;
   visible.value = true;
 };
 defineExpose({ open });
@@ -121,6 +132,7 @@ const handleClosed = () => {
   form.value = defaultForm();
   unit.value = '';
   currentStock.value = null;
+  isThirdPhase.value = false;
 };
 
 const submit = () => {
@@ -142,3 +154,12 @@ const submit = () => {
   });
 };
 </script>
+
+<style scoped>
+.dest-tip {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--el-text-color-secondary);
+}
+</style>

@@ -1553,7 +1553,10 @@ export default {
       quantity: '出库量',
       outDest: '出库去向',
       destVegDock: '果蔬月台',
-      destFeed: '饲料饲喂'
+      destFeed: '饲料饲喂',
+      thirdPhaseNoDock:
+        '三期作物不走果蔬月台：三期不纳入地块管理、也不发到门店，而月台收货后货会进蔬菜保鲜库（门店取货的池子）。' +
+        '出库请用本行的「产品出库」或「毛菜间出库管理」，进出数量照常记账。'
     },
     outDialog: {
       title: '产品出库',

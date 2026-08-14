@@ -1551,7 +1551,10 @@ export default {
       quantity: 'Out Qty',
       outDest: 'Destination',
       destVegDock: 'Veg Dock',
-      destFeed: 'Feed'
+      destFeed: 'Feed',
+      thirdPhaseNoDock:
+        'Phase III produce does not go through the veg dock: it is not plot-managed and never ships to stores, ' +
+        'while dock receiving moves goods into the store supply pool. Use "Product Outbound" or "Veg Room Outbound" instead.'
     },
     outDialog: {
       title: 'Product Stock Out',
