@@ -48,6 +48,8 @@ export interface PlantWorkPerformanceVO {
   productName?: string;
   /** 采摘总量（公斤） */
   pickWeight?: number | string;
+  /** 绩效百分比（0-100 整数，%）—— V6 row107，同产品不同百分比各占一行 */
+  perfPercent?: number;
   /** 单价快照（元/公斤） */
   unitPriceSnapshot?: number | string;
   /** 应付绩效金额（元） */

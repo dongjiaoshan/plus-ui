@@ -97,21 +97,22 @@
             {{ t('vegOut.create.maxProductsTip', { n: MAX_SELECTED_PRODUCTS }) }}
           </span>
         </div>
-        <el-empty v-if="!selectedRows.length" :description="t('vegOut.create.selectedEmpty')" :image-size="70" />
-        <!-- row195：不显示地块；重量挪到原地块位置；原重量位置改显销售总价；汇总加总价之和 -->
+        <el-empty v-if="!selectedGroups.length" :description="t('vegOut.create.selectedEmpty')" :image-size="70" />
+        <!-- row195：不显示地块；重量挪到原地块位置；原重量位置改显销售总价；汇总加总价之和
+             V6 row108：一个产品一条 —— 同产品不同地块的几个库存篮在这里累计成一条，品类数也按产品数算 -->
         <div v-else class="selected-list">
-          <div v-for="row in selectedRows" :key="row.stockId" class="selected-item">
+          <div v-for="g in selectedGroups" :key="g.key" class="selected-item">
             <div class="truncate">
-              <span>{{ row.productName }}</span>
-              <span class="plot">{{ fmtQty(quantityMap[row.stockId], row) }}</span>
+              <span>{{ g.productName }}</span>
+              <span class="plot">{{ fmtQty(g.quantity, g.rows[0]) }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="qty">{{ fmtMoney(lineAmount(row)) }}</span>
-              <el-icon class="del" @click="clearLine(row)"><CircleClose /></el-icon>
+              <span class="qty">{{ fmtMoney(g.amount) }}</span>
+              <el-icon class="del" @click="clearGroup(g)"><CircleClose /></el-icon>
             </div>
           </div>
           <div class="selected-total">
-            {{ t('vegOut.create.totalKinds', { n: selectedRows.length }) }} · {{ fmtKg(totalWeight) }} ·
+            {{ t('vegOut.create.totalKinds', { n: selectedGroups.length }) }} · {{ fmtKg(totalWeight) }} ·
             {{ fmtMoney(totalAmount) }}
           </div>
         </div>
@@ -135,6 +136,7 @@
 import { CircleClose } from '@element-plus/icons-vue';
 import { listVegOutCandidates, submitVegOutBatch } from '@/api/djs-warehouse/vegOut';
 import { printVegOutSheet, ROWS_PER_PAGE } from '../printSheet';
+import { productMergeKey, uniformUnitPrice } from '../mergeByProduct';
 import type { VegOutCandidateVO } from '@/api/djs-warehouse/vegOut/types';
 import { formatPlotLabel } from '@/utils/plotTag';
 import { formatQtyByUnit } from '@/utils/weight';
@@ -264,26 +266,89 @@ function rememberRows(rows: VegOutCandidateVO[]) {
 /** 已选 = 填了正数出库量的行（跨搜索全集，右侧实时反映）。量清 0 / 清空即视为不出库该产品。 */
 const selectedRows = computed(() => knownRows.value.filter((r) => Number(quantityMap[r.stockId]) > 0));
 
+/** 已选产品合并组（V6 row108）：同一产品编号的多个地块篮在右侧与打印单上合成一条。 */
+interface SelectedGroup {
+  key: string;
+  productName: string;
+  productSpec?: string;
+  productUnit?: string;
+  /** 组内库存行（清整组、逐行提交都要用它） */
+  rows: VegOutCandidateVO[];
+  /** 累计出库量 */
+  quantity: number;
+  /** 累计销售总价 = Σ(行出库量 × 行单价)，不是「合并量 × 某个单价」 */
+  amount: number;
+  /** 组内各行单价一致时为该单价，否则 undefined（打印单价列留白） */
+  unitPrice?: number;
+  /** 是否按 kg 计量（决定进不进重量合计） */
+  isKg: boolean;
+}
+
+/**
+ * 已选产品（按产品编号合并）—— 甲方 V6 row108：
+ * 「同一个产品属于不同地块时…只按产品编号进行累计，同一个产品不用多条记录，记录为一个重量显示」。
+ *
+ * ⚠️ 合并只在这层做，**提交仍按 stockId 逐行**（见 submit）：后端扣的是具体那个地块篮的库存。
+ */
+const selectedGroups = computed<SelectedGroup[]>(() => {
+  const map = new Map<string, SelectedGroup>();
+  selectedRows.value.forEach((r) => {
+    const key = productMergeKey(r);
+    let g = map.get(key);
+    if (!g) {
+      g = {
+        key,
+        productName: r.productName,
+        productSpec: r.productSpec,
+        productUnit: r.productUnit,
+        rows: [],
+        quantity: 0,
+        amount: 0,
+        unitPrice: undefined,
+        isKg: isKgRow(r)
+      };
+      map.set(key, g);
+    }
+    g.rows.push(r);
+    g.quantity += Number(quantityMap[r.stockId] || 0);
+    g.amount += lineAmount(r);
+  });
+  return [...map.values()].map((g) => ({
+    ...g,
+    unitPrice: uniformUnitPrice(g.rows.map((r) => Number(priceMap[r.stockId] || 0)))
+  }));
+});
+
+/** 已选产品的合并键集合（判断左侧某行所属产品是否已在单上）。 */
+const selectedGroupKeys = computed(() => new Set(selectedGroups.value.map((g) => g.key)));
+
+/** 清掉整个产品：组内每个地块篮的出库量都清空（右侧一条对应的就是这几行）。 */
+function clearGroup(g: SelectedGroup) {
+  g.rows.forEach(clearLine);
+}
+
 /**
  * 一单最多 10 个产品 —— 与打印模板 {@link ROWS_PER_PAGE} 同一个数：
  * 241×140mm 的三联单一页只印得下 10 行，超了就得分页，甲方不接受一单打两张纸。
+ *
+ * ⚠️ 数的是**产品**不是库存行（V6 row108 合并后一个产品只占一行）：按库存行数会让
+ * 「同一个红薯选 3 个地块」白白吃掉 3 个名额，而单子上它就是一行。
  */
 const MAX_SELECTED_PRODUCTS = ROWS_PER_PAGE;
-const selectionFull = computed(() => selectedRows.value.length >= MAX_SELECTED_PRODUCTS);
+const selectionFull = computed(() => selectedGroups.value.length >= MAX_SELECTED_PRODUCTS);
 
 /**
- * 选满 10 个后，**未选中**行的出库量输入框禁用（不允许再录第 11 个）。
- * 已选中的行不禁用 —— 否则用户既改不了量、也清不掉，会卡死在满员状态。
+ * 选满 10 个产品后，**产品尚未在单上**的行禁用（不允许再录第 11 个产品）。
+ * 已在单上的产品其余地块篮不禁用 —— 那不新增品类，只是同一行的量往上加；
+ * 已填量的行也不禁用，否则用户既改不了量、也清不掉，会卡死在满员状态。
  */
 function qtyDisabled(row: VegOutCandidateVO): boolean {
-  return selectionFull.value && !(Number(quantityMap[row.stockId]) > 0);
+  return selectionFull.value && !selectedGroupKeys.value.has(productMergeKey(row));
 }
 // row194 混单位（Kevin 2026-08-03 定 D7）：**重量合计只累加 kg 行**——干货有袋/桶/罐、蛋类是「枚」，
 // 「3 袋 + 2kg」加不到一起。金额是钱，三类都能加，故 totalAmount 全量累加。
-const totalWeight = computed(() =>
-  selectedRows.value.filter(isKgRow).reduce((s, r) => s + Number(quantityMap[r.stockId] || 0), 0)
-);
-const totalAmount = computed(() => selectedRows.value.reduce((s, r) => s + lineAmount(r), 0));
+const totalWeight = computed(() => selectedGroups.value.filter((g) => g.isKg).reduce((s, g) => s + g.quantity, 0));
+const totalAmount = computed(() => selectedGroups.value.reduce((s, g) => s + g.amount, 0));
 
 async function loadCandidates() {
   loading.value = true;
@@ -334,8 +399,9 @@ async function submit(print: boolean) {
     proxy?.$modal.msgWarning(t('vegOut.create.rule.items'));
     return;
   }
-  // 兜底：selectedRows 已改成跨搜索全集，输入框禁用理论上挡得住；这里再拦一道防边界情况
-  if (selectedRows.value.length > MAX_SELECTED_PRODUCTS) {
+  // 兜底：selectedRows 已改成跨搜索全集，输入框禁用理论上挡得住；这里再拦一道防边界情况。
+  // 按合并后的产品数判（与打印行数、与后端 MAX_PRODUCTS_PER_SHEET 同一口径）
+  if (selectedGroups.value.length > MAX_SELECTED_PRODUCTS) {
     proxy?.$modal.msgWarning(t('vegOut.create.rule.maxProducts', { n: MAX_SELECTED_PRODUCTS }));
     return;
   }
@@ -344,6 +410,9 @@ async function submit(print: boolean) {
     const res = await submitVegOutBatch({
       outDate: form.outDate,
       outDest: form.outDest,
+      // ⚠️ 提交按**库存行**逐条走，不按右侧合并后的产品走（V6 row108 的合并只在展示 / 打印层）：
+      // 后端扣的是具体那个「产品 × 地块」篮的库存，合并成一条它就不知道从哪个篮扣、
+      // 也写不出正确的地块流水（月台待收货、地块追溯都依赖流水上的 plot_id）。
       items: selectedRows.value.map((r) => ({
         stockId: r.stockId,
         quantity: Number(quantityMap[r.stockId]),
@@ -360,12 +429,15 @@ async function submit(print: boolean) {
         batchNo,
         outDate: form.outDate,
         customerName: destLabel(form.outDest),
-        rows: selectedRows.value.map((r) => ({
-          productName: r.productName,
-          productSpec: r.productSpec,
-          productUnit: r.productUnit,
-          quantity: Number(quantityMap[r.stockId] || 0),
-          unitPrice: Number(priceMap[r.stockId] || 0)
+        // V6 row108：一个产品打一行（同产品不同地块的量已在 selectedGroups 里累计）。
+        // 金额直接给组内真实小计之和，不让打印模板按「合并量 × 单价」倒算。
+        rows: selectedGroups.value.map((g) => ({
+          productName: g.productName,
+          productSpec: g.productSpec,
+          productUnit: g.productUnit,
+          quantity: g.quantity,
+          unitPrice: g.unitPrice,
+          amount: g.amount
         }))
       });
     }

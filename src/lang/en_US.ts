@@ -2446,6 +2446,8 @@ export default {
       productName: 'Product',
       plotCode: 'Plot Code',
       pickWeight: 'Pick Weight',
+      perfPercent: 'Performance %',
+      remark: 'Remark',
       teamName: 'Pick Team',
       statSource: 'Stat Source'
     },
@@ -4511,7 +4513,7 @@ export default {
       statMonth: 'Settle Month',
       pickMonth: 'Select month',
       generate: 'Generate',
-      hint: 'Computed by harvest weight x crop unit-price snapshot; re-generating overwrites the month'
+      hint: 'Computed by harvest weight x performance percentage x crop unit-price snapshot; re-generating overwrites the month'
     },
     field: {
       statMonth: 'Month',
@@ -4537,7 +4539,7 @@ export default {
       generateSuccess: 'Settlement generated, {count} rows'
     },
     emptyHint:
-      'No performance data yet. Pick a settle month above and click “Generate” — the system computes each team’s amount from monthly harvest weight × crop unit-price snapshot.',
+      'No performance data yet. Pick a settle month above and click “Generate” — the system computes each team’s amount from monthly harvest weight × performance percentage × crop unit-price snapshot.',
     detail: {
       title: 'Performance Detail',
       tabYield: 'Yield Performance',
@@ -4546,6 +4548,7 @@ export default {
       cropName: 'Crop',
       productName: 'Product',
       cropPickWeight: 'Harvest',
+      perfPercent: 'Performance %',
       cropUnitPrice: 'Unit Price',
       cropAmount: 'Amount',
       totalAmount: 'Total',

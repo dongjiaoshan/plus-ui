@@ -121,6 +121,22 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (r: BizRow) => (r.pickWeight != null ? `${Number(r.pickWeight).toFixed(3)} ${t('pickDetail.unit.kg')}` : '-')
   },
   {
+    // V6 row106：采摘量右边跟录入时填的绩效百分比；采摘活动来源没有这个维度，显 '-'
+    prop: 'perfPercent',
+    label: t('pickDetail.column.perfPercent'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (r: BizRow) => (r.perfPercent != null ? `${Number(r.perfPercent)}%` : '-')
+  },
+  {
+    prop: 'remark',
+    label: t('pickDetail.column.remark'),
+    minWidth: 150,
+    align: 'center',
+    showOverflowTooltip: true,
+    formatter: (r: BizRow) => (r.remark != null && r.remark !== '' ? String(r.remark) : '-')
+  },
+  {
     prop: 'teamName',
     label: t('pickDetail.column.teamName'),
     minWidth: 130,

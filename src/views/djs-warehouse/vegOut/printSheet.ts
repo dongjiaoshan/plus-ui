@@ -14,15 +14,27 @@
  * 新增出库弹窗侧同步限死最多 10 个产品，正常业务一单一页。</p>
  */
 
-/** 打印单一行。 */
+/**
+ * 打印单一行。
+ *
+ * <p>一行 = 一个产品（V6 row108）。同一产品的多个地块篮由调用方先经 `mergeByProduct.ts`
+ * 合并再传进来，故合并行必须自带 `amount`、且单价可能为空。</p>
+ */
 export interface VegOutPrintRow {
   productName: string;
   productSpec?: string;
   productUnit?: string;
   /** 出库量（打印时按甲方要求不显示小数） */
   quantity: number;
-  /** 销售单价 */
-  unitPrice: number;
+  /** 销售单价；合并行内各库存行单价不一致时为空（不倒算平均价），单价列留白 */
+  unitPrice?: number;
+  /**
+   * 本行总金额。缺省按 `quantity × unitPrice` 算。
+   *
+   * 合并行**必须显式给**：它等于组内各库存行真实小计之和，用「合并后的量 × 某个单价」
+   * 倒算会在各行单价不同时算出一个谁也对不上的数，而这张三联单是财务凭证。
+   */
+  amount?: number;
 }
 
 export interface VegOutPrintPayload {
@@ -73,6 +85,19 @@ function money(v: number): string {
   return n.toFixed(2);
 }
 
+/** 单价列：合并行内单价不一致时留白（宁可空着，也不印一个谁也对不上的均价）。 */
+function priceText(v: number | undefined): string {
+  return v === undefined || v === null ? '' : money(v);
+}
+
+/** 行金额：显式给了就用（合并行 = 组内真实小计之和），否则按 量 × 单价 算。 */
+function rowAmount(r: VegOutPrintRow): number {
+  if (r.amount !== undefined && r.amount !== null) {
+    return Number(r.amount) || 0;
+  }
+  return (Number(r.quantity) || 0) * (Number(r.unitPrice) || 0);
+}
+
 function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], pageNo: number, pageCount: number, allRows: VegOutPrintRow[]): string {
   // 不足 10 行补空行，保持表格高度与模板一致（针式纸走纸位置固定）
   const padded: (VegOutPrintRow | null)[] = [...pageRows];
@@ -87,8 +112,8 @@ function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], page
         <td>${esc(name)}</td>
         <td>${esc(r.productUnit || '')}</td>
         <td>${qtyText(r.quantity)}</td>
-        <td>${money(r.unitPrice)}</td>
-        <td>${money(r.quantity * r.unitPrice)}</td>
+        <td>${priceText(r.unitPrice)}</td>
+        <td>${money(rowAmount(r))}</td>
       </tr>`;
     })
     .join('');
@@ -103,7 +128,7 @@ function buildPage(payload: VegOutPrintPayload, pageRows: VegOutPrintRow[], page
   // 而系统记的是 ¥31.25 —— 单据和账目对不上比「拿计算器按不整除」严重得多。
   // 代价是整数列 × 单价 ≠ 打印金额，甲方看样张时需要知道这一点。
   const sumQty = sumRows.reduce((s, r) => s + Math.round(Number(r.quantity) || 0), 0);
-  const sumAmount = sumRows.reduce((s, r) => s + (Number(r.quantity) || 0) * (Number(r.unitPrice) || 0), 0);
+  const sumAmount = sumRows.reduce((s, r) => s + rowAmount(r), 0);
   const totalLabel = pageCount > 1 ? (pageNo === pageCount ? '总合计' : '本页小计') : '合计';
 
   return `<section class="sheet">
