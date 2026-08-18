@@ -1703,6 +1703,26 @@ export default {
       }
     }
   },
+  plantFarmMap: {
+    pageTitle: 'Farm Map Planning',
+    draftNotice: 'P0 draft: hand-drawn schematic base map with demo colors, not wired to the backend. For reviewing the drawing and palette only.',
+    opTip: 'Scroll to zoom · drag to pan · double-click to reset · click a block to select',
+    colorBy: { status: 'Plan status', phase: 'Phase' },
+    stat: { regionTotal: '{n} blocks', bound: '{n} mounted' },
+    phase: { p1: 'Phase 1', p2: 'Phase 2' },
+    legend: {
+      title: 'Legend',
+      unbound: 'No zone mounted',
+      idle: 'Idle',
+      partial: 'Partly planned',
+      planned: 'Planned',
+      harvesting: 'Harvesting',
+      p1: 'Phase 1',
+      p2: 'Phase 2'
+    },
+    offMap: { title: 'Off-map zones', tip: 'Not on this tour map; plan them from here' },
+    selected: { title: 'Selected', empty: 'Click a block on the map' }
+  },
   plantZone: {
     title: { add: 'Add Zone', edit: 'Edit Zone' },
     column: {

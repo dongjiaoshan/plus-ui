@@ -1706,6 +1706,26 @@ export default {
       }
     }
   },
+  plantFarmMap: {
+    pageTitle: '农场地图排产',
+    draftNotice: 'P0 草图：底图为手绘示意，颜色为演示数据，未接后端。仅用于确认画法与配色，确认后再接绑定与排产。',
+    opTip: '滚轮缩放 · 拖拽平移 · 双击复位 · 点击区块选中',
+    colorBy: { status: '排产状态', phase: '按期' },
+    stat: { regionTotal: '区块 {n}', bound: '已挂载 {n}' },
+    phase: { p1: '一期', p2: '二期' },
+    legend: {
+      title: '图例',
+      unbound: '未挂载片区',
+      idle: '空闲',
+      partial: '部分已排',
+      planned: '已排产',
+      harvesting: '采摘中',
+      p1: '一期',
+      p2: '二期'
+    },
+    offMap: { title: '图外片区', tip: '不在这张导览图上，排产从此处进入' },
+    selected: { title: '当前选中', empty: '点击图上区块查看' }
+  },
   plantZone: {
     title: { add: '新增片区', edit: '编辑片区' },
     column: {
