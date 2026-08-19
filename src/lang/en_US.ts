@@ -4014,6 +4014,8 @@ export default {
       noCode: 'No trace code to print for this row',
       scanHint: 'Scan to view traceability',
       traceCaption: 'Dongjiaoshan Organic Trace Code',
+      traceCaptionPork: 'Dongjiaoshan Pork Trace Code',
+      traceCaptionVeg: 'Dongjiaoshan Produce Trace Code',
       sizeHint: 'Actual print size 3cm × 3cm',
       printFailed: 'Failed to generate print file, please retry'
     },
