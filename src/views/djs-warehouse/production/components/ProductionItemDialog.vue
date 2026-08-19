@@ -170,6 +170,8 @@ const columns = computed<BizTableColumn[]>(() => [
       const d = (row as ProductProductionVO).deliverDest;
       if (d === 'platform') return t('djs.warehouse.production.dest.platform');
       if (d === 'gift') return t('djs.warehouse.production.dest.gift');
+      // 后台出库产出行（矿山/厨房等直接来仓库拿走）：不进发货月台，去向单独标出来
+      if (d === 'warehouse_out') return t('djs.warehouse.production.dest.warehouseOut');
       return '-';
     }
   },

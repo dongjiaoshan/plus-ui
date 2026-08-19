@@ -3234,7 +3234,8 @@ export default {
         },
         dest: {
           platform: '发货月台',
-          gift: '礼盒'
+          gift: '礼盒',
+          warehouseOut: '后台出库'
         },
         button: {
           traceCode: '追溯码'

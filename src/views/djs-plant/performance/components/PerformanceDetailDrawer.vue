@@ -1,5 +1,7 @@
 <template>
-  <el-drawer v-model="visible" size="640px" destroy-on-close>
+  <!-- 产量绩效 6 列（作物/产品/采摘量/绩效百分比/单价/绩效额）列宽合计 740px，640px 的抽屉装不下、
+       表格要横滚才看得全（甲方 row121）。820px = 740 列宽 + 抽屉左右内边距，正好不出横向滚动条。 -->
+  <el-drawer v-model="visible" size="820px" destroy-on-close>
     <template #header>
       <div class="flex items-center justify-between w-full pr-4">
         <span class="text-base font-medium">{{ t('plantPerformance.detail.title') }}</span>

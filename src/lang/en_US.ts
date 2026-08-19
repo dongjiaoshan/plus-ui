@@ -3248,7 +3248,8 @@ export default {
         },
         dest: {
           platform: 'Platform',
-          gift: 'Gift Box'
+          gift: 'Gift Box',
+          warehouseOut: 'Warehouse Out'
         },
         button: {
           traceCode: 'Trace Code'
