@@ -1553,7 +1553,10 @@ export default {
       quantity: '出库量',
       outDest: '出库去向',
       destVegDock: '果蔬月台',
-      destFeed: '饲料饲喂'
+      destFeed: '饲料饲喂',
+      thirdPhaseNoDock:
+        '三期作物不走果蔬月台：三期不纳入地块管理、也不发到门店，而月台收货后货会进蔬菜保鲜库（门店取货的池子）。' +
+        '出库请用本行的「产品出库」或「毛菜间出库管理」，进出数量照常记账。'
     },
     outDialog: {
       title: '产品出库',
@@ -2431,6 +2434,8 @@ export default {
       productName: '产品名称',
       plotCode: '地块编号',
       pickWeight: '采摘量',
+      perfPercent: '绩效百分比',
+      remark: '备注',
       teamName: '采摘班组',
       statSource: '统计来源'
     },
@@ -3229,7 +3234,8 @@ export default {
         },
         dest: {
           platform: '发货月台',
-          gift: '礼盒'
+          gift: '礼盒',
+          warehouseOut: '后台出库'
         },
         button: {
           traceCode: '追溯码'
@@ -3994,6 +4000,8 @@ export default {
       noCode: '该行无追溯码可打印',
       scanHint: '扫码查看溯源',
       traceCaption: '东角山有机追溯码',
+      traceCaptionPork: '东角山猪肉追溯码',
+      traceCaptionVeg: '东角山果蔬追溯码',
       sizeHint: '实际打印尺寸 3cm × 3cm',
       printFailed: '生成打印文件失败，请重试'
     },
@@ -4498,7 +4506,7 @@ export default {
       statMonth: '结算月份',
       pickMonth: '请选择月份',
       generate: '生成结算',
-      hint: '按采摘量 × 作物单价快照生成，重复生成会覆盖该月数据'
+      hint: '按采摘量 × 绩效百分比 × 作物单价快照生成，重复生成会覆盖该月数据'
     },
     field: {
       statMonth: '月份',
@@ -4523,7 +4531,7 @@ export default {
       monthRequired: '请先选择结算月份',
       generateSuccess: '结算生成成功，共 {count} 条'
     },
-    emptyHint: '还没有绩效数据。请在上方选择结算月份点「生成结算」，系统按当月各班组采摘量 × 作物单价快照自动计算后即会显示。',
+    emptyHint: '还没有绩效数据。请在上方选择结算月份点「生成结算」，系统按当月各班组采摘量 × 绩效百分比 × 作物单价快照自动计算后即会显示。',
     detail: {
       title: '绩效详情',
       tabYield: '产量绩效',
@@ -4532,6 +4540,7 @@ export default {
       cropName: '作物',
       productName: '产品',
       cropPickWeight: '采摘量',
+      perfPercent: '绩效百分比',
       cropUnitPrice: '单价',
       cropAmount: '绩效额',
       totalAmount: '合计',

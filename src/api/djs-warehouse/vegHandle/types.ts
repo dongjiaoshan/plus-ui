@@ -71,6 +71,10 @@ export interface PickDetailVO {
   plotCode?: string;
   /** 采摘量（kg）。 */
   pickWeight?: number;
+  /** 绩效百分比（0-100 整数，%）；采摘活动来源无此维度，返回 null。 */
+  perfPercent?: number;
+  /** 录入备注；采摘活动来源无此维度，返回 null。 */
+  remark?: string;
   /** 采摘班组名称。 */
   teamName?: string;
 }

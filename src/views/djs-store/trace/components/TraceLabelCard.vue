@@ -1,7 +1,7 @@
 <template>
-  <!-- 追溯码贴纸：3cm×3cm 定尺，顶「东角山有机追溯码」+ 二维码 + 底「生产编码」「门店名称」两行。预览与打印共用同一份结构。 -->
+  <!-- 追溯码贴纸：3cm×3cm 定尺，顶标题按业态取（猪肉/果蔬/其余有机）+ 二维码 + 底「生产编码」「门店名称」两行。预览与打印共用同一份结构。 -->
   <div class="trace-label">
-    <div class="trace-label__title">{{ t('storeTrace.label.traceCaption') }}</div>
+    <div class="trace-label__title">{{ caption }}</div>
     <img v-if="qrDataUrl" :src="qrDataUrl" alt="qr" class="trace-label__qr" />
     <div v-else class="trace-label__qr trace-label__qr--empty">-</div>
     <div class="trace-label__foot">
@@ -33,6 +33,23 @@ const { t } = useI18n();
  */
 const serialText = computed(() => (props.data.serialNo != null ? String(props.data.serialNo) : ''));
 const storeText = computed(() => props.data.storeName || '');
+
+/**
+ * 贴纸顶部标题按业态取（V6 row122）：猪肉「东角山猪肉追溯码」/ 果蔬「东角山果蔬追溯码」。
+ * 业态取 `data.traceType`（同二维码 URL `/trace/{type}/{code}` 的那个值）；
+ * 取不到或是别的业态（礼盒等）保持原来的「东角山有机追溯码」。
+ * 贴纸上产品名/别名与有机证书图的取舍在生码时已定格（trace_display_name），此处不重复判定。
+ */
+const caption = computed(() => {
+  switch (props.data.traceType) {
+    case 'pork':
+      return t('storeTrace.label.traceCaptionPork');
+    case 'veg':
+      return t('storeTrace.label.traceCaptionVeg');
+    default:
+      return t('storeTrace.label.traceCaption');
+  }
+});
 </script>
 
 <style lang="scss" scoped>
@@ -50,17 +67,21 @@ const storeText = computed(() => props.data.storeName || '');
   color: #000;
   font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
+/* r125：line-height 1.05 比中文字的行盒还小，「东角山果蔬追溯码」的下缘会被裁掉一截。
+   给到 1.25 让字完整显示；30mm 高度里放得下：标题 2.5×1.25≈3.1 + 二维码 18.5 + 底部两行
+   2.1×1.25×2≈5.3 + 上下 padding 2 = 28.9mm < 30mm。 */
 .trace-label__title {
   width: 100%;
   font-size: 2.5mm;
   font-weight: 700;
-  line-height: 1.05;
+  line-height: 1.25;
   text-align: center;
   letter-spacing: 0.1mm;
 }
+/* r125：二维码让出 0.5mm 给标题/底部两行的行高，扫码识别不受影响（18.5mm 仍远大于识别下限）。 */
 .trace-label__qr {
-  width: 19mm;
-  height: 19mm;
+  width: 18.5mm;
+  height: 18.5mm;
   display: block;
 }
 .trace-label__qr--empty {
@@ -70,10 +91,11 @@ const storeText = computed(() => props.data.storeName || '');
   color: #999;
   border: 0.2mm dashed #ccc;
 }
+/* r125：同标题——底部「生产编码 / 门店名称」两行原来也被裁掉下缘。 */
 .trace-label__foot {
   width: 100%;
   font-size: 2.1mm;
-  line-height: 1.05;
+  line-height: 1.25;
   text-align: center;
 }
 /* 生产编码 / 门店名各占一行；单行内仍允许超长时折行，但两者不再互相挤同一行 */

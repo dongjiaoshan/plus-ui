@@ -1,5 +1,7 @@
 <template>
-  <el-drawer v-model="visible" size="640px" destroy-on-close>
+  <!-- 产量绩效 6 列（作物/产品/采摘量/绩效百分比/单价/绩效额）列宽合计 740px，640px 的抽屉装不下、
+       表格要横滚才看得全（甲方 row121）。820px = 740 列宽 + 抽屉左右内边距，正好不出横向滚动条。 -->
+  <el-drawer v-model="visible" size="820px" destroy-on-close>
     <template #header>
       <div class="flex items-center justify-between w-full pr-4">
         <span class="text-base font-medium">{{ t('plantPerformance.detail.title') }}</span>
@@ -19,6 +21,10 @@
           </el-table-column>
           <el-table-column :label="t('plantPerformance.detail.cropPickWeight')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ row.pickWeight != null ? `${Number(row.pickWeight).toFixed(3)} 公斤` : '-' }}</template>
+          </el-table-column>
+          <!-- V6 row107：采摘量右边跟绩效百分比 —— 同一产品按不同百分比录入的采摘各占一行，绩效额 = 采摘量 × 百分比 × 单价 -->
+          <el-table-column :label="t('plantPerformance.detail.perfPercent')" width="110" align="center" header-align="center">
+            <template #default="{ row }">{{ row.perfPercent != null ? `${Number(row.perfPercent)}%` : '-' }}</template>
           </el-table-column>
           <el-table-column :label="t('plantPerformance.detail.cropUnitPrice')" width="130" align="center" header-align="center">
             <template #default="{ row }">{{ row.unitPriceSnapshot != null ? `${row.unitPriceSnapshot} 元/公斤` : '-' }}</template>
@@ -74,20 +80,26 @@ const farmLoading = ref(false);
 const cropRows = ref<PlantWorkPerformanceVO[]>([]);
 const farmList = ref<FarmRecordVO[]>([]);
 
-/** 产量绩效表合计行：采摘量合计 + 绩效额合计（单价列无意义合计，留空）。 */
+/**
+ * 产量绩效表合计行。列序：0 作物 / 1 产品 / 2 采摘量 / 3 绩效百分比 / 4 单价 / 5 绩效额。
+ * 只有采摘量与绩效额可加总：百分比、单价逐行不同，加起来没有业务含义 → 留空。
+ */
+const YIELD_COL_PICK_WEIGHT = 2;
+
 function yieldSummary({ columns }: { columns: TableColumnCtx<PlantWorkPerformanceVO>[] }): string[] {
   const sums: string[] = [];
   const weightSum = cropRows.value.reduce((acc, r) => acc + Number(r.pickWeight ?? 0), 0);
   const amountSum = cropRows.value.reduce((acc, r) => acc + Number(r.performanceAmount ?? 0), 0);
+  const lastIdx = columns.length - 1;
   columns.forEach((_col, idx) => {
     if (idx === 0) {
       sums[idx] = t('plantPerformance.detail.totalAmount');
-    } else if (idx === 1) {
+    } else if (idx === YIELD_COL_PICK_WEIGHT) {
       sums[idx] = `${weightSum.toFixed(3)} 公斤`;
-    } else if (idx === 2) {
-      sums[idx] = '';
-    } else {
+    } else if (idx === lastIdx) {
       sums[idx] = `¥${amountSum.toFixed(2)}`;
+    } else {
+      sums[idx] = '';
     }
   });
   return sums;

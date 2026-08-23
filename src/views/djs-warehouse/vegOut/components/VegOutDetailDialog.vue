@@ -66,6 +66,7 @@ import { getVegOutDetail } from '@/api/djs-warehouse/vegOut';
 import type { VegOutBatchVO, VegOutDetailVO } from '@/api/djs-warehouse/vegOut/types';
 import { formatQtyByUnit } from '@/utils/weight';
 import { printVegOutSheet } from '../printSheet';
+import { mergeVegOutPrintRows } from '../mergeByProduct';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -103,19 +104,30 @@ function fmtQty(row: VegOutDetailVO): string {
   return unit.toLowerCase() === 'kg' || !unit ? `${formatQtyByUnit(n, 'kg')}kg` : `${n} ${unit}`;
 }
 
-/** row198：按当前明细重打这张出库单（不落库、不取新号）。 */
+/**
+ * row198：按当前明细重打这张出库单（不落库、不取新号）。
+ *
+ * <p>V6 row108：明细一条流水一行（同产品不同地块篮各一条），但打印按产品编号合并成一行 ——
+ * 与新增时打的那张单必须逐行长得一样，否则同一张单号打两次会出两个版本。
+ * 金额传各行真实小计（{@code outAmount}）之和，不按「合并量 × 单价」倒算。</p>
+ */
 function handleReprint() {
   printVegOutSheet({
     batchNo: batchNo.value,
     outDate: header.value.outDate,
     customerName: header.value.customerName,
-    rows: rows.value.map((r) => ({
-      productName: r.productName,
-      productSpec: r.productSpec,
-      productUnit: r.productUnit,
-      quantity: Number(r.outWeight) || 0,
-      unitPrice: Number(r.outUnitPrice) || 0
-    }))
+    rows: mergeVegOutPrintRows(
+      rows.value.map((r) => ({
+        productCode: r.productCode,
+        productName: r.productName,
+        productSpec: r.productSpec,
+        productUnit: r.productUnit,
+        quantity: Number(r.outWeight) || 0,
+        unitPrice: Number(r.outUnitPrice) || 0,
+        // 后端 outAmount = 出库量 × 单价快照；万一为空则由合并函数按 量 × 单价 兜底
+        amount: r.outAmount === undefined || r.outAmount === null ? undefined : Number(r.outAmount) || 0
+      }))
+    )
   });
 }
 

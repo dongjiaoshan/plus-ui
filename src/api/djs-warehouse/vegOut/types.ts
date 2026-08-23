@@ -2,6 +2,12 @@
 export interface VegOutCandidateVO {
   stockId: string;
   productId: string;
+  /**
+   * 产品业务编号（t_warehouse_product_info.product_id，用户手填的产品编码）。
+   *
+   * V6 row108：右侧「已选产品」与打印单按它把同一产品的多个地块篮合并成一条。
+   */
+  productCode?: string;
   productName: string;
   productSpec?: string;
   /** 库存重量（BigDecimal 后端可能序列化为 string） */
@@ -9,6 +15,10 @@ export interface VegOutCandidateVO {
   productUnit?: string;
   plotId?: string;
   plotCode?: string;
+  /** 地块名称（「地块」列展示值；无地块时为空） */
+  plotName?: string;
+  /** 三期标识（1 = 三期）：三期货无 plot_id，「地块」列靠它显示「三期」 */
+  thirdPhase?: number | string | null;
   /** 产品业态（vegetable / dry_good / egg / other）—— 干货与蛋类没有地块 */
   belongType?: string;
   /** 产品销售价格（row191）：新增页「销售单价」默认值，可改 */
@@ -30,6 +40,8 @@ export interface VegOutBatchVO {
 
 /** 毛菜间出库单明细（row187 详情弹框） */
 export interface VegOutDetailVO {
+  /** 产品业务编号：详情「重新打印」按它把同一产品的多条流水合成一行（V6 row108） */
+  productCode?: string;
   productName: string;
   productSpec?: string;
   /** 计量单位（row194 起候选含干货/蛋类，单位混杂 kg/袋/桶/罐/枚，不能恒按 kg 展示） */

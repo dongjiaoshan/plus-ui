@@ -1551,7 +1551,10 @@ export default {
       quantity: 'Out Qty',
       outDest: 'Destination',
       destVegDock: 'Veg Dock',
-      destFeed: 'Feed'
+      destFeed: 'Feed',
+      thirdPhaseNoDock:
+        'Phase III produce does not go through the veg dock: it is not plot-managed and never ships to stores, ' +
+        'while dock receiving moves goods into the store supply pool. Use "Product Outbound" or "Veg Room Outbound" instead.'
     },
     outDialog: {
       title: 'Product Stock Out',
@@ -2443,6 +2446,8 @@ export default {
       productName: 'Product',
       plotCode: 'Plot Code',
       pickWeight: 'Pick Weight',
+      perfPercent: 'Performance %',
+      remark: 'Remark',
       teamName: 'Pick Team',
       statSource: 'Stat Source'
     },
@@ -3243,7 +3248,8 @@ export default {
         },
         dest: {
           platform: 'Platform',
-          gift: 'Gift Box'
+          gift: 'Gift Box',
+          warehouseOut: 'Warehouse Out'
         },
         button: {
           traceCode: 'Trace Code'
@@ -4008,6 +4014,8 @@ export default {
       noCode: 'No trace code to print for this row',
       scanHint: 'Scan to view traceability',
       traceCaption: 'Dongjiaoshan Organic Trace Code',
+      traceCaptionPork: 'Dongjiaoshan Pork Trace Code',
+      traceCaptionVeg: 'Dongjiaoshan Produce Trace Code',
       sizeHint: 'Actual print size 3cm × 3cm',
       printFailed: 'Failed to generate print file, please retry'
     },
@@ -4508,7 +4516,7 @@ export default {
       statMonth: 'Settle Month',
       pickMonth: 'Select month',
       generate: 'Generate',
-      hint: 'Computed by harvest weight x crop unit-price snapshot; re-generating overwrites the month'
+      hint: 'Computed by harvest weight x performance percentage x crop unit-price snapshot; re-generating overwrites the month'
     },
     field: {
       statMonth: 'Month',
@@ -4534,7 +4542,7 @@ export default {
       generateSuccess: 'Settlement generated, {count} rows'
     },
     emptyHint:
-      'No performance data yet. Pick a settle month above and click “Generate” — the system computes each team’s amount from monthly harvest weight × crop unit-price snapshot.',
+      'No performance data yet. Pick a settle month above and click “Generate” — the system computes each team’s amount from monthly harvest weight × performance percentage × crop unit-price snapshot.',
     detail: {
       title: 'Performance Detail',
       tabYield: 'Yield Performance',
@@ -4543,6 +4551,7 @@ export default {
       cropName: 'Crop',
       productName: 'Product',
       cropPickWeight: 'Harvest',
+      perfPercent: 'Performance %',
       cropUnitPrice: 'Unit Price',
       cropAmount: 'Amount',
       totalAmount: 'Total',
