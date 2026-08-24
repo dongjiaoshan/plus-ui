@@ -4016,7 +4016,7 @@ export default {
       traceCaption: 'Dongjiaoshan Organic Trace Code',
       traceCaptionPork: 'Dongjiaoshan Pork Trace Code',
       traceCaptionVeg: 'Dongjiaoshan Produce Trace Code',
-      sizeHint: 'Preview enlarged 2× for checking; actual print size 3cm × 3cm',
+      sizeHint: 'Preview enlarged 2x for checking; actual print 2.8cm x 2.8cm on 4cm x 3cm label stock',
       printFailed: 'Failed to generate print file, please retry'
     },
     veg: {
