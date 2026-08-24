@@ -1,8 +1,10 @@
 <template>
   <el-dialog v-model="visible" :title="t('storeTrace.label.dialogTitle')" width="420px" append-to-body @closed="onClosed">
-    <!-- 预览：3cm×3cm 追溯码贴纸（居中，按实际打印尺寸展示） -->
+    <!-- 预览：3cm×3cm 追溯码贴纸放大 2 倍展示（贴纸本身仍是 30mm，只有预览放大） -->
     <div class="trace-label-preview">
-      <TraceLabelCard :data="data" :weight-text="weightText" :qr-data-url="qrDataUrl" />
+      <div class="trace-label-preview__zoom">
+        <TraceLabelCard :data="data" :weight-text="weightText" :qr-data-url="qrDataUrl" />
+      </div>
       <div class="trace-label-preview__hint">{{ t('storeTrace.label.sizeHint') }}</div>
     </div>
 
@@ -142,6 +144,8 @@ async function runPrint() {
  * 用隐藏 iframe 打印标签图（替代 window.open 弹窗）。
  * 浏览器以 --kiosk-printing 启动时，print() 不弹原生对话框，直接送默认打印机；
  * 普通浏览器仍会弹一次系统打印框（受浏览器安全限制，JS 无法绕过）。
+ * 纸 40mm×30mm，方形贴纸图打 28mm 居中（左右各留 6mm 白边）：热敏标签机有 1~2mm 不可打印边
+ * + 间隙传感器 ±1mm 定位误差，满幅 30mm 会被裁掉下缘，故上下各留 1mm 安全边。
  */
 function printImageViaIframe(imgData: string, title: string): Promise<void> {
   return new Promise((resolve) => {
@@ -172,7 +176,7 @@ function printImageViaIframe(imgData: string, title: string): Promise<void> {
     doc.open();
     doc.write(
       `<html><head><title>${title}</title>` +
-        `<style>@page{size:30mm 30mm;margin:0}html,body{margin:0;padding:0;text-align:center}img{width:30mm;height:30mm;display:block}</style>` +
+        `<style>@page{size:40mm 30mm;margin:0}html,body{margin:0;padding:0;text-align:center}img{width:28mm;height:28mm;display:block;margin:1mm auto}</style>` +
         `</head><body><img src="${imgData}" alt="label"/></body></html>`
     );
     doc.close();
@@ -201,6 +205,13 @@ defineExpose({ open, printDirect });
   align-items: center;
   gap: 8px;
   padding: 16px 0;
+}
+/* r130：30mm 贴纸按真实尺寸落到屏幕只有 113px，顶部标题被压到 9.4px——
+   中文在这个字号下底部笔画会被光栅化吞掉，看起来就是「字底部没显示全」。
+   打印产物（html2canvas scale:2 → 228px）本身是完整的，问题只在屏幕预览太小。
+   故预览整体放大 2 倍便于核对内容；贴纸与打印快照仍是 30mm，尺寸没变。 */
+.trace-label-preview__zoom {
+  zoom: 2;
 }
 .trace-label-preview :deep(.trace-label) {
   border: 1px dashed #dcdfe6;

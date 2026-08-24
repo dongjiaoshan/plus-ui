@@ -4002,7 +4002,7 @@ export default {
       traceCaption: '东角山有机追溯码',
       traceCaptionPork: '东角山猪肉追溯码',
       traceCaptionVeg: '东角山果蔬追溯码',
-      sizeHint: '实际打印尺寸 3cm × 3cm',
+      sizeHint: '预览已放大 2 倍便于核对，实际打印尺寸 3cm × 3cm',
       printFailed: '生成打印文件失败，请重试'
     },
     veg: {
