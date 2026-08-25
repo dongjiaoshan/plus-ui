@@ -144,14 +144,19 @@ async function runPrint() {
  * 用隐藏 iframe 打印标签图（替代 window.open 弹窗）。
  * 浏览器以 --kiosk-printing 启动时，print() 不弹原生对话框，直接送默认打印机；
  * 普通浏览器仍会弹一次系统打印框（受浏览器安全限制，JS 无法绕过）。
- * 纸 40mm×30mm（ADR-0013 §3.3），方形贴纸图最大 28mm 居中：热敏标签机有 1~2mm 不可打印边
- * + 间隙传感器 ±1mm 定位误差，满幅 30mm 会被裁掉下缘，故四周留 1mm 安全边。
+ * 方形贴纸图最大 28mm 居中，四周留 1mm 安全边（热敏标签机有 1~2mm 不可打印边
+ * + 间隙传感器 ±1mm 定位误差，满幅会被裁掉边缘）。
  *
- * 排版对「实际拿到多大的页」零假设 —— 打印对话框的纵向/横向、以及驱动里那张纸到底多大，
- * 都不在我们手里：body 撑满页面 + flex 两轴居中 + 图 max-width/max-height:100% + object-fit:contain。
- * 于是页面比图大就居中留白、比图小就整体缩小，**任何情况下都不会被裁、不会偏到一边**。
- * 别改回固定 `width:28mm;height:28mm;margin:1mm auto`：那种写法在竖向页上会把图顶到最上面
- * （下方空 11mm），在可打印区小于 28mm 的驱动上会直接裁掉半张贴纸——两种实物瑕疵都出过。
+ * ⚠️ 三条都别改回去，各自对应一次实物返工：
+ *
+ * 1. `@page{size:auto}` —— **不要写死 `size:40mm 30mm`**。写死的那版：只要驱动里那张纸不是
+ *    40×30（实测甲方那台就不是），Chromium 会按声明的尺寸排完版再把**整页缩放**塞进真实纸张，
+ *    结果是二维码从 28mm 缩到 21mm、还被拉成 20.97×37.04 的非正方形，旁边空出一大条白边。
+ *    交给 auto 之后，纸 40×30 / 30×40 / 30×30 三种实测都是 27.8~28mm 见方、两轴居中。
+ * 2. `position:fixed` 铺满页盒 —— 打印分页布局里 `html,body{height:100%}` 不保证解析成页高，
+ *    解析不了就退化成内容高度，flex 没有多余空间可分，图会顶在最上面。
+ * 3. 图用 `max-width/max-height:100% + object-fit:contain` —— 可打印区比 28mm 小时整体等比缩，
+ *    而不是溢出被裁。写死 `width:28mm;height:28mm;margin:1mm auto` 出过「标题只剩半截」的实物。
  */
 function printImageViaIframe(imgData: string, title: string): Promise<void> {
   return new Promise((resolve) => {
@@ -182,11 +187,12 @@ function printImageViaIframe(imgData: string, title: string): Promise<void> {
     doc.open();
     doc.write(
       `<html><head><title>${title}</title>` +
-        `<style>@page{size:40mm 30mm;margin:0}` +
-        `html,body{margin:0;padding:0;width:100%;height:100%}` +
-        `body{box-sizing:border-box;padding:1mm;display:flex;align-items:center;justify-content:center}` +
+        `<style>@page{size:auto;margin:0}` +
+        `html,body{margin:0;padding:0}` +
+        `.p{position:fixed;top:0;left:0;right:0;bottom:0;box-sizing:border-box;padding:1mm;` +
+        `display:flex;align-items:center;justify-content:center}` +
         `img{width:28mm;height:28mm;max-width:100%;max-height:100%;object-fit:contain;display:block}</style>` +
-        `</head><body><img src="${imgData}" alt="label"/></body></html>`
+        `</head><body><div class="p"><img src="${imgData}" alt="label"/></div></body></html>`
     );
     doc.close();
     const img = doc.querySelector('img');
