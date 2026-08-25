@@ -144,8 +144,14 @@ async function runPrint() {
  * 用隐藏 iframe 打印标签图（替代 window.open 弹窗）。
  * 浏览器以 --kiosk-printing 启动时，print() 不弹原生对话框，直接送默认打印机；
  * 普通浏览器仍会弹一次系统打印框（受浏览器安全限制，JS 无法绕过）。
- * 纸 40mm×30mm，方形贴纸图打 28mm 居中（左右各留 6mm 白边）：热敏标签机有 1~2mm 不可打印边
- * + 间隙传感器 ±1mm 定位误差，满幅 30mm 会被裁掉下缘，故上下各留 1mm 安全边。
+ * 纸 40mm×30mm（ADR-0013 §3.3），方形贴纸图最大 28mm 居中：热敏标签机有 1~2mm 不可打印边
+ * + 间隙传感器 ±1mm 定位误差，满幅 30mm 会被裁掉下缘，故四周留 1mm 安全边。
+ *
+ * 排版对「实际拿到多大的页」零假设 —— 打印对话框的纵向/横向、以及驱动里那张纸到底多大，
+ * 都不在我们手里：body 撑满页面 + flex 两轴居中 + 图 max-width/max-height:100% + object-fit:contain。
+ * 于是页面比图大就居中留白、比图小就整体缩小，**任何情况下都不会被裁、不会偏到一边**。
+ * 别改回固定 `width:28mm;height:28mm;margin:1mm auto`：那种写法在竖向页上会把图顶到最上面
+ * （下方空 11mm），在可打印区小于 28mm 的驱动上会直接裁掉半张贴纸——两种实物瑕疵都出过。
  */
 function printImageViaIframe(imgData: string, title: string): Promise<void> {
   return new Promise((resolve) => {
@@ -176,7 +182,10 @@ function printImageViaIframe(imgData: string, title: string): Promise<void> {
     doc.open();
     doc.write(
       `<html><head><title>${title}</title>` +
-        `<style>@page{size:40mm 30mm;margin:0}html,body{margin:0;padding:0;text-align:center}img{width:28mm;height:28mm;display:block;margin:1mm auto}</style>` +
+        `<style>@page{size:40mm 30mm;margin:0}` +
+        `html,body{margin:0;padding:0;width:100%;height:100%}` +
+        `body{box-sizing:border-box;padding:1mm;display:flex;align-items:center;justify-content:center}` +
+        `img{width:28mm;height:28mm;max-width:100%;max-height:100%;object-fit:contain;display:block}</style>` +
         `</head><body><img src="${imgData}" alt="label"/></body></html>`
     );
     doc.close();
