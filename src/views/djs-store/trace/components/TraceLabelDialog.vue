@@ -1,10 +1,8 @@
 <template>
   <el-dialog v-model="visible" :title="t('storeTrace.label.dialogTitle')" width="420px" append-to-body @closed="onClosed">
-    <!-- 预览：3cm×3cm 追溯码贴纸放大 2 倍展示（贴纸本身仍是 30mm，只有预览放大） -->
+    <!-- 预览：直接看贴纸的 10 倍稿（300px），实际出纸时缩到 2.8cm -->
     <div class="trace-label-preview">
-      <div class="trace-label-preview__zoom">
-        <TraceLabelCard :data="data" :weight-text="weightText" :qr-data-url="qrDataUrl" />
-      </div>
+      <TraceLabelCard :data="data" :weight-text="weightText" :qr-data-url="qrDataUrl" />
       <div class="trace-label-preview__hint">{{ t('storeTrace.label.sizeHint') }}</div>
     </div>
 
@@ -114,7 +112,8 @@ async function genQr() {
   }
   const url = buildTraceUrl(data.value.traceType || 'pork', code);
   try {
-    qrDataUrl.value = await QRCode.toDataURL(url, { width: 120, margin: 1, errorCorrectionLevel: 'M' });
+    // 贴纸按 10 倍稿画（二维码位 185px）、快照再 ×2 → 出图 370px，源码低于此会糊边影响扫码
+    qrDataUrl.value = await QRCode.toDataURL(url, { width: 480, margin: 1, errorCorrectionLevel: 'M' });
   } catch {
     qrDataUrl.value = '';
   }
@@ -221,13 +220,6 @@ defineExpose({ open, printDirect });
   gap: 8px;
   padding: 16px 0;
 }
-/* r130：30mm 贴纸按真实尺寸落到屏幕只有 113px，顶部标题被压到 9.4px——
-   中文在这个字号下底部笔画会被光栅化吞掉，看起来就是「字底部没显示全」。
-   打印产物（html2canvas scale:2 → 228px）本身是完整的，问题只在屏幕预览太小。
-   故预览整体放大 2 倍便于核对内容；贴纸与打印快照仍是 30mm，尺寸没变。 */
-.trace-label-preview__zoom {
-  zoom: 2;
-}
 .trace-label-preview :deep(.trace-label) {
   border: 1px dashed #dcdfe6;
 }
@@ -239,7 +231,7 @@ defineExpose({ open, printDirect });
   position: fixed;
   left: -100000px;
   top: 0;
-  width: 30mm;
+  width: 300px;
   pointer-events: none;
   z-index: -1;
 }

@@ -1,5 +1,5 @@
 <template>
-  <!-- 追溯码贴纸：3cm×3cm 定尺，顶标题按业态取（猪肉/果蔬/其余有机）+ 二维码 + 底「生产编码」「门店名称」两行。预览与打印共用同一份结构。 -->
+  <!-- 追溯码贴纸：3cm×3cm 版式（按 10 倍稿 300px 画，见 style 注释），顶标题按业态取（猪肉/果蔬/其余有机）+ 二维码 + 底「生产编码」「门店名称」两行。预览与打印共用同一份结构。 -->
   <div class="trace-label">
     <div class="trace-label__title">{{ caption }}</div>
     <img v-if="qrDataUrl" :src="qrDataUrl" alt="qr" class="trace-label__qr" />
@@ -53,12 +53,20 @@ const caption = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-/* 3cm×3cm 追溯码贴纸（顶标题 + 二维码 + 底 生产编码-门店），row33 */
+/* 追溯码贴纸版式：**按 1mm = 10px 的 10 倍稿画**，最终由调用方缩到 3cm 见方
+   （预览直接看这张 300px 的放大稿，打印是 html2canvas 快照缩到 2.8cm）。
+
+   ⚠️ 不要把这些尺寸改回 mm —— 那是「门店名下半截被裁」返工三轮的根因：
+   `font-size: 2.1mm` = 7.94px，低于 **Chrome 中文默认的 12px 最小字号**，浏览器会把它顶到
+   12px 渲染，两行底部文案凭空长 14px，最后一行被挤出 30mm 的贴纸盒被裁掉下缘。
+   （实测：minimumFontSize=12 下 html2canvas 产物 228×228、底部留白 0px = 贴边裁断；
+   换成本版 10 倍稿后产物 600×600、底部留白 25px。）
+   版式高度账：padding 20 + 标题 25×1.25≈31 + 二维码 185 + 底部两行 21×1.25×2≈53 = 289 < 300。 */
 .trace-label {
   box-sizing: border-box;
-  width: 30mm;
-  height: 30mm;
-  padding: 1mm;
+  width: 300px;
+  height: 300px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -67,38 +75,40 @@ const caption = computed(() => {
   color: #000;
   font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
-/* r125：line-height 1.05 比中文字的行盒还小，「东角山果蔬追溯码」的下缘会被裁掉一截。
-   给到 1.25 让字完整显示；30mm 高度里放得下：标题 2.5×1.25≈3.1 + 二维码 18.5 + 底部两行
-   2.1×1.25×2≈5.3 + 上下 padding 2 = 28.9mm < 30mm。 */
 .trace-label__title {
   width: 100%;
-  font-size: 2.5mm;
+  font-size: 25px;
   font-weight: 700;
   line-height: 1.25;
   text-align: center;
-  letter-spacing: 0.1mm;
+  letter-spacing: 1px;
 }
-/* r125：二维码让出 0.5mm 给标题/底部两行的行高，扫码识别不受影响（18.5mm 仍远大于识别下限）。 */
+/* 二维码是版式里唯一可让步的元素：门店名超长折成两行时由它等比缩（aspect-ratio 保正方，
+   不会像定死 width 那样被压扁），缩到 130px（=1.3cm）为止仍远在扫码识别下限之上。 */
 .trace-label__qr {
-  width: 18.5mm;
-  height: 18.5mm;
+  flex: 0 1 auto;
+  width: auto;
+  height: 185px;
+  min-height: 130px;
+  aspect-ratio: 1 / 1;
   display: block;
 }
 .trace-label__qr--empty {
+  width: 185px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #999;
-  border: 0.2mm dashed #ccc;
+  border: 2px dashed #ccc;
 }
-/* r125：同标题——底部「生产编码 / 门店名称」两行原来也被裁掉下缘。 */
+/* 生产编码 / 门店名各占一行，不许被二维码挤掉 */
 .trace-label__foot {
   width: 100%;
-  font-size: 2.1mm;
+  flex: 0 0 auto;
+  font-size: 21px;
   line-height: 1.25;
   text-align: center;
 }
-/* 生产编码 / 门店名各占一行；单行内仍允许超长时折行，但两者不再互相挤同一行 */
 .trace-label__foot-line {
   width: 100%;
   word-break: break-all;

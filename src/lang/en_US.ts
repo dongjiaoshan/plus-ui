@@ -1291,6 +1291,20 @@ export default {
     confirm: {
       del: 'Delete {count} location(s)? Make sure they have no active stock.'
     },
+    stockDrawer: {
+      title: '{name} - Stock Detail',
+      searchPlaceholder: 'Search by product name',
+      export: 'Export',
+      empty: 'No product stock in this location',
+      column: {
+        productName: 'Product',
+        productSpec: 'Spec',
+        productStock: 'Current Stock',
+        productUnit: 'Unit',
+        todayInQty: 'In Today',
+        todayOutQty: 'Out Today'
+      }
+    },
     summary: {
       locationCount: 'Locations',
       productCount: 'Product Categories',
@@ -4016,7 +4030,7 @@ export default {
       traceCaption: 'Dongjiaoshan Organic Trace Code',
       traceCaptionPork: 'Dongjiaoshan Pork Trace Code',
       traceCaptionVeg: 'Dongjiaoshan Produce Trace Code',
-      sizeHint: 'Preview enlarged 2x for checking; actual print 2.8cm x 2.8cm on 4cm x 3cm label stock',
+      sizeHint: 'Enlarged preview; actual print 2.8cm x 2.8cm on 4cm x 3cm label stock',
       printFailed: 'Failed to generate print file, please retry'
     },
     veg: {

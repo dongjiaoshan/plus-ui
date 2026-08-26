@@ -81,3 +81,21 @@ export interface LocationCardSummaryVO {
   /** 最近盘点结果（djs_check_result 1/2/3） */
   lastCheckResult?: number;
 }
+
+/**
+ * 库位内逐产品库存行（V6 row136：库位总览卡片点开的右侧抽屉 / 导出同源）。
+ *
+ * 当天进完又出完、库存已归零的产品仍在列表里（否则今日出入库两列会漏掉当天最活跃的货）。
+ */
+export interface LocationProductStockVO {
+  /** 产品 ID（雪花，string 承接防精度截断） */
+  productId: number | string;
+  productName: string;
+  productSpec?: string;
+  /** 实时库存量（该库位内该产品全部库存行之和） */
+  productStock: number | string;
+  productUnit?: string;
+  todayInQty: number | string;
+  /** 今日出库量（不含录入损耗） */
+  todayOutQty: number | string;
+}

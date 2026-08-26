@@ -1293,6 +1293,20 @@ export default {
     confirm: {
       del: '是否确认删除选中的 {count} 条库位？删除前需先确保库位无在用库存。'
     },
+    stockDrawer: {
+      title: '{name} · 库存明细',
+      searchPlaceholder: '请输入产品名称搜索',
+      export: '导出',
+      empty: '该库位暂无产品库存',
+      column: {
+        productName: '产品名称',
+        productSpec: '规格',
+        productStock: '实时库存量',
+        productUnit: '单位',
+        todayInQty: '今日入库量',
+        todayOutQty: '今日出库量'
+      }
+    },
     summary: {
       locationCount: '库位数',
       productCount: '库存产品品类',
@@ -4002,7 +4016,7 @@ export default {
       traceCaption: '东角山有机追溯码',
       traceCaptionPork: '东角山猪肉追溯码',
       traceCaptionVeg: '东角山果蔬追溯码',
-      sizeHint: '预览已放大 2 倍便于核对，实际打印 2.8cm × 2.8cm（4cm × 3cm 标签纸留安全边）',
+      sizeHint: '此处为放大预览，实际打印 2.8cm × 2.8cm（4cm × 3cm 标签纸留安全边）',
       printFailed: '生成打印文件失败，请重试'
     },
     veg: {

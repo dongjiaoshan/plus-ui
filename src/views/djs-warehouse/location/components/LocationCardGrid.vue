@@ -2,7 +2,12 @@
   <div v-loading="loading" class="location-card-grid">
     <el-row :gutter="12">
       <el-col v-for="card in cards" :key="String(card.locationId)" :xs="12" :sm="12" :md="6" :lg="6" class="mb-3">
-        <el-card shadow="hover" class="location-card" :body-style="{ padding: '12px 14px' }">
+        <el-card
+          shadow="hover"
+          class="location-card location-card--clickable"
+          :body-style="{ padding: '12px 14px' }"
+          @click="openStockDrawer(card)"
+        >
           <div class="location-card__header">
             <span class="location-card__name">{{ card.locationName }}</span>
             <dict-tag :options="djs_location_type" :value="card.locationType" />
@@ -38,12 +43,16 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- V6 row136：点卡片从右侧滑出该库位的逐产品库存明细 -->
+    <LocationStockDrawer ref="stockDrawerRef" />
   </div>
 </template>
 
 <script setup name="LocationCardGrid" lang="ts">
 import { getLocationSummary } from '@/api/djs-warehouse/location';
 import type { LocationCardSummaryVO } from '@/api/djs-warehouse/location/types';
+import LocationStockDrawer from './LocationStockDrawer.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -52,6 +61,12 @@ const { djs_location_type, djs_check_result } = toRefs<Record<string, any>>(prox
 
 const loading = ref(false);
 const cards = ref<LocationCardSummaryVO[]>([]);
+const stockDrawerRef = ref<InstanceType<typeof LocationStockDrawer>>();
+
+/** V6 row136：点库位卡片 → 右侧抽屉列该库位的逐产品库存明细 */
+function openStockDrawer(card: LocationCardSummaryVO) {
+  stockDrawerRef.value?.open(card.locationId, card.locationName);
+}
 
 /** 库存 / 出入库量统一格式化（后端 BigDecimal 序列化可能是 string） */
 function formatQty(v: number | string | undefined): string {
@@ -88,6 +103,10 @@ onMounted(() => {
 }
 
 .location-card {
+  &--clickable {
+    cursor: pointer;
+  }
+
   &__header {
     display: flex;
     align-items: center;
