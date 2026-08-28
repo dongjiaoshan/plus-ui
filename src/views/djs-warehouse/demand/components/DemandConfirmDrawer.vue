@@ -99,8 +99,26 @@
         <el-table-column :label="t('demand.confirmPage.column.pigAssigned')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">{{ pigAssignedLabel(row) }}</template>
         </el-table-column>
-        <el-table-column :label="t('demand.confirmPage.column.actions')" width="240" fixed="right" align="center" header-align="center">
+        <el-table-column
+          :label="t('demand.confirmPage.column.actions')"
+          :width="adjustMode ? 300 : 240"
+          fixed="right"
+          align="center"
+          header-align="center"
+        >
           <template #default="{ row }">
+            <!-- 调整需求量（V6-R140）：只有「需求调整管理」那页传 adjustMode 才出现，
+                 仓库管理→需求管理保持原样。发货之后（排产中/部分发货/已完成）不显示。 -->
+            <el-button
+              v-if="canAdjust(row)"
+              v-hasPermi="['djs:warehouse:demandAdjust:adjust']"
+              link
+              type="warning"
+              size="small"
+              @click="onAdjust(row)"
+            >
+              {{ t('demand.action.adjust') }}
+            </el-button>
             <el-button v-if="canConfirm(row)" link type="success" size="small" @click="onConfirm(row)">
               {{ t('demand.action.confirm') }}
             </el-button>
@@ -119,6 +137,9 @@
 
       <!-- 指定猪只弹窗（沿用现成组件）-->
       <PigAssignDialog ref="pigDialogRef" @success="onChanged" />
+
+      <!-- 需求量调整弹框（V6-R140，仅 adjustMode 下挂载）-->
+      <DemandAdjustDialog v-if="adjustMode" ref="adjustDialogRef" @success="onChanged" />
     </div>
   </el-drawer>
 </template>
@@ -128,6 +149,7 @@ import { useI18n } from 'vue-i18n';
 import { Refresh } from '@element-plus/icons-vue';
 import { formatOrderQuantity, isKgUnit } from '@/utils/weight';
 import PigAssignDialog from './PigAssignDialog.vue';
+import DemandAdjustDialog from './DemandAdjustDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
 import { confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';
 import type { DemandGroupVO, DemandManageQuery, DemandManageVO, DemandProductType, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
@@ -136,6 +158,12 @@ const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const emit = defineEmits<{ (e: 'changed'): void }>();
+
+/**
+ * 调整模式（V6-R140）：只有「需求调整管理」页（系统管理→数据管理下）传 true，
+ * 操作列才多出「调整」按钮。仓库管理→需求管理走默认 false，页面一如从前。
+ */
+const props = withDefaults(defineProps<{ adjustMode?: boolean }>(), { adjustMode: false });
 
 const visible = ref(false);
 
@@ -236,8 +264,19 @@ function canAssignPig(row: DemandManageVO): boolean {
 function canDelete(row: DemandManageVO): boolean {
   return row.demandStatus === 'SUBMITTED';
 }
+/**
+ * 可调整需求量（V6-R140，甲方原话「需求未到发货的状态之前可以调整」）。
+ *
+ * 待确认 / 已确认放行；排产中（旧流程遗留态，门店视角已算「已发货」）、部分发货、已完成一律不给。
+ * 这份白名单与后端 DemandManageServiceImpl.ADJUSTABLE_STATUSES 必须同口径 ——
+ * 前端只负责藏按钮，真正拦住的是后端那道闸。
+ */
+function canAdjust(row: DemandManageVO): boolean {
+  if (!props.adjustMode) return false;
+  return row.demandStatus === 'SUBMITTED' || row.demandStatus === 'CONFIRMED' || row.demandStatus === 'DRAFT';
+}
 function hasAnyAction(row: DemandManageVO): boolean {
-  return canConfirm(row) || canAssignPig(row) || canDelete(row);
+  return canAdjust(row) || canConfirm(row) || canAssignPig(row) || canDelete(row);
 }
 
 async function fetchList() {
@@ -303,6 +342,12 @@ async function onDelete(row: DemandManageVO) {
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   onChanged();
 }
+
+function onAdjust(row: DemandManageVO) {
+  adjustDialogRef.value?.open(row, storeNameOf(row));
+}
+
+const adjustDialogRef = ref<{ open: (row: DemandManageVO, storeName: string) => void }>();
 
 function onAssignPig(row: DemandManageVO) {
   const required = Number(row.demandQuantity ?? 0);

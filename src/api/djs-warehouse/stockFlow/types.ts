@@ -25,6 +25,8 @@ export interface StockFlowVO {
   changeNum: number;
   changeQuantity: number;
   supplierId?: number;
+  /** 供应商名称（后端 JOIN t_md_supplier 回填；该笔流水无供应商时为空） */
+  supplierName?: string;
   earNo?: string;
   plotId?: number;
   /** 地块编号（= t_plant_plot_info.plot_code，后端 JOIN 回填） */
@@ -73,6 +75,8 @@ export interface StockFlowQuery {
   operatorId?: number;
   /** 入/出库人姓名模糊匹配 */
   operatorName?: string;
+  /** 供应商名称模糊匹配（入库记录页按供应商搜索） */
+  supplierName?: string;
   dateFrom?: string;
   dateTo?: string;
   pageNum?: number;

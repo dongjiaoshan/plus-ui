@@ -94,6 +94,7 @@ const searchModel = reactive<Record<string, any>>({
   operatorName: undefined,
   blockNo: undefined,
   earNo: undefined,
+  supplierName: undefined,
   thirdPhase: undefined
 });
 
@@ -106,6 +107,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'operatorName', label: t('djs.warehouse.flowIn.operator'), type: 'input' },
   { field: 'blockNo', label: t('djs.warehouse.flowIn.blockNo'), type: 'input' },
   { field: 'earNo', label: t('djs.warehouse.flowIn.earNo'), type: 'input' },
+  // 供应商模糊搜索（甲方 row139）：后端反查 t_md_supplier.id 集合后按 supplierId IN 下推
+  { field: 'supplierName', label: t('djs.warehouse.flowIn.supplierName'), type: 'input' },
   // 三期筛选（甲方 row92）：选「仅看三期」传 thirdPhase=1，全部不传
   { field: 'thirdPhase', label: t('plotTag.filter.label'), type: 'select', options: thirdPhaseFilterOptions() }
 ]);
@@ -136,7 +139,9 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (row: BizRow) => formatPlotLabel(row)
   },
   { prop: 'earNo', label: t('djs.warehouse.flowIn.earNo'), minWidth: 120, align: 'center' },
-  { prop: 'operatorName', label: t('djs.warehouse.flowIn.operator'), minWidth: 100, align: 'center' }
+  { prop: 'operatorName', label: t('djs.warehouse.flowIn.operator'), minWidth: 100, align: 'center' },
+  // 供应商列（甲方 row139）：放在最后一列，该笔流水没有供应商时留空
+  { prop: 'supplierName', label: t('djs.warehouse.flowIn.supplierName'), minWidth: 140, align: 'center', showOverflowTooltip: true }
 ]);
 
 /** searchModel → 后端 query（daterange 拆 dateFrom/dateTo；空串归一 undefined） */
@@ -152,6 +157,7 @@ function buildQuery(): StockFlowQuery {
     operatorName: searchModel.operatorName || undefined,
     blockNo: searchModel.blockNo || undefined,
     earNo: searchModel.earNo || undefined,
+    supplierName: searchModel.supplierName || undefined,
     thirdPhase: toThirdPhaseParam(searchModel.thirdPhase),
     dateFrom: from || undefined,
     dateTo: to || undefined,

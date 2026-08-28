@@ -192,6 +192,7 @@ const inboundFormRef = ref<{
     productUnit?: string;
     storeLocationId?: string | number;
     buyClass?: string;
+    supplierId?: string | number;
     supplierName?: string;
   }) => void;
 }>();
@@ -208,6 +209,8 @@ function handleInbound(row: BizRow) {
     productUnit: row.productUnit,
     storeLocationId: row.storeLocationId,
     buyClass: row.buyClass,
+    // row141：带上 supplierId，弹框里预选商品配置的供应商（可改）
+    supplierId: row.supplierId,
     supplierName: row.supplierName
   });
 }

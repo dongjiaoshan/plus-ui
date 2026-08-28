@@ -1433,6 +1433,8 @@ export default {
       title: '商品入库',
       product: '入库商品',
       supplier: '供应商',
+      supplierPlaceholder: '请选择本次到货的供应商',
+      unit: '商品单位',
       location: '入库库位',
       locationPlaceholder: '请选择入库库位',
       locationType: '库位类型',
@@ -1441,6 +1443,7 @@ export default {
       confirm: '确认入库',
       locationRequired: '请选择入库库位',
       quantityRequired: '请输入入库数量',
+      quantityIntegerOnly: '该商品单位是【{unit}】，入库量只能填整数',
       remark: '备注'
     },
     production: {
@@ -3118,6 +3121,7 @@ export default {
         flowDate: '业务时间',
         flowType: '类型',
         inMode: '入库方式',
+        supplierName: '供应商',
         matType: '物资类型',
         productType: '产品类型',
         productCode: '产品编码',
@@ -3441,8 +3445,24 @@ export default {
       history: '状态历史',
       detail: '详情',
       viewDemand: '查看需求',
+      adjust: '调整',
       selectAllPage: '全选本页',
       batchConfirm: '批量确认需求'
+    },
+    // V6-R140 需求调整管理
+    adjust: {
+      title: '调整需求量',
+      storeName: '需求门店',
+      productName: '需求产品',
+      oldQuantity: '原需求量',
+      newQuantity: '调整后需求量',
+      remark: '调整备注',
+      remarkPh: '请填写本次调整的原因或说明（选填）',
+      rule: {
+        quantityRequired: '请填写调整后需求量',
+        quantityPositive: '调整后需求量必须大于 0',
+        quantityUnchanged: '与原需求量相同，无需调整'
+      }
     },
     detail: {
       title: '产品需求详情',

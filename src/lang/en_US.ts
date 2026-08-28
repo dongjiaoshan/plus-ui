@@ -1431,6 +1431,8 @@ export default {
       title: 'Goods inbound',
       product: 'Goods',
       supplier: 'Supplier',
+      supplierPlaceholder: 'Select the supplier for this receipt',
+      unit: 'Unit',
       location: 'Inbound location',
       locationPlaceholder: 'Select inbound location',
       locationType: 'Location Type',
@@ -1439,6 +1441,7 @@ export default {
       confirm: 'Confirm inbound',
       locationRequired: 'Please select inbound location',
       quantityRequired: 'Please enter inbound quantity',
+      quantityIntegerOnly: 'This product is measured in [{unit}]; quantity must be an integer',
       remark: 'Remark'
     },
     production: {
@@ -3132,6 +3135,7 @@ export default {
         flowDate: 'Time',
         flowType: 'Type',
         inMode: 'Inbound Mode',
+        supplierName: 'Supplier',
         matType: 'Material Type',
         productType: 'Product Type',
         productCode: 'Product Code',
@@ -3455,8 +3459,24 @@ export default {
       history: 'History',
       detail: 'Detail',
       viewDemand: 'View Demand',
+      adjust: 'Adjust',
       selectAllPage: 'Select all (page)',
       batchConfirm: 'Batch confirm demand'
+    },
+    // V6-R140 demand quantity adjustment
+    adjust: {
+      title: 'Adjust Demand Quantity',
+      storeName: 'Store',
+      productName: 'Product',
+      oldQuantity: 'Current Qty',
+      newQuantity: 'Adjusted Qty',
+      remark: 'Remark',
+      remarkPh: 'Reason or note for this adjustment (optional)',
+      rule: {
+        quantityRequired: 'Adjusted quantity is required',
+        quantityPositive: 'Adjusted quantity must be greater than 0',
+        quantityUnchanged: 'Same as current quantity, nothing to adjust'
+      }
     },
     detail: {
       title: 'Product Demand Detail',

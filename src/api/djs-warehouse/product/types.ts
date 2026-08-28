@@ -87,6 +87,8 @@ export interface ProductInboundForm {
   remark?: string;
   /** 采购入库场景：本商品 store_location_id 为空时回写为本次所选库位（首次入库认领家库位） */
   autoConfigLocation?: boolean;
+  /** 本次到货的供应商（row141，仅采购入库弹框传；不传则后端回落商品配置） */
+  supplierId?: string | number;
 }
 
 export interface ProductInfoForm {
