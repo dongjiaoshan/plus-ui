@@ -44,6 +44,7 @@
 </template>
 
 <script setup name="SaleRecordForm" lang="ts">
+import { todayYmd } from '@/utils/date';
 import { listStoreRelation } from '@/api/djs-store/operation/relation';
 import { addStoreSale } from '@/api/djs-store/operation/sale';
 import type { StoreProductRelationVO, StoreSaleRecordForm } from '@/api/djs-store/operation/types';
@@ -96,7 +97,9 @@ const rules: FormRules = {
     { required: true, message: t('storeOperation.sale.form.saleDateRequired'), trigger: 'change' },
     {
       validator: (_rule, value, callback) => {
-        if (value && new Date(value).getTime() > Date.now()) {
+        // 按「日历日字符串」直接比，不要 new Date(value) —— 'YYYY-MM-DD' 会被当 UTC 午夜解析，
+        // 等于东八区当天 08:00，于是 00:00–08:00 录当天销售会被判成「晚于今天」而录不进去。
+        if (value && String(value).slice(0, 10) > todayYmd()) {
           callback(new Error(t('storeOperation.sale.form.saleDateFuture')));
         } else {
           callback();

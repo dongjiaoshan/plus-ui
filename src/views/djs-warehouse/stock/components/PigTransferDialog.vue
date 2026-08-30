@@ -31,12 +31,13 @@
         />
       </el-form-item>
       <el-form-item :label="t('stock.transferDialog.quantity')" prop="quantity">
+        <!-- 转移量精度随计量单位分流，与同页「产品出库」同口径（计量类三位小数 / 计数类整数） -->
         <el-input-number
           v-model="form.quantity"
           :min="0.001"
           :max="maxQuantity"
           :step="1"
-          :precision="2"
+          :precision="quantityPrecision"
           controls-position="right"
           :placeholder="t('stock.transferDialog.quantityPlaceholder')"
           style="width: 100%"
@@ -57,9 +58,10 @@
 </template>
 
 <script setup lang="ts">
+import { todayYmd } from '@/utils/date';
 import { pigTransfer } from '@/api/djs-warehouse/stock';
 import type { LocationStockVO, StockTransferForm } from '@/api/djs-warehouse/stock/types';
-import { formatQtyByUnit } from '@/utils/weight';
+import { formatQtyByUnit, isCountingUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -91,7 +93,7 @@ const maxQuantity = computed(() => {
   return Number.isNaN(n) ? Infinity : n;
 });
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayYmd();
 
 const defaultForm = (): StockTransferForm => ({
   id: '',
@@ -101,9 +103,27 @@ const defaultForm = (): StockTransferForm => ({
 });
 const form = ref<StockTransferForm>(defaultForm());
 
+/**
+ * 转移量精度同「产品出库」：计量类三位小数 / 计数类不设 precision，由规则报错。
+ * min 与 step 恒定不随单位变，理由同 StockOutDialog（min 会静默钳值）。
+ */
+const quantityPrecision = computed(() => (isCountingUnit(unit.value) ? undefined : 3));
+
 const rules = computed(() => ({
   transferDate: [{ required: true, message: t('stock.transferDialog.rule.transferDate'), trigger: 'change' }],
-  quantity: [{ required: true, message: t('stock.transferDialog.rule.quantity'), trigger: 'blur' }]
+  quantity: [
+    { required: true, message: t('stock.transferDialog.rule.quantity'), trigger: 'blur' },
+    {
+      validator: (_r: unknown, value: number | undefined, cb: (e?: Error) => void) => {
+        if (value == null || Number.isNaN(Number(value))) return cb();
+        if (isCountingUnit(unit.value) && !Number.isInteger(Number(value))) {
+          return cb(new Error(t('stock.transferDialog.rule.quantityIntegerOnly', { unit: unit.value || '-' })));
+        }
+        cb();
+      },
+      trigger: 'blur'
+    }
+  ]
 }));
 
 const emit = defineEmits<{ (e: 'success'): void }>();

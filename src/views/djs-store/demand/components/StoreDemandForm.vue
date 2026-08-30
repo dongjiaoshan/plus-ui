@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { todayYmd } from '@/utils/date';
 import { ref, reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { addStoreDemand, getStoreDemand, updateStoreDemand } from '@/api/djs-store/demand';
@@ -108,7 +109,7 @@ const demandNo = ref<string>('');
 const formRef = ref();
 
 const baseForm = (): StoreDemandForm => ({
-  demandDate: new Date().toISOString().slice(0, 10),
+  demandDate: todayYmd(),
   storeId: props.defaultStoreId ?? '',
   productId: '',
   productName: '',

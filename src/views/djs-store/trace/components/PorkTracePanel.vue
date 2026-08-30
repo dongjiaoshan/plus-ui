@@ -115,6 +115,7 @@
 </template>
 
 <script setup name="PorkTracePanel" lang="ts">
+import { todayYmd } from '@/utils/date';
 import { Food, Refresh } from '@element-plus/icons-vue';
 import { listTraceablePig, genStoreTraceCode, listStorePackProducts } from '@/api/djs-store/trace';
 import type { TraceablePigVO, StorePackProductVO } from '@/api/djs-store/trace/types';
@@ -342,11 +343,6 @@ async function handleGen() {
   } finally {
     genLoading.value = false;
   }
-}
-
-function todayYmd(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 onMounted(async () => {

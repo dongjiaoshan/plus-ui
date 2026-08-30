@@ -1589,6 +1589,7 @@ export default {
       rule: {
         outDate: '请选择出库日期',
         quantity: '请输入出库量',
+        quantityIntegerOnly: '该商品单位是【{unit}】，出库量只能填整数',
         stockOutDest: '请选择出库去向'
       }
     },
@@ -1606,7 +1607,8 @@ export default {
       confirm: '确定',
       rule: {
         transferDate: '请选择转移日期',
-        quantity: '请输入转移量'
+        quantity: '请输入转移量',
+        quantityIntegerOnly: '该商品单位是【{unit}】，转移量只能填整数'
       }
     },
     recordDialog: {

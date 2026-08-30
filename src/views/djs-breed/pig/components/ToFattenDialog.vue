@@ -65,6 +65,7 @@
  * 录入：转移日期（默认当日）/ 转移负责人（养殖部人员下拉）/ 转移栋舍 + 栏位（默认猪只当前位置）。
  * 确认后后端把状态 后备(HB) → 育肥(YF)、类型 种母猪 → 育肥猪，并写事件台账。
  */
+import { todayYmd } from '@/utils/date';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 import { listBarn, listPen } from '@/api/djs-breed/farm';
@@ -107,12 +108,6 @@ const barns = ref<BarnVO[]>([]);
 const barnLoading = ref(false);
 const pens = ref<PenVO[]>([]);
 const penLoading = ref(false);
-
-/** yyyy-MM-dd（本地时区，不用 toISOString 以免 UTC 偏移退一天）。 */
-function todayYmd(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 async function loadEmployees() {
   employeeLoading.value = true;

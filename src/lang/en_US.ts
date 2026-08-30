@@ -1587,6 +1587,7 @@ export default {
       rule: {
         outDate: 'Please select out date',
         quantity: 'Please enter out qty',
+        quantityIntegerOnly: 'This product is measured in [{unit}]; out qty must be an integer',
         stockOutDest: 'Please select destination'
       }
     },
@@ -1604,7 +1605,8 @@ export default {
       confirm: 'Confirm',
       rule: {
         transferDate: 'Please select transfer date',
-        quantity: 'Please enter transfer qty'
+        quantity: 'Please enter transfer qty',
+        quantityIntegerOnly: 'This product is measured in [{unit}]; transfer qty must be an integer'
       }
     },
     recordDialog: {
