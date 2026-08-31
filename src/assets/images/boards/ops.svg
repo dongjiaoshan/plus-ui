@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="运营管理">
+  <defs>
+    <linearGradient id="bg-ops" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3fc1b0"/>
+      <stop offset="1" stop-color="#12857a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="200" fill="url(#bg-ops)"/>
+  <g opacity="0.92">
+    <!-- 坐标轴 -->
+    <path d="M152 56 L152 152 L258 152" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- 递增柱 -->
+    <rect x="168" y="116" width="20" height="32" rx="3" fill="#ffffff"/>
+    <rect x="198" y="98" width="20" height="50" rx="3" fill="#ffffff"/>
+    <rect x="228" y="76" width="20" height="72" rx="3" fill="#ffffff"/>
+    <!-- 上升趋势箭头 -->
+    <path d="M172 92 L202 66 L230 50" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M206 44 L236 44 L236 74 Z" fill="#ffffff"/>
+  </g>
+</svg>

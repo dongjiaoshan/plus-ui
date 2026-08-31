@@ -72,6 +72,7 @@ export default {
       warehouse: '仓库管理',
       store: '门店管理',
       system: '系统管理',
+      ops: '运营管理',
       empty: '当前账号未分配任何板块，请联系管理员'
     }
   },
@@ -160,6 +161,7 @@ export default {
         reset: '重置',
         inputPrefix: '请输入',
         selectPrefix: '请选择',
+        all: '全部',
         startDate: '开始日期',
         endDate: '结束日期'
       },
@@ -816,6 +818,31 @@ export default {
       }
     },
     exportTodo: '导出能力将在后续版本中接入'
+  },
+  // 运营管理 → 农场信息 → 育肥猪信息（育肥猪 / 仔猪日龄分布 + 栋舍矩阵）
+  fattenInfo: {
+    title: '育肥猪信息',
+    refresh: '刷新',
+    empty: '暂无数据',
+    matrixTitle: '栋舍日龄分布',
+    filterTip: '已筛选日龄区间：{bucket}，再次点击该柱或关闭标签恢复全部',
+    tab: {
+      fattening: '育肥猪',
+      piglet: '仔猪'
+    },
+    unit: {
+      head: '头'
+    },
+    chart: {
+      fatteningTitle: '育肥猪日龄分布',
+      pigletTitle: '仔猪日龄分布',
+      series: '头数'
+    },
+    col: {
+      barn: '栋舍',
+      total: '合计',
+      sum: '合计'
+    }
   },
   // 养殖事件台账（admin 只读：引种 / 仔猪耳标 / 事件台账 / 生长记录）
   breedEvent: {
@@ -1679,6 +1706,10 @@ export default {
   plantOverview: {
     title: '种植总览',
     empty: '暂无作物数据',
+    search: {
+      cropName: '作物名称',
+      cropNamePlaceholder: '请输入作物名称'
+    },
     breadcrumbHome: '首页',
     breadcrumbPlant: '种植管理',
     kpi: {
@@ -1949,6 +1980,46 @@ export default {
     },
     warning: { yes: '即将到期', no: '正常' },
     confirm: { del: '是否确认删除选中的 {count} 张证书？' }
+  },
+  // 种植 - 作物需求 / 需求反馈（V6-R152 运营端提 + V6-R153 种植端回，同一张表两个入口）
+  cropDemand: {
+    title: { add: '新增需求', detail: '需求详情', reply: '需求回复' },
+    column: {
+      demandDate: '需求日期',
+      demandCategory: '需求分类',
+      demandContent: '需求内容',
+      demandStatus: '需求状态',
+      replyContent: '回复内容',
+      createTime: '需求创建时间',
+      createByName: '创建人',
+      replyTime: '回复时间',
+      replyByName: '回复人'
+    },
+    field: {
+      demandDate: '需求日期',
+      demandCategory: '需求分类',
+      demandContent: '需求内容',
+      demandStatus: '需求状态',
+      imageOssIds: '需求图片',
+      replyContent: '需求回复',
+      createTime: '需求创建时间',
+      createByName: '创建人',
+      replyTime: '回复时间',
+      replyByName: '回复人'
+    },
+    placeholder: {
+      demandContent: '请输入需求内容',
+      demandCategory: '请选择需求分类',
+      replyContent: '请输入回复内容'
+    },
+    rule: {
+      demandCategory: { required: '请选择需求分类' },
+      demandContent: { required: '需求内容不能为空' },
+      replyContent: { required: '回复内容不能为空' }
+    },
+    action: { detail: '查看详情', del: '删除', reply: '回复' },
+    empty: { images: '未上传图片', reply: '暂未回复' },
+    confirm: { del: '是否确认删除该条需求？' }
   },
   // 种植 - 作物（PLT-MD-001）
   plantCrop: {
@@ -2319,6 +2390,27 @@ export default {
       legend: { plan: '计划范围', actual: '实际执行' }
     }
   },
+  marketPlan: {
+    pageTitle: '果蔬上市计划',
+    field: {
+      cropName: '作物名称',
+      marketBeginMonth: '上市月份',
+      marketEndMonth: '下市月份'
+    },
+    placeholder: {
+      cropName: '请输入作物名称',
+      marketBeginMonth: '请选择上市月份',
+      marketEndMonth: '请选择下市月份'
+    },
+    column: {
+      cropImage: '作物图片',
+      cropName: '作物名称',
+      expectedYield: '预计产量(kg)',
+      actualYield: '实际产量(kg)',
+      marketBeginMonth: '上市月份',
+      marketEndMonth: '下市月份'
+    }
+  },
   pickPlan: {
     pageTitle: '采摘计划',
     field: {
@@ -2525,6 +2617,57 @@ export default {
       noFinishedProduct: '该原材料没有对应的生产产品，无法领用，请先创建对应的生产产品',
       noPickedRemaining: '今日无领用剩余量，请先领用出库后再录入退回/损耗/饲喂',
       exceedRemaining: '数量不能超过今日领用剩余（{remaining}）'
+    }
+  },
+  inoutMonthly: {
+    action: {
+      inSummary: '入库汇总',
+      outSummary: '出库汇总'
+    },
+    field: {
+      statMonth: '月份'
+    },
+    column: {
+      statMonth: '汇总月份'
+    },
+    in: {
+      title: '入库汇总',
+      productName: '产品名称',
+      productNamePlaceholder: '请输入产品名称',
+      inMode: '入库方式',
+      inModePlaceholder: '请选择入库方式',
+      productType: '产品类型',
+      productTypePlaceholder: '请选择产品类型',
+      supplierName: '供应商',
+      supplierNamePlaceholder: '请输入供应商',
+      productNameCol: '产品名称',
+      productTypeCol: '产品类型',
+      productSpec: '规格',
+      inModeCol: '入库方式',
+      inboundQty: '入库量',
+      productUnit: '单位',
+      supplierNameCol: '供应商',
+      search: '搜索',
+      reset: '重置',
+      export: '导出'
+    },
+    out: {
+      title: '出库汇总',
+      productName: '产品名称',
+      productNamePlaceholder: '请输入产品名称',
+      outDest: '出库去向',
+      outDestPlaceholder: '请选择出库去向',
+      productType: '产品类型',
+      productTypePlaceholder: '请选择产品类型',
+      productNameCol: '产品名称',
+      productTypeCol: '产品类型',
+      productSpec: '规格',
+      outDestCol: '出库去向',
+      outboundQty: '出库量',
+      productUnit: '单位',
+      search: '搜索',
+      reset: '重置',
+      export: '导出'
     }
   },
   stockMonthly: {
@@ -4708,6 +4851,31 @@ export default {
       title: '产品追溯码',
       serialNo: '序号',
       scanHint: '微信扫码查看全链路溯源'
+    }
+  },
+  // 追溯码配置管理（系统管理 → 数据管理，V6-R146）
+  traceCodeConfig: {
+    column: {
+      configName: '追溯码名称',
+      baseIntroImage: '基地介绍页图片',
+      updateTime: '更新时间',
+      updateBy: '更新人'
+    },
+    field: {
+      configName: '追溯码名称',
+      baseIntroImage: '基地介绍页图片'
+    },
+    title: {
+      upload: '上传基地介绍页图片'
+    },
+    action: {
+      upload: '上传图片'
+    },
+    empty: {
+      image: '未配置'
+    },
+    tip: {
+      fallback: '建议上传整页设计稿；未配置时追溯码扫码页的基地介绍沿用系统内置版式。'
     }
   },
   // 公开追溯 H5 落地页（C 端顾客扫码访问，TRACE-H5）

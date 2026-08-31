@@ -19,7 +19,8 @@
     <!-- 自定义左侧扩展 slot -->
     <slot name="extra" />
 
-    <right-toolbar v-model:show-search="showSearchRef" :columns="columnFields" @query-table="emits('refresh')" />
+    <!-- search=false 时不渲染放大镜：无查询表单的页面（searchSchema 为空）点它什么也不会发生 -->
+    <right-toolbar v-model:show-search="showSearchRef" :search="showSearchToggle !== false" :columns="columnFields" @query-table="emits('refresh')" />
   </el-row>
 </template>
 
@@ -35,6 +36,8 @@ interface Props {
   selectionCount: number;
   /** 用于 RightToolbar 显隐列 */
   columnFields?: FieldOption[];
+  /** 是否渲染「显示/隐藏搜索」放大镜按钮（不传 = 渲染，与 RightToolbar 默认一致） */
+  showSearchToggle?: boolean;
 }
 
 const props = defineProps<Props>();

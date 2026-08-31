@@ -16,7 +16,7 @@
       perm-prefix="djs:plant:cropOrganic"
       :show-row-edit="false"
       :show-row-del="false"
-      :action-width="220"
+      :action-width="290"
       @search="handleSearch"
       @reset="handleReset"
       @add="handleAdd"
@@ -47,6 +47,9 @@
       <template #action="{ row }">
         <el-button v-hasPermi="['djs:plant:cropOrganic:edit']" link type="primary" @click="handleEdit(row)">
           {{ t('biz.table.action.edit') }}
+        </el-button>
+        <el-button v-hasPermi="['djs:plant:cropOrganic:export']" link type="primary" @click="handleRowExport(row)">
+          {{ t('biz.table.action.export') }}
         </el-button>
         <el-button v-hasPermi="['djs:plant:cropOrganic:edit']" link type="primary" @click="handleRelate(row)">
           {{ t('plantCropOrganic.relate.action') }}
@@ -186,6 +189,12 @@ async function handleDel(rowOrRows: BizRow | BizRow[]) {
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   fetchList();
 }
+/** 行内导出：导出该证书已关联的作物明细（证书编号 / 作物名称 / 作物编号，一作物一行）。 */
+function handleRowExport(row: BizRow) {
+  const certNo = (row.cropCertNo as string | undefined) ?? '';
+  proxy?.download('djs/plant/cropOrganic/relatedCrops/export', { id: row.id }, `crop_organic_crops_${certNo}_${new Date().getTime()}.xlsx`);
+}
+
 function handleExport() {
   proxy?.download(
     'djs/plant/cropOrganic/export',

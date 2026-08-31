@@ -35,6 +35,12 @@ export interface SearchFieldSchema {
   /** type=select 时必填，二选一：dictType 走全局字典 / options 自定义 */
   dictType?: string;
   options?: Array<{ label: string; value: string | number }>;
+  /**
+   * type=select 是否在选项首位显式插入「全部」（value `''`，等价不带该筛选条件）。
+   * 甲方逐字写了「全部」时用它 —— 只靠 clearable 的清空按钮表达「全部」不算数。
+   * 配 searchModel 该字段默认值 `''`，进页面即显示「全部」而非占位符。
+   */
+  allOption?: boolean;
   /** 是否可清空 */
   clearable?: boolean;
   /** type=select 多选（R70 关键搜索筛选下拉多选）；多选时 v-model 值为数组，buildQuery 需按数组传后端 IN */

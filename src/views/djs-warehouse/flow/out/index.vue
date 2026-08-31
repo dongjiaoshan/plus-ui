@@ -36,27 +36,12 @@ import { formatQtyByUnit } from '@/utils/weight';
 import { formatPlotLabel, thirdPhaseFilterOptions, toThirdPhaseParam } from '@/utils/plotTag';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import { FLOW_TYPE_OUT_VALUES } from '../scope';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
 
-/**
- * djs_flow_type 是出入合并字典，出库方式下拉只保留出库方向的值（按 value 白名单过滤，不动字典 seed）。
- * loss / ship_out / pack_consume（生产发货与损耗）后端 queryOutList 已排除展示，下拉同步不提供。
- */
-const FLOW_TYPE_OUT_VALUES = [
-  'pick_out',
-  // 领用按来源拆分 + 盘点异常出库（FIX-WMS-FLOWDICT-001）
-  'dept_pick_out',
-  'prod_pick_out',
-  'feed_out',
-  'cut_out',
-  'check_out',
-  'check_abnormal_out',
-  'backstage_out',
-  'other'
-];
 const { djs_flow_type } = toRefs<Record<string, any>>(proxy?.useDict('djs_flow_type'));
 const outModeOptions = computed(() =>
   (djs_flow_type.value ?? [])

@@ -36,34 +36,12 @@ import { formatQtyByUnit } from '@/utils/weight';
 import { formatPlotLabel, thirdPhaseFilterOptions, toThirdPhaseParam } from '@/utils/plotTag';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import { FLOW_TYPE_IN_VALUES } from '../scope';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
 
-/** djs_flow_type 是出入合并字典，入库方式下拉只保留入库方向的值（按 value 白名单过滤，不动字典 seed） */
-const FLOW_TYPE_IN_VALUES = [
-  // 退回入库按来源拆分（FIX-WMS-FLOWDICT-001，旧 return_in 已停写，保留兼容历史流水筛选）
-  'return_in',
-  'store_return_in',
-  'prod_return_in',
-  'pick_return_in',
-  'cut_out_in',
-  'veg_stock_in',
-  'slaughter_burn',
-  'bar_in_stock',
-  'check_in',
-  'supplier_in',
-  'purchase_in',
-  // pack_in（打包入库）不在入库记录展示，下拉同步移除（D-row7）
-  'veg_receive_in',
-  'veg_purchase_in',
-  // 三期作物入库（V6 row88）—— 新入库方式必须同步进这个白名单，否则「入库记录」页筛不出来
-  'third_phase_in',
-  'receive_in',
-  'return_goods_in',
-  'other'
-];
 const { djs_flow_type } = toRefs<Record<string, any>>(proxy?.useDict('djs_flow_type'));
 const inModeOptions = computed(() =>
   (djs_flow_type.value ?? [])

@@ -72,6 +72,7 @@ export default {
       warehouse: 'Warehouse',
       store: 'Store',
       system: 'System',
+      ops: 'Operations',
       empty: 'No module assigned to this account. Please contact the administrator.'
     }
   },
@@ -160,6 +161,7 @@ export default {
         reset: 'Reset',
         inputPrefix: 'Enter ',
         selectPrefix: 'Select ',
+        all: 'All',
         startDate: 'Start date',
         endDate: 'End date'
       },
@@ -816,6 +818,31 @@ export default {
       }
     },
     exportTodo: 'Export will be available in a future release'
+  },
+  // Ops management -> Farm info -> Fattening pig info (age distribution + barn matrix)
+  fattenInfo: {
+    title: 'Fattening Pig Info',
+    refresh: 'Refresh',
+    empty: 'No data',
+    matrixTitle: 'Age Distribution by Barn',
+    filterTip: 'Filtered by age range: {bucket}. Click the same bar again or close this tag to show all.',
+    tab: {
+      fattening: 'Fattening Pigs',
+      piglet: 'Piglets'
+    },
+    unit: {
+      head: ' head'
+    },
+    chart: {
+      fatteningTitle: 'Fattening Pig Age Distribution',
+      pigletTitle: 'Piglet Age Distribution',
+      series: 'Head Count'
+    },
+    col: {
+      barn: 'Barn',
+      total: 'Total',
+      sum: 'Sum'
+    }
   },
   // Breed event ledgers (admin read-only: introduce / piglet ear-tag / event ledger / growth)
   breedEvent: {
@@ -1676,6 +1703,10 @@ export default {
   plantOverview: {
     title: 'Plant Overview',
     empty: 'No crop data',
+    search: {
+      cropName: 'Crop Name',
+      cropNamePlaceholder: 'Enter crop name'
+    },
     breadcrumbHome: 'Home',
     breadcrumbPlant: 'Plant Management',
     kpi: {
@@ -1953,6 +1984,46 @@ export default {
     },
     warning: { yes: 'Expiring', no: 'Normal' },
     confirm: { del: 'Delete {count} certificates?' }
+  },
+  // Planting - Crop Demand / Demand Feedback (V6-R152 ops side + V6-R153 planting side, one table two entries)
+  cropDemand: {
+    title: { add: 'New Demand', detail: 'Demand Detail', reply: 'Reply Demand' },
+    column: {
+      demandDate: 'Demand Date',
+      demandCategory: 'Category',
+      demandContent: 'Demand Content',
+      demandStatus: 'Status',
+      replyContent: 'Reply',
+      createTime: 'Created At',
+      createByName: 'Created By',
+      replyTime: 'Replied At',
+      replyByName: 'Replied By'
+    },
+    field: {
+      demandDate: 'Demand Date',
+      demandCategory: 'Category',
+      demandContent: 'Demand Content',
+      demandStatus: 'Status',
+      imageOssIds: 'Images',
+      replyContent: 'Reply',
+      createTime: 'Created At',
+      createByName: 'Created By',
+      replyTime: 'Replied At',
+      replyByName: 'Replied By'
+    },
+    placeholder: {
+      demandContent: 'Enter demand content',
+      demandCategory: 'Select category',
+      replyContent: 'Enter reply content'
+    },
+    rule: {
+      demandCategory: { required: 'Category is required' },
+      demandContent: { required: 'Demand content is required' },
+      replyContent: { required: 'Reply content is required' }
+    },
+    action: { detail: 'Detail', del: 'Delete', reply: 'Reply' },
+    empty: { images: 'No images', reply: 'Not replied yet' },
+    confirm: { del: 'Delete this demand?' }
   },
   // Planting - Crop (PLT-MD-001)
   plantCrop: {
@@ -2331,6 +2402,27 @@ export default {
       legend: { plan: 'Plan range', actual: 'Actual' }
     }
   },
+  marketPlan: {
+    pageTitle: 'Market Plan',
+    field: {
+      cropName: 'Crop Name',
+      marketBeginMonth: 'On-market Month',
+      marketEndMonth: 'Off-market Month'
+    },
+    placeholder: {
+      cropName: 'Enter crop name',
+      marketBeginMonth: 'Select on-market month',
+      marketEndMonth: 'Select off-market month'
+    },
+    column: {
+      cropImage: 'Crop Image',
+      cropName: 'Crop Name',
+      expectedYield: 'Expected Yield (kg)',
+      actualYield: 'Actual Yield (kg)',
+      marketBeginMonth: 'On-market Month',
+      marketEndMonth: 'Off-market Month'
+    }
+  },
   pickPlan: {
     pageTitle: 'Pick Plan',
     field: {
@@ -2537,6 +2629,57 @@ export default {
       noFinishedProduct: 'This material has no corresponding production product and cannot be issued; please create one first',
       noPickedRemaining: 'No picked remaining today; pick out first before recording return/loss/feed',
       exceedRemaining: 'Quantity cannot exceed today picked remaining ({remaining})'
+    }
+  },
+  inoutMonthly: {
+    action: {
+      inSummary: 'Inbound Summary',
+      outSummary: 'Outbound Summary'
+    },
+    field: {
+      statMonth: 'Month'
+    },
+    column: {
+      statMonth: 'Summary Month'
+    },
+    in: {
+      title: 'Inbound Summary',
+      productName: 'Product Name',
+      productNamePlaceholder: 'Enter product name',
+      inMode: 'Inbound Method',
+      inModePlaceholder: 'Select inbound method',
+      productType: 'Product Type',
+      productTypePlaceholder: 'Select product type',
+      supplierName: 'Supplier',
+      supplierNamePlaceholder: 'Enter supplier',
+      productNameCol: 'Product Name',
+      productTypeCol: 'Product Type',
+      productSpec: 'Spec',
+      inModeCol: 'Inbound Method',
+      inboundQty: 'Inbound Qty',
+      productUnit: 'Unit',
+      supplierNameCol: 'Supplier',
+      search: 'Search',
+      reset: 'Reset',
+      export: 'Export'
+    },
+    out: {
+      title: 'Outbound Summary',
+      productName: 'Product Name',
+      productNamePlaceholder: 'Enter product name',
+      outDest: 'Outbound Destination',
+      outDestPlaceholder: 'Select outbound destination',
+      productType: 'Product Type',
+      productTypePlaceholder: 'Select product type',
+      productNameCol: 'Product Name',
+      productTypeCol: 'Product Type',
+      productSpec: 'Spec',
+      outDestCol: 'Outbound Destination',
+      outboundQty: 'Outbound Qty',
+      productUnit: 'Unit',
+      search: 'Search',
+      reset: 'Reset',
+      export: 'Export'
     }
   },
   stockMonthly: {
@@ -4719,6 +4862,31 @@ export default {
       title: 'Product Trace Code',
       serialNo: 'No.',
       scanHint: 'Scan to view full traceability'
+    }
+  },
+  // Trace code page config (System → Data Management, V6-R146)
+  traceCodeConfig: {
+    column: {
+      configName: 'Trace Code Name',
+      baseIntroImage: 'Base Intro Image',
+      updateTime: 'Update Time',
+      updateBy: 'Updated By'
+    },
+    field: {
+      configName: 'Trace Code Name',
+      baseIntroImage: 'Base Intro Image'
+    },
+    title: {
+      upload: 'Upload Base Intro Image'
+    },
+    action: {
+      upload: 'Upload Image'
+    },
+    empty: {
+      image: 'Not configured'
+    },
+    tip: {
+      fallback: 'Upload a full-page image. When not configured, the scan page keeps the built-in base introduction layout.'
     }
   },
   // Public traceability H5 landing page (TRACE-H5)

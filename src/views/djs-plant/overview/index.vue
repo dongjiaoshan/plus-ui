@@ -27,8 +27,28 @@
       </div>
     </div>
 
-    <!-- 分隔线 -->
-    <el-divider />
+    <!-- 工具条（KPI 与作物卡片之间）：左作物名称搜索 / 右导出；自带下边框，替代原分隔线 -->
+    <div class="overview-toolbar">
+      <el-form :inline="true" class="overview-toolbar-form" @submit.prevent>
+        <el-form-item :label="t('plantOverview.search.cropName')">
+          <el-input
+            v-model="searchCropName"
+            :placeholder="t('plantOverview.search.cropNamePlaceholder')"
+            clearable
+            style="width: 220px"
+            @keyup.enter="handleSearch"
+            @clear="handleSearch"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleSearch">{{ t('biz.table.search.submit') }}</el-button>
+          <el-button icon="Refresh" @click="handleReset">{{ t('biz.table.search.reset') }}</el-button>
+        </el-form-item>
+      </el-form>
+      <el-button v-hasPermi="['djs:plant:overview:export']" type="warning" plain icon="Download" @click="handleExport">
+        {{ t('biz.table.action.export') }}
+      </el-button>
+    </div>
 
     <!-- 作物卡片网格（el-row/el-col，每作物一卡，整卡可点击下钻） -->
     <el-empty v-if="!loading && crops.length === 0" :description="t('plantOverview.empty')" />
@@ -80,13 +100,20 @@ import type { CropOverviewCardVO, PlantOverviewSummaryVO } from '@/api/djs-plant
 import { listByIds as listOssByIds } from '@/api/system/oss';
 import CropDetailDrawer from './components/CropDetailDrawer.vue';
 import { useI18n } from 'vue-i18n';
+import type { ComponentInternalInstance } from 'vue';
 
 const { t } = useI18n();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const summary = ref<PlantOverviewSummaryVO | null>(null);
 const crops = ref<CropOverviewCardVO[]>([]);
 const thumbUrlMap = ref<Record<string, string>>({});
 const loading = ref(false);
+
+/** 搜索框绑定值（未提交）。 */
+const searchCropName = ref<string>('');
+/** 已提交生效的作物名称关键字：卡片列表与导出共用，避免改了输入框没点搜索就导出导致屏幕/文件不一致。 */
+const appliedCropName = ref<string>('');
 
 // 作物详情抽屉（替代旧 /djs-plant/overview/crop-detail 整页路由，§6.13 抽屉化）
 const detailVisible = ref(false);
@@ -96,7 +123,7 @@ const detailCropName = ref<string>('');
 async function loadSummary() {
   loading.value = true;
   try {
-    const res = await getPlantOverviewSummary();
+    const res = await getPlantOverviewSummary(appliedCropName.value || undefined);
     summary.value = res.data ?? null;
     crops.value = res.data?.crops ?? [];
     await loadThumbUrls();
@@ -122,6 +149,28 @@ async function loadThumbUrls() {
     console.warn('[PlantOverview] listOssByIds failed', e);
     thumbUrlMap.value = {};
   }
+}
+
+/** 搜索：提交输入框关键字并重查（只过滤下方作物卡片，顶部 KPI 恒全场口径）。 */
+function handleSearch() {
+  appliedCropName.value = searchCropName.value.trim();
+  loadSummary();
+}
+
+/** 重置：清空关键字并重查全量。 */
+function handleReset() {
+  searchCropName.value = '';
+  appliedCropName.value = '';
+  loadSummary();
+}
+
+/** 导出作物卡片（一作物一行横向展示），过滤条件与当前列表一致。 */
+function handleExport() {
+  proxy?.download(
+    'djs/plant/overview/cropCard/export',
+    { cropName: appliedCropName.value || undefined },
+    `plant_overview_${new Date().getTime()}.xlsx`
+  );
 }
 
 /** 计划完成率 = 已种地块 / 计划地块数 * 100，保留两位小数；计划地块为 0 时兜底 0.00 防除零。 */
@@ -187,6 +236,25 @@ onMounted(loadSummary);
           color: var(--el-text-color-secondary);
           margin-left: 2px;
         }
+      }
+    }
+  }
+
+  .overview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+
+    .overview-toolbar-form {
+      margin: 0;
+
+      :deep(.el-form-item) {
+        margin-bottom: 0;
       }
     }
   }

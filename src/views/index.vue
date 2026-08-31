@@ -48,6 +48,7 @@ import breedImg from '@/assets/images/boards/breed.svg';
 import plantImg from '@/assets/images/boards/plant.svg';
 import warehouseImg from '@/assets/images/boards/warehouse.svg';
 import storeImg from '@/assets/images/boards/store.svg';
+import opsImg from '@/assets/images/boards/ops.svg';
 import dashboardImg from '@/assets/images/boards/dashboard.svg';
 
 interface BoardCard {
@@ -69,6 +70,7 @@ const BOARD_CARDS: BoardCard[] = [
   { key: 'plant', labelKey: 'home.board.plant', img: plantImg, menuPath: 'djs-plant' },
   { key: 'warehouse', labelKey: 'home.board.warehouse', img: warehouseImg, menuPath: 'djs-warehouse' },
   { key: 'store', labelKey: 'home.board.store', img: storeImg, menuPath: 'djs-store' },
+  { key: 'ops', labelKey: 'home.board.ops', img: opsImg, menuPath: 'djs-ops' },
   { key: 'dashboard', labelKey: 'home.board.system', img: dashboardImg, menuPath: 'system' }
 ];
 
@@ -223,14 +225,14 @@ onMounted(() => {
   padding: 80px 0;
 }
 
-// 桌面大屏：5 卡平铺一行（栅格 24 不整除 5，大屏覆盖为 20% 等分）
+// 桌面大屏：6 卡平铺一行（栅格 24 不整除 6 的等分需求，大屏覆盖为 1/6 等分）
 @media (min-width: 1400px) {
   .home-boards {
     flex-wrap: nowrap;
 
     &__col {
-      flex: 0 0 20%;
-      max-width: 20%;
+      flex: 0 0 16.6667%;
+      max-width: 16.6667%;
     }
   }
 }

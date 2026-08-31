@@ -2,7 +2,7 @@
   <div class="biz-table p-2">
     <!-- 顶部查询表单 -->
     <SearchForm
-      v-if="searchSchema && searchSchema.length > 0"
+      v-if="hasSearchForm"
       v-model:model="innerSearchModel"
       :schema="searchSchema"
       :visible="showSearch"
@@ -23,6 +23,7 @@
           :show-search="showSearch"
           :selection-count="selection.length"
           :column-fields="toolbarColumnFields"
+          :show-search-toggle="hasSearchForm"
           @add="emits('add')"
           @batch-del="handleBatchDel"
           @export="handleExport"
@@ -167,6 +168,10 @@ watch(
 
 /* ---------- 显示搜索 ---------- */
 const showSearch = ref(true);
+
+// searchSchema 为空的页面（如追溯码配置管理，甲方口径「不需要搜索条件」）根本没有查询表单，
+// 工具栏上的「显示/隐藏搜索」放大镜点了也无事发生 —— 一并不渲染。
+const hasSearchForm = computed(() => !!props.searchSchema && props.searchSchema.length > 0);
 
 /* ---------- 字典加载 ---------- */
 const dictMap = reactive<Record<string, DictDataOption[]>>({});

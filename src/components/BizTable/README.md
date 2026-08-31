@@ -176,6 +176,7 @@ const columns: BizTableColumn[] = [{ prop: 'status', label: '状态', dictType: 
 
 ## 已知限制
 
+- `searchSchema` 传空数组 = 该页没有查询表单：顶部 SearchForm 与工具栏「显示/隐藏搜索」放大镜按钮都不渲染（点了没反应的死控件）
 - 查询表单 `daterange` 把值绑成 `[start, end]` 数组；业务页负责在 `@search` 里拆成 `beginXxx` / `endXxx` 传给后端
 - 列显隐切换状态不持久化（刷新页面回到默认）
 - 树形表格暂未抽象到本组件（树形 list 直接用 `el-table tree-props`，不走 BizTable）
