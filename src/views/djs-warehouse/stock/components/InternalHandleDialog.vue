@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import { todayYmd } from '@/utils/date';
 import { submitInternalHandle } from '@/api/djs-warehouse/vegOut';
 import type { LocationStockVO } from '@/api/djs-warehouse/stock/types';
 import { THIRD_PHASE_FLAG } from '@/utils/plotTag';
@@ -104,7 +105,7 @@ const maxQuantity = computed(() => {
   return Number.isNaN(n) ? Infinity : n;
 });
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayYmd();
 
 const defaultForm = () => ({ outDate: today(), quantity: undefined as number | undefined, outDest: '' });
 const form = ref(defaultForm());

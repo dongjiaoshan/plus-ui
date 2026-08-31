@@ -133,6 +133,7 @@
 </template>
 
 <script setup lang="ts">
+import { todayYmd } from '@/utils/date';
 import { CircleClose } from '@element-plus/icons-vue';
 import { listVegOutCandidates, submitVegOutBatch } from '@/api/djs-warehouse/vegOut';
 import { printVegOutSheet, ROWS_PER_PAGE } from '../printSheet';
@@ -158,7 +159,7 @@ const candidates = ref<VegOutCandidateVO[]>([]);
 /** stockId → 出库量。用 map 而非改行对象，切换搜索条件后已填的量不丢。 */
 const quantityMap = reactive<Record<string, number | undefined>>({});
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayYmd();
 const form = reactive<{ outDate: string; outDest: string }>({ outDate: today(), outDest: '' });
 
 function fmtKg(v: number | string | undefined | null): string {

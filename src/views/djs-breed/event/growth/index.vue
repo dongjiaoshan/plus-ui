@@ -90,6 +90,7 @@
 </template>
 
 <script setup name="DjsBreedEventGrowth" lang="ts">
+import { todayYmd } from '@/utils/date';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -233,7 +234,7 @@ function onPigSelected(earNo: string) {
 function openAdd() {
   addForm.earNo = '';
   addForm.pigId = '';
-  addForm.measureDate = new Date().toISOString().slice(0, 10);
+  addForm.measureDate = todayYmd();
   addForm.weight = undefined;
   addForm.backfatThickness = undefined;
   addForm.backHeight = undefined;

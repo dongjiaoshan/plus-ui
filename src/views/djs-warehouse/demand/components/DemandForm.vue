@@ -117,6 +117,7 @@
 </template>
 
 <script setup lang="ts">
+import { todayYmd } from '@/utils/date';
 import { ref, reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { addDemand, getDemand, updateDemand } from '@/api/djs-warehouse/demand';
@@ -147,7 +148,7 @@ const demandNo = ref<string>('');
 const formRef = ref();
 
 const baseForm = (): DemandManageForm => ({
-  demandDate: new Date().toISOString().slice(0, 10),
+  demandDate: todayYmd(),
   storeId: '',
   productId: '',
   productName: '',

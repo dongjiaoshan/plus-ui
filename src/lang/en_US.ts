@@ -1291,6 +1291,20 @@ export default {
     confirm: {
       del: 'Delete {count} location(s)? Make sure they have no active stock.'
     },
+    stockDrawer: {
+      title: '{name} - Stock Detail',
+      searchPlaceholder: 'Search by product name',
+      export: 'Export',
+      empty: 'No product stock in this location',
+      column: {
+        productName: 'Product',
+        productSpec: 'Spec',
+        productStock: 'Current Stock',
+        productUnit: 'Unit',
+        todayInQty: 'In Today',
+        todayOutQty: 'Out Today'
+      }
+    },
     summary: {
       locationCount: 'Locations',
       productCount: 'Product Categories',
@@ -1417,6 +1431,8 @@ export default {
       title: 'Goods inbound',
       product: 'Goods',
       supplier: 'Supplier',
+      supplierPlaceholder: 'Select the supplier for this receipt',
+      unit: 'Unit',
       location: 'Inbound location',
       locationPlaceholder: 'Select inbound location',
       locationType: 'Location Type',
@@ -1425,6 +1441,7 @@ export default {
       confirm: 'Confirm inbound',
       locationRequired: 'Please select inbound location',
       quantityRequired: 'Please enter inbound quantity',
+      quantityIntegerOnly: 'This product is measured in [{unit}]; quantity must be an integer',
       remark: 'Remark'
     },
     production: {
@@ -1570,6 +1587,7 @@ export default {
       rule: {
         outDate: 'Please select out date',
         quantity: 'Please enter out qty',
+        quantityIntegerOnly: 'This product is measured in [{unit}]; out qty must be an integer',
         stockOutDest: 'Please select destination'
       }
     },
@@ -1587,7 +1605,8 @@ export default {
       confirm: 'Confirm',
       rule: {
         transferDate: 'Please select transfer date',
-        quantity: 'Please enter transfer qty'
+        quantity: 'Please enter transfer qty',
+        quantityIntegerOnly: 'This product is measured in [{unit}]; transfer qty must be an integer'
       }
     },
     recordDialog: {
@@ -3118,6 +3137,7 @@ export default {
         flowDate: 'Time',
         flowType: 'Type',
         inMode: 'Inbound Mode',
+        supplierName: 'Supplier',
         matType: 'Material Type',
         productType: 'Product Type',
         productCode: 'Product Code',
@@ -3441,8 +3461,24 @@ export default {
       history: 'History',
       detail: 'Detail',
       viewDemand: 'View Demand',
+      adjust: 'Adjust',
       selectAllPage: 'Select all (page)',
       batchConfirm: 'Batch confirm demand'
+    },
+    // V6-R140 demand quantity adjustment
+    adjust: {
+      title: 'Adjust Demand Quantity',
+      storeName: 'Store',
+      productName: 'Product',
+      oldQuantity: 'Current Qty',
+      newQuantity: 'Adjusted Qty',
+      remark: 'Remark',
+      remarkPh: 'Reason or note for this adjustment (optional)',
+      rule: {
+        quantityRequired: 'Adjusted quantity is required',
+        quantityPositive: 'Adjusted quantity must be greater than 0',
+        quantityUnchanged: 'Same as current quantity, nothing to adjust'
+      }
     },
     detail: {
       title: 'Product Demand Detail',
@@ -4016,7 +4052,7 @@ export default {
       traceCaption: 'Dongjiaoshan Organic Trace Code',
       traceCaptionPork: 'Dongjiaoshan Pork Trace Code',
       traceCaptionVeg: 'Dongjiaoshan Produce Trace Code',
-      sizeHint: 'Actual print size 3cm × 3cm',
+      sizeHint: 'Enlarged preview; actual print 2.8cm x 2.8cm on 4cm x 3cm label stock',
       printFailed: 'Failed to generate print file, please retry'
     },
     veg: {

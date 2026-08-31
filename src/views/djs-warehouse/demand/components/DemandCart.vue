@@ -98,6 +98,7 @@
 </template>
 
 <script setup lang="ts">
+import { todayYmd } from '@/utils/date';
 import { ref, reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Search } from '@element-plus/icons-vue';
@@ -163,7 +164,7 @@ const cartItems = ref<CartItem[]>([]);
 
 const footer = reactive<{ storeId: string; demandDate: string; expectedArriveDate?: string }>({
   storeId: '',
-  demandDate: new Date().toISOString().slice(0, 10),
+  demandDate: todayYmd(),
   expectedArriveDate: undefined
 });
 
@@ -294,7 +295,7 @@ function reset(): void {
   cartItems.value = [];
   Object.keys(rowQty).forEach((k) => delete rowQty[k]);
   footer.storeId = '';
-  footer.demandDate = new Date().toISOString().slice(0, 10);
+  footer.demandDate = todayYmd();
   footer.expectedArriveDate = undefined;
   footerFormRef.value?.clearValidate?.();
 }

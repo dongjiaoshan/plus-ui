@@ -75,7 +75,7 @@
     <DemandCart ref="cartRef" @success="reloadAll" />
 
     <!-- 查看需求：右侧抽屉（点蒙层自动关闭，每次打开重拉，无缓存）替代原整页子路由 -->
-    <DemandConfirmDrawer ref="confirmDrawerRef" @changed="reloadAll" />
+    <DemandConfirmDrawer ref="confirmDrawerRef" :adjust-mode="adjustMode" @changed="reloadAll" />
   </div>
 </template>
 
@@ -94,6 +94,13 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+/**
+ * 调整模式（V6-R140）：本页被「需求调整管理」（系统管理→数据管理下）以组件形式复用时传 true，
+ * 「查看需求」抽屉的操作列才多出「调整」按钮。作为路由页直接打开时为 false，页面一如从前。
+ */
+const props = withDefaults(defineProps<{ adjustMode?: boolean }>(), { adjustMode: false });
+const adjustMode = computed(() => props.adjustMode);
 
 /** 需求门店下拉 options（按门店过滤汇总列表）。 */
 const storeOptions = ref<{ label: string; value: number | string }[]>([]);

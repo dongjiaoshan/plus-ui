@@ -23,12 +23,15 @@
         />
       </el-form-item>
       <el-form-item :label="t('stock.outDialog.quantity')" prop="quantity">
+        <!-- 出库量精度随计量单位分流（同采购入库口径）：计量类单位三位小数，计数类单位整数。
+             计数类**不设 precision** —— el-input-number 的 precision=0 会把 1.6 静默四舍五入成 2，
+             用户想出 1 瓶结果出了 2 瓶且毫无提示；非整数交给下面的校验规则明确报错。 -->
         <el-input-number
           v-model="form.quantity"
           :min="0.001"
           :max="maxQuantity"
           :step="1"
-          :precision="2"
+          :precision="quantityPrecision"
           controls-position="right"
           :placeholder="t('stock.outDialog.quantityPlaceholder')"
           style="width: 100%"
@@ -54,10 +57,11 @@
 </template>
 
 <script setup lang="ts">
+import { todayYmd } from '@/utils/date';
 import { stockOut } from '@/api/djs-warehouse/stock';
 import type { LocationStockVO, StockOutForm } from '@/api/djs-warehouse/stock/types';
 import { filterManualOutDest } from '@/views/djs-warehouse/constants';
-import { formatQtyByUnit } from '@/utils/weight';
+import { formatQtyByUnit, isCountingUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -94,7 +98,7 @@ const maxQuantity = computed(() => {
   return Number.isNaN(n) ? Infinity : n;
 });
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayYmd();
 
 const defaultForm = (): StockOutForm => ({
   id: '',
@@ -105,9 +109,34 @@ const defaultForm = (): StockOutForm => ({
 });
 const form = ref<StockOutForm>(defaultForm());
 
+/**
+ * 出库量精度随产品单位分流，与采购入库（ProductInboundForm）同一套规则：
+ * 计量类单位（kg / 吨 / 升 / 斤 / 米…）给 precision=3 —— 库存按 DECIMAL(12,3) 记账，
+ * 写死两位会让 65.880 这类库存出不干净；计数类单位（瓶 / 袋 / 盒 / 个…）不给 precision，
+ * 由下面的规则明确报错。
+ *
+ * ⚠️ min 恒 0.001、step 恒 1，**不随单位变**：el-input-number 会在失焦时把低于 min 的值
+ * 静默钳到 min，计数类若取 min=1，用户填 0.5 瓶会被无声改成 1 瓶（想出 0.5 结果出了 1，还是往上取）
+ * —— 那正是本段一开始要避免的静默改数。step 同理不动，点一下箭头加 1 是既有手感。
+ */
+const quantityPrecision = computed(() => (isCountingUnit(unit.value) ? undefined : 3));
+
 const rules = computed(() => ({
   outDate: [{ required: true, message: t('stock.outDialog.rule.outDate'), trigger: 'change' }],
-  quantity: [{ required: true, message: t('stock.outDialog.rule.quantity'), trigger: 'blur' }],
+  quantity: [
+    { required: true, message: t('stock.outDialog.rule.quantity'), trigger: 'blur' },
+    {
+      // 计数类单位只能整数 —— 明确报错而不是把用户填的数悄悄改掉
+      validator: (_r: unknown, value: number | undefined, cb: (e?: Error) => void) => {
+        if (value == null || Number.isNaN(Number(value))) return cb();
+        if (isCountingUnit(unit.value) && !Number.isInteger(Number(value))) {
+          return cb(new Error(t('stock.outDialog.rule.quantityIntegerOnly', { unit: unit.value || '-' })));
+        }
+        cb();
+      },
+      trigger: 'blur'
+    }
+  ],
   stockOutDest: [{ required: true, message: t('stock.outDialog.rule.stockOutDest'), trigger: 'change' }]
 }));
 

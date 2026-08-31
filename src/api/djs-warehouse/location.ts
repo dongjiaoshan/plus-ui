@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { LocationCardSummaryVO, LocationInfoForm, LocationInfoQuery, LocationInfoVO } from './location/types';
+import type { LocationCardSummaryVO, LocationInfoForm, LocationInfoQuery, LocationInfoVO, LocationProductStockVO } from './location/types';
 
 /**
  * 库位 API（WMS-MD-001）。
@@ -22,6 +22,23 @@ export const getLocationSummary = (): AxiosPromise<LocationCardSummaryVO[]> => {
   return request({
     url: '/djs/warehouse/location/summary',
     method: 'get'
+  });
+};
+
+/**
+ * 单库位内的逐产品库存明细（V6 row136：库位总览卡片点开的右侧抽屉）。
+ *
+ * @param locationId  库位 ID
+ * @param productName 产品名称模糊搜索（可空）
+ */
+export const getLocationProductStock = (
+  locationId: number | string,
+  productName?: string
+): AxiosPromise<LocationProductStockVO[]> => {
+  return request({
+    url: '/djs/warehouse/location/productStock',
+    method: 'get',
+    params: { locationId, productName }
   });
 };
 

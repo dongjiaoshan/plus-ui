@@ -58,6 +58,36 @@ export function isKgUnit(unit: string | null | undefined): boolean {
   return unit === '公斤' || unit.toLowerCase() === 'kg';
 }
 
+/**
+ * 计数类单位白名单（V6-R141）——「只能整数」的判据。
+ *
+ * 甲方 row141 原话是「如果单位是非KG，则输入为整数」，但字面执行会把 吨(36 个商品) / 升 / 斤 /
+ * 米 / 平方米 / 亩 这些**计量**单位一起锁成整数，而 2.5 吨是合法业务值
+ * （`ProductInfoServiceImpl.formatFlowQtyByUnit` 的注释就明说「取整会把 2.5 吨抹成 3 吨」）。
+ * Kevin 2026-08-28 拍板：改成「只有计数类单位才强制整数」。
+ *
+ * 名单取自库里真实在用的 31 个单位（本地与 staging 完全一致）+ 几个显然的同类：
+ * 计量类（可小数）= kg / 公斤 / 吨 / 升 / 斤 / 米 / 平方米 / 亩；其余落在本名单里的都是计数类。
+ *
+ * ⚠️ **不在名单里的未知单位一律按「可小数」处理**，不是按整数：
+ * 拦错了会让人根本录不进数（挡住干活），放过了只是多了个小数位（数据略怪但不阻塞），
+ * 且与本次改动之前的行为一致（原先所有单位都允许三位小数）。
+ *
+ * ⚠️ 后端 `ProductInfoServiceImpl#isCountingUnit` 是同一份名单，改这里必须同步改那边，
+ * 否则会出现「前端让填、后端报错」。
+ */
+const COUNTING_UNITS = new Set([
+  '份', '瓶', '袋', '盒', '个', '桶', '罐', '卷', '张', '包',
+  '件', '枚', '捆', '株', '只', '根', '支', '台', '盏', '条',
+  '套', '片', '双', '箱', '组', '把', '头', '提'
+]);
+
+/** 是否计数类单位（只能填整数）。空 / 未知单位返 false = 按可小数处理。 */
+export function isCountingUnit(unit: string | null | undefined): boolean {
+  if (!unit) return false;
+  return COUNTING_UNITS.has(unit.trim());
+}
+
 /** 白条订单展示单位。 */
 export const WHITE_BAR_DEMAND_UNIT = '头';
 

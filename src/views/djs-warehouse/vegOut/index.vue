@@ -37,6 +37,7 @@
 </template>
 
 <script setup name="VegOut" lang="ts">
+import { todayYmd, ymdOf } from '@/utils/date';
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import VegOutCreateDrawer from './components/VegOutCreateDrawer.vue';
@@ -67,12 +68,11 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-/** 出库日期默认查近一个月（甲方 row187 明确「默认为查询近一个月的数据」）。 */
+/** 出库日期默认查近一个月（甲方 row187 明确「默认为查询近一个月的数据」）。按本地时区算，见 utils/date。 */
 function defaultDateRange(): string[] {
-  const end = new Date();
   const begin = new Date();
   begin.setMonth(begin.getMonth() - 1);
-  return [begin.toISOString().slice(0, 10), end.toISOString().slice(0, 10)];
+  return [ymdOf(begin), todayYmd()];
 }
 
 const searchModel = reactive<Record<string, any>>({

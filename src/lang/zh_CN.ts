@@ -1293,6 +1293,20 @@ export default {
     confirm: {
       del: '是否确认删除选中的 {count} 条库位？删除前需先确保库位无在用库存。'
     },
+    stockDrawer: {
+      title: '{name} · 库存明细',
+      searchPlaceholder: '请输入产品名称搜索',
+      export: '导出',
+      empty: '该库位暂无产品库存',
+      column: {
+        productName: '产品名称',
+        productSpec: '规格',
+        productStock: '实时库存量',
+        productUnit: '单位',
+        todayInQty: '今日入库量',
+        todayOutQty: '今日出库量'
+      }
+    },
     summary: {
       locationCount: '库位数',
       productCount: '库存产品品类',
@@ -1419,6 +1433,8 @@ export default {
       title: '商品入库',
       product: '入库商品',
       supplier: '供应商',
+      supplierPlaceholder: '请选择本次到货的供应商',
+      unit: '商品单位',
       location: '入库库位',
       locationPlaceholder: '请选择入库库位',
       locationType: '库位类型',
@@ -1427,6 +1443,7 @@ export default {
       confirm: '确认入库',
       locationRequired: '请选择入库库位',
       quantityRequired: '请输入入库数量',
+      quantityIntegerOnly: '该商品单位是【{unit}】，入库量只能填整数',
       remark: '备注'
     },
     production: {
@@ -1572,6 +1589,7 @@ export default {
       rule: {
         outDate: '请选择出库日期',
         quantity: '请输入出库量',
+        quantityIntegerOnly: '该商品单位是【{unit}】，出库量只能填整数',
         stockOutDest: '请选择出库去向'
       }
     },
@@ -1589,7 +1607,8 @@ export default {
       confirm: '确定',
       rule: {
         transferDate: '请选择转移日期',
-        quantity: '请输入转移量'
+        quantity: '请输入转移量',
+        quantityIntegerOnly: '该商品单位是【{unit}】，转移量只能填整数'
       }
     },
     recordDialog: {
@@ -3104,6 +3123,7 @@ export default {
         flowDate: '业务时间',
         flowType: '类型',
         inMode: '入库方式',
+        supplierName: '供应商',
         matType: '物资类型',
         productType: '产品类型',
         productCode: '产品编码',
@@ -3427,8 +3447,24 @@ export default {
       history: '状态历史',
       detail: '详情',
       viewDemand: '查看需求',
+      adjust: '调整',
       selectAllPage: '全选本页',
       batchConfirm: '批量确认需求'
+    },
+    // V6-R140 需求调整管理
+    adjust: {
+      title: '调整需求量',
+      storeName: '需求门店',
+      productName: '需求产品',
+      oldQuantity: '原需求量',
+      newQuantity: '调整后需求量',
+      remark: '调整备注',
+      remarkPh: '请填写本次调整的原因或说明（选填）',
+      rule: {
+        quantityRequired: '请填写调整后需求量',
+        quantityPositive: '调整后需求量必须大于 0',
+        quantityUnchanged: '与原需求量相同，无需调整'
+      }
     },
     detail: {
       title: '产品需求详情',
@@ -4002,7 +4038,7 @@ export default {
       traceCaption: '东角山有机追溯码',
       traceCaptionPork: '东角山猪肉追溯码',
       traceCaptionVeg: '东角山果蔬追溯码',
-      sizeHint: '实际打印尺寸 3cm × 3cm',
+      sizeHint: '此处为放大预览，实际打印 2.8cm × 2.8cm（4cm × 3cm 标签纸留安全边）',
       printFailed: '生成打印文件失败，请重试'
     },
     veg: {

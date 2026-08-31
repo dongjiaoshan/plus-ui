@@ -130,6 +130,14 @@ export interface DemandPigVO {
   assignedByName?: string;
 }
 
+/** 需求量调整入参（V6-R140「需求调整管理」）。 */
+export interface DemandAdjustForm {
+  /** 调整后需求量（必须 > 0；清零走删除路径，不走本接口） */
+  demandQuantity: number;
+  /** 调整备注（选填，与需求量一起落进留痕表） */
+  adjustRemark?: string;
+}
+
 export interface AssignPigForm {
   earNos: string[];
 }

@@ -3,6 +3,7 @@ import { AxiosPromise } from 'axios';
 import type {
   AssignPigForm,
   AuditHistoryEntryVO,
+  DemandAdjustForm,
   DemandGroupVO,
   DemandManageForm,
   DemandManageQuery,
@@ -79,6 +80,18 @@ export const batchConfirmDemand = (groups: { demandDate: string; productId: stri
 
 export const cancelDemand = (id: string | number, remark?: string) =>
   request({ url: `/djs/warehouse/demand/${id}/cancel`, method: 'post', params: { remark } });
+
+// =========== 需求量调整（V6-R140「需求调整管理」）===========
+
+/**
+ * 调整需求量 + 记一条留痕。
+ *
+ * 权限走 `djs:warehouse:demandAdjust:adjust`（不是 demand:edit）——
+ * 甲方要「改量」单独挂系统管理→数据管理、单独授权，仓库管理→需求管理那页不出这个按钮。
+ * 后端只在发货之前的状态放行（DRAFT/SUBMITTED/CONFIRMED）。
+ */
+export const adjustDemand = (id: string | number, data: DemandAdjustForm) =>
+  request({ url: `/djs/warehouse/demand/${id}/adjust`, method: 'post', data });
 
 // =========== 指定猪只（白条业态）===========
 
