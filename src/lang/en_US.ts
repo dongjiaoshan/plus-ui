@@ -2407,20 +2407,28 @@ export default {
     field: {
       cropName: 'Crop Name',
       marketBeginMonth: 'On-market Month',
-      marketEndMonth: 'Off-market Month'
+      marketEndMonth: 'Off-shelf Month'
     },
     placeholder: {
       cropName: 'Enter crop name',
       marketBeginMonth: 'Select on-market month',
-      marketEndMonth: 'Select off-market month'
+      marketEndMonth: 'Select off-shelf month'
     },
     column: {
       cropImage: 'Crop Image',
+      marketStatus: 'Status',
       cropName: 'Crop Name',
       expectedYield: 'Expected Yield (kg)',
       actualYield: 'Actual Yield (kg)',
-      marketBeginMonth: 'On-market Month',
-      marketEndMonth: 'Off-market Month'
+      marketBeginDate: 'On-market Date',
+      marketEndDate: 'Off-shelf Date'
+    },
+    status: {
+      pending: 'Not Yet On Market',
+      upcoming: 'On Market Soon',
+      on_sale: 'On Market',
+      ending: 'Off Shelf Soon',
+      off_shelf: 'Off Shelf'
     }
   },
   pickPlan: {

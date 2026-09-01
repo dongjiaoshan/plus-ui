@@ -33,6 +33,14 @@
         />
         <span v-else>-</span>
       </template>
+
+      <!-- 状态：后端按上市/下架日期与当天现算，只回状态码，中文与配色在前端 -->
+      <template #cell-marketStatus="{ row }">
+        <el-tag v-if="row.marketStatus" :type="STATUS_TAG_TYPE[row.marketStatus] ?? 'info'" disable-transitions>
+          {{ t(`marketPlan.status.${row.marketStatus}`) }}
+        </el-tag>
+        <span v-else>-</span>
+      </template>
     </BizTable>
   </div>
 </template>
@@ -55,7 +63,8 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-// 搜索：严格只有甲方点名的三项（作物名称模糊 / 上市月份 / 下市月份），不加隐式年份过滤
+// 搜索：严格只有甲方点名的三项（作物名称模糊 / 上市月份 / 下架月份），不加隐式年份过滤
+// 列表展示精确到天，筛选仍按月——搜索框本身就是月份选择器，挑的是月、命中该月内所有日期
 const searchModel = reactive<Record<string, unknown>>({
   cropName: undefined,
   marketBeginMonth: undefined,
@@ -86,9 +95,23 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   }
 ]);
 
-// 列序严格对齐甲方：作物图片 / 作物名称 / 预计产量 / 实际产量 / 上市月份 / 下市月份（导出同序）
+/**
+ * 状态码 → el-tag 配色。状态本身是后端现算的五档，不是字典，所以配色表放前端。
+ * 与 i18n 的 marketPlan.status.* 一一对应，加档时两处一起加。
+ */
+const STATUS_TAG_TYPE: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
+  pending: 'info',
+  upcoming: 'primary',
+  on_sale: 'success',
+  ending: 'warning',
+  off_shelf: 'danger'
+};
+
+// 列序严格对齐甲方：作物图片 / 状态 / 作物名称 / 预计产量 / 实际产量 / 上市日期 / 下架日期
+// 导出少一个作物图片列（V6-R157），其余同序，列序由后端 VO 的 @ExcelProperty 声明序保证
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropImageUrl', label: t('marketPlan.column.cropImage'), width: 90, align: 'center' },
+  { prop: 'marketStatus', label: t('marketPlan.column.marketStatus'), width: 100, align: 'center' },
   { prop: 'cropName', label: t('marketPlan.column.cropName'), minWidth: 160, align: 'center', showOverflowTooltip: true },
   {
     prop: 'expectedYield',
@@ -106,18 +129,18 @@ const columns = computed<BizTableColumn[]>(() => [
   },
   // 该计划一条采摘明细都没有时两列为空，显 '-'（行仍保留，排序压在最后）
   {
-    prop: 'marketBeginMonth',
-    label: t('marketPlan.column.marketBeginMonth'),
-    minWidth: 120,
+    prop: 'marketBeginDate',
+    label: t('marketPlan.column.marketBeginDate'),
+    minWidth: 130,
     align: 'center',
-    formatter: (r: BizRow) => (r.marketBeginMonth ? String(r.marketBeginMonth) : '-')
+    formatter: (r: BizRow) => (r.marketBeginDate ? String(r.marketBeginDate) : '-')
   },
   {
-    prop: 'marketEndMonth',
-    label: t('marketPlan.column.marketEndMonth'),
-    minWidth: 120,
+    prop: 'marketEndDate',
+    label: t('marketPlan.column.marketEndDate'),
+    minWidth: 130,
     align: 'center',
-    formatter: (r: BizRow) => (r.marketEndMonth ? String(r.marketEndMonth) : '-')
+    formatter: (r: BizRow) => (r.marketEndDate ? String(r.marketEndDate) : '-')
   }
 ]);
 

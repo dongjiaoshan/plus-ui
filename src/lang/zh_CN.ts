@@ -2395,20 +2395,28 @@ export default {
     field: {
       cropName: '作物名称',
       marketBeginMonth: '上市月份',
-      marketEndMonth: '下市月份'
+      marketEndMonth: '下架月份'
     },
     placeholder: {
       cropName: '请输入作物名称',
       marketBeginMonth: '请选择上市月份',
-      marketEndMonth: '请选择下市月份'
+      marketEndMonth: '请选择下架月份'
     },
     column: {
       cropImage: '作物图片',
+      marketStatus: '状态',
       cropName: '作物名称',
       expectedYield: '预计产量(kg)',
       actualYield: '实际产量(kg)',
-      marketBeginMonth: '上市月份',
-      marketEndMonth: '下市月份'
+      marketBeginDate: '上市日期',
+      marketEndDate: '下架日期'
+    },
+    status: {
+      pending: '待上市',
+      upcoming: '即将上市',
+      on_sale: '上市中',
+      ending: '即将下市',
+      off_shelf: '已下架'
     }
   },
   pickPlan: {
