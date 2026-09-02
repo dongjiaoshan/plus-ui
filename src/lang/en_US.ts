@@ -3721,6 +3721,7 @@ export default {
       no: 'No',
       empty: 'No demand orders',
       confirmDelete: 'Delete this demand order? It will be set to the DELETED terminal state',
+      confirmCancel: 'Cancel demand "{no}"? It can no longer be shipped and the packed quantity is not returned. This cannot be undone.',
       filter: {
         productName: 'Product Name',
         productNamePh: 'Enter product name',
@@ -3734,7 +3735,8 @@ export default {
         SUBMITTED: 'To Confirm',
         CONFIRMED: 'Confirmed',
         SHIPPED: 'Shipped',
-        ARRIVED: 'Arrived'
+        ARRIVED: 'Arrived',
+        CANCELLED: 'Cancelled'
       },
       pigTip: {
         prefix: 'Available pigs for outbound',

@@ -125,6 +125,9 @@
             <el-button v-if="canAssignPig(row)" link type="primary" size="small" @click="onAssignPig(row)">
               {{ t('demand.action.assignPig') }}
             </el-button>
+            <el-button v-if="canCancel(row)" link type="info" size="small" @click="onCancel(row)">
+              {{ t('demand.action.cancel') }}
+            </el-button>
             <el-button v-if="canDelete(row)" link type="danger" size="small" @click="onDelete(row)">
               {{ t('common.delete') }}
             </el-button>
@@ -151,7 +154,7 @@ import { formatOrderQuantity, isKgUnit } from '@/utils/weight';
 import PigAssignDialog from './PigAssignDialog.vue';
 import DemandAdjustDialog from './DemandAdjustDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
-import { confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';
+import { cancelDemand, confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';
 import type { DemandGroupVO, DemandManageQuery, DemandManageVO, DemandProductType, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
 
 const { t } = useI18n();
@@ -184,7 +187,8 @@ const STORE_STATUS_LABEL_KEY: Record<string, string> = {
   CONFIRMED: 'CONFIRMED', // 已确认
   IN_PRODUCTION: 'SHIPPED', // 归「已发货」门店视角
   PARTIAL_SHIPPED: 'SHIPPED', // 已发货
-  COMPLETED: 'ARRIVED' // 确认到店
+  COMPLETED: 'ARRIVED', // 确认到店
+  CANCELLED: 'CANCELLED' // 已取消（缺它则取消后状态列落兜底「—」，看不出操作结果）
 };
 function storeStatusLabel(code?: string): string {
   const key = code ? STORE_STATUS_LABEL_KEY[code] : undefined;
@@ -275,8 +279,23 @@ function canAdjust(row: DemandManageVO): boolean {
   if (!props.adjustMode) return false;
   return row.demandStatus === 'SUBMITTED' || row.demandStatus === 'CONFIRMED' || row.demandStatus === 'DRAFT';
 }
+/**
+ * 可取消：待确认 / 已确认 / 排产中 / 部分发货（与后端 DemandStateMachine 的 CANCEL 出边同口径）。
+ *
+ * 需求一旦过了 demand_date 就不再进入打包扣减与发货月台的候选（两处都钳 demand_date >= 今天），
+ * 而唯一能推进它的事件是发货确认 —— 于是过期未发的需求会永久停在「已确认」。取消是它唯一的出口。
+ * 注意：状态机没有 CANCELLED → CONFIRMED 的反向边，**取消不可撤销**，故弹窗写明后果。
+ */
+function canCancel(row: DemandManageVO): boolean {
+  return (
+    row.demandStatus === 'SUBMITTED' ||
+    row.demandStatus === 'CONFIRMED' ||
+    row.demandStatus === 'IN_PRODUCTION' ||
+    row.demandStatus === 'PARTIAL_SHIPPED'
+  );
+}
 function hasAnyAction(row: DemandManageVO): boolean {
-  return canAdjust(row) || canConfirm(row) || canAssignPig(row) || canDelete(row);
+  return canAdjust(row) || canConfirm(row) || canAssignPig(row) || canCancel(row) || canDelete(row);
 }
 
 async function fetchList() {
@@ -339,6 +358,13 @@ async function onConfirm(row: DemandManageVO) {
 async function onDelete(row: DemandManageVO) {
   await proxy?.$modal.confirm(t('demand.confirmPage.confirmDelete'));
   await removeDemand(row.id);
+  proxy?.$modal.msgSuccess(t('common.opSuccess'));
+  onChanged();
+}
+
+async function onCancel(row: DemandManageVO) {
+  await proxy?.$modal.confirm(t('demand.confirmPage.confirmCancel', { no: row.demandNo }));
+  await cancelDemand(row.id);
   proxy?.$modal.msgSuccess(t('common.opSuccess'));
   onChanged();
 }

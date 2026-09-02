@@ -3707,6 +3707,7 @@ export default {
       no: '否',
       empty: '暂无需求订单',
       confirmDelete: '确认删除该需求订单？删除后置「已删除」终态',
+      confirmCancel: '取消需求「{no}」？取消后不再可发货，已备货量不退回。此操作不可撤销。',
       filter: {
         productName: '需求产品名称',
         productNamePh: '请输入需求产品名称',
@@ -3720,7 +3721,8 @@ export default {
         SUBMITTED: '待确认',
         CONFIRMED: '已确认',
         SHIPPED: '已发货',
-        ARRIVED: '确认到店'
+        ARRIVED: '确认到店',
+        CANCELLED: '已取消'
       },
       pigTip: {
         prefix: '当前可出栏猪只',
