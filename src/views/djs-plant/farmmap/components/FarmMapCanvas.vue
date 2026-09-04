@@ -6,23 +6,24 @@
 
         <g class="farm-map__regions">
           <g
-            v-for="region in regions"
+            v-for="region in MAP_REGIONS"
             :key="region.key"
             class="region"
-            :class="[`region--${stateOf(region).status}`, { 'region--active': region.key === selectedKey }]"
+            :class="[
+              colorMode === 'origin' ? `region--origin-${region.palette}` : `region--${stateOf(region).status}`,
+              { 'region--active': region.key === selectedKey }
+            ]"
             @click="onRegionClick($event, region)"
             @mouseenter="onRegionEnter($event, region)"
             @mousemove="onRegionMove"
             @mouseleave="hoverKey = ''"
           >
-            <polygon :points="toPointsAttr(region.shape)" class="region__shape" />
-            <!-- 块内地块细分线：让一个片区看得出装着 N 个地块 -->
-            <line v-for="(d, i) in regionDividers(region)" :key="i" class="region__divider" :x1="d[0]" :y1="d[1]" :x2="d[2]" :y2="d[3]" />
+            <polygon :points="toPointsAttr(region.points)" class="region__shape" />
             <text
-              v-if="labelFits(region)"
+              v-if="labelFits(region, scale)"
               class="region__label"
-              :x="regionCenter(region.shape)[0]"
-              :y="regionCenter(region.shape)[1] + labelFontSize * 0.34"
+              :x="regionCenter(region)[0]"
+              :y="regionCenter(region)[1] + labelFontSize * 0.34"
               :style="{ fontSize: `${labelFontSize}px`, strokeWidth: `${labelFontSize * 0.2}px` }"
             >
               {{ stateOf(region).label }}
@@ -53,36 +54,37 @@
 <script setup lang="ts" name="FarmMapCanvas">
 import { Refresh, ZoomIn, ZoomOut } from '@element-plus/icons-vue';
 import FarmMapBase from '../map/FarmMapBase.vue';
-import { MAP_REGIONS, VIEW_BOX, regionBox, regionCenter, regionDividers, toPointsAttr, type MapRegion } from '../map/regions';
+import { MAP_REGIONS, VIEW_BOX, labelFits, regionCenter, toPointsAttr, type MapRegion } from '../map/regions';
 import { usePanZoom } from '../composables/usePanZoom';
 
 /**
- * 区块着色。
+ * 格子着色状态。
  *
- * 前 5 个是排产状态（unbound = 还没挂片区）；p1 / p2 是「按期着色」模式下用的期别色，
- * 用来把注意力从排产状态挪回地块归属。
+ * unbound = 这个格子还没挂地块（白底虚线）；其余三个直接对应地块状态字典
+ * djs_plot_status 的 1/2/3，不另造一套枚举——图上的颜色和地块列表里的状态列
+ * 说的必须是同一件事，否则两个页面看同一块地会得出不同结论。
  */
-export type RegionStatus = 'unbound' | 'idle' | 'partial' | 'planned' | 'harvesting' | 'p1' | 'p2';
+export type RegionStatus = 'unbound' | 'idle' | 'planting' | 'harvesting';
 
 export interface RegionState {
   status: RegionStatus;
-  /** 图上显示名：已绑定 = 真实片区名；未绑定 = regions.ts 里的预设参考名 */
+  /** 图上显示名：已挂 = 地块名；未挂 = 格子号 */
   label: string;
   tooltip: string[];
 }
 
 const props = withDefaults(
   defineProps<{
-    /** 区块几何，默认用内置布局 */
-    regions?: MapRegion[];
-    /** key → 状态。缺省的 key 按 unbound 渲染 */
+    /** regionKey → 状态。缺省的 key 按 unbound 渲染 */
     states?: Record<string, RegionState>;
     selectedKey?: string;
+    /** status = 按地块状态着色；origin = 还原甲方地图原配色 */
+    colorMode?: 'status' | 'origin';
   }>(),
   {
-    regions: () => MAP_REGIONS,
     states: () => ({}),
-    selectedKey: ''
+    selectedKey: '',
+    colorMode: 'status'
   }
 );
 
@@ -98,12 +100,12 @@ const tipX = ref(0);
 const tipY = ref(0);
 
 function stateOf(region: MapRegion): RegionState {
-  return props.states[region.key] ?? { status: 'unbound', label: region.label, tooltip: ['未挂载片区'] };
+  return props.states[region.key] ?? { status: 'unbound', label: region.key, tooltip: ['未挂地块'] };
 }
 
 const hoverState = computed(() => {
   if (!hoverKey.value) return null;
-  const region = props.regions.find((r) => r.key === hoverKey.value);
+  const region = MAP_REGIONS.find((r) => r.key === hoverKey.value);
   return region ? stateOf(region) : null;
 });
 
@@ -112,15 +114,6 @@ const hoverState = computed(() => {
  * 否则放大到 200% 时标签跟着变成两倍大，挤满整块地。
  */
 const labelFontSize = computed(() => 12 / scale.value);
-
-/**
- * 太窄的区块放不下标签。判据用**屏幕尺寸**（几何尺寸 × 缩放）而不是几何尺寸，
- * 于是长廊、地头这类窄条在放大后会自动显出名字——这正是缩放该有的用处。
- */
-function labelFits(region: MapRegion): boolean {
-  const { w, h } = regionBox(region.shape);
-  return w * scale.value >= 44 && h * scale.value >= 20;
-}
 
 function onRegionClick(e: MouseEvent, region: MapRegion) {
   // 拖动地图时鼠标抬起会顺带触发 click，位移超阈值就不当成点选
@@ -143,6 +136,9 @@ function onRegionEnter(e: MouseEvent, region: MapRegion) {
 function onRegionMove(e: MouseEvent) {
   updateTipPos(e);
 }
+
+// 容器尺寸变化（进出全屏）后父组件要能把地图复位，否则之前的平移量会把图推到视口外
+defineExpose({ reset });
 </script>
 
 <style scoped>
@@ -151,7 +147,7 @@ function onRegionMove(e: MouseEvent) {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #fbfaf4;
+  background-color: #fdf3e7;
   border: 1px solid var(--el-border-color-lighter);
   border-radius: 6px;
   cursor: grab;
@@ -174,23 +170,17 @@ function onRegionMove(e: MouseEvent) {
   height: 100%;
 }
 
-/* ---- 区块 ---- */
+/* ---- 格子 ---- */
 .region {
   cursor: pointer;
 }
 
 .region__shape {
-  stroke-width: 1.4;
+  stroke: #fff;
+  stroke-width: 1.2;
   transition:
     fill 0.15s,
     stroke 0.15s;
-}
-
-.region__divider {
-  stroke: #fff;
-  stroke-width: 0.8;
-  opacity: 0.6;
-  pointer-events: none;
 }
 
 .region__label {
@@ -198,53 +188,72 @@ function onRegionMove(e: MouseEvent) {
   text-anchor: middle;
   pointer-events: none;
   paint-order: stroke;
-  stroke: rgb(255 255 255 / 70%);
-  fill: #3f5140;
+  stroke: rgb(255 255 255 / 75%);
+  fill: #40513f;
 }
 
+/* ---- 按地块状态着色 ---- */
 .region--unbound .region__shape {
   fill: #fff;
-  stroke: #b6bcb2;
-  stroke-dasharray: 4 3;
+  stroke: #c2c6bd;
+  stroke-dasharray: 5 4;
 }
 
 .region--idle .region__shape {
   fill: #e6e9ec;
-  stroke: #b4bcc4;
+  stroke: #fff;
 }
 
-.region--partial .region__shape {
-  fill: #f8e3ad;
-  stroke: #e0a13a;
-}
-
-.region--planned .region__shape {
-  fill: #bfe4ab;
-  stroke: #6cb84c;
+.region--planting .region__shape {
+  fill: #a8d98b;
+  stroke: #fff;
 }
 
 .region--harvesting .region__shape {
-  fill: #fad7bb;
-  stroke: #e2872f;
+  fill: #f5b969;
+  stroke: #fff;
 }
 
-.region--p1 .region__shape {
-  fill: #d8e8cd;
-  stroke: #9dbf8b;
+/* ---- 还原甲方地图原配色 ---- */
+.region--origin-field-light .region__shape {
+  fill: #cbd58f;
 }
 
-.region--p2 .region__shape {
-  fill: #cfe0ee;
-  stroke: #8fb0cd;
+.region--origin-field-dark .region__shape {
+  fill: #8cc18c;
+}
+
+.region--origin-house-blue .region__shape {
+  fill: #b0d1e9;
+}
+
+.region--origin-strip-purple .region__shape {
+  fill: #c4afd6;
+}
+
+.region--origin-strip-pale .region__shape {
+  fill: #c8c8e1;
+}
+
+.region--origin-yellow .region__shape {
+  fill: #e4d66e;
+}
+
+.region--origin-orange .region__shape {
+  fill: #e8a369;
+}
+
+.region--origin-red .region__shape {
+  fill: #e28a82;
 }
 
 .region:hover .region__shape {
-  stroke-width: 2.4;
+  stroke-width: 2.6;
   stroke: var(--el-color-primary);
 }
 
 .region--active .region__shape {
-  stroke-width: 3;
+  stroke-width: 3.2;
   stroke: var(--el-color-primary);
 }
 

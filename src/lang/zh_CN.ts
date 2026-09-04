@@ -1707,24 +1707,31 @@ export default {
     }
   },
   plantFarmMap: {
-    pageTitle: '农场地图排产',
-    draftNotice: 'P0 草图：底图为手绘示意，颜色为演示数据，未接后端。仅用于确认画法与配色，确认后再接绑定与排产。',
-    opTip: '滚轮缩放 · 拖拽平移 · 双击复位 · 点击区块选中',
-    colorBy: { status: '排产状态', phase: '按期' },
-    stat: { regionTotal: '区块 {n}', bound: '已挂载 {n}' },
-    phase: { p1: '一期', p2: '二期' },
+    pageTitle: '农场地图',
+    opTip: '滚轮缩放 · 拖拽平移 · 双击复位 · 点击格子选中',
+    noZone: '未分片区',
+    colorBy: { status: '按地块状态', origin: '按原图配色' },
+    stat: { bound: '已挂 {n} / 共 {total} 块地', offMap: '· 图外 {n}' },
+    field: { plotCode: '地块编码：', zoneName: '所属片区：', plotStatus: '地块状态：', plotArea: '面积（亩）：' },
     legend: {
       title: '图例',
-      unbound: '未挂载片区',
+      unbound: '未挂地块',
       idle: '空闲',
-      partial: '部分已排',
-      planned: '已排产',
-      harvesting: '采摘中',
-      p1: '一期',
-      p2: '二期'
+      planting: '种植中',
+      harvesting: '采摘中'
     },
-    offMap: { title: '图外片区', tip: '不在这张导览图上，排产从此处进入' },
-    selected: { title: '当前选中', empty: '点击图上区块查看' }
+    action: { bind: '挂上这块地', unbind: '解绑', pickPlot: '选一块地挂上', fullscreen: '全屏', exitFullscreen: '退出全屏' },
+    msg: { bound: '已挂上', unbound: '已解绑', unbindConfirm: '确认把这个格子上的地块解绑？' },
+    selected: {
+      title: '当前选中',
+      empty: '点击图上格子查看',
+      unbound: '这个格子还没挂地块。'
+    },
+    offMap: {
+      title: '图外地块（{n}）',
+      allBound: '全部地块都已挂到图上',
+      tip: '图上没有对应格子的地块（长廊 / 地头等），排产照常从地块列表进入。'
+    }
   },
   plantZone: {
     title: { add: '新增片区', edit: '编辑片区' },

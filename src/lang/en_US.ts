@@ -1704,24 +1704,31 @@ export default {
     }
   },
   plantFarmMap: {
-    pageTitle: 'Farm Map Planning',
-    draftNotice: 'P0 draft: hand-drawn schematic base map with demo colors, not wired to the backend. For reviewing the drawing and palette only.',
-    opTip: 'Scroll to zoom · drag to pan · double-click to reset · click a block to select',
-    colorBy: { status: 'Plan status', phase: 'Phase' },
-    stat: { regionTotal: '{n} blocks', bound: '{n} mounted' },
-    phase: { p1: 'Phase 1', p2: 'Phase 2' },
+    pageTitle: 'Farm Map',
+    opTip: 'Scroll to zoom · drag to pan · double-click to reset · click a cell to select',
+    noZone: 'No zone',
+    colorBy: { status: 'By plot status', origin: 'Original colors' },
+    stat: { bound: '{n} of {total} plots placed', offMap: '· {n} off-map' },
+    field: { plotCode: 'Plot code: ', zoneName: 'Zone: ', plotStatus: 'Status: ', plotArea: 'Area (mu): ' },
     legend: {
       title: 'Legend',
-      unbound: 'No zone mounted',
+      unbound: 'No plot attached',
       idle: 'Idle',
-      partial: 'Partly planned',
-      planned: 'Planned',
-      harvesting: 'Harvesting',
-      p1: 'Phase 1',
-      p2: 'Phase 2'
+      planting: 'Planting',
+      harvesting: 'Harvesting'
     },
-    offMap: { title: 'Off-map zones', tip: 'Not on this tour map; plan them from here' },
-    selected: { title: 'Selected', empty: 'Click a block on the map' }
+    action: { bind: 'Attach plot', unbind: 'Detach', pickPlot: 'Pick a plot', fullscreen: 'Fullscreen', exitFullscreen: 'Exit fullscreen' },
+    msg: { bound: 'Attached', unbound: 'Detached', unbindConfirm: 'Detach the plot from this cell?' },
+    selected: {
+      title: 'Selected',
+      empty: 'Click a cell on the map',
+      unbound: 'No plot attached to this cell yet.'
+    },
+    offMap: {
+      title: 'Off-map plots ({n})',
+      allBound: 'Every plot is placed on the map',
+      tip: 'Plots with no cell on the map (corridors, headlands). Scheduling still works from the plot list.'
+    }
   },
   plantZone: {
     title: { add: 'Add Zone', edit: 'Edit Zone' },

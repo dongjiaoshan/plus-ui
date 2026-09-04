@@ -97,22 +97,6 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: '个人中心', icon: 'user' }
       }
     ]
-  },
-  {
-    // 农场地图排产 P0 草图。走静态路由是因为草图阶段还没建 sys_menu，
-    // 接后端时改由菜单下发（种植域 8300 段），这条静态路由同时删除。
-    path: '/plant',
-    component: Layout,
-    hidden: true,
-    redirect: 'noredirect',
-    children: [
-      {
-        path: 'farmmap',
-        component: () => import('@/views/djs-plant/farmmap/index.vue'),
-        name: 'PlantFarmMap',
-        meta: { title: '农场地图排产', icon: 'guide' }
-      }
-    ]
   }
 ];
 
