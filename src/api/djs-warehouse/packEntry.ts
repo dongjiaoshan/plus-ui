@@ -119,7 +119,6 @@ export interface DryPackBo {
   locationId?: number | string;
   storeId?: number | string;
   deliverDest?: DeliverDest;
-  productSpec?: string;
   proofOssIds?: string;
   remark?: string;
 }
@@ -146,7 +145,6 @@ export interface VegPackBo {
   materialId?: number | string;
   storeId?: number | string;
   deliverDest?: DeliverDest;
-  productSpec?: string;
   proofOssIds?: string;
   remark?: string;
 }

@@ -122,7 +122,6 @@
                 v-model="form.sourceInhouseId"
                 :options="sourceToggleOptions"
                 :empty-text="t('djs.warehouse.packEntry.sourcePlaceholder')"
-                @change="onSourceChange"
               />
             </div>
           </div>
@@ -407,7 +406,6 @@ interface PackFormShape {
   productWeight: number | undefined;
   packBoxCount: number | undefined;
   productUnit: string;
-  productSpec: string | undefined;
   locationId: number | string | '';
   storeId: number | string | '';
   deliverDest: DeliverDest | undefined;
@@ -421,7 +419,6 @@ const defaultForm = (): PackFormShape => ({
   productWeight: undefined,
   packBoxCount: undefined,
   productUnit: 'kg',
-  productSpec: undefined,
   locationId: '',
   storeId: '',
   // 发送位置默认「发货月台」(platform)：肉品/果蔬/其他打包首选发货月台（最常用），每次提交 reset 后仍保持默认。
@@ -604,9 +601,9 @@ async function loadVegProducts() {
 }
 
 function onProductChange(item: ProductInfoVO) {
-  // 选卡片回填默认单位/规格，方便录入
+  // 选卡片回填默认单位，方便录入。规格不回填也不提交：它是产品属性，后端落库恒取产品主数据
+  // （曾经由本表单带上去，且只在为空时回填 —— 一次会话里被第一个产品粘住，后面换产品全写成同一个规格）。
   if (item.productUnit) form.value.productUnit = item.productUnit;
-  if (item.productSpec && !form.value.productSpec) form.value.productSpec = item.productSpec;
   // 肉品打包：换产品 → 清耳号 + 来源（耳号按产品过滤，残留旧产品耳号会导致来源歧义）
   if (props.earGroup) {
     selectedEarNo.value = '';
@@ -1135,13 +1132,6 @@ const remainingPackableCopies = computed<number | null>(() => {
   return Math.floor(remainNum / measure);
 });
 
-function onSourceChange() {
-  const src = sources.value.find((x) => String(x.id) === String(form.value.sourceInhouseId));
-  if (src?.productSpec && !form.value.productSpec) {
-    form.value.productSpec = src.productSpec;
-  }
-}
-
 /** 条件缺失（前置校验不通过）走右侧 ElNotification；成功/失败走自动消失的全局 ElMessage，二者区分。 */
 function notifyMissing(message: string) {
   ElNotification.warning({ title: t('djs.warehouse.packEntry.cannotSubmit'), message });
@@ -1403,7 +1393,6 @@ async function handleSubmit(printTrace: boolean) {
           allowOverMeasure,
           storeId: form.value.storeId || undefined,
           deliverDest: form.value.deliverDest,
-          productSpec: form.value.productSpec,
           remark: form.value.remark
         };
         res = await submitVegPack(bo);
@@ -1441,7 +1430,6 @@ async function handleSubmit(printTrace: boolean) {
           productUnit: dryUnit,
           storeId: form.value.storeId || undefined,
           deliverDest: form.value.deliverDest,
-          productSpec: form.value.productSpec,
           remark: form.value.remark
         };
         res = await submitDryPack(bo);
