@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shiftYmd, todayYmd, ymdOf } from './date';
+import { shiftMonthYmd, shiftYmd, todayYmd, ymdOf } from './date';
 
 /**
  * 业务日期一律按中国（本地）时区算。
@@ -39,5 +39,25 @@ describe('todayYmd / shiftYmd', () => {
 
   it('凌晨算 N 天后同样不偏一天', () => {
     expect(shiftYmd(1, earlyMorning)).toBe('2026-08-31');
+  });
+});
+
+describe('shiftMonthYmd', () => {
+  it('常规月：上月同日', () => {
+    expect(shiftMonthYmd(-1, new Date(2026, 8, 5, 9, 0, 0))).toBe('2026-08-05');
+  });
+
+  it('日号在目标月不存在时压到月末，不溢出到下个月', () => {
+    // 3-31 的上一个月是 2 月，没有 31 号：Date 默认会进位成 3-03，统计起点就丢了近一个月
+    expect(shiftMonthYmd(-1, new Date(2026, 2, 31, 9, 0, 0))).toBe('2026-02-28');
+    expect(shiftMonthYmd(-1, new Date(2024, 2, 31, 9, 0, 0))).toBe('2024-02-29');
+  });
+
+  it('跨年', () => {
+    expect(shiftMonthYmd(-1, new Date(2026, 0, 15, 9, 0, 0))).toBe('2025-12-15');
+  });
+
+  it('凌晨算上月同日同样不偏一天', () => {
+    expect(shiftMonthYmd(-1, new Date(2026, 7, 30, 0, 30, 0))).toBe('2026-07-30');
   });
 });

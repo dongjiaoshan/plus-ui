@@ -34,6 +34,7 @@ import type { StockFlowQuery, StockFlowVO } from '@/api/djs-warehouse/stockFlow/
 import { listLocation } from '@/api/djs-warehouse/location';
 import { formatQtyByUnit } from '@/utils/weight';
 import { formatPlotLabel, thirdPhaseFilterOptions, toThirdPhaseParam } from '@/utils/plotTag';
+import { useSupplierOptions } from '@/composables/useSupplierOptions';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { FLOW_TYPE_IN_VALUES } from '../scope';
@@ -63,6 +64,9 @@ const pageSize = ref(10);
 /** 入库仓库下拉（库位主数据），onMounted 拉一次 */
 const locationOptions = ref<Array<{ label: string; value: string | number }>>([]);
 
+/** 供应商下拉（可搜索），与「入库汇总」弹窗同一份选项来源 */
+const { supplierOptions, loadSupplierOptions } = useSupplierOptions();
+
 const searchModel = reactive<Record<string, any>>({
   dateRange: undefined,
   productName: undefined,
@@ -72,7 +76,7 @@ const searchModel = reactive<Record<string, any>>({
   operatorName: undefined,
   blockNo: undefined,
   earNo: undefined,
-  supplierName: undefined,
+  supplierId: undefined,
   thirdPhase: undefined
 });
 
@@ -85,8 +89,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'operatorName', label: t('djs.warehouse.flowIn.operator'), type: 'input' },
   { field: 'blockNo', label: t('djs.warehouse.flowIn.blockNo'), type: 'input' },
   { field: 'earNo', label: t('djs.warehouse.flowIn.earNo'), type: 'input' },
-  // 供应商模糊搜索（甲方 row139）：后端反查 t_md_supplier.id 集合后按 supplierId IN 下推
-  { field: 'supplierName', label: t('djs.warehouse.flowIn.supplierName'), type: 'input' },
+  // 供应商（甲方 row162）：可搜索下拉，选项来自供应商主数据；选中后按 supplier_id 精确下推
+  { field: 'supplierId', label: t('djs.warehouse.flowIn.supplierName'), type: 'select', options: supplierOptions.value },
   // 三期筛选（甲方 row92）：选「仅看三期」传 thirdPhase=1，全部不传
   { field: 'thirdPhase', label: t('plotTag.filter.label'), type: 'select', options: thirdPhaseFilterOptions() }
 ]);
@@ -135,7 +139,7 @@ function buildQuery(): StockFlowQuery {
     operatorName: searchModel.operatorName || undefined,
     blockNo: searchModel.blockNo || undefined,
     earNo: searchModel.earNo || undefined,
-    supplierName: searchModel.supplierName || undefined,
+    supplierId: searchModel.supplierId || undefined,
     thirdPhase: toThirdPhaseParam(searchModel.thirdPhase),
     dateFrom: from || undefined,
     dateTo: to || undefined,
@@ -188,6 +192,7 @@ onMounted(() => {
   const pid = route.query.productId;
   drillProductId.value = typeof pid === 'string' && pid ? pid : undefined;
   loadLocations();
+  loadSupplierOptions();
   loadList();
 });
 </script>

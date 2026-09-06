@@ -65,9 +65,22 @@
             <el-input v-model="form.address" :placeholder="t('store.placeholder.address')" maxlength="255" />
           </el-form-item>
         </el-col>
-        <el-col :span="24">
+        <!-- 编辑态右侧并排放店长微信图（与店长姓名/电话同为「店长」相关字段，跟随其显隐）；新增态右侧无内容，门店图片占满整行 -->
+        <el-col :span="isEdit ? 12 : 24">
           <el-form-item :label="t('store.field.image')" prop="imageOssId">
             <OssUpload ref="ossUploadRef" v-model="imageOssIdsModel" biz-type="store_photo" :limit="1" :file-size="10" />
+          </el-form-item>
+        </el-col>
+        <el-col v-if="isEdit" :span="12">
+          <!-- row164：店长微信二维码图，追溯页销售门店块拿它给顾客扫码（row165） -->
+          <el-form-item :label="t('store.field.managerWechat')" prop="managerWechatOssId">
+            <OssUpload
+              ref="managerWechatUploadRef"
+              v-model="managerWechatOssIdsModel"
+              biz-type="store_manager_wechat"
+              :limit="1"
+              :file-size="10"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -101,6 +114,7 @@ const visible = ref(false);
 const submitting = ref(false);
 const formRef = ref<ElFormInstance>();
 const ossUploadRef = ref<InstanceType<typeof OssUpload>>();
+const managerWechatUploadRef = ref<InstanceType<typeof OssUpload>>();
 
 const defaultForm = (): StoreForm => ({
   id: undefined,
@@ -115,6 +129,7 @@ const defaultForm = (): StoreForm => ({
   posSystemId: undefined,
   productionMarkCode: undefined,
   imageOssId: null,
+  managerWechatOssId: null,
   remark: undefined
 });
 
@@ -125,6 +140,13 @@ const imageOssIdsModel = computed<string[]>({
   get: () => (form.value.imageOssId ? [form.value.imageOssId] : []),
   set: (val: string[]) => {
     form.value.imageOssId = val && val.length > 0 ? val[0] : null;
+  }
+});
+
+const managerWechatOssIdsModel = computed<string[]>({
+  get: () => (form.value.managerWechatOssId ? [form.value.managerWechatOssId] : []),
+  set: (val: string[]) => {
+    form.value.managerWechatOssId = val && val.length > 0 ? val[0] : null;
   }
 });
 
@@ -148,6 +170,21 @@ const openCreate = () => {
   visible.value = true;
 };
 
+/** 反查 ossId 对应的 URL；OssUpload 内部不主动反查，父组件拿到后调 setExistingFiles 回填缩略图 */
+const loadOssItems = async (ossId: string, field: string) => {
+  try {
+    const ossRes = await listOssByIds(ossId);
+    return (ossRes.data || []).map((o) => ({
+      ossId: String(o.ossId),
+      url: o.url,
+      originalName: o.originalName
+    }));
+  } catch (e) {
+    console.warn('[StoreForm] listOssByIds failed for', field, ossId, e);
+    return [];
+  }
+};
+
 const openEdit = async (id: number | string) => {
   const res = await getStore(id);
   form.value = {
@@ -155,21 +192,17 @@ const openEdit = async (id: number | string) => {
     ...res.data
   };
   visible.value = true;
-  // 回填 OssUpload 已有图片（OssUpload 内部 watch 不主动反查 URL，必须父组件调 setExistingFiles）
-  const ossId = form.value.imageOssId;
-  if (ossId) {
-    try {
-      const ossRes = await listOssByIds(ossId);
-      const items = (ossRes.data || []).map((o) => ({
-        ossId: String(o.ossId),
-        url: o.url,
-        originalName: o.originalName
-      }));
-      await nextTick();
-      ossUploadRef.value?.setExistingFiles(items);
-    } catch (e) {
-      console.warn('[StoreForm] listOssByIds failed for imageOssId', ossId, e);
-    }
+  const imageItems = form.value.imageOssId ? await loadOssItems(form.value.imageOssId, 'imageOssId') : [];
+  const managerWechatItems = form.value.managerWechatOssId
+    ? await loadOssItems(form.value.managerWechatOssId, 'managerWechatOssId')
+    : [];
+  await nextTick();
+  // 空数组不回填：setExistingFiles 会反向 emit 清空 v-model，反查失败时不该把已存的 ossId 抹掉
+  if (imageItems.length > 0) {
+    ossUploadRef.value?.setExistingFiles(imageItems);
+  }
+  if (managerWechatItems.length > 0) {
+    managerWechatUploadRef.value?.setExistingFiles(managerWechatItems);
   }
 };
 

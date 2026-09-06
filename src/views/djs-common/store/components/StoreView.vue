@@ -16,8 +16,12 @@
       <el-descriptions-item :label="t('store.field.posSystemId')">{{ data.posSystemId || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.productionMarkCode')">{{ data.productionMarkCode || '-' }}</el-descriptions-item>
       <el-descriptions-item :label="t('store.field.address')" :span="2">{{ data.address || '-' }}</el-descriptions-item>
-      <el-descriptions-item :label="t('store.field.image')" :span="2">
+      <el-descriptions-item :label="t('store.field.image')">
         <image-preview v-if="imageUrl" :src="imageUrl" :width="120" :height="120" />
+        <el-text v-else type="info">-</el-text>
+      </el-descriptions-item>
+      <el-descriptions-item :label="t('store.field.managerWechat')">
+        <image-preview v-if="managerWechatUrl" :src="managerWechatUrl" :width="120" :height="120" />
         <el-text v-else type="info">-</el-text>
       </el-descriptions-item>
       <el-descriptions-item :label="t('store.field.remark')" :span="2">{{ data.remark || '-' }}</el-descriptions-item>
@@ -43,20 +47,32 @@ const { djs_store_type, djs_store_status } = toRefs<any>(proxy?.useDict('djs_sto
 const visible = ref(false);
 const data = ref<Partial<StoreVO>>({});
 const imageUrl = ref<string>('');
+const managerWechatUrl = ref<string>('');
+
+/** ossId → 首张可访问 URL；反查失败按无图处理（详情页只读，不该因图挂了弹错） */
+const resolveOssUrl = async (ossId: string, field: string) => {
+  try {
+    const ossRes = await listOssByIds(ossId);
+    return ossRes.data?.[0]?.url ?? '';
+  } catch (e) {
+    console.warn('[StoreView] listOssByIds failed for', field, ossId, e);
+    return '';
+  }
+};
 
 const open = async (id: number | string) => {
   const res = await getStore(id);
   data.value = res.data || {};
   imageUrl.value = '';
+  managerWechatUrl.value = '';
   visible.value = true;
   const ossId = data.value.imageOssId;
   if (ossId) {
-    try {
-      const ossRes = await listOssByIds(ossId);
-      imageUrl.value = ossRes.data?.[0]?.url ?? '';
-    } catch (e) {
-      console.warn('[StoreView] listOssByIds failed for imageOssId', ossId, e);
-    }
+    imageUrl.value = await resolveOssUrl(ossId, 'imageOssId');
+  }
+  const wechatOssId = data.value.managerWechatOssId;
+  if (wechatOssId) {
+    managerWechatUrl.value = await resolveOssUrl(wechatOssId, 'managerWechatOssId');
   }
 };
 

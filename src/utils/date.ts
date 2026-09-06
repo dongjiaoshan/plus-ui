@@ -30,3 +30,18 @@ export const shiftYmd = (offsetDays: number, now: Date = new Date()): string => 
   d.setDate(d.getDate() + offsetDays);
   return ymdOf(d);
 };
+
+/**
+ * 今天 ± N 个月（本地时区）'YYYY-MM-DD'，**日号不够就压到当月最后一天**。
+ *
+ * `setMonth` 自己会溢出进位（3-31 减一个月 → 3-3，因为 2 月没有 31 号），
+ * 而「近一个月」这种区间起点跳到区间内部会让统计少算一整段，所以这里显式压到月末。
+ */
+export const shiftMonthYmd = (offsetMonths: number, now: Date = new Date()): string => {
+  const day = now.getDate();
+  const first = new Date(now.getFullYear(), now.getMonth() + offsetMonths, 1);
+  // 目标月 0 号 = 上一个月最后一天 → 拿到目标月天数
+  const daysInTarget = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  first.setDate(Math.min(day, daysInTarget));
+  return ymdOf(first);
+};

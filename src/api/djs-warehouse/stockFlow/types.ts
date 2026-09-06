@@ -75,8 +75,8 @@ export interface StockFlowQuery {
   operatorId?: number;
   /** 入/出库人姓名模糊匹配 */
   operatorName?: string;
-  /** 供应商名称模糊匹配（入库记录页按供应商搜索） */
-  supplierName?: string;
+  /** 供应商 ID 精确匹配（入库记录页供应商下拉）；雪花 ID 全链路 string，禁 Number */
+  supplierId?: string;
   dateFrom?: string;
   dateTo?: string;
   pageNum?: number;

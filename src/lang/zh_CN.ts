@@ -406,6 +406,7 @@ export default {
       posSystemId: '收银系统 ID',
       productionMarkCode: '生产标识码',
       image: '门店图片',
+      managerWechat: '店长微信图片',
       remark: '备注',
       updateTimeRange: '更新时间',
       updateBy: '更新人员'
@@ -1546,6 +1547,9 @@ export default {
       productNamePlaceholder: '请输入产品名称',
       stockWeight: '库存重量',
       plotCode: '地块编号',
+      earNo: '耳号',
+      storeLocation: '存储仓库',
+      tab: { vegetable: '果蔬产品', pork: '猪肉产品', other: '其他产品' },
       outQuantity: '出库量',
       selected: '已选产品',
       selectedEmpty: '在左侧填写出库量即可加入',
@@ -2647,7 +2651,7 @@ export default {
       productType: '产品类型',
       productTypePlaceholder: '请选择产品类型',
       supplierName: '供应商',
-      supplierNamePlaceholder: '请输入供应商',
+      supplierNamePlaceholder: '请选择供应商',
       productNameCol: '产品名称',
       productTypeCol: '产品类型',
       productSpec: '规格',
@@ -2676,6 +2680,32 @@ export default {
       search: '搜索',
       reset: '重置',
       export: '导出'
+    }
+  },
+  inoutStat: {
+    tab: {
+      in: '入库统计',
+      out: '出库统计'
+    },
+    field: {
+      date: '日期',
+      productName: '产品名称',
+      productType: '产品类型',
+      inMode: '入库方式',
+      outDest: '出库去向',
+      supplier: '供应商',
+      noSupplier: '无供应商'
+    },
+    column: {
+      productName: '产品名称',
+      productType: '产品类型',
+      productSpec: '规格',
+      inMode: '入库方式',
+      inboundQty: '入库量',
+      outDest: '出库去向',
+      outboundQty: '出库量',
+      productUnit: '单位',
+      supplier: '供应商'
     }
   },
   stockMonthly: {
@@ -3565,6 +3595,8 @@ export default {
       materialUnit: '原材料单位',
       confirmRate: '需求确认率',
       lastConfirmTime: '需求最终确认时间',
+      orderTime: '下单时间',
+      ordererName: '下单人',
       expectedArriveDate: '期望到货',
       createByName: '创建人',
       createTime: '创建时间',
@@ -3838,6 +3870,7 @@ export default {
       productName: '产品名称',
       productSpec: '产品规格',
       demandQuantity: '需求量',
+      arrivedQuantity: '到店量',
       productUnit: '单位',
       demandType: '需求类型',
       demandRemark: '备注',
@@ -3848,6 +3881,8 @@ export default {
       demandConfirmer: '需求确认人',
       expectedArriveDate: '期望到货',
       createTime: '创建时间',
+      orderTime: '下单时间',
+      ordererName: '下单人',
       actions: '操作'
     },
     placeholder: {

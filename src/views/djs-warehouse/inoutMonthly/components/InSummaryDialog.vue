@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="dialogTitle" width="90%" append-to-body destroy-on-close :close-on-click-modal="true">
-    <!-- 搜索：产品名称模糊 + 入库方式多选 + 产品类型多选 + 供应商模糊（甲方 row155 第 2 点） -->
+    <!-- 搜索：产品名称模糊 + 入库方式多选 + 产品类型多选 + 供应商可搜索下拉（甲方 row155 第 2 点 / row166） -->
     <el-form :inline="true" class="mb-2" @submit.prevent>
       <el-form-item :label="t('inoutMonthly.in.productName')">
         <el-input
@@ -38,13 +38,15 @@
         </el-select>
       </el-form-item>
       <el-form-item :label="t('inoutMonthly.in.supplierName')">
-        <el-input
-          v-model="query.supplierName"
+        <el-select
+          v-model="query.supplierId"
           :placeholder="t('inoutMonthly.in.supplierNamePlaceholder')"
+          filterable
           clearable
           style="width: 180px"
-          @keyup.enter="fetchList"
-        />
+        >
+          <el-option v-for="s in supplierOptions" :key="s.value" :label="s.label" :value="s.value" />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="fetchList">{{ t('inoutMonthly.in.search') }}</el-button>
@@ -101,6 +103,7 @@
 import { listInSummary, type InoutSummaryInVO } from '@/api/djs-warehouse/inoutMonthly';
 import { FLOW_TYPE_IN_VALUES } from '@/views/djs-warehouse/flow/scope';
 import { formatQtyByUnit, isKgUnit } from '@/utils/weight';
+import { useSupplierOptions } from '@/composables/useSupplierOptions';
 import { useI18n } from 'vue-i18n';
 
 defineOptions({ name: 'InSummaryDialog' });
@@ -110,6 +113,9 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { djs_flow_type, djs_product_type } = toRefs<Record<string, Array<{ label: string; value: string }>>>(
   proxy?.useDict('djs_flow_type', 'djs_product_type')
 );
+
+/** 供应商下拉（可搜索），与「入库记录」页同一份选项来源 */
+const { supplierOptions, loadSupplierOptions } = useSupplierOptions();
 
 const visible = ref(false);
 const loading = ref(false);
@@ -121,12 +127,13 @@ const query = reactive<{
   productName?: string;
   flowTypes: string[];
   productTypes: string[];
-  supplierName?: string;
+  /** 供应商 ID（雪花 > 2^53，全链路 string） */
+  supplierId?: string;
 }>({
   productName: undefined,
   flowTypes: [],
   productTypes: [],
-  supplierName: undefined
+  supplierId: undefined
 });
 
 /** djs_flow_type 是出入合并字典，入库方式下拉按白名单过滤（与「入库记录」页共用 flow/scope.ts） */
@@ -146,6 +153,7 @@ function open(statMonth: string) {
   handleResetModel();
   list.value = [];
   visible.value = true;
+  loadSupplierOptions();
   fetchList();
 }
 
@@ -156,7 +164,7 @@ function buildParams() {
     productName: query.productName || undefined,
     productTypes: query.productTypes.length ? query.productTypes.map((v) => Number(v)) : undefined,
     flowTypes: query.flowTypes.length ? query.flowTypes : undefined,
-    supplierName: query.supplierName || undefined
+    supplierId: query.supplierId || undefined
   };
 }
 
@@ -173,7 +181,7 @@ async function fetchList() {
 
 function handleResetModel() {
   query.productName = undefined;
-  query.supplierName = undefined;
+  query.supplierId = undefined;
   query.flowTypes = [];
   query.productTypes = [];
 }

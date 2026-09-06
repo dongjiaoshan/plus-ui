@@ -117,6 +117,10 @@ export interface DemandGroupVO {
   /** 确认率（0~1 小数；前端 *100 toFixed 转 %）。 */
   confirmRate: number | string;
   lastConfirmTime?: string;
+  /** 下单时间：组内最早一单的 create_time（row181，一行是同日同产品的多店合并，非单值）。 */
+  orderTime?: string;
+  /** 下单人：组内最早一单的昵称；组内多人时后端已拼成「张三 等 3 人」（row181）。 */
+  ordererName?: string;
   /** 前端注入的复合 row-key（demandDate + productId），后端不返回。 */
   rowKey?: string;
 }

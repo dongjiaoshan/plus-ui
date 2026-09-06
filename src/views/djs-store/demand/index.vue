@@ -124,7 +124,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'productName', label: t('storeDemand.field.productName'), type: 'input' }
 ]);
 
-// 列对齐原型：需求日期/产品名称/产品规格/需求量/单位/需求类型/备注/预计到店重量/需求状态/需求确认时间/需求确认人/操作
+// 列对齐原型：需求日期/需求状态/产品名称/产品规格/需求量/到店量/单位/需求类型/备注/预计到店重量/
+//            损坏数量/需求确认时间/需求确认人/下单时间/下单人/操作
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'demandDate', label: t('storeDemand.column.demandDate'), minWidth: 110, align: 'center' },
   { prop: 'storeDemandStatus', label: t('storeDemand.column.demandStatus'), minWidth: 110, align: 'center', dictType: 'djs_store_demand_status' },
@@ -141,6 +142,21 @@ const columns = computed<BizTableColumn[]>(() => [
       const v = r.demandQuantity;
       if (v == null || v === '') return '—';
       return formatOrderQuantity(v, r.productUnit, r.productType === 'white_bar');
+    }
+  },
+  {
+    prop: 'arrivedQuantity',
+    label: t('storeDemand.column.arrivedQuantity'),
+    minWidth: 110,
+    align: 'center',
+    // row161：到店量 = 该需求下已发货清点（is_delivery_check=1）的成品条数，后端 compute-on-read。
+    // 不用需求单上的 shipped_count —— 那个在打包送到发货月台时就累加了，甲方要的是「点击发车时」的量，
+    // 两者在「打包完但还没发车」的窗口期不一致。与同行需求量共用一套量纲（份的显份、kg 的显 kg），
+    // 所以复用 demandQuantity 那支 formatter；没发过车的行按 0 走同一支格式化（kg 得 '0.000'），
+    // 与「损坏数量」显 0 的处置一致。
+    formatter: (row: BizRow) => {
+      const r = row as StoreDemandVO;
+      return formatOrderQuantity(r.arrivedQuantity ?? 0, r.productUnit, r.productType === 'white_bar');
     }
   },
   {
@@ -184,6 +200,10 @@ const columns = computed<BizTableColumn[]>(() => [
   },
   { prop: 'confirmerTime', label: t('storeDemand.column.confirmerTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
   { prop: 'demandConfirmerName', label: t('storeDemand.column.demandConfirmer'), minWidth: 110, align: 'center' },
+  // row176：下单时间 / 下单人 = 需求单的 create_time / create_by（后端 createByName 走
+  // USER_ID_TO_NICKNAME 翻译成中文名）。甲方口径叫「下单」，不复用「创建时间 / 创建人」文案。
+  { prop: 'createTime', label: t('storeDemand.column.orderTime'), minWidth: 160, align: 'center', formatter: 'datetime' },
+  { prop: 'createByName', label: t('storeDemand.column.ordererName'), minWidth: 110, align: 'center' },
   { prop: 'actions', label: t('storeDemand.column.actions'), width: 220, fixed: 'right', align: 'center' }
 ]);
 

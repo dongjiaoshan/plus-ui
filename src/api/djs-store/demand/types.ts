@@ -55,7 +55,10 @@ export interface StoreDemandVO extends BaseEntity {
   /** 损坏数量（row48）：后端对「已发货」行回填 is_damaged=1 的产品件数；非已发货行 null（前端 '—'）。 */
   damagedCount?: number;
   expectedArriveDate?: string;
+  /** 累计已发货量（demand.shipped_count，打包送月台时累加）：门店列表「到店量」列（row161）直接读它，未发过为 null。 */
   shippedCount: number | string;
+  /** 到店量：该需求下已发货清点的成品条数（后端 compute-on-read，与需求量同单位）。 */
+  arrivedQuantity: number | string;
   confirmedCount: number | string;
   auditHistory?: string;
   createByName?: string;

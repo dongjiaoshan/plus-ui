@@ -26,8 +26,8 @@ export interface InoutSummaryQuery {
   productTypes?: number[];
   /** 入库方式多选（djs_flow_type，仅入库汇总） */
   flowTypes?: string[];
-  /** 供应商名称模糊（仅入库汇总） */
-  supplierName?: string;
+  /** 供应商 ID 精确匹配（仅入库汇总）；雪花 ID 全链路 string，禁 Number */
+  supplierId?: string;
   /** 出库去向多选（djs_stock_out_dest，仅出库汇总） */
   stockOutDests?: string[];
 }

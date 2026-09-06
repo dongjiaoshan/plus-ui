@@ -24,6 +24,8 @@ export interface StoreVO extends BaseEntity {
   productionMarkCode?: string;
   /** OSS oss_id（雪花 string，禁 Number）；前端用 image-preview 展示 */
   imageOssId?: string | null;
+  /** 店长微信二维码图 OSS oss_id（雪花 string，禁 Number） */
+  managerWechatOssId?: string | null;
   remark?: string;
   /** 员工数量（V1 stub=0） */
   employeeCount?: number;
@@ -45,6 +47,7 @@ export interface StoreForm {
   posSystemId?: string;
   productionMarkCode?: string;
   imageOssId?: string | null;
+  managerWechatOssId?: string | null;
   remark?: string;
 }
 

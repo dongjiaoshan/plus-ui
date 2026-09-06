@@ -39,7 +39,15 @@
           </span>
         </div>
 
-        <el-table v-loading="loading" :data="candidates" border size="small" height="calc(100vh - 320px)">
+        <!-- 三业态 tab：果蔬 / 猪肉 / 其他。候选一次取回，切 tab 只在前端过滤 —— 五个库位的原材料篮
+             总量在几十行量级，再发一次请求换来的只是白等一个 loading。 -->
+        <el-tabs v-model="activeTab" class="mb-2">
+          <el-tab-pane v-for="tab in belongTabs" :key="tab.value" :label="tab.label" :name="tab.value" />
+        </el-tabs>
+
+        <!-- :key 绑 activeTab：三个 tab 的第三列不同（地块 / 耳号 / 无），el-table 对 v-if 增删列的
+             列缓存刷新不彻底，整表重建最稳。 -->
+        <el-table :key="activeTab" v-loading="loading" :data="tabRows" border size="small" height="calc(100vh - 380px)">
           <!-- row194：产品名称后加规格列；出库量后加销售单价、销售总价；各列同宽（统一 min-width） -->
           <el-table-column :label="t('vegOut.create.productName')" prop="productName" :min-width="COL_MIN_WIDTH" show-overflow-tooltip />
           <el-table-column :label="t('vegOut.create.productSpec')" prop="productSpec" :min-width="COL_MIN_WIDTH" align="center">
@@ -47,10 +55,24 @@
           </el-table-column>
           <!-- row99：规格与库存重量之间加「地块」列。列名与取值都走 plotTag —— 与库存查询 / 入库记录 /
                出库记录三页同一个真相源，别在这里另起 key（同一个 label 两处定义早晚会分叉）。
-               三期货无 plot_id、显示「三期」；干货 / 蛋类本就没有地块，显示占位符。
+               三期货无 plot_id、显示「三期」。只有果蔬 tab 有这列：猪肉换成耳号，其他业态本就没有地块。
                长地块名（线上最长 11 字「长廊1（水泥长廊）1号」）在 130px 列宽下会折行，故与产品名称列同样挂 tooltip。 -->
-          <el-table-column :label="t('plotTag.column')" :min-width="COL_MIN_WIDTH" align="center" show-overflow-tooltip>
+          <el-table-column
+            v-if="activeTab === TAB_VEGETABLE"
+            :label="t('plotTag.column')"
+            :min-width="COL_MIN_WIDTH"
+            align="center"
+            show-overflow-tooltip
+          >
             <template #default="{ row }">{{ formatPlotLabel(row) }}</template>
+          </el-table-column>
+          <!-- 猪肉篮的追溯标签是耳号（分割间按「部位 × 耳号」建篮）；外购白条无耳号，显示占位符。 -->
+          <el-table-column v-if="activeTab === TAB_PORK" :label="t('vegOut.create.earNo')" :min-width="COL_MIN_WIDTH" align="center">
+            <template #default="{ row }">{{ row.earNo || '-' }}</template>
+          </el-table-column>
+          <!-- 存储仓库 = 这篮货实际所在库位，三个 tab 都有：候选跨五个库位，工人得知道去哪个库拿货。 -->
+          <el-table-column :label="t('vegOut.create.storeLocation')" :min-width="COL_MIN_WIDTH" align="center" show-overflow-tooltip>
+            <template #default="{ row }">{{ row.locationName || '-' }}</template>
           </el-table-column>
           <el-table-column :label="t('vegOut.create.stockWeight')" prop="stockWeight" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">{{ fmtStock(row) }}</template>
@@ -156,6 +178,37 @@ const loading = ref(false);
 const submitting = ref(false);
 const productName = ref('');
 const candidates = ref<VegOutCandidateVO[]>([]);
+
+/** 三个业态 tab 的 name。「其他」不是某个业态，是白名单里除果蔬 / 猪肉之外的全部业态的兜底桶。 */
+const TAB_VEGETABLE = 'vegetable';
+const TAB_PORK = 'pork';
+const TAB_OTHER = 'other';
+type TabKey = typeof TAB_VEGETABLE | typeof TAB_PORK | typeof TAB_OTHER;
+
+const belongTabs = computed(() => [
+  { value: TAB_VEGETABLE, label: t('vegOut.create.tab.vegetable') },
+  { value: TAB_PORK, label: t('vegOut.create.tab.pork') },
+  { value: TAB_OTHER, label: t('vegOut.create.tab.other') }
+]);
+
+// el-tabs 的 v-model 走 TabPaneName（string | number），故这里存 string 而不是 TabKey（与 matPick 同款）
+const activeTab = ref<string>(TAB_VEGETABLE);
+
+/** 行归哪个 tab：果蔬 / 猪肉各认自己的业态，其余（干货 / 蛋类 / other…）全落「其他」。 */
+function tabOf(row: VegOutCandidateVO): TabKey {
+  if (row.belongType === TAB_VEGETABLE) return TAB_VEGETABLE;
+  if (row.belongType === TAB_PORK) return TAB_PORK;
+  return TAB_OTHER;
+}
+
+/**
+ * 当前 tab 的候选行。
+ *
+ * ⚠️ 只影响「左侧表格显示哪几行」—— 已选（selectedRows）读的是 quantityMap 全集，
+ * 所以在果蔬 tab 填的量切到猪肉 tab 不会消失、也照样计入 10 个产品的上限。
+ */
+const tabRows = computed(() => candidates.value.filter((r) => tabOf(r) === activeTab.value));
+
 /** stockId → 出库量。用 map 而非改行对象，切换搜索条件后已填的量不丢。 */
 const quantityMap = reactive<Record<string, number | undefined>>({});
 
@@ -372,6 +425,7 @@ const open = async () => {
   form.outDest = '';
   productName.value = '';
   previewNo.value = '';
+  activeTab.value = TAB_VEGETABLE;
   Object.keys(quantityMap).forEach((k) => delete quantityMap[k]);
   Object.keys(priceMap).forEach((k) => delete priceMap[k]);
   knownRows.value = [];

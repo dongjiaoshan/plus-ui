@@ -17,9 +17,13 @@ export interface VegOutCandidateVO {
   plotCode?: string;
   /** 地块名称（「地块」列展示值；无地块时为空） */
   plotName?: string;
+  /** 猪只耳号（猪肉 tab 用它替代「地块」列；外购白条无耳号为空） */
+  earNo?: string;
+  /** 存储仓库：这个库存篮实际所在库位的名称（工人照它去哪个库拿货） */
+  locationName?: string;
   /** 三期标识（1 = 三期）：三期货无 plot_id，「地块」列靠它显示「三期」 */
   thirdPhase?: number | string | null;
-  /** 产品业态（vegetable / dry_good / egg / other）—— 干货与蛋类没有地块 */
+  /** 产品业态（vegetable / pork / dry_good / egg / other）—— 前端按它分三个 tab */
   belongType?: string;
   /** 产品销售价格（row191）：新增页「销售单价」默认值，可改 */
   salePrice?: number | string | null;

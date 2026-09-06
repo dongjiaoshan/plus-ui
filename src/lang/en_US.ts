@@ -406,6 +406,7 @@ export default {
       posSystemId: 'POS system ID',
       productionMarkCode: 'Production mark code',
       image: 'Store image',
+      managerWechat: 'Manager WeChat QR',
       remark: 'Remark',
       updateTimeRange: 'Updated at',
       updateBy: 'Updated by'
@@ -1545,6 +1546,9 @@ export default {
       productNamePlaceholder: 'Enter product name',
       stockWeight: 'Stock',
       plotCode: 'Plot No.',
+      earNo: 'Ear Tag',
+      storeLocation: 'Storage Warehouse',
+      tab: { vegetable: 'Vegetables', pork: 'Pork', other: 'Others' },
       outQuantity: 'Out Qty',
       selected: 'Selected',
       selectedEmpty: 'Enter a quantity on the left to add',
@@ -2659,7 +2663,7 @@ export default {
       productType: 'Product Type',
       productTypePlaceholder: 'Select product type',
       supplierName: 'Supplier',
-      supplierNamePlaceholder: 'Enter supplier',
+      supplierNamePlaceholder: 'Select supplier',
       productNameCol: 'Product Name',
       productTypeCol: 'Product Type',
       productSpec: 'Spec',
@@ -2688,6 +2692,32 @@ export default {
       search: 'Search',
       reset: 'Reset',
       export: 'Export'
+    }
+  },
+  inoutStat: {
+    tab: {
+      in: 'Inbound Stats',
+      out: 'Outbound Stats'
+    },
+    field: {
+      date: 'Date',
+      productName: 'Product Name',
+      productType: 'Product Type',
+      inMode: 'Inbound Method',
+      outDest: 'Outbound Destination',
+      supplier: 'Supplier',
+      noSupplier: 'No Supplier'
+    },
+    column: {
+      productName: 'Product Name',
+      productType: 'Product Type',
+      productSpec: 'Spec',
+      inMode: 'Inbound Method',
+      inboundQty: 'Inbound Qty',
+      outDest: 'Outbound Destination',
+      outboundQty: 'Outbound Qty',
+      productUnit: 'Unit',
+      supplier: 'Supplier'
     }
   },
   stockMonthly: {
@@ -3579,6 +3609,8 @@ export default {
       materialUnit: 'Material Unit',
       confirmRate: 'Confirm Rate',
       lastConfirmTime: 'Last Confirm Time',
+      orderTime: 'Order Time',
+      ordererName: 'Ordered By',
       expectedArriveDate: 'Expected',
       createByName: 'Creator',
       createTime: 'Created',
@@ -3852,6 +3884,7 @@ export default {
       productName: 'Product name',
       productSpec: 'Spec',
       demandQuantity: 'Quantity',
+      arrivedQuantity: 'Arrived qty',
       productUnit: 'Unit',
       demandType: 'Demand type',
       demandRemark: 'Remark',
@@ -3862,6 +3895,8 @@ export default {
       demandConfirmer: 'Confirmed by',
       expectedArriveDate: 'Expected arrival',
       createTime: 'Created',
+      orderTime: 'Order time',
+      ordererName: 'Ordered by',
       actions: 'Actions'
     },
     placeholder: {
