@@ -20,7 +20,16 @@
     @reset="handleReset"
     @export="handleExport"
     @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
-  />
+  >
+    <!-- row186 第 1 点：列表最后新增操作列，功能为「查看详情」 -->
+    <template #action="{ row }">
+      <el-button v-hasPermi="['djs:warehouse:inoutStat:list']" link type="primary" size="small" @click="handleDetail(row as InoutStatOutVO)">
+        {{ t('inoutStat.action.detail') }}
+      </el-button>
+    </template>
+  </BizTable>
+
+  <OutDetailDialog ref="detailRef" />
 </template>
 
 <script setup lang="ts">
@@ -32,7 +41,8 @@
  */
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listOutStat, type InoutStatOutVO, type InoutStatQuery } from '@/api/djs-warehouse/inoutStat';
+import { listOutStat, type InoutStatDetailFilter, type InoutStatOutVO, type InoutStatQuery } from '@/api/djs-warehouse/inoutStat';
+import OutDetailDialog from './OutDetailDialog.vue';
 import { defaultDateRange } from '../options';
 import { formatQtyByUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
@@ -49,6 +59,9 @@ interface StatListPayload {
 }
 
 const tableRef = ref<BizTableExpose>();
+const detailRef = ref<{
+  open: (row: InoutStatOutVO, listQuery: Omit<InoutStatDetailFilter, 'productCode'>, outDest: string) => void;
+}>();
 
 const list = ref<InoutStatOutVO[]>([]);
 const total = ref(0);
@@ -72,6 +85,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
+  // row187：产品编码是第一列（也是后端聚合的身份键）
+  { prop: 'productCode', label: t('inoutStat.column.productCode'), minWidth: 110, align: 'center' },
   { prop: 'productName', label: t('inoutStat.column.productName'), minWidth: 160, align: 'center', showOverflowTooltip: true },
   { prop: 'productTypeName', label: t('inoutStat.column.productType'), minWidth: 100, align: 'center' },
   { prop: 'productSpec', label: t('inoutStat.column.productSpec'), minWidth: 110, align: 'center', showOverflowTooltip: true },
@@ -134,6 +149,16 @@ function handlePageChange(pn: number, ps: number) {
   pageNum.value = pn;
   pageSize.value = ps;
   loadList();
+}
+
+/**
+ * row186：打开该汇总行的出库明细。
+ *
+ * 出库去向传**原始值** stockOutDest 而不是列上的 outDestName：
+ * 「未指定」是后端兜出来的展示串，拿它回查匹配不到任何一行。
+ */
+function handleDetail(row: InoutStatOutVO) {
+  detailRef.value?.open(row, buildQuery(), row.stockOutDest ?? '');
 }
 
 /** 导出当前搜索条件下的全量（后端与列表走同一份聚合 SQL，甲方第 5 点） */

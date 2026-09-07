@@ -20,7 +20,16 @@
     @reset="handleReset"
     @export="handleExport"
     @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
-  />
+  >
+    <!-- row186 第 1 点：列表最后新增操作列，功能为「查看详情」 -->
+    <template #action="{ row }">
+      <el-button v-hasPermi="['djs:warehouse:inoutStat:list']" link type="primary" size="small" @click="handleDetail(row as InoutStatInVO)">
+        {{ t('inoutStat.action.detail') }}
+      </el-button>
+    </template>
+  </BizTable>
+
+  <InDetailDialog ref="detailRef" />
 </template>
 
 <script setup lang="ts">
@@ -33,7 +42,8 @@
  */
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listInStat, type InoutStatInVO, type InoutStatQuery } from '@/api/djs-warehouse/inoutStat';
+import { listInStat, type InoutStatDetailFilter, type InoutStatInVO, type InoutStatQuery } from '@/api/djs-warehouse/inoutStat';
+import InDetailDialog from './InDetailDialog.vue';
 import { useSupplierOptions } from '@/composables/useSupplierOptions';
 import { FLOW_TYPE_IN_VALUES } from '@/views/djs-warehouse/flow/scope';
 import { NO_SUPPLIER_VALUE, defaultDateRange } from '../options';
@@ -53,6 +63,9 @@ interface StatListPayload {
 }
 
 const tableRef = ref<BizTableExpose>();
+const detailRef = ref<{
+  open: (row: InoutStatInVO, listQuery: Omit<InoutStatDetailFilter, 'productCode'>, inMode: string, supplier: string) => void;
+}>();
 
 const list = ref<InoutStatInVO[]>([]);
 const total = ref(0);
@@ -90,6 +103,8 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
+  // row187：产品编码是第一列（也是后端聚合的身份键）
+  { prop: 'productCode', label: t('inoutStat.column.productCode'), minWidth: 110, align: 'center' },
   { prop: 'productName', label: t('inoutStat.column.productName'), minWidth: 160, align: 'center', showOverflowTooltip: true },
   { prop: 'productTypeName', label: t('inoutStat.column.productType'), minWidth: 100, align: 'center' },
   { prop: 'productSpec', label: t('inoutStat.column.productSpec'), minWidth: 110, align: 'center', showOverflowTooltip: true },
@@ -158,6 +173,17 @@ function handlePageChange(pn: number, ps: number) {
   pageNum.value = pn;
   pageSize.value = ps;
   loadList();
+}
+
+/**
+ * row186：打开该汇总行的入库明细。
+ *
+ * 分组键传**原始值**（flowType / supplierKey）而不是列上显示的翻译文案：
+ * 「无供应商」是后端兜出来的展示串，拿它回查匹配不到任何一行。
+ * 同时把列表当前筛选原样带过去，明细才是这一行的真子集。
+ */
+function handleDetail(row: InoutStatInVO) {
+  detailRef.value?.open(row, buildQuery(), row.flowType ?? '', row.supplierKey ?? '');
 }
 
 /** 导出当前搜索条件下的全量（后端与列表走同一份聚合 SQL，甲方第 5 点） */

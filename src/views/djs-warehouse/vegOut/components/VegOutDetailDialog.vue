@@ -1,7 +1,7 @@
 <template>
   <!-- row187：出库单详情，弹框形式，可按产品名筛 -->
-  <!-- 宽度 900px：5 列（含「出库总价」）在 640px 下最右列会被弹窗右边框裁掉半截 -->
-  <el-dialog v-model="visible" :title="t('vegOut.detail.title')" width="900px" append-to-body destroy-on-close @closed="handleClosed">
+  <!-- 宽度 1100px：row191 加「耳号」「地块」后共 7 列，900px 下最右的「出库总价」会被裁掉半截 -->
+  <el-dialog v-model="visible" :title="t('vegOut.detail.title')" width="1100px" append-to-body destroy-on-close @closed="handleClosed">
     <div class="mb-3 flex items-center gap-2">
       <el-input
         v-model="productName"
@@ -26,7 +26,7 @@
       <!-- row198：顶部右侧显示出库单号 -->
       <span class="ml-auto text-gray-500">{{ t('vegOut.column.batchNo') }}：{{ batchNo || '-' }}</span>
     </div>
-    <!-- 五列统一 min-width（不用固定 width）：表格按弹窗宽度均分剩余空间，金额列不再被裁 -->
+    <!-- 七列统一 min-width（不用固定 width）：表格按弹窗宽度均分剩余空间，金额列不再被裁 -->
     <el-table v-loading="loading" :data="rows" border size="small" max-height="500">
       <el-table-column
         :label="t('vegOut.detail.productName')"
@@ -39,7 +39,10 @@
       <el-table-column :label="t('vegOut.detail.productSpec')" prop="productSpec" min-width="150" align="center" header-align="center">
         <template #default="{ row }">{{ row.productSpec || '-' }}</template>
       </el-table-column>
-      <!-- row193：去掉地块编号列（干货/蛋类本就没有地块，果蔬也按甲方要求不再显示） -->
+      <!-- row191：规格与出库量之间补「耳号」「地块」两列。猪肉行有耳号、果蔬行有地块，
+           另一项后端已兜成 '-'，前端不再二次兜底（兜两次容易一边 '-' 一边空白） -->
+      <el-table-column :label="t('vegOut.detail.earNo')" prop="earNo" min-width="120" align="center" header-align="center" />
+      <el-table-column :label="t('vegOut.detail.plotCode')" prop="plotCode" min-width="120" align="center" header-align="center" />
       <el-table-column :label="t('vegOut.detail.outWeight')" prop="outWeight" min-width="150" align="center" header-align="center">
         <template #default="{ row }">{{ fmtQty(row) }}</template>
       </el-table-column>

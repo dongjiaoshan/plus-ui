@@ -32,8 +32,10 @@ export interface InoutSummaryQuery {
   stockOutDests?: string[];
 }
 
-/** 入库汇总行（产品 × 入库方式 × 供应商；字典 label 与空值兜底都在后端完成） */
+/** 入库汇总行（产品编码 × 产品 × 入库方式 × 供应商；字典 label 与空值兜底都在后端完成） */
 export interface InoutSummaryInVO {
+  /** 产品编码（product_info.product_id 业务码，弹窗第一列，也是聚合的身份键） */
+  productCode?: string;
   productName?: string;
   productTypeName?: string;
   productSpec?: string;
@@ -44,8 +46,10 @@ export interface InoutSummaryInVO {
   supplierName?: string;
 }
 
-/** 出库汇总行（产品 × 出库去向） */
+/** 出库汇总行（产品编码 × 产品 × 出库去向） */
 export interface InoutSummaryOutVO {
+  /** 产品编码（product_info.product_id 业务码，弹窗第一列，也是聚合的身份键） */
+  productCode?: string;
   productName?: string;
   productTypeName?: string;
   productSpec?: string;

@@ -1528,7 +1528,8 @@ export default {
       title: 'Outbound Detail',
       productName: 'Product',
       productSpec: 'Spec',
-      plotCode: 'Plot No.',
+      earNo: 'Ear Tag',
+      plotCode: 'Plot',
       outWeight: 'Out Qty',
       productNamePlaceholder: 'Enter product name'
     },
@@ -2664,6 +2665,7 @@ export default {
       productTypePlaceholder: 'Select product type',
       supplierName: 'Supplier',
       supplierNamePlaceholder: 'Select supplier',
+      productCodeCol: 'Product Code',
       productNameCol: 'Product Name',
       productTypeCol: 'Product Type',
       productSpec: 'Spec',
@@ -2683,6 +2685,7 @@ export default {
       outDestPlaceholder: 'Select outbound destination',
       productType: 'Product Type',
       productTypePlaceholder: 'Select product type',
+      productCodeCol: 'Product Code',
       productNameCol: 'Product Name',
       productTypeCol: 'Product Type',
       productSpec: 'Spec',
@@ -2708,7 +2711,29 @@ export default {
       supplier: 'Supplier',
       noSupplier: 'No Supplier'
     },
+    action: {
+      detail: 'View Details'
+    },
+    detail: {
+      inTitle: 'Inbound Details',
+      outTitle: 'Outbound Details',
+      inDate: 'Inbound Date',
+      outDate: 'Outbound Date',
+      dateStart: 'Start Date',
+      dateEnd: 'End Date',
+      dateSep: 'to',
+      inOperator: 'Inbound Recorder',
+      outOperator: 'Outbound Recorder',
+      operatorPlaceholder: 'Select recorder',
+      inSupplier: 'Inbound Supplier',
+      inTime: 'Inbound Operation Time',
+      outTime: 'Outbound Operation Time',
+      search: 'Search',
+      reset: 'Reset',
+      export: 'Export'
+    },
     column: {
+      productCode: 'Product Code',
       productName: 'Product Name',
       productType: 'Product Type',
       productSpec: 'Spec',
@@ -3763,13 +3788,6 @@ export default {
         statusPh: 'Select demand status'
       },
       // Store-view 4-state trimmed status filter (values map to raw warehouse codes; see confirm/index.vue)
-      storeStatus: {
-        SUBMITTED: 'To Confirm',
-        CONFIRMED: 'Confirmed',
-        SHIPPED: 'Shipped',
-        ARRIVED: 'Arrived',
-        CANCELLED: 'Cancelled'
-      },
       pigTip: {
         prefix: 'Available pigs for outbound',
         suffix: ''
@@ -3779,6 +3797,7 @@ export default {
         productSpec: 'Spec',
         demandDate: 'Demand Date',
         demandQuantity: 'Demand Quantity',
+        arrivedQuantity: 'Arrived Quantity',
         productUnit: 'Unit',
         storeName: 'Store',
         demandRemark: 'Remark',

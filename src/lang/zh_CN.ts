@@ -1529,7 +1529,8 @@ export default {
       title: '出库明细',
       productName: '产品名称',
       productSpec: '规格',
-      plotCode: '地块编号',
+      earNo: '耳号',
+      plotCode: '地块',
       outWeight: '出库量',
       productNamePlaceholder: '请输入产品名称'
     },
@@ -2652,6 +2653,7 @@ export default {
       productTypePlaceholder: '请选择产品类型',
       supplierName: '供应商',
       supplierNamePlaceholder: '请选择供应商',
+      productCodeCol: '产品编码',
       productNameCol: '产品名称',
       productTypeCol: '产品类型',
       productSpec: '规格',
@@ -2671,6 +2673,7 @@ export default {
       outDestPlaceholder: '请选择出库去向',
       productType: '产品类型',
       productTypePlaceholder: '请选择产品类型',
+      productCodeCol: '产品编码',
       productNameCol: '产品名称',
       productTypeCol: '产品类型',
       productSpec: '规格',
@@ -2696,7 +2699,29 @@ export default {
       supplier: '供应商',
       noSupplier: '无供应商'
     },
+    action: {
+      detail: '查看详情'
+    },
+    detail: {
+      inTitle: '入库明细',
+      outTitle: '出库明细',
+      inDate: '入库日期',
+      outDate: '出库日期',
+      dateStart: '开始日期',
+      dateEnd: '结束日期',
+      dateSep: '至',
+      inOperator: '入库记录人',
+      outOperator: '出库记录人',
+      operatorPlaceholder: '请选择记录人',
+      inSupplier: '入库供应商',
+      inTime: '入库操作时间',
+      outTime: '出库操作时间',
+      search: '搜索',
+      reset: '重置',
+      export: '导出'
+    },
     column: {
+      productCode: '产品编码',
       productName: '产品名称',
       productType: '产品类型',
       productSpec: '规格',
@@ -3748,14 +3773,6 @@ export default {
         demandStatus: '需求状态',
         statusPh: '请选择需求状态'
       },
-      // 状态筛选下拉门店视角 4 态裁剪（value 映射原始仓库码，详见 confirm/index.vue 注释）
-      storeStatus: {
-        SUBMITTED: '待确认',
-        CONFIRMED: '已确认',
-        SHIPPED: '已发货',
-        ARRIVED: '确认到店',
-        CANCELLED: '已取消'
-      },
       pigTip: {
         prefix: '当前可出栏猪只',
         suffix: '头'
@@ -3765,6 +3782,7 @@ export default {
         productSpec: '产品规格',
         demandDate: '需求日期',
         demandQuantity: '需求量',
+        arrivedQuantity: '到店量',
         productUnit: '单位',
         storeName: '需求门店',
         demandRemark: '需求备注',

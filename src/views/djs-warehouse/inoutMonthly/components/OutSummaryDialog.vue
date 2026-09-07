@@ -48,6 +48,8 @@
     </el-form>
 
     <el-table v-loading="loading" :data="list" border max-height="540">
+      <!-- row188：产品编码是第一列（也是后端聚合的身份键） -->
+      <el-table-column :label="t('inoutMonthly.out.productCodeCol')" prop="productCode" min-width="110" align="center" header-align="center" />
       <el-table-column
         :label="t('inoutMonthly.out.productNameCol')"
         prop="productName"

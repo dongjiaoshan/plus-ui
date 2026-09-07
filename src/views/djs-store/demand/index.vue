@@ -209,18 +209,26 @@ const columns = computed<BizTableColumn[]>(() => [
 
 // 待确认 = SUBMITTED（门店发起后即 SUBMITTED）；待确认才可编辑 / 删除
 const isPending = (r: BizRow) => (r as StoreDemandVO).demandStatus === 'SUBMITTED';
-// 原型 0613-04 点4：「确认收货」仅在「已发货」行展示。
-// 门店视角「已发货」= 仓库 PARTIAL_SHIPPED / COMPLETED 且未收货；点后 → 确认到店。
+/**
+ * 「确认收货」按钮：只在真有货到店、且还没确认过的行上展示（V6-R197）。
+ *
+ * 判据从仓库态 demandStatus 改成后端派生的门店态 storeDemandStatus —— 缺量出车时需求被推到
+ * COMPLETED 但一件都没到店，后端现在把它算成「已确认」，那种行给「确认收货」按钮就是在诱导
+ * 店员把「什么都没收到」标成「确认到店」。部分到店（PARTIAL_ARRIVED）可以确认收货（R161 已定）。
+ */
 const canReceive = (r: BizRow) => {
-  const s = (r as StoreDemandVO).demandStatus;
-  return (s === 'PARTIAL_SHIPPED' || s === 'COMPLETED') && !(r as StoreDemandVO).receivedTime;
+  const s = (r as StoreDemandVO).storeDemandStatus;
+  return s === 'SHIPPED' || s === 'PARTIAL_ARRIVED';
 };
 // 个人邮寄
 const isMailing = (r: BizRow) => (r as StoreDemandVO).demandType === 'mailing';
-// 已发货（仓库 PARTIAL_SHIPPED / COMPLETED）：无论是否已收货，都可看产品明细并对产品标损（row47）
+/**
+ * 「产品明细」按钮（可对已发出的产品标损，row47）：货已经发出去的行都给 —— 已发货 / 部分到店 /
+ * 已确认到店。同样按门店态判，与上面「确认收货」共用一套口径。
+ */
 const isShipped = (r: BizRow) => {
-  const s = (r as StoreDemandVO).demandStatus;
-  return s === 'PARTIAL_SHIPPED' || s === 'COMPLETED';
+  const s = (r as StoreDemandVO).storeDemandStatus;
+  return s === 'SHIPPED' || s === 'PARTIAL_ARRIVED' || s === 'ARRIVED';
 };
 
 async function fetchList() {

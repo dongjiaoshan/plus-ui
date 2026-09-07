@@ -45,7 +45,7 @@
         </el-form-item>
         <el-form-item :label="t('demand.confirmPage.filter.demandStatus')">
           <el-select
-            v-model="searchModel.demandStatus"
+            v-model="searchModel.storeDemandStatus"
             :placeholder="t('demand.confirmPage.filter.statusPh')"
             clearable
             style="width: 180px"
@@ -67,9 +67,12 @@
       </div>
 
       <el-table v-loading="loading" :data="list" border :empty-text="t('demand.confirmPage.empty')">
+        <!-- 需求状态（V6-R197）：直接渲染后端派生的 storeDemandStatus + djs_store_demand_status 字典，
+             不再在前端把仓库 7 态映射成门店文案 —— 那份前端映射把 COMPLETED 一律写成「确认到店」，
+             缺量出车（一件都没到）的行也显示确认到店，正是甲方 row197 报的问题。 -->
         <el-table-column :label="t('demand.confirmPage.column.demandStatus')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <el-tag :type="storeStatusTagType(row.demandStatus)" effect="light">{{ storeStatusLabel(row.demandStatus) }}</el-tag>
+            <dict-tag :options="djs_store_demand_status" :value="row.storeDemandStatus" />
           </template>
         </el-table-column>
         <!-- 需求日期列（row196）：本抽屉锁定单一需求日期，逐行显式展示 demand_date，避免把「需求最终确认时间」误读成需求日期（次日预约单常见：确认于前一天、需求日期为次日）。 -->
@@ -81,6 +84,15 @@
             productType === 'white_bar'
               ? formatOrderQuantity(row.demandQuantity, row.productUnit, true)
               : formatQty(row.demandQuantity, row.productUnit)
+          }}</template>
+        </el-table-column>
+        <!-- 到店量（V6-R197）：需求量右边，口径 = 该需求下已发货清点的成品条数，与需求量同单位、同格式化。
+             没发过车的行显 0（不是 '—'）—— 「还没发车」在业务上就是到店 0。 -->
+        <el-table-column :label="t('demand.confirmPage.column.arrivedQuantity')" min-width="120" align="center" header-align="center">
+          <template #default="{ row }">{{
+            productType === 'white_bar'
+              ? formatOrderQuantity(row.arrivedQuantity ?? 0, row.productUnit, true)
+              : formatQty(row.arrivedQuantity ?? 0, row.productUnit)
           }}</template>
         </el-table-column>
         <el-table-column :label="t('demand.confirmPage.column.productUnit')" width="70" align="center" header-align="center">
@@ -155,7 +167,13 @@ import PigAssignDialog from './PigAssignDialog.vue';
 import DemandAdjustDialog from './DemandAdjustDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
 import { cancelDemand, confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';
-import type { DemandGroupVO, DemandManageQuery, DemandManageVO, DemandProductType, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
+import type {
+  DemandGroupVO,
+  DemandManageQuery,
+  DemandManageVO,
+  DemandProductType,
+  StoreDemandViewStatusCode
+} from '@/api/djs-warehouse/demand/types';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -179,46 +197,24 @@ const productName = ref('');
 const drawerTitle = computed(() => t('demand.confirmPage.title'));
 
 /**
- * row46：表格「需求状态」列文案与筛选下拉门店视角（confirmPage.storeStatus）保持一致。
- * 仓库 7 态 → 门店视角文案映射（避免「已提交 vs 待确认」双名）。
+ * 需求状态列 / 筛选下拉都走门店视角派生态字典 djs_store_demand_status（V6-R197）。
+ *
+ * 前端不再自己把仓库 7 态映射成门店文案：那份映射把 COMPLETED 一律算成「确认到店」，
+ * 缺量出车（COMPLETED 但一件都没到店）的行也显示确认到店 —— 甲方 row197 报的就是这个。
+ * 现在状态由后端 StoreDemandStatusMapping 一处算完回填 storeDemandStatus，
+ * 筛选也把门店态原样传回后端（storeDemandStatuses），读与筛同源。
  */
-const STORE_STATUS_LABEL_KEY: Record<string, string> = {
-  SUBMITTED: 'SUBMITTED', // 待确认
-  CONFIRMED: 'CONFIRMED', // 已确认
-  IN_PRODUCTION: 'SHIPPED', // 归「已发货」门店视角
-  PARTIAL_SHIPPED: 'SHIPPED', // 已发货
-  COMPLETED: 'ARRIVED', // 确认到店
-  CANCELLED: 'CANCELLED' // 已取消（缺它则取消后状态列落兜底「—」，看不出操作结果）
-};
-function storeStatusLabel(code?: string): string {
-  const key = code ? STORE_STATUS_LABEL_KEY[code] : undefined;
-  return key ? t(`demand.confirmPage.storeStatus.${key}`) : '—';
-}
-function storeStatusTagType(code?: string): 'info' | 'success' | 'warning' | 'primary' {
-  switch (code) {
-    case 'CONFIRMED':
-      return 'success';
-    case 'IN_PRODUCTION':
-    case 'PARTIAL_SHIPPED':
-      return 'warning';
-    case 'COMPLETED':
-      return 'primary';
-    case 'SUBMITTED':
-    default:
-      return 'info';
-  }
-}
+const { djs_store_demand_status } = toRefs<any>(proxy?.useDict('djs_store_demand_status'));
 
 /**
- * 状态筛选下拉门店视角裁剪为 4 态（待确认/已确认/已发货/确认到店）。
- * value 用原始仓库 demand_status 码，命中后端 list 端点的 .eq 等值过滤。
+ * 状态筛选下拉 = 字典项去掉「已删除」（门店端不提供已删除查询，后端 mapping 对它直接报错）。
+ * value 是门店态码，走 storeDemandStatuses 参数，与列上显示的态一一对应。
  */
-const statusFilterOptions = computed(() => [
-  { label: t('demand.confirmPage.storeStatus.SUBMITTED'), value: 'SUBMITTED' },
-  { label: t('demand.confirmPage.storeStatus.CONFIRMED'), value: 'CONFIRMED' },
-  { label: t('demand.confirmPage.storeStatus.SHIPPED'), value: 'PARTIAL_SHIPPED' },
-  { label: t('demand.confirmPage.storeStatus.ARRIVED'), value: 'COMPLETED' }
-]);
+const statusFilterOptions = computed<{ label: string; value: string }[]>(() =>
+  ((djs_store_demand_status.value ?? []) as { label: string; value: string }[])
+    .filter((d) => d.value !== 'DELETED')
+    .map((d) => ({ label: d.label, value: d.value }))
+);
 
 /** 白条 / 猪业态才展示「可出栏猪只提示」板块。 */
 const showPigTip = computed(() => productType.value === 'white_bar' || productType.value === 'pig');
@@ -233,9 +229,9 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const searchModel = reactive<{ storeId?: string; demandStatus?: string }>({
+const searchModel = reactive<{ storeId?: string; storeDemandStatus?: string }>({
   storeId: undefined,
-  demandStatus: undefined
+  storeDemandStatus: undefined
 });
 
 /** 需求量按产品单位分流：kg（含公斤）保留三位小数，其余取整不留小数。 */
@@ -307,7 +303,9 @@ async function fetchList() {
       productId: productId.value || undefined,
       demandDate: demandDate.value || undefined,
       storeId: searchModel.storeId || undefined,
-      demandStatus: (searchModel.demandStatus || undefined) as DemandStatusCode | undefined
+      // 门店视角态筛选（V6-R197）：传门店态给后端按 StoreDemandStatusMapping 下推，
+      // 不再拿仓库 demand_status 单值 .eq 硬凑（那样「已发货」只能命中 PARTIAL_SHIPPED 一半的行）
+      storeDemandStatuses: searchModel.storeDemandStatus ? [searchModel.storeDemandStatus as StoreDemandViewStatusCode] : undefined
     };
     const res: any = await listDemand(query);
     list.value = (res.rows ?? res.data ?? []) as DemandManageVO[];
@@ -337,7 +335,7 @@ function handleSearch() {
 }
 function handleReset() {
   searchModel.storeId = undefined;
-  searchModel.demandStatus = undefined;
+  searchModel.storeDemandStatus = undefined;
   pageNum.value = 1;
   fetchList();
 }
@@ -389,7 +387,7 @@ async function open(row: DemandGroupVO) {
   productType.value = (row.productType ?? '') as DemandProductType | '';
   productName.value = row.productName ?? '';
   searchModel.storeId = undefined;
-  searchModel.demandStatus = undefined;
+  searchModel.storeDemandStatus = undefined;
   pageNum.value = 1;
   visible.value = true;
   if (!storeLoaded) {

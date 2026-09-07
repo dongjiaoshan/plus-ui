@@ -18,8 +18,14 @@ export type StoreDemandMailingType = 'store' | 'mailing';
 /** 需求状态 7 态（仓库落库值，与字典 djs_demand_status 对齐）。 */
 export type StoreDemandStatusCode = 'DRAFT' | 'SUBMITTED' | 'CONFIRMED' | 'IN_PRODUCTION' | 'PARTIAL_SHIPPED' | 'COMPLETED' | 'CANCELLED' | 'DELETED';
 
-/** 门店视角派生状态 5 态（字典 djs_store_demand_status，0613-04）。 */
-export type StoreDemandViewStatusCode = 'SUBMITTED' | 'CONFIRMED' | 'SHIPPED' | 'ARRIVED' | 'DELETED';
+/**
+ * 门店视角派生状态 6 态（字典 djs_store_demand_status，0613-04 + V6-R197）。
+ *
+ * PARTIAL_ARRIVED「部分到店」是 V6-R197 新增：已发货态且未收货时按到店量三分 ——
+ * 到店量 0 → CONFIRMED 已确认 / 0 < 到店量 < 需求量 → PARTIAL_ARRIVED / 到店量 >= 需求量 → SHIPPED。
+ * 口径唯一实现在后端 StoreDemandStatusMapping，前端不复算。
+ */
+export type StoreDemandViewStatusCode = 'SUBMITTED' | 'CONFIRMED' | 'PARTIAL_ARRIVED' | 'SHIPPED' | 'ARRIVED' | 'DELETED';
 
 export interface StoreDemandVO extends BaseEntity {
   id: string;

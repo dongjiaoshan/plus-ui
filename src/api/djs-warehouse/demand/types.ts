@@ -11,6 +11,15 @@ export type DemandProductType = 'white_bar' | 'pig' | 'vegetable' | 'dry' | 'egg
 /** 需求状态 7 态（与字典 djs_demand_status 对齐）。 */
 export type DemandStatusCode = 'DRAFT' | 'SUBMITTED' | 'CONFIRMED' | 'IN_PRODUCTION' | 'PARTIAL_SHIPPED' | 'COMPLETED' | 'CANCELLED';
 
+/**
+ * 门店视角派生状态 6 态（字典 djs_store_demand_status）。
+ *
+ * PARTIAL_ARRIVED「部分到店」是 V6-R197 新增：已发货态且未收货时按到店量三分 ——
+ * 到店量 0 → CONFIRMED 已确认 / 0 < 到店量 < 需求量 → PARTIAL_ARRIVED / 到店量 >= 需求量 → SHIPPED。
+ * 口径唯一实现在后端 StoreDemandStatusMapping，前端不复算。
+ */
+export type StoreDemandViewStatusCode = 'SUBMITTED' | 'CONFIRMED' | 'PARTIAL_ARRIVED' | 'SHIPPED' | 'ARRIVED' | 'DELETED';
+
 export interface DemandManageVO extends BaseEntity {
   id: string;
   demandNo: string;
@@ -27,6 +36,15 @@ export interface DemandManageVO extends BaseEntity {
   demandRemark?: string;
   demandExplain?: string;
   demandStatus: DemandStatusCode;
+  /**
+   * 门店视角派生状态（字典 djs_store_demand_status，后端 queryPageList 回填，前端只读不算）。
+   *
+   * 与 demandStatus 是两个维度：demandStatus 是仓库落库 7 态，本字段是「仓库态 + 是否收货 + 到店量」
+   * 算出来的门店语义态。需求确认抽屉的「需求状态」列显示的就是它（V6-R197）。
+   */
+  storeDemandStatus?: StoreDemandViewStatusCode;
+  /** 到店量：该需求下已发货清点（is_delivery_check=1）的成品条数，后端 compute-on-read，与需求量同单位。 */
+  arrivedQuantity?: number | string;
   demandConfirmer?: string;
   /** @Translation 后端 enrich */
   demandConfirmerName?: string;
@@ -65,6 +83,11 @@ export interface DemandManageForm {
 
 export interface DemandManageQuery extends PageQuery {
   demandNo?: string;
+  /**
+   * 门店视角派生态多选（djs_store_demand_status）。与 demandStatus/demandStatuses（仓库 7 态）是两个维度，
+   * 后端按 StoreDemandStatusMapping.sqlPredicateAny 下推 —— 与列表回填的 storeDemandStatus 同源。
+   */
+  storeDemandStatuses?: StoreDemandViewStatusCode[];
   productType?: DemandProductType;
   /** 业态多选（R70 产品类型下拉多选）。 */
   productTypes?: DemandProductType[];

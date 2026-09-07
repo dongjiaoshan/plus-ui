@@ -55,6 +55,9 @@ export interface VegOutDetailVO {
   outUnitPrice?: number | string | null;
   /** 出库总价（row193）= 出库量 × 出库单价 */
   outAmount?: number | string | null;
+  /** 耳号（row191）：猪肉行才有，其余业态后端兜 '-' */
+  earNo?: string;
+  /** 地块编号（row191）：果蔬行才有，其余业态后端兜 '-' */
   plotCode?: string;
   /** 出库量带单位展示串（导出专用，仅 xlsx 路径由后端派生；明细接口不返） */
   outQtyLabel?: string;

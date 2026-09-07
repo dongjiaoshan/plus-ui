@@ -36,7 +36,7 @@
       </el-form-item>
       <el-form-item :label="t('demand.confirmPage.filter.demandStatus')">
         <el-select
-          v-model="searchModel.demandStatus"
+          v-model="searchModel.storeDemandStatus"
           :placeholder="t('demand.confirmPage.filter.statusPh')"
           clearable
           style="width: 180px"
@@ -63,6 +63,10 @@
       <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center" header-align="center">
         <template #default="{ row }">{{ formatQty(row.demandQuantity) }}</template>
       </el-table-column>
+      <!-- 到店量（V6-R197）：需求量右边，= 该需求下已发货清点的成品条数，与需求量同单位；没发过车显 0 -->
+      <el-table-column :label="t('demand.confirmPage.column.arrivedQuantity')" min-width="120" align="center" header-align="center">
+        <template #default="{ row }">{{ formatQty(row.arrivedQuantity ?? 0) }}</template>
+      </el-table-column>
       <el-table-column :label="t('demand.confirmPage.column.productUnit')" prop="productUnit" width="70" align="center" header-align="center" />
       <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
         <template #default="{ row }">{{ storeNameOf(row) }}</template>
@@ -70,8 +74,8 @@
       <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="120" align="center" header-align="center" show-overflow-tooltip />
       <el-table-column :label="t('demand.confirmPage.column.demandStatus')" min-width="120" align="center" header-align="center">
         <template #default="{ row }">
-          <!-- row46：表格状态文案与筛选下拉门店视角一致（同源 confirmPage.storeStatus 映射） -->
-          <el-tag :type="storeStatusTagType(row.demandStatus)" effect="light">{{ storeStatusLabel(row.demandStatus) }}</el-tag>
+          <!-- V6-R197：渲染后端派生的门店态 storeDemandStatus，前端不再自己映射仓库 7 态 -->
+          <dict-tag :options="djs_store_demand_status" :value="row.storeDemandStatus" />
         </template>
       </el-table-column>
       <el-table-column :label="t('demand.confirmPage.column.confirmerTime')" prop="confirmerTime" min-width="120" align="center" header-align="center">
@@ -113,60 +117,28 @@ import { Refresh } from '@element-plus/icons-vue';
 import PigAssignDialog from '../components/PigAssignDialog.vue';
 import { useDemandProducts } from '../composables/useDemandProducts';
 import { confirmDemand, getDemandSummary, listDemand, removeDemand } from '@/api/djs-warehouse/demand';
-import type { DemandManageQuery, DemandManageVO, DemandProductType, DemandStatusCode } from '@/api/djs-warehouse/demand/types';
+import type { DemandManageQuery, DemandManageVO, DemandProductType, StoreDemandViewStatusCode } from '@/api/djs-warehouse/demand/types';
 
 const { t } = useI18n();
 const route = useRoute();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 /**
- * row46：表格「需求状态」列文案与筛选下拉门店视角（confirmPage.storeStatus）保持一致。
- * 仓库 7 态 → 门店视角文案映射（同 statusFilterOptions 口径，避免「已提交 vs 待确认」双名）。
- */
-const STORE_STATUS_LABEL_KEY: Record<string, string> = {
-  SUBMITTED: 'SUBMITTED', // 待确认
-  CONFIRMED: 'CONFIRMED', // 已确认
-  IN_PRODUCTION: 'SHIPPED', // 归「已发货」门店视角
-  PARTIAL_SHIPPED: 'SHIPPED', // 已发货
-  COMPLETED: 'ARRIVED' // 确认到店
-};
-function storeStatusLabel(code?: string): string {
-  const key = code ? STORE_STATUS_LABEL_KEY[code] : undefined;
-  return key ? t(`demand.confirmPage.storeStatus.${key}`) : '—';
-}
-function storeStatusTagType(code?: string): 'info' | 'success' | 'warning' | 'primary' {
-  switch (code) {
-    case 'CONFIRMED':
-      return 'success';
-    case 'IN_PRODUCTION':
-    case 'PARTIAL_SHIPPED':
-      return 'warning';
-    case 'COMPLETED':
-      return 'primary';
-    case 'SUBMITTED':
-    default:
-      return 'info';
-  }
-}
-
-/**
- * 状态筛选下拉门店视角裁剪为 4 态（待确认/已确认/已发货/确认到店），
- * 砍掉门店不关心的 DRAFT/IN_PRODUCTION/CANCELLED/DELETED。
+ * 需求状态列 / 筛选下拉都走门店视角派生态字典 djs_store_demand_status（V6-R197）。
  *
- * value 用原始仓库 demand_status 码，才能命中后端 list 端点的 .eq 等值过滤。
- * 映射：待确认=SUBMITTED；已确认=CONFIRMED；已发货=PARTIAL_SHIPPED；确认到店=COMPLETED。
- * 限制（后端纯前端范围内无法消除）：
- *  - 「已发货」门店语义实含 PARTIAL_SHIPPED + COMPLETED 两码，后端单值 .eq 只能匹配一个，
- *    本下拉用 PARTIAL_SHIPPED；COMPLETED 行归到「确认到店」option。
- *  - 「确认到店」真实定义是 received_time IS NOT NULL（派生态），list 端点无该过滤参数，
- *    此处以 COMPLETED 作就近代理，并非严格按收货时间筛选；如需精确筛选需后端补 received_time 参数。
+ * 前端不再自己把仓库 7 态映射成门店文案：那份映射把 COMPLETED 一律算成「确认到店」，
+ * 缺量出车（COMPLETED 但一件都没到店）的行也显示确认到店 —— 甲方 row197 报的就是这个。
+ * 状态由后端 StoreDemandStatusMapping 一处算完回填 storeDemandStatus，筛选把门店态原样回传
+ * （storeDemandStatuses），读与筛同源，与 DemandConfirmDrawer 逐字一致。
  */
-const statusFilterOptions = computed(() => [
-  { label: t('demand.confirmPage.storeStatus.SUBMITTED'), value: 'SUBMITTED' },
-  { label: t('demand.confirmPage.storeStatus.CONFIRMED'), value: 'CONFIRMED' },
-  { label: t('demand.confirmPage.storeStatus.SHIPPED'), value: 'PARTIAL_SHIPPED' },
-  { label: t('demand.confirmPage.storeStatus.ARRIVED'), value: 'COMPLETED' }
-]);
+const { djs_store_demand_status } = toRefs<any>(proxy?.useDict('djs_store_demand_status'));
+
+/** 状态筛选下拉 = 字典项去掉「已删除」（门店端不提供已删除查询，后端 mapping 对它直接报错）。 */
+const statusFilterOptions = computed<{ label: string; value: string }[]>(() =>
+  ((djs_store_demand_status.value ?? []) as { label: string; value: string }[])
+    .filter((d) => d.value !== 'DELETED')
+    .map((d) => ({ label: d.label, value: d.value }))
+);
 
 /** 路由 query 锁定的需求日期 + 产品（确认页只看某日某产品的所有门店需求单）。 */
 const demandDate = String(route.query.demandDate ?? '');
@@ -185,9 +157,9 @@ const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-const searchModel = reactive<{ storeId?: string; demandStatus?: string }>({
+const searchModel = reactive<{ storeId?: string; storeDemandStatus?: string }>({
   storeId: undefined,
-  demandStatus: undefined
+  storeDemandStatus: undefined
 });
 
 function formatQty(v: number | string | undefined): string {
@@ -232,7 +204,8 @@ async function fetchList() {
       productId: productId || undefined,
       demandDate: demandDate || undefined,
       storeId: searchModel.storeId || undefined,
-      demandStatus: (searchModel.demandStatus || undefined) as DemandStatusCode | undefined
+      // 门店视角态筛选（V6-R197）：传门店态给后端按 StoreDemandStatusMapping 下推
+      storeDemandStatuses: searchModel.storeDemandStatus ? [searchModel.storeDemandStatus as StoreDemandViewStatusCode] : undefined
     };
     const res: any = await listDemand(query);
     list.value = (res.rows ?? res.data ?? []) as DemandManageVO[];
@@ -259,7 +232,7 @@ function handleSearch() {
 }
 function handleReset() {
   searchModel.storeId = undefined;
-  searchModel.demandStatus = undefined;
+  searchModel.storeDemandStatus = undefined;
   pageNum.value = 1;
   fetchList();
 }
