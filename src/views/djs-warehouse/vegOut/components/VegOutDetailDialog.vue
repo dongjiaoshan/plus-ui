@@ -40,9 +40,14 @@
         <template #default="{ row }">{{ row.productSpec || '-' }}</template>
       </el-table-column>
       <!-- row191：规格与出库量之间补「耳号」「地块」两列。猪肉行有耳号、果蔬行有地块，
-           另一项后端已兜成 '-'，前端不再二次兜底（兜两次容易一边 '-' 一边空白） -->
+           耳号那项后端已兜成 '-'，前端不再二次兜底（兜两次容易一边 '-' 一边空白） -->
       <el-table-column :label="t('vegOut.detail.earNo')" prop="earNo" min-width="120" align="center" header-align="center" />
-      <el-table-column :label="t('vegOut.detail.plotCode')" prop="plotCode" min-width="120" align="center" header-align="center" />
+      <!-- row199：地块显示**地块名称**（与新增出库抽屉那列一致），三期货无地块显示「三期」。
+           列名与取值都走 plotTag —— 与库存查询 / 入库记录 / 出库记录 / 新增出库抽屉同一个真相源，
+           别在这里另起 key（同一个 label 两处定义早晚会分叉）。 -->
+      <el-table-column :label="t('plotTag.column')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
+        <template #default="{ row }">{{ formatPlotLabel(row) }}</template>
+      </el-table-column>
       <el-table-column :label="t('vegOut.detail.outWeight')" prop="outWeight" min-width="150" align="center" header-align="center">
         <template #default="{ row }">{{ fmtQty(row) }}</template>
       </el-table-column>
@@ -68,6 +73,7 @@
 import { getVegOutDetail } from '@/api/djs-warehouse/vegOut';
 import type { VegOutBatchVO, VegOutDetailVO } from '@/api/djs-warehouse/vegOut/types';
 import { formatQtyByUnit } from '@/utils/weight';
+import { formatPlotLabel } from '@/utils/plotTag';
 import { printVegOutSheet } from '../printSheet';
 import { mergeVegOutPrintRows } from '../mergeByProduct';
 import { useI18n } from 'vue-i18n';

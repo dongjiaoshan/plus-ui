@@ -1530,7 +1530,6 @@ export default {
       productName: '产品名称',
       productSpec: '规格',
       earNo: '耳号',
-      plotCode: '地块',
       outWeight: '出库量',
       productNamePlaceholder: '请输入产品名称'
     },
@@ -3936,6 +3935,9 @@ export default {
       markAction: '记为损坏',
       editAction: '修改',
       produceNo: '生产单号',
+      produceDate: '生产日期',
+      demandDeductQty: '抵扣需求量',
+      deliverDest: '出库去向',
       materialName: '原材料名称',
       materialConsume: '原材料量',
       materialUnit: '原材料单位',

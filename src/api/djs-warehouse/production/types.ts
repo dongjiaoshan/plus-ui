@@ -36,6 +36,8 @@ export interface ProductProductionVO {
   materialUnit?: string;
   /** 关联需求 id（契约 a：按需求下钻 production 明细用）。 */
   demandId?: number | string;
+  /** 本条产出抵扣的需求量（按需求单位计；需求行「到店量」= 同需求下本字段之和）。 */
+  demandDeductQty?: number | string;
   /** 是否损坏（0=否 / 1=是，字典 djs_yes_no；契约 a/b）。 */
   isDamaged?: number;
   /** 损坏凭证 ossId CSV（契约 b：标损时写入）。 */
@@ -106,6 +108,8 @@ export interface ProductProductionQuery {
   storeId?: number | string;
   /** 按需求下钻 production 明细（契约 a：损坏弹框列表用）。 */
   demandId?: number | string;
+  /** 只看已发货清点的产出（is_delivery_check=1）。需求「产品明细」置 true，与「到店量」同条件。 */
+  deliveryChecked?: boolean;
   /** 是否损坏过滤（0=否 / 1=是；契约 a：损坏弹框「是否损坏」搜索条用，空=全部）。 */
   isDamaged?: number;
   /** 是否存在损坏（作用于聚合 row50：0=组内无损坏 / 1=有；空=全部）。 */

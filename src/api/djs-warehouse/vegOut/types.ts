@@ -57,8 +57,12 @@ export interface VegOutDetailVO {
   outAmount?: number | string | null;
   /** 耳号（row191）：猪肉行才有，其余业态后端兜 '-' */
   earNo?: string;
-  /** 地块编号（row191）：果蔬行才有，其余业态后端兜 '-' */
-  plotCode?: string;
+  /** 地块名称（row199）：果蔬行才有；与新增出库抽屉「地块」列同源，交 formatPlotLabel 渲染 */
+  plotName?: string;
+  /** 三期标识（1 = 三期）：三期货无地块，「地块」列靠它显示「三期」 */
+  thirdPhase?: number | string | null;
+  /** 「地块」列的导出取值（后端 PlotLabel 派生，xlsx 专用；页面自己按 plotName + thirdPhase 渲染） */
+  plotLabel?: string;
   /** 出库量带单位展示串（导出专用，仅 xlsx 路径由后端派生；明细接口不返） */
   outQtyLabel?: string;
 }

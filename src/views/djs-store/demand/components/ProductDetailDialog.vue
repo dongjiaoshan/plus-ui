@@ -53,6 +53,7 @@ import DamageEvidenceForm from './DamageEvidenceForm.vue';
 import { listProductionItems } from '@/api/djs-warehouse/production';
 import type { ProductProductionVO, ProductProductionQuery } from '@/api/djs-warehouse/production/types';
 import { isKgUnit } from '@/utils/weight';
+import { formatDeliverDestLabel } from '@/utils/deliverDest';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -68,14 +69,15 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 /**
- * 当前下钻范围（row40）：按「同一日期 + 当前门店 + 该产品」拉生产明细，而非按 demandId。
- * demandId 在生产记录上是门店级松散关联（一个门店多日期多产品都挂同一 demand_id），
- * 按 demandId 过滤会拉出该门店的全部产品；改用 produceDate+productId+storeId 精确锁定该需求当日该产品。
+ * 当前下钻范围（row204）：按 **demandId** 拉这条需求已到店的逐件产出。
+ *
+ * 不能按「需求日期 + 门店 + 产品」拉：产出的 produce_date 是**生产**当天，需求的 demand_date 是**到店**那天，
+ * 「今天生产、明天到店」是常规流程，两者差一天时按日期筛一行都查不到 —— 甲方看到的「部分到店行点开明细空白」
+ * 就是这么来的。demand_id 与 is_delivery_check 是点击发车那一刻同事务写的，
+ * 与需求行「到店量」的聚合口径（Σ demand_deduct_qty WHERE is_delivery_check=1）是同一把钥匙。
  */
-const scope = reactive<{ produceDate: string; productId: string; storeId: string; productType: string; productUnit: string }>({
-  produceDate: '',
-  productId: '',
-  storeId: '',
+const scope = reactive<{ demandId: string; productType: string; productUnit: string }>({
+  demandId: '',
   productType: '',
   productUnit: ''
 });
@@ -93,6 +95,37 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
 
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'produceNo', label: t('storeDemand.damage.produceNo'), minWidth: 160, align: 'center', showOverflowTooltip: true },
+  {
+    // row204：产出的生产日期常常比需求日期早一天（今天生产、明天到店），显式列出来免得甲方
+    // 以为明细拉错了日期。
+    prop: 'produceDate',
+    label: t('storeDemand.damage.produceDate'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (row: BizRow) => String((row as ProductProductionVO).produceDate ?? '').slice(0, 10) || '—'
+  },
+  {
+    // row204：这条产出抵了多少需求量 —— 本列之和 = 需求行上的「到店量」。
+    prop: 'demandDeductQty',
+    label: t('storeDemand.damage.demandDeductQty'),
+    minWidth: 120,
+    align: 'center',
+    formatter: (row: BizRow) => {
+      const v = (row as ProductProductionVO).demandDeductQty;
+      if (v === undefined || v === null || v === '') return '—';
+      const n = Number(v);
+      return Number.isNaN(n) ? String(v) : `${n}${scope.productUnit || ''}`;
+    }
+  },
+  {
+    // D-0048：明细如实列全该需求的全部抵扣产出，这一列让「仓库自用出库」那类行一眼可辨，
+    // 免得甲方看到抵扣量之和对得上、却不知道其中一条货并没进门店。
+    prop: 'deliverDest',
+    label: t('storeDemand.damage.deliverDest'),
+    minWidth: 110,
+    align: 'center',
+    formatter: (row: BizRow) => formatDeliverDestLabel((row as ProductProductionVO).deliverDest)
+  },
   {
     prop: 'materialName',
     label: t('storeDemand.damage.materialName'),
@@ -138,16 +171,21 @@ const columns = computed<BizTableColumn[]>(() => [
 ]);
 
 async function loadList() {
-  if (!scope.productId || !scope.produceDate) return;
+  if (!scope.demandId) return;
   loading.value = true;
   try {
     const params: ProductProductionQuery = {
-      // row40：按 生产日期 + 产品 + 门店 精确锁定（走后端 byBatch 分支）
-      produceDate: scope.produceDate,
-      productId: scope.productId,
-      storeId: scope.storeId || undefined,
-      // 门店需求产品明细：排除礼盒组件产出（deliver_dest='gift'），否则明细行数比需求量多出礼盒打包行
-      excludeGiftDeliver: true,
+      // row204：按需求锁定（走后端 byDemand 分支），只取已发货清点的那部分 = 已到店。
+      //
+      // ⚠️ 这里**不能**再加 excludeGiftDeliver（D-0048）：到店量的聚合
+      // （ProductProductionMapper#selectArrivedQuantityByDemandIds）没有任何 deliver_dest 过滤，
+      // 明细一旦多一道 deliver_dest 条件，行的抵扣量之和就对不上需求行显示的到店量。
+      // 线上实证：需求 2089615514926686209 到店量 100，带 excludeGiftDeliver 只查得到 1 行 50 —— 少的
+      // 那 50 是 deliver_dest='warehouse_out' 的仓库自用出库。到店量该不该排除仓库自用是需求级口径
+      // （D-0048 待甲方定），在它定下来之前明细**如实列全**，并用「出库去向」列把这类行标出来。
+      // 礼盒组件不受影响：gift 产出根本不写 demand_id（fulfillDirectDemandOnPack 对 gift 早返回）。
+      demandId: scope.demandId,
+      deliveryChecked: true,
       // 「是否损坏」筛选：undefined=全部；0/1 透传后端 is_damaged 精确过滤
       isDamaged: searchModel.isDamaged === undefined || searchModel.isDamaged === '' ? undefined : Number(searchModel.isDamaged),
       pageNum: pageNum.value,
@@ -185,9 +223,7 @@ function onDamage(row: BizRow) {
 }
 
 function onClosed() {
-  scope.produceDate = '';
-  scope.productId = '';
-  scope.storeId = '';
+  scope.demandId = '';
   scope.productType = '';
   scope.productUnit = '';
   list.value = [];
@@ -195,13 +231,11 @@ function onClosed() {
 }
 
 /**
- * 打开「产品明细」弹框（row40：按需求的 日期 + 门店 + 产品 拉当日该产品生产明细）。
- * @param params 需求行的 demandDate / productId / storeId
+ * 打开「产品明细」弹框（row204：按需求 id 拉这条需求已到店的逐件产出）。
+ * @param params 需求行的 id / productType / productUnit
  */
-function open(params: { produceDate: string; productId: string; storeId?: string; productType?: string; productUnit?: string }) {
-  scope.produceDate = String(params.produceDate ?? '');
-  scope.productId = String(params.productId ?? '');
-  scope.storeId = String(params.storeId ?? '');
+function open(params: { demandId: string; productType?: string; productUnit?: string }) {
+  scope.demandId = String(params.demandId ?? '');
   scope.productType = String(params.productType ?? '');
   scope.productUnit = String(params.productUnit ?? '');
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));

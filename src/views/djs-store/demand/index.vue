@@ -330,12 +330,10 @@ async function onBatchReceive() {
   fetchList();
 }
 function onViewDetail(row: BizRow) {
-  // 打开「产品明细」弹框（row40：按 需求日期 + 门店 + 产品 拉当日该产品逐件生产明细，含损坏标记）
+  // 打开「产品明细」弹框（row204：按 demandId 拉这条需求已到店的逐件产出，含损坏标记）
   const r = row as StoreDemandVO;
   detailDialogRef.value?.open({
-    produceDate: r.demandDate,
-    productId: r.productId,
-    storeId: r.storeId,
+    demandId: r.id,
     productType: r.productType,
     productUnit: r.productUnit
   });

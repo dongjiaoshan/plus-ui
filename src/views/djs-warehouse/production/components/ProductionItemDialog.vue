@@ -64,6 +64,7 @@
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listProductionItems } from '@/api/djs-warehouse/production';
+import { formatDeliverDestLabel } from '@/utils/deliverDest';
 import type { ProductProductionGroupVO, ProductProductionQuery, ProductProductionVO } from '@/api/djs-warehouse/production/types';
 import { formatQtyByUnit, formatWeightByBelong } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
@@ -166,14 +167,8 @@ const columns = computed<BizTableColumn[]>(() => [
     label: t('djs.warehouse.production.column.deliverDest'),
     minWidth: 100,
     align: 'center',
-    formatter: (row: BizRow) => {
-      const d = (row as ProductProductionVO).deliverDest;
-      if (d === 'platform') return t('djs.warehouse.production.dest.platform');
-      if (d === 'gift') return t('djs.warehouse.production.dest.gift');
-      // 后台出库产出行（矿山/厨房等直接来仓库拿走）：不进发货月台，去向单独标出来
-      if (d === 'warehouse_out') return t('djs.warehouse.production.dest.warehouseOut');
-      return '-';
-    }
+    // 值 → 文案的映射收口在 utils/deliverDest（门店需求「产品明细」同一列共用），别在这里另起一套
+    formatter: (row: BizRow) => formatDeliverDestLabel((row as ProductProductionVO).deliverDest)
   },
   { prop: 'produceTime', label: t('djs.warehouse.production.column.produceTime'), minWidth: 160, formatter: 'datetime' },
   {

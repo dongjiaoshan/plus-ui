@@ -1529,7 +1529,6 @@ export default {
       productName: 'Product',
       productSpec: 'Spec',
       earNo: 'Ear Tag',
-      plotCode: 'Plot',
       outWeight: 'Out Qty',
       productNamePlaceholder: 'Enter product name'
     },
@@ -3951,6 +3950,9 @@ export default {
       markAction: 'Mark damaged',
       editAction: 'Edit',
       produceNo: 'Produce No.',
+      produceDate: 'Produce date',
+      demandDeductQty: 'Deducted qty',
+      deliverDest: 'Destination',
       materialName: 'Material name',
       materialConsume: 'Material qty',
       materialUnit: 'Material unit',
