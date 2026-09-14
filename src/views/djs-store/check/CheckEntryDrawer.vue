@@ -29,7 +29,14 @@
            precision prop 虽更新但 modelValue 恒 0 不触发内部重排，「份」行沿用上一「kg」行的陈旧 "0.000" 显示。
            按产品身份重挂行 → 输入框重挂、以 precision=0 重排 → 非 kg 显整数。 -->
       <el-table v-loading="loading" :data="filteredRows" row-key="productId" border stripe class="entry-table">
-        <el-table-column prop="productName" :label="t('storeLedger.column.productName')" min-width="120" show-overflow-tooltip align="center" header-align="center" />
+        <el-table-column
+          prop="productName"
+          :label="t('storeLedger.column.productName')"
+          min-width="120"
+          show-overflow-tooltip
+          align="center"
+          header-align="center"
+        />
         <!-- 流程性问题 row14：去掉「类别」列 -->
         <el-table-column prop="productUnit" :label="t('storeLedger.column.unit')" min-width="120" align="center" header-align="center" />
         <!-- 期初：只读（库存表结存） -->
@@ -54,34 +61,80 @@
             <span v-else :class="qtyClass(row.inboundQty, row)">{{ fmtQty(row.inboundQty, row) }}</span>
           </template>
         </el-table-column>
-        <!-- 销售：手动 -->
+        <!-- 销售：其余行手动；猪肉原材料行只读（R215 第 2 条「取」现场打包追溯码的原材料消耗量，后端当场重算） -->
         <el-table-column :label="t('storeLedger.column.saleQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.saleQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number
+              v-if="!row.porkMaterialRow"
+              v-model="row.saleQty"
+              :min="0"
+              :precision="kgPrecision(row)"
+              :step="kgStep(row)"
+              :controls="false"
+              class="cell-num"
+              @change="recalc(row)"
+            />
+            <template v-else>
+              <span>{{ fmtQty(row.saleQty, row) }}</span>
+              <el-tooltip :content="t('storeLedger.entry.tracedSaleHint')" placement="top">
+                <el-icon class="derived-hint"><QuestionFilled /></el-icon>
+              </el-tooltip>
+            </template>
           </template>
         </el-table-column>
         <!-- 赠送：手动 -->
         <el-table-column :label="t('storeLedger.column.giftQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.giftQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number
+              v-model="row.giftQty"
+              :min="0"
+              :precision="kgPrecision(row)"
+              :step="kgStep(row)"
+              :controls="false"
+              class="cell-num"
+              @change="recalc(row)"
+            />
           </template>
         </el-table-column>
-        <!-- 退回（门店退回仓库）：只读 -->
+        <!-- 退回（门店退回仓库）：两行都只读，但来源不同 —— 猪肉原材料行是倒算值（R215），其余行是退回模块当日聚合 -->
         <el-table-column :label="t('storeLedger.column.returnedQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
             <span :class="qtyClass(row.returnWhQty, row)">{{ fmtQty(row.returnWhQty, row) }}</span>
+            <el-tooltip v-if="row.porkMaterialRow" :content="t('storeLedger.entry.derivedReturnHint')" placement="top">
+              <el-icon class="derived-hint"><QuestionFilled /></el-icon>
+            </el-tooltip>
           </template>
         </el-table-column>
         <!-- 期末：手动实盘录入 -->
         <el-table-column :label="t('storeLedger.column.closingQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <el-input-number v-model="row.closingQty" :min="0" :precision="kgPrecision(row)" :step="kgStep(row)" :controls="false" class="cell-num" @change="recalc(row)" />
+            <el-input-number
+              v-model="row.closingQty"
+              :min="0"
+              :precision="kgPrecision(row)"
+              :step="kgStep(row)"
+              :controls="false"
+              class="cell-num"
+              @change="recalc(row)"
+            />
           </template>
         </el-table-column>
-        <!-- 损耗：只读（后端公式计算，前端同步展示） -->
+        <!-- 损耗：猪肉原材料行手填（默认 0，R215）；其余行只读（后端公式倒算，前端同步展示） -->
         <el-table-column :label="t('storeLedger.column.lossQty')" min-width="120" align="center" header-align="center">
           <template #default="{ row }">
-            <span class="loss" :class="{ 'loss-negative': row.lossQty < 0, 'is-zero': !Number(row.lossQty) }">{{ fmtQty(row.lossQty, row) }}</span>
+            <el-input-number
+              v-if="row.porkMaterialRow"
+              v-model="row.lossQty"
+              :min="0"
+              :precision="kgPrecision(row)"
+              :step="kgStep(row)"
+              :controls="false"
+              class="cell-num"
+              @change="recalc(row)"
+            />
+            <span v-else class="loss" :class="{ 'loss-negative': row.lossQty < 0, 'is-zero': !Number(row.lossQty) }">{{
+              fmtQty(row.lossQty, row)
+            }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -100,7 +153,13 @@
 
 <script setup name="StoreCheckEntryDrawer" lang="ts">
 import { listStoreLedgerCandidates, batchSaveStoreLedger, getStoreLedgerDetail } from '@/api/djs-store/ledger';
-import type { StoreLedgerBatchItem, StoreLedgerBelongTab, StoreLedgerCandidateVO, StoreLedgerCategory, StoreLedgerLineVO } from '@/api/djs-store/ledger/types';
+import type {
+  StoreLedgerBatchItem,
+  StoreLedgerBelongTab,
+  StoreLedgerCandidateVO,
+  StoreLedgerCategory,
+  StoreLedgerLineVO
+} from '@/api/djs-store/ledger/types';
 import { getWhiteBarSplitLoss } from '@/api/djs-store/loss';
 import { useI18n } from 'vue-i18n';
 
@@ -134,12 +193,14 @@ interface EntryRow {
   giftQty: number;
   /** 退货量（顾客退货，手动） */
   returnSaleQty: number;
-  /** 退回量（门店退回仓库，只读） */
+  /** 退回量：普通行 = 退回模块当日聚合（只读）；猪肉原材料行 = 倒算值（R215） */
   returnWhQty: number;
   /** 期末库存（手动实盘录入） */
   closingQty: number;
-  /** 损耗（前端按公式同步展示，后端最终计算） */
+  /** 损耗：普通行 = 倒算展示；猪肉原材料行 = 手填（默认 0，R215） */
   lossQty: number;
+  /** 是不是猪肉原材料行（后端按 belong_type∈(pork,white_bar) 且 product_attr=2 判好下发，R215） */
+  porkMaterialRow: boolean;
 }
 
 function todayStr(): string {
@@ -160,9 +221,7 @@ const arriveWeight = ref(0);
 /** 修改模式（DENGBO-R13）：对已盘记录更正，锁定日期、叠加已保存值、提交 edit=true 允许覆盖。 */
 const editMode = ref(false);
 
-const drawerTitle = computed(() =>
-  editMode.value ? t('storeLedger.entry.editTitle', { date: ledgerDate.value }) : t('storeLedger.entry.title')
-);
+const drawerTitle = computed(() => (editMode.value ? t('storeLedger.entry.editTitle', { date: ledgerDate.value }) : t('storeLedger.entry.title')));
 
 /** 产品品类页签（DENGBO-R10）：猪肉 / 果蔬 / 其他。切换只过滤视图，提交仍保存全部行。 */
 const TABS: StoreLedgerBelongTab[] = ['pork', 'veg', 'other'];
@@ -239,8 +298,21 @@ function kgStep(row: { productUnit?: string }): number {
   return isWeightRow(row) ? 0.001 : 1;
 }
 
-/** 损耗 = 期初 + 入库 − 销售 − 赠送 + 退货 − 退回 − 期末（与后端公式一致）。 */
+/**
+ * 两套口径按行分流，与后端 StoreDailyLedgerServiceImpl.batchSave 必须逐字一致（漂了就是页面显示与落库不符）：
+ *   - 猪肉原材料行（R215，甲方 2026-09-13）：期末 + 损耗手填 → **退回量倒算**
+ *     `退回 = 期初 + 入库 − 销售 − 赠送 − 期末 − 损耗`（甲方给的式子里没有「+顾客退货」这一项，按字面执行）；
+ *   - 其余行（含猪肉的生产产品，甲方明说「生产产品逻辑不变」）：期末手填 → **损耗倒算**
+ *     `损耗 = 期初 + 入库 − 销售 − 赠送 + 顾客退货 − 退回 − 期末`。
+ * 判据 `porkMaterialRow` 由后端下发，前端不自己推 —— 两边各推一份必然漂。
+ */
 function recalc(row: EntryRow) {
+  if (row.porkMaterialRow) {
+    row.returnWhQty = Number(
+      (nz(row.openingQty) + nz(row.inboundQty) - nz(row.saleQty) - nz(row.giftQty) - nz(row.closingQty) - nz(row.lossQty)).toFixed(3)
+    );
+    return;
+  }
   row.lossQty = Number(
     (
       nz(row.openingQty) +
@@ -292,14 +364,23 @@ async function loadCandidates() {
         // 猪肉行（inboundReadonly=false）是用户按实重手填的，仍 saved 优先，否则上次的更正会被冲掉。
         inboundQty: inboundReadonly ? nz(c.inboundQty) : saved ? nz(saved.inboundQty) : nz(c.inboundQty),
         inboundReadonly,
-        saleQty: saved ? nz(saved.saleQty) : nz(c.saleQty),
+        // R215：猪肉原材料行的销售量 = 当日现场打包追溯码的原材料消耗量，与上面的只读入库量、下面的
+        // 退回量同属「服务端客观聚合」，恒取候选实时值。走 saved 优先会把它永久钉死在 0 ——
+        // 现场打包要求「先在门店盘点录入当日入库量」才放行，所以首次盘点保存时必然还没打包。
+        saleQty: c.porkMaterialRow ? nz(c.saleQty) : saved ? nz(saved.saleQty) : nz(c.saleQty),
         giftQty: saved ? nz(saved.giftQty) : 0,
         returnSaleQty: saved ? nz(saved.returnQty) : nz(c.returnSaleQty),
         // row53：退回量（门店退回仓库，只读）恒取候选实时值——退回是当日退货模块聚合的客观量，
         // 不随「上次盘点已保存值」回落（否则当日有退回却显 0）。退货量 returnSaleQty 仍保留 saved 优先（可手填）。
         returnWhQty: nz(c.returnWhQty),
         closingQty: saved ? nz(saved.closingQty) : 0,
-        lossQty: 0
+        // R215：猪肉原材料行的损耗是**手填值**，修改模式要取回上次保存的；其余行由 recalc 倒算覆盖，给 0 即可。
+        // ⚠️ R215 上线**之前**落库的行，loss_qty 存的是旧口径的倒算残差（staging 实查 46 行全部 loss==inbound），
+        // 在这里会被当成「工人手填的损耗」再减一次 → 退回量倒算出 −当日现场打包量、被负值校验拦住提交。
+        // 要不要把历史行按新口径重述属于「改已落库字段语义」，已登记 D-0058 等甲方/Kevin 拍板；
+        // 按 fallback 先做：不动历史数据，历史行由工人在「修改」时手动把损耗清零。
+        lossQty: c.porkMaterialRow && saved ? nz(saved.lossQty) : 0,
+        porkMaterialRow: c.porkMaterialRow === true
       };
       recalc(r);
       return r;
@@ -349,7 +430,10 @@ function savedToRow(s: StoreLedgerLineVO): EntryRow {
     returnSaleQty: nz(s.returnQty),
     returnWhQty: nz(s.whReturnQty),
     closingQty: nz(s.closingQty),
-    lossQty: 0
+    lossQty: nz(s.lossQty),
+    // 明细 VO 不带 porkMaterialRow（它是候选接口算的）。这条分支只覆盖「历史盘过、今天已不在候选里」的产品，
+    // 这类行本就不该再按 R215 倒算（今天没有现场打包消耗可取），按普通行处理即可。
+    porkMaterialRow: false
   };
   recalc(r);
   return r;
@@ -359,18 +443,15 @@ async function handleSubmit() {
   if (!storeId.value || !rows.value.length) {
     return;
   }
-  // row39：损耗量 / 期末库存为负 → 不允许完成盘点，提示含负值产品名。
-  const negativeRows = rows.value.filter((r) => Number(r.lossQty) < 0 || Number(r.closingQty) < 0);
+  // row39：倒算项 / 期末库存为负 → 不允许完成盘点，提示含负值产品名。
+  // 倒算项按行分流：猪肉原材料行是退回量（R215），其余行是损耗 —— 检查错了那一列等于没检查。
+  const negativeRows = rows.value.filter((r) => Number(r.closingQty) < 0 || Number(r.porkMaterialRow ? r.returnWhQty : r.lossQty) < 0);
   if (negativeRows.length) {
-    proxy?.$modal.msgError(
-      t('storeLedger.entry.negativeError', { names: negativeRows.map((r) => r.productName).join('、') })
-    );
+    proxy?.$modal.msgError(t('storeLedger.entry.negativeError', { names: negativeRows.map((r) => r.productName).join('、') }));
     return;
   }
   await proxy?.$modal.confirm(
-    editMode.value
-      ? t('storeLedger.entry.editConfirm', { n: rows.value.length })
-      : t('storeLedger.entry.submitConfirm', { n: rows.value.length })
+    editMode.value ? t('storeLedger.entry.editConfirm', { n: rows.value.length }) : t('storeLedger.entry.submitConfirm', { n: rows.value.length })
   );
   const items: StoreLedgerBatchItem[] = rows.value.map((r) => ({
     productId: r.productId,
@@ -380,7 +461,9 @@ async function handleSubmit() {
     giftQty: r.giftQty,
     returnSaleQty: r.returnSaleQty,
     returnWhQty: r.returnWhQty,
-    closingQty: r.closingQty
+    closingQty: r.closingQty,
+    // 猪肉原材料行才是手填值；其余行后端忽略本字段、自行倒算
+    lossQty: r.lossQty
   }));
   submitLoading.value = true;
   try {
@@ -414,6 +497,14 @@ defineExpose({ open });
 </script>
 
 <style lang="scss" scoped>
+/* 猪肉原材料行「退回量由公式倒算」的说明图标：贴在数值右侧，弱化不抢视线 */
+.derived-hint {
+  margin-left: 4px;
+  color: var(--el-text-color-placeholder);
+  vertical-align: middle;
+  cursor: help;
+}
+
 .ledger-entry {
   .entry-tools {
     display: flex;

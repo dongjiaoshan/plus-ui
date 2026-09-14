@@ -153,10 +153,30 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'returnDate', label: t('djs.warehouse.return.returnDate'), minWidth: 120 },
   { prop: 'storeName', label: t('djs.warehouse.return.storeId'), minWidth: 130 },
   { prop: 'productKindCount', label: t('djs.warehouse.return.productKindCount'), minWidth: 90 },
-  { prop: 'returnWeightTotal', label: t('djs.warehouse.return.returnWeightTotal'), minWidth: 100, formatter: (row: any) => formatWeight(row.returnWeightTotal) },
-  { prop: 'confirmWeightTotal', label: t('djs.warehouse.return.confirmWeightTotal'), minWidth: 100, formatter: (row: any) => formatWeight(row.confirmWeightTotal) },
-  { prop: 'weightDiffTotal', label: t('djs.warehouse.return.weightDiffTotal'), minWidth: 100, formatter: (row: any) => formatWeight(row.weightDiffTotal) },
-  { prop: 'nonWeightReturnWeightTotal', label: t('djs.warehouse.return.nonWeightReturnWeightTotal'), minWidth: 130, formatter: (row: any) => formatWeight(row.nonWeightReturnWeightTotal) },
+  {
+    prop: 'returnWeightTotal',
+    label: t('djs.warehouse.return.returnWeightTotal'),
+    minWidth: 100,
+    formatter: (row: any) => formatWeight(row.returnWeightTotal)
+  },
+  {
+    prop: 'confirmWeightTotal',
+    label: t('djs.warehouse.return.confirmWeightTotal'),
+    minWidth: 100,
+    formatter: (row: any) => formatWeight(row.confirmWeightTotal)
+  },
+  {
+    prop: 'weightDiffTotal',
+    label: t('djs.warehouse.return.weightDiffTotal'),
+    minWidth: 100,
+    formatter: (row: any) => formatWeight(row.weightDiffTotal)
+  },
+  {
+    prop: 'nonWeightReturnWeightTotal',
+    label: t('djs.warehouse.return.nonWeightReturnWeightTotal'),
+    minWidth: 130,
+    formatter: (row: any) => formatWeight(row.nonWeightReturnWeightTotal)
+  },
   { prop: 'confirmProgress', label: t('djs.warehouse.return.confirmProgress'), minWidth: 100 },
   { prop: 'confirmTime', label: t('djs.warehouse.return.confirmTime'), minWidth: 160 },
   { prop: 'confirmUserName', label: t('djs.warehouse.return.confirmUser'), minWidth: 100 }
@@ -283,6 +303,11 @@ function buildQueryParams(): ReturnProductQuery {
   return {
     productIds,
     storeIds,
+    // 本页是「门店退回」的退货记录，恒只看 return_type=store。
+    // STR-RETURN-OPS-001 起 /store-daily 同时返「单位退回」（新菜单要的），不锁死这一维的话
+    // 单位退回会混进来，而它没有门店、「退回门店」列显的是退回单位名 —— 本页语义就变了。
+    // 想看单位退回走 仓库→库存管理→门店退回操作。
+    returnType: 'store',
     returnDateFrom: range[0] || undefined,
     returnDateTo: range[1] || undefined
   };

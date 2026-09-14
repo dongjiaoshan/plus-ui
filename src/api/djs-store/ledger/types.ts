@@ -78,6 +78,10 @@ export interface StoreLedgerCandidateVO {
   returnSaleQty: number | string;
   /** 预填退回量（门店退回仓库 store_to_warehouse 当日聚合，只读） */
   returnWhQty: number | string;
+  /** 是不是「猪肉原材料行」（belong_type∈(pork,white_bar) 且 product_attr=2，R215）。
+   *  true → 销售量**预填**现场打包追溯码消耗量（仍可手改）、期末与损耗手填默认 0、**退回量倒算**；
+   *  false → 沿用原口径（期末手填、损耗倒算），即甲方说的「生产产品逻辑不变」。 */
+  porkMaterialRow?: boolean;
 }
 
 /** 当日盘点整表批量提交单行（期末手动入参；损耗由后端计算不传）。 */
@@ -95,6 +99,8 @@ export interface StoreLedgerBatchItem {
   returnSaleQty?: number | string;
   /** 退回量（门店退回仓库，只读回传） */
   returnWhQty?: number | string;
+  /** 损耗量：**猪肉原材料行**手填（默认 0，R215）；其余行后端忽略、自行倒算 */
+  lossQty?: number | string;
   /** 期末库存（手动实盘录入） */
   closingQty?: number | string;
 }

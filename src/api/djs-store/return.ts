@@ -11,7 +11,10 @@ import type {
   StoreReturnBatchForm,
   StoreReturnConfirmForm,
   StoreReturnForm,
+  StoreReturnOpsItemVO,
   StoreReturnPorkCandidateVO,
+  StoreReturnUnitCandidateVO,
+  StoreReturnUnitForm,
   StoreReturnVegCandidateVO,
   StoreReturnQuery,
   StoreReturnVO
@@ -61,7 +64,7 @@ export const batchCreateStoreReturn = (data: StoreReturnBatchForm) => {
   });
 };
 
-/** 退回操作「猪肉产品」tab 候选（仅当该门店当日有白条产品到店时才返回字典项，否则空） */
+/** 退回操作「猪肉产品」tab 候选（row214：取字典「退回产品清单」里 belong_type=pork/white_bar 的产品，与门店当日有无到店无关） */
 export const listPorkReturnCandidates = (storeId: string): AxiosPromise<StoreReturnPorkCandidateVO[]> => {
   return request({
     url: '/djs/store/return/operation/pork-candidates',
@@ -70,7 +73,7 @@ export const listPorkReturnCandidates = (storeId: string): AxiosPromise<StoreRet
   });
 };
 
-/** 退回操作「果蔬产品」tab 候选（= 该门店当天已确认到店的果蔬需求产品，按 product_id 去重） */
+/** 退回操作「果蔬产品」tab 候选（row214：取字典「退回产品清单」里 belong_type=vegetable 的产品；材料外售的成品会折叠成其原材料） */
 export const listVegReturnCandidates = (storeId: string): AxiosPromise<StoreReturnVegCandidateVO[]> => {
   return request({
     url: '/djs/store/return/operation/veg-candidates',
@@ -80,8 +83,10 @@ export const listVegReturnCandidates = (storeId: string): AxiosPromise<StoreRetu
 };
 
 /**
- * 退回操作「其他产品」tab 候选（row202）：干货 / 鸡蛋 / 其他三业态。
- * 取数与猪肉 / 果蔬同口径 —— 门店当日盘点台账「期初 + 入库 − 销售 − 赠送 > 0」（row205；不减损坏，损坏的货本身就要退回）。
+ * 退回操作「其他产品」tab 候选（row214）：**非猪肉非果蔬的一律落这里**（甲方原话「其他的类型统一显示在其他产品里」），
+ * 含 belong_type 为空的外购产品；礼盒除外（拆不回单一原材料，确认那步必然 400，候选侧就剔掉）。
+ * 三个 tab 同源 —— 字典「退回产品清单」`djs_return_product_list`，按产品自身 belong_type 分流。
+ * 返回的 arrivedQuantity 恒为 null = **不封顶**（甲方「对于其退回量不做限制」），台账封顶口径已作废。
  */
 export const listOtherReturnCandidates = (storeId: string): AxiosPromise<StoreReturnVegCandidateVO[]> => {
   return request({
@@ -91,11 +96,55 @@ export const listOtherReturnCandidates = (storeId: string): AxiosPromise<StoreRe
   });
 };
 
-/** 仓库确认实收（原型「退回记录」仓库确认入库，pending→received 联动外购入库） */
+/**
+ * 仓库确认实收（原型「退回记录」仓库确认入库，pending→received 联动外购入库）。
+ *
+ * `receivedQty` / `receivedWeight` 传的都是**原材料量**：admin「门店退回操作」抽屉里界面按
+ * **退回单位**录，提交前必须乘 `materialNum` 换算（与 mp `metric.ts#toConfirmWeight` 同一套），
+ * 否则同一张单 admin 处理与 mp 处理会写出两个数。
+ */
 export const confirmStoreReturn = (data: StoreReturnConfirmForm) => {
   return request({
     url: '/djs/store/return/confirm',
     method: 'put',
+    data
+  });
+};
+
+// ---------------------------------------------------------------------------
+// STR-RETURN-OPS-001 admin「门店退回操作」
+// ---------------------------------------------------------------------------
+
+/**
+ * 门店退回操作抽屉明细：一张退回单（退回类型 + 退回日期 + 门店/退回单位）下的逐产品行。
+ *
+ * 「退回处理」与「查看详情」共用本端点 —— 同一份数据，由前端按 `returnStatus` 决定可编辑性。
+ */
+export const listReturnOpsItems = (query?: StoreReturnQuery): AxiosPromise<StoreReturnOpsItemVO[]> => {
+  return request({
+    url: '/djs/store/return/operation/items',
+    method: 'get',
+    params: query
+  });
+};
+
+/**
+ * 「新增单位退回」弹框候选产品：字典「退回产品清单」按产品编码 resolve 出的产品数据（含入库库位候选）。
+ */
+export const listReturnUnitCandidates = (): AxiosPromise<StoreReturnUnitCandidateVO[]> => {
+  return request({
+    url: '/djs/store/return/operation/unit-candidates',
+    method: 'get'
+  });
+};
+
+/**
+ * 新增一张「单位退回」单：落 return_type='unit' + return_status='received'，未丢弃行同事务写入库。
+ */
+export const createUnitReturn = (data: StoreReturnUnitForm) => {
+  return request<number>({
+    url: '/djs/store/return/unit',
+    method: 'post',
     data
   });
 };

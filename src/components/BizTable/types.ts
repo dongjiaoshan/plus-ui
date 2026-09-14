@@ -45,6 +45,11 @@ export interface SearchFieldSchema {
   clearable?: boolean;
   /** type=select 多选（R70 关键搜索筛选下拉多选）；多选时 v-model 值为数组，buildQuery 需按数组传后端 IN */
   multiple?: boolean;
+  /**
+   * 置灰该筛选项（如「退回类型 = 单位退回」时「退回门店」按定义查不到东西）。
+   * 只影响交互，不改值 —— 业务页应在 buildQuery 里同步丢弃这些条件下推。
+   */
+  disabled?: boolean;
   /** 表单项宽度 */
   width?: string | number;
 }

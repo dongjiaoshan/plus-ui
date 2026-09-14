@@ -83,7 +83,14 @@
             <el-form-item :label="t('productionConfig.medication.fattenMedMaxAge')">
               <!-- 下限 1：最大用药日龄填 0 没有业务含义（等于一头育肥猪都不能用药），且后端 fattenMedMaxAge()
                    把 0 当「未配置」回落默认 300，UI 放行 0 会造成「后台显示 0、小程序仍按 300」的两端不一致。 -->
-              <el-input-number v-model="medicationForm.fatten_med_max_age_days" :min="1" :max="9999" :step="1" :precision="0" controls-position="right" />
+              <el-input-number
+                v-model="medicationForm.fatten_med_max_age_days"
+                :min="1"
+                :max="9999"
+                :step="1"
+                :precision="0"
+                controls-position="right"
+              />
               <span class="unit-suffix">{{ t('productionConfig.unit.day') }}</span>
               <div class="field-tip">{{ t('productionConfig.medication.fattenMedMaxAgeTip') }}</div>
             </el-form-item>
@@ -123,7 +130,7 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const activeTab = ref<'sow' | 'fatten' | 'slaughter' | 'medication'>('sow');
 
-// ============= Tab1 母猪生产配置（6 字段表单）=============
+// ============= Tab1 母猪生产配置 =============
 // key 与后端 ProductionCycleConfigController.SOW_DEFAULTS 严格对齐
 const SOW_FIELDS = [
   { key: 'sow_reserve_to_breed_days' },
@@ -132,7 +139,8 @@ const SOW_FIELDS = [
   { key: 'sow_empty_to_breed_days' },
   { key: 'sow_abort_to_breed_days' },
   { key: 'sow_breed_to_farrow_days' },
-  { key: 'sow_farrow_to_wean_days' }
+  { key: 'sow_farrow_to_wean_days' },
+  { key: 'sow_farrow_judge_deadline_days' }
 ] as const;
 
 const sowForm = reactive<Record<string, number>>({
@@ -141,8 +149,9 @@ const sowForm = reactive<Record<string, number>>({
   sow_return_to_breed_days: 5,
   sow_empty_to_breed_days: 5,
   sow_abort_to_breed_days: 5,
-  sow_breed_to_farrow_days: 141,
-  sow_farrow_to_wean_days: 25
+  sow_breed_to_farrow_days: 114,
+  sow_farrow_to_wean_days: 25,
+  sow_farrow_judge_deadline_days: 119
 });
 const sowSaving = ref(false);
 

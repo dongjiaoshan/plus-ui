@@ -126,3 +126,67 @@ export const triggerAggregate = (date?: string): AxiosPromise<string> => {
     params: date ? { date } : undefined
   });
 };
+
+// ============================================================
+//  配种批次口径（BRD-STAT-COHORT-001）
+// ============================================================
+
+/** 配种批次去向台账单行。各去向桶互斥，合计 = bred。 */
+export interface CohortLedgerVO {
+  /** 配种月 yyyy-MM */
+  breedMonth: string;
+  /** 本月配种头数 */
+  bred: number;
+  /** 其中已过判定日的头数（= 分娩率分母） */
+  matured: number;
+  /** 已到期且在判定节点内分娩（= 分娩率分子） */
+  farrow: number;
+  /** 已到期但超判定节点才分娩：判定时算未分娩，不进分子 */
+  farrowLate: number;
+  /** 返情 */
+  returnCount: number;
+  /** 空怀 */
+  emptyCount: number;
+  /** 流产 */
+  abortCount: number;
+  /** 配种后淘汰 / 死亡离群 */
+  goneCount: number;
+  /** 已到期但无任何结局记录，待现场定性 */
+  undecided: number;
+  /** 判定日未到、结局未定（正常在途） */
+  pending: number;
+  /** 本月最早判定日 yyyy-MM-dd */
+  firstDeadline: string;
+  /** 本月最晚判定日 yyyy-MM-dd */
+  lastDeadline: string;
+  /** 分娩率%（farrow / matured × 100） */
+  farrowRate: number;
+}
+
+/** 超期未定性母猪单行。 */
+export interface OverdueUndecidedVO {
+  breedingId: string;
+  earNo: string;
+  breedingDate: string;
+  deadline: string;
+  overdueDays: number;
+  parity: number;
+  barnName?: string;
+  penName?: string;
+  currentStatus: string;
+}
+
+export const getCohortLedger = (year?: number): AxiosPromise<CohortLedgerVO[]> => {
+  return request({
+    url: '/djs/breed/dashboard/cohort-ledger',
+    method: 'get',
+    params: year ? { year } : undefined
+  });
+};
+
+export const listOverdueUndecided = (): AxiosPromise<OverdueUndecidedVO[]> => {
+  return request({
+    url: '/djs/breed/dashboard/overdue-undecided',
+    method: 'get'
+  });
+};

@@ -46,11 +46,28 @@ export interface ReturnProductVO {
 export interface ReturnStoreDailyVO {
   /** 退货日期（apply_time 截到天，yyyy-MM-dd） */
   returnDate: string;
+  /** 退回类型 djs_store_return_type：store=门店退回 / unit=单位退回（STR-RETURN-OPS-001） */
+  returnType?: string;
+  /** 退回单位名（仅 returnType=unit） */
+  returnUnit?: string;
   storeId?: string;
-  /** 门店名称（后端回填） */
+  /** 「退回门店」展示值：门店退回 → 门店名；单位退回 → 退回单位名（后端已统一回填） */
   storeName?: string;
+  /** 退回状态 djs_store_return_status：pending=待处理 / received=已处理（组内还有 pending 就是 pending） */
+  returnStatus?: string;
   /** 退货品种数 = 该组 distinct product_id 计数 */
   productKindCount: number;
+  /** 猪肉产品品类数 = 该组 distinct product_id 里 belong_type ∈ (pork, white_bar) 的个数（后端算，前端不得 filter） */
+  porkKindCount?: number;
+  /** 果蔬产品品类数 = belong_type='vegetable' 的个数 */
+  vegKindCount?: number;
+  /** 其他产品品类数 = 其余全部（含 belong_type 为空）的个数 */
+  otherKindCount?: number;
+  /** 退回操作人 ID／姓名 */
+  operatorId?: string;
+  operatorName?: string;
+  /** 退回时间（提交那一刻，后端取 create_time） */
+  returnTime?: string;
   /** 退货重量合计 */
   returnWeightTotal?: number;
   /** 确认重量合计 */
@@ -109,6 +126,15 @@ export interface ReturnProductQuery {
   /** STORE-RETURN-UNIFY-001：改读 t_store_return 后按 return_date 过滤（store 端点参数）。 */
   returnDateFrom?: string;
   returnDateTo?: string;
+  /**
+   * 退回类型 djs_store_return_type（STR-RETURN-OPS-001）：
+   * store=门店退回 / unit=单位退回；空 = 两类都查。
+   */
+  returnType?: string;
+  /**
+   * 退回单位（仅 returnType=unit 有意义）。单位退回没有门店，查明细时必须带上它才能定位到唯一一张单。
+   */
+  returnUnit?: string;
 }
 
 export interface ReturnConfirmBody {

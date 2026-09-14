@@ -9,7 +9,7 @@
       </el-radio-group>
     </div>
 
-    <!-- 猪肉产品：产品名称 / 退回量 / 单位（row119：退回量按「当日到店量 − 今日已退」封顶，上限 0 → 输入框禁用，上限本身不展示） -->
+    <!-- 猪肉产品：产品名称 / 退回量 / 单位（row214：候选来自字典「退回产品清单」，退回量不封顶；非 kg 单位允许两位小数） -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" min-width="180" show-overflow-tooltip align="center" header-align="center">
         <template #default="{ row }">
@@ -21,11 +21,9 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :max="maxOf(row)"
-            :disabled="maxOf(row) === 0"
-            :precision="isKg(row.productUnit) ? 3 : 0"
+            :precision="isKg(row.productUnit) ? 3 : 2"
             :step="1"
-            :placeholder="placeholderOf(row)"
+            :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
             style="width: 180px"
           />
@@ -36,19 +34,24 @@
       </el-table-column>
     </el-table>
 
-    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row205：上限 = 期初+入库−销售−赠送−今日已退） -->
+    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row214：同猪肉，候选来自退回产品清单、不封顶） -->
     <el-table v-else-if="activeCat === 'vegetable'" v-loading="loading" :data="vegRows" border class="op-table">
-      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column
+        :label="t('storeReturn.column.productName')"
+        prop="productName"
+        min-width="180"
+        show-overflow-tooltip
+        align="center"
+        header-align="center"
+      />
       <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
         <template #default="{ row }">
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :max="maxOf(row)"
-            :disabled="maxOf(row) === 0"
-            :precision="isKg(row.productUnit) ? 3 : 0"
+            :precision="isKg(row.productUnit) ? 3 : 2"
             :step="1"
-            :placeholder="placeholderOf(row)"
+            :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
             style="width: 180px"
           />
@@ -59,19 +62,24 @@
       </el-table-column>
     </el-table>
 
-    <!-- 其他产品（row202：干货 / 鸡蛋 / 其他三业态，列与逻辑与果蔬完全一致） -->
+    <!-- 其他产品（row214：非猪肉非果蔬的一律落这里，列与逻辑与果蔬完全一致） -->
     <el-table v-else v-loading="loading" :data="otherRows" border class="op-table">
-      <el-table-column :label="t('storeReturn.column.productName')" prop="productName" min-width="180" show-overflow-tooltip align="center" header-align="center" />
+      <el-table-column
+        :label="t('storeReturn.column.productName')"
+        prop="productName"
+        min-width="180"
+        show-overflow-tooltip
+        align="center"
+        header-align="center"
+      />
       <el-table-column :label="t('storeReturn.column.returnQuantity')" width="220" align="center" header-align="center">
         <template #default="{ row }">
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :max="maxOf(row)"
-            :disabled="maxOf(row) === 0"
-            :precision="isKg(row.productUnit) ? 3 : 0"
+            :precision="isKg(row.productUnit) ? 3 : 2"
             :step="1"
-            :placeholder="placeholderOf(row)"
+            :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
             style="width: 180px"
           />
@@ -112,9 +120,9 @@ interface MatrixRow {
   returnQuantity?: number;
   /** 退回产品重量(kg) */
   returnWeight?: number;
-  /** 到店量（退回量上限 rows40/41）：份数产品=当日到店需求订购份数 / 重量产品=当日到店重量；空 → 不封顶 */
+  /** 到店量：row214 起后端恒不下发（退回量不封顶），字段留着只为兼容 VO 结构，UI 不再消费 */
   arrivedQuantity?: number;
-  /** 今日已退量（row119）：可退上限 = 到店量 − 今日已退 */
+  /** 今日已退量（row214 起只做展示，不再参与封顶） */
   returnedQuantity?: number;
 }
 
@@ -167,32 +175,7 @@ function isKg(unit?: string): boolean {
   return u === 'kg' || u === '公斤';
 }
 
-/**
- * row119：该行可退上限 = 当日到店量 − 今日已退量（不小于 0）。
- * 后端候选接口给 arrivedQuantity / returnedQuantity，两端同一口径；到店量为空 = 该产品不封顶（Infinity）。
- */
-function maxOf(row: MatrixRow): number {
-  if (row.arrivedQuantity === undefined || row.arrivedQuantity === null) {
-    return Infinity;
-  }
-  return Math.max(0, Number(row.arrivedQuantity) - Number(row.returnedQuantity ?? 0));
-}
-
-/** 可退上限文案（超限提示用）：不封顶 → '—'；kg 保留 3 位、计件去尾零。 */
-function limitText(row: MatrixRow): string {
-  const max = maxOf(row);
-  if (!Number.isFinite(max)) {
-    return '—';
-  }
-  return isKg(row.productUnit) ? max.toFixed(3) : String(Number(max.toFixed(0)));
-}
-
-/** 上限为 0（当日没到店 / 今日已退完）时，输入框直接禁用并说明原因。 */
-function placeholderOf(row: MatrixRow): string {
-  return maxOf(row) === 0 ? t('storeReturn.operation.noReturnable') : t('storeReturn.operation.quantityPlaceholder');
-}
-
-/** 猪肉 tab：后端按「该门店当日是否有白条到店」决定是否返回字典项候选（无到店 / 未选门店 → 空）。 */
+/** 猪肉 tab：后端按字典「退回产品清单」里 belong_type=pork/white_bar 的产品返回候选（未选门店 → 空）。 */
 async function loadPorkCandidates() {
   if (!storeId.value) {
     porkRows.value = [];
@@ -241,7 +224,7 @@ async function loadVegRows() {
   }
 }
 
-/** 其他产品 tab（row202）：干货 / 鸡蛋 / 其他三业态，取数与果蔬同口径（台账 期初+入库−销售−赠送，row205）。 */
+/** 其他产品 tab（row214）：非猪肉非果蔬的产品一律落这里，候选与另两 tab 同源（退回产品清单）。 */
 async function loadOtherRows() {
   if (!storeId.value) {
     otherRows.value = [];
@@ -276,12 +259,6 @@ async function handleSubmit() {
   if (!storeId.value) {
     return;
   }
-  // row119：提交前再拦一次超限（input :max 挡键盘输入，粘贴 / 上限刷新后仍可能越界；后端同口径二次把关）。
-  const over = allRows.value.find((r) => (r.returnQuantity ?? 0) > maxOf(r));
-  if (over) {
-    proxy?.$modal.msgError(t('storeReturn.operation.overLimit', { name: over.productName, limit: limitText(over), unit: over.productUnit ?? '' }));
-    return;
-  }
   // 流程性问题 row15：唯一录入项是退回量。退回产品重量由前端按单位派生——
   //   产品单位为 kg → 退回产品重量 = 退回量；非 kg → 退回产品重量 = 0。
   const items: StoreReturnBatchItem[] = allRows.value
@@ -299,7 +276,7 @@ async function handleSubmit() {
   try {
     await batchCreateStoreReturn({ storeId: storeId.value, items });
     proxy?.$modal.msgSuccess(t('common.opSuccess'));
-    // row119：重拉候选刷新「今日已退」→ 可退上限随之收缩，避免连续提交累计越界。
+    // 重拉候选刷新「今日已退」展示值。
     // 三个 tab 必须全刷：漏掉任一个，那个 tab 的输入框不清空、:max 也不收缩，
     // 按钮继续亮着，再点一次就会把同一行重复提交出去（后端每次重算额度所以不会破顶，
     // 但只要剩余额度够就会真生成第二条退回记录）。

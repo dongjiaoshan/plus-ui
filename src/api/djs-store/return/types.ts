@@ -112,12 +112,20 @@ export interface StoreReturnBatchForm {
   items: StoreReturnBatchItem[];
 }
 
-/** 仓库确认实收 form（对齐原型「退回记录」仓库确认入库） */
+/** 仓库确认实收 form（对齐原型「退回记录」仓库确认入库，也是「门店退回操作 → 退回处理」的入参） */
 export interface StoreReturnConfirmForm {
   id?: string;
   locationId?: string;
+  /**
+   * 仓库实收量 / 实收重量 —— 都是**原材料量**。
+   * admin 抽屉界面按退回单位录，提交前乘 materialNum 换算（与 mp metric.ts#toConfirmWeight 同源）。
+   */
   receivedQty?: number;
   receivedWeight?: number;
+  /** 处置方式：0/null=退回入库（默认，写库存） / 1=产品丢弃（不入库） */
+  isDiscard?: number;
+  /** 猪肉退货入库库位类型：fresh=猪肉鲜品库 / frozen=冻品库（仅 pork 生效） */
+  targetLocationType?: string;
 }
 
 export interface StoreReturnForm {
@@ -153,4 +161,108 @@ export interface StoreReturnQuery {
    * pork=猪肉类(含白条) / vegetable=果蔬(只认 vegetable) / other=其余全部(干货/蛋类/礼盒/其他/空归属)
    */
   belongCategory?: 'pork' | 'vegetable' | 'other';
+  /** 退回类型 djs_store_return_type：store=门店退回 / unit=单位退回（空 = 两类都查）。 */
+  returnType?: string;
+  /** 退回单位（仅 returnType=unit 有意义）。 */
+  returnUnit?: string;
+}
+
+// ---------------------------------------------------------------------------
+// STR-RETURN-OPS-001 admin「门店退回操作」
+// ---------------------------------------------------------------------------
+
+/** 库位下拉项（对齐后端 LocationPickerVo，与 mp LocationPicker 同构）。 */
+export interface LocationPickerVO {
+  /** 库位 ID（snowflake string） */
+  id: string;
+  locationCode?: string;
+  locationName?: string;
+  locationType?: string;
+  locationSort?: number;
+}
+
+/**
+ * 门店退回操作抽屉行（{@code GET /djs/store/return/operation/items}）。
+ *
+ * 「退回处理」与「查看详情」共用同一份数据：待处理行按可编辑渲染（默认值 = 后端给的判据），
+ * 已处理行（returnStatus='received'）渲染为只读文本。
+ */
+export interface StoreReturnOpsItemVO {
+  id: string;
+  returnNo?: string;
+  returnType?: string;
+  returnUnit?: string;
+  storeId?: string;
+  storeName?: string;
+  productId?: string;
+  productName?: string;
+  productSpec?: string;
+  /** 产品单位 = 退回单位：决定第三列标题 / 后缀 / 精度 */
+  productUnit?: string;
+  /** 原材料单位（缺省已由后端回落产品单位） */
+  materialUnit?: string;
+  /** 计量规则（一件折算多少原材料，缺配回落 1）；提交前乘它换算回原材料量 */
+  materialNum?: number;
+  /** 是否配在「退回产品清单」里 → 非 kg 行两位小数的判据 */
+  inReturnList?: boolean;
+  /** 能否退回入库（false → 只能产品丢弃） */
+  canInbound?: boolean;
+  /** 能否做单位换算（false → 锁行，后端也拒） */
+  canConvert?: boolean;
+  returnQuantity?: number;
+  returnWeight?: number;
+  receivedQty?: number;
+  receivedWeight?: number;
+  locationId?: string;
+  locationName?: string;
+  /** 入库库位下拉默认值 */
+  defaultLocationId?: string;
+  /** 入库库位下拉可选项（猪肉固定鲜品库/冻品库） */
+  locationOptions?: LocationPickerVO[];
+  isDiscard?: number;
+  returnStatus?: string;
+  returnDate?: string;
+  operatorId?: string;
+  operatorName?: string;
+  confirmUserId?: string;
+  confirmUserName?: string;
+  confirmTime?: string;
+}
+
+/** 「新增单位退回」弹框候选行（{@code GET /djs/store/return/operation/unit-candidates}）。 */
+export interface StoreReturnUnitCandidateVO {
+  productId: string;
+  /** 产品业务编码（字典里配的就是它） */
+  productCode?: string;
+  productName?: string;
+  productSpec?: string;
+  belongType?: string;
+  productUnit?: string;
+  materialUnit?: string;
+  materialNum?: number;
+  inReturnList?: boolean;
+  canInbound?: boolean;
+  canConvert?: boolean;
+  defaultLocationId?: string;
+  locationOptions?: LocationPickerVO[];
+}
+
+/** 单位退回提交单行。 */
+export interface StoreReturnUnitItemForm {
+  productId: string;
+  /** 退回量（按产品单位；kg 三位小数、非 kg 清单内两位，前端限制） */
+  returnQuantity: number;
+  /** 入库库位（未丢弃行必填） */
+  locationId?: string;
+  /** 0=产品入库（默认） / 1=产品丢弃 */
+  isDiscard?: number;
+}
+
+/** 「新增单位退回」提交体（{@code POST /djs/store/return/unit}）。 */
+export interface StoreReturnUnitForm {
+  /** 退回日期（yyyy-MM-dd） */
+  returnDate: string;
+  /** 退回单位（字典 djs_return_unit） */
+  returnUnit: string;
+  items: StoreReturnUnitItemForm[];
 }

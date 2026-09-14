@@ -30,6 +30,7 @@
               :clearable="field.clearable ?? true"
               :empty-values="field.allOption ? ALL_OPTION_EMPTY_VALUES : undefined"
               :multiple="field.multiple ?? false"
+              :disabled="field.disabled ?? false"
               :collapse-tags="field.multiple ? true : undefined"
               :collapse-tags-tooltip="field.multiple ? true : undefined"
               filterable

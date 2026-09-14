@@ -540,6 +540,35 @@ export default {
   },
   // 生产配置（BRD-MD-003）— 3 tab 单页：生产周期 / 精液公猪 / 药品周期
   // v1.2 关键：无定时任务 / 无自动流转 —— 配置只决定"建议时间"，状态转换全靠 BRD-EVENT-* 事件触发
+  cohortLedger: {
+    title: '配种批次去向台账',
+    overdueTitle: '超期未定性母猪',
+    year: '统计年份',
+    refresh: '刷新',
+    judgeHint: '分娩率按配种批次口径：配种满「分娩判定节点天数」仍未分娩即计入损失。未到判定日的批次不计入分娩率。',
+    overdueHint: '以下母猪配种已过判定日，系统里既无分娩记录也无返情/空怀/流产记录，需现场补录定性。',
+    breedMonth: '配种月',
+    bred: '配种头数',
+    matured: '已到期',
+    farrow: '按期分娩',
+    farrowLate: '超期分娩',
+    returnCount: '返情',
+    emptyCount: '空怀',
+    abortCount: '流产',
+    goneCount: '淘汰/死亡',
+    undecided: '超期未定性',
+    pending: '在途未到期',
+    deadlineRange: '判定日区间',
+    farrowRate: '分娩率',
+    earNo: '耳号',
+    breedingDate: '配种日期',
+    deadline: '判定日',
+    overdueDays: '已超期(天)',
+    parity: '胎次',
+    barnPen: '栋舍/栏位',
+    currentStatus: '当前状态',
+    empty: '暂无数据'
+  },
   productionConfig: {
     tab: {
       sow: '母猪生产配置',
@@ -560,7 +589,8 @@ export default {
       sow_empty_to_breed_days: '空怀-配种天数',
       sow_abort_to_breed_days: '流产-配种天数',
       sow_breed_to_farrow_days: '配种-分娩天数',
-      sow_farrow_to_wean_days: '分娩-断奶天数'
+      sow_farrow_to_wean_days: '分娩-断奶天数',
+      sow_farrow_judge_deadline_days: '分娩判定节点天数'
     },
     fatten: {
       index: '序号',
@@ -3284,6 +3314,57 @@ export default {
         discardYes: '是',
         discardNo: '否'
       },
+      storeReturn: {
+        title: '门店退回操作',
+        returnDate: '退回日期',
+        returnType: '退回类型',
+        returnStore: '退回门店',
+        returnStatus: '退回状态',
+        porkKindCount: '猪肉产品品类数',
+        vegKindCount: '果蔬产品品类数',
+        otherKindCount: '其他产品品类数',
+        operatorName: '退回操作人',
+        returnTime: '退回时间',
+        confirmUserName: '退回处理人',
+        confirmTime: '退回处理时间',
+        handle: '退回处理',
+        viewDetail: '查看详情',
+        // 抽屉
+        handleTitle: '门店退回处理',
+        detailTitle: '门店退回详情',
+        productName: '产品名称',
+        productSpec: '规格',
+        returnQuantity: '退回量',
+        productUnit: '产品单位',
+        confirmQuantity: '仓库确认量',
+        inboundLocation: '入库库位',
+        handleMode: '处理方式',
+        handleInbound: '产品入库',
+        handleDiscard: '产品丢弃',
+        discardNoLocation: '无需库位',
+        done: '处理完成',
+        doneSuccess: '退回处理完成',
+        partialFailure: '已处理 {done}/{total} 行，剩余行处理失败，请检查后重试',
+        emptyItems: '这张退回单没有产品明细',
+        locationPlaceholder: '请选择入库库位',
+        locationRequired: '{name} 未选择入库库位',
+        confirmRequired: '{name} 的仓库确认量必须大于 0',
+        confirmTooSmall: '{name} 换算成原材料量后为 0，请调大确认量',
+        onlyDiscardNoMaterial: '该产品未配置原材料，仓库无法入库，只能选择产品丢弃',
+        onlyDiscardNoRatio: '该产品的退回单位与原材料单位不同且未配「计量规则」，无法换算入库量，只能选择产品丢弃',
+        // 新增单位退回
+        addTitle: '新增单位退回',
+        returnUnit: '退回单位',
+        datePlaceholder: '请选择退回日期',
+        unitPlaceholder: '请选择退回单位',
+        searchProduct: '搜索产品名称',
+        addHint: '退回单位取自字典「退回单位配置」（数据源为「出库去向」）；退回列表取自字典「退回产品清单」，只有填写了退回量的产品会参与本次退回。',
+        dateRequired: '请先选择退回日期',
+        unitRequired: '请先选择退回单位',
+        quantityRequired: '请至少填写一个产品的退回量',
+        noCandidates: '「退回产品清单」字典为空，请先在字典管理里配置产品编码',
+        addSuccess: '单位退回已新增'
+      },
       check: {
         checkId: '盘点单号',
         locationName: '盘点库位',
@@ -4601,7 +4682,9 @@ export default {
       editConfirm: '确认更正 {n} 个产品的盘点数据？',
       whiteBarSplitLoss: '当日白条分割损耗：',
       whiteBarArriveWeight: '当日白条到店重量',
-      negativeError: '以下产品损耗量或期末库存为负，无法完成盘点：{names}'
+      negativeError: '以下产品的倒算量（猪肉原材料为退回量、其余为损耗量）或期末库存为负，无法完成盘点：{names}',
+      derivedReturnHint: '猪肉原材料行：退回量 = 期初 + 入库 − 销售 − 赠送 − 期末 − 损耗（随左侧各列联动）',
+      tracedSaleHint: '猪肉原材料行：销售量取当日现场打包追溯码的原材料消耗量，不可手改；差额请记入损耗量'
     }
   },
   storeLoss: {

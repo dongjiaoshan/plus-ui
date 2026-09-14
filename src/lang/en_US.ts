@@ -540,6 +540,36 @@ export default {
   },
   // Production Config (BRD-MD-003) — single-page with 3 tabs: cycle / boar / medicine schedule
   // v1.2 key: NO timer / NO auto-transition — config only decides "suggested time", state changes by events
+  cohortLedger: {
+    title: 'Breeding Cohort Ledger',
+    overdueTitle: 'Overdue Undecided Sows',
+    year: 'Year',
+    refresh: 'Refresh',
+    judgeHint:
+      'Farrowing rate uses the breeding-cohort basis: a service still without farrowing after the judge-deadline days counts as a loss. Cohorts not yet past the deadline are excluded.',
+    overdueHint: 'These sows are past the judge deadline with no farrowing and no return/empty/abortion record. Field staff must record an outcome.',
+    breedMonth: 'Breeding Month',
+    bred: 'Serviced',
+    matured: 'Matured',
+    farrow: 'Farrowed In Time',
+    farrowLate: 'Farrowed Late',
+    returnCount: 'Return',
+    emptyCount: 'Empty',
+    abortCount: 'Abortion',
+    goneCount: 'Culled/Died',
+    undecided: 'Overdue Undecided',
+    pending: 'In Progress',
+    deadlineRange: 'Deadline Range',
+    farrowRate: 'Farrowing Rate',
+    earNo: 'Ear No.',
+    breedingDate: 'Breeding Date',
+    deadline: 'Deadline',
+    overdueDays: 'Overdue (days)',
+    parity: 'Parity',
+    barnPen: 'Barn/Pen',
+    currentStatus: 'Status',
+    empty: 'No data'
+  },
   productionConfig: {
     tab: {
       sow: 'Sow Production',
@@ -560,7 +590,8 @@ export default {
       sow_empty_to_breed_days: 'Empty → Breed (days)',
       sow_abort_to_breed_days: 'Abort → Breed (days)',
       sow_breed_to_farrow_days: 'Breed → Farrow (days)',
-      sow_farrow_to_wean_days: 'Farrow → Wean (days)'
+      sow_farrow_to_wean_days: 'Farrow → Wean (days)',
+      sow_farrow_judge_deadline_days: 'Farrow Judge Deadline (days)'
     },
     fatten: {
       index: 'No.',
@@ -679,7 +710,8 @@ export default {
       newEarNoPlaceholder: 'Format: strain-breed-sex-birthdate-seq, e.g. 01-01-2-260319-022',
       newEarNoRequired: 'New ear number is required',
       newEarNoPattern: 'Must match strain-breed-sex-birthdate-seq format (e.g. 01-01-2-260319-022)',
-      warning: 'Only the current ear number is changed; existing history records and trace codes are not updated. If this pig has offspring, their father/mother ear number fields need manual review.',
+      warning:
+        'Only the current ear number is changed; existing history records and trace codes are not updated. If this pig has offspring, their father/mother ear number fields need manual review.',
       confirmTitle: 'Confirm ear number change?',
       confirmMessage: 'Ear number will change from {old} to {new}, continue?',
       success: 'Ear number updated',
@@ -3298,6 +3330,59 @@ export default {
         discardYes: 'Yes',
         discardNo: 'No'
       },
+      storeReturn: {
+        title: 'Store Return Operations',
+        returnDate: 'Return Date',
+        returnType: 'Return Type',
+        returnStore: 'Return Store',
+        returnStatus: 'Return Status',
+        porkKindCount: 'Pork Product Kinds',
+        vegKindCount: 'Produce Product Kinds',
+        otherKindCount: 'Other Product Kinds',
+        operatorName: 'Returned By',
+        returnTime: 'Returned At',
+        confirmUserName: 'Handled By',
+        confirmTime: 'Handled At',
+        handle: 'Handle Return',
+        viewDetail: 'View Detail',
+        // Drawer
+        handleTitle: 'Handle Store Return',
+        detailTitle: 'Store Return Detail',
+        productName: 'Product',
+        productSpec: 'Spec',
+        returnQuantity: 'Returned Qty',
+        productUnit: 'Unit',
+        confirmQuantity: 'Warehouse Confirmed Qty',
+        inboundLocation: 'Inbound Location',
+        handleMode: 'Disposition',
+        handleInbound: 'Inbound',
+        handleDiscard: 'Discard',
+        discardNoLocation: 'Not required',
+        done: 'Complete',
+        doneSuccess: 'Return handled',
+        partialFailure: 'Handled {done}/{total} lines; the rest failed. Please check and retry.',
+        emptyItems: 'No product lines in this return',
+        locationPlaceholder: 'Select inbound location',
+        locationRequired: 'Inbound location is required for {name}',
+        confirmRequired: 'Confirmed qty for {name} must be greater than 0',
+        confirmTooSmall: 'Confirmed qty for {name} converts to 0 in raw-material units; please increase it',
+        onlyDiscardNoMaterial: 'This product has no raw material configured, so it cannot be inbound; only Discard is available',
+        onlyDiscardNoRatio:
+          "This product's return unit differs from its raw-material unit without a conversion ratio, so it cannot be inbound; only Discard is available",
+        // Unit return creation
+        addTitle: 'New Unit Return',
+        returnUnit: 'Return Unit',
+        datePlaceholder: 'Select return date',
+        unitPlaceholder: 'Select return unit',
+        searchProduct: 'Search product name',
+        addHint:
+          'The return unit comes from the "Return Unit Config" dictionary (sourced from Stock-out Destination); the product list comes from the "Return Product List" dictionary. Only lines with a returned qty are submitted.',
+        dateRequired: 'Please select a return date first',
+        unitRequired: 'Please select a return unit first',
+        quantityRequired: 'Please enter a returned qty for at least one product',
+        noCandidates: 'The "Return Product List" dictionary is empty; configure product codes in Dictionary Management first',
+        addSuccess: 'Unit return created'
+      },
       check: {
         checkId: 'Check No.',
         locationName: 'Location',
@@ -4612,7 +4697,11 @@ export default {
       editConfirm: 'Correct check data for {n} products?',
       whiteBarSplitLoss: 'White-bar split loss today: ',
       whiteBarArriveWeight: 'White-bar arrivals today',
-      negativeError: 'The following products have negative loss or closing stock and cannot complete the check: {names}'
+      negativeError:
+        'The following products have a negative derived quantity (return for pork raw materials, loss otherwise) or negative closing stock and cannot complete the check: {names}',
+      derivedReturnHint: 'Pork raw-material row: return = opening + inbound - sales - gifts - closing - loss (recalculated as you edit)',
+      tracedSaleHint:
+        'Pork raw-material row: sales comes from the raw material consumed by today\u2019s on-site packing trace codes and is not editable; book any difference as loss'
     }
   },
   storeLoss: {
