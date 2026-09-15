@@ -80,7 +80,7 @@
           <el-table-column :label="t('vegOut.create.outQuantity')" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">
               <el-input-number
-                v-model="quantityMap[row.stockId]"
+                v-model="quantityMap[rowKey(row)]"
                 :min="0"
                 :max="Number(row.stockWeight)"
                 :precision="3"
@@ -95,7 +95,7 @@
           <el-table-column :label="t('vegOut.create.unitPrice')" :min-width="COL_MIN_WIDTH" align="center">
             <template #default="{ row }">
               <el-input-number
-                v-model="priceMap[row.stockId]"
+                v-model="priceMap[rowKey(row)]"
                 :min="0"
                 :precision="2"
                 :step="0.1"
@@ -162,7 +162,7 @@ import { printVegOutSheet, ROWS_PER_PAGE } from '../printSheet';
 import { productMergeKey, uniformUnitPrice } from '../mergeByProduct';
 import type { VegOutCandidateVO } from '@/api/djs-warehouse/vegOut/types';
 import { formatPlotLabel } from '@/utils/plotTag';
-import { formatQtyByUnit } from '@/utils/weight';
+import { formatQtyByUnit, isKgUnit } from '@/utils/weight';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -209,7 +209,19 @@ function tabOf(row: VegOutCandidateVO): TabKey {
  */
 const tabRows = computed(() => candidates.value.filter((r) => tabOf(r) === activeTab.value));
 
-/** stockId → 出库量。用 map 而非改行对象，切换搜索条件后已填的量不丢。 */
+/**
+ * 行键（row224 / D-0068）：用**分组维度本身**拼，不用篮 id 列表。
+ *
+ * 篮 id 列表看着更"精确"，实际是个会动的身份：这一组新入一篮、或某一篮被扣到 0 掉出
+ * `product_stock > 0`，键就变了 —— 而候选在每次搜索 / 回车 / 清空时都会重拉，
+ * 键一变，工人刚填的出库量与单价就静默消失，已选产品里还会留下拿着旧 id 的幽灵行。
+ * 分组维度（产品 / 库位 / 耳号 / 地块 / 三期）才是这一行的稳定身份，与服务端合并键同一套。
+ */
+function rowKey(row: VegOutCandidateVO): string {
+  return [row.productId, row.locationName ?? '', row.earNo ?? '', row.plotId ?? '', row.thirdPhase ?? ''].join('|');
+}
+
+/** 行键 → 出库量。用 map 而非改行对象，切换搜索条件后已填的量不丢。 */
 const quantityMap = reactive<Record<string, number | undefined>>({});
 
 const today = () => todayYmd();
@@ -239,7 +251,7 @@ function destLabel(code: string): string {
  */
 const previewNo = ref('');
 
-/** stockId → 销售单价（row194）。默认取产品 sale_price，用户可改；提交时逐行带上作快照。 */
+/** 行键 → 销售单价（row194）。默认取产品 sale_price，用户可改；提交时逐行带上作快照。 */
 const priceMap = reactive<Record<string, number | undefined>>({});
 
 /** 产品配置的销售价（t_warehouse_product_info.sale_price）；未配置 / 非数值返回 undefined。 */
@@ -255,26 +267,29 @@ function defaultPrice(row: VegOutCandidateVO): number | undefined {
  * 候选列表每次加载完逐行调用，抽屉一打开单价列即有默认值，用户可再调整。
  */
 function ensurePrice(row: VegOutCandidateVO) {
-  if (priceMap[row.stockId] === undefined) {
+  if (priceMap[rowKey(row)] === undefined) {
     const p = defaultPrice(row);
-    if (p !== undefined) priceMap[row.stockId] = p;
+    if (p !== undefined) priceMap[rowKey(row)] = p;
   }
 }
 
 /** 清掉一行：出库量清空，单价回落产品默认销售价（与加载时预填同口径，不留空）。 */
 function clearLine(row: VegOutCandidateVO) {
-  quantityMap[row.stockId] = undefined;
-  priceMap[row.stockId] = defaultPrice(row);
+  quantityMap[rowKey(row)] = undefined;
+  priceMap[rowKey(row)] = defaultPrice(row);
 }
 
 /** 行销售总价 = 出库量 × 销售单价。 */
 function lineAmount(row: VegOutCandidateVO): number {
-  return Number(quantityMap[row.stockId] || 0) * Number(priceMap[row.stockId] || 0);
+  return Number(quantityMap[rowKey(row)] || 0) * Number(priceMap[rowKey(row)] || 0);
 }
 
 /** 该行是否按 kg 计量（干货库有袋/桶/罐、蛋类是「枚」，只有 kg 行进重量合计）。 */
 function isKgRow(row: VegOutCandidateVO): boolean {
-  return (row.productUnit || '').trim().toLowerCase() === 'kg';
+  // 判据与全仓对齐（utils/weight.ts#isKgUnit + 后端 BATCH_AGG_SQL）：kg / 公斤 / 单位缺失按 kg 兜底。
+  // 原来这里既不认「公斤」也不认空单位，于是抽屉的重量合计与列表的「出库重量」在这两种单位上口径相反。
+  const u = (row.productUnit || '').trim();
+  return u === '' || isKgUnit(u);
 }
 
 /** 库存量展示：kg 行走 3 位小数 + kg；计件行显示原单位（如「3 袋」）。 */
@@ -308,17 +323,17 @@ function fmtMoney(v: number | string | undefined | null): string {
  */
 const knownRows = ref<VegOutCandidateVO[]>([]);
 function rememberRows(rows: VegOutCandidateVO[]) {
-  const seen = new Set(knownRows.value.map((r) => String(r.stockId)));
+  const seen = new Set(knownRows.value.map((r) => rowKey(r)));
   rows.forEach((r) => {
-    if (!seen.has(String(r.stockId))) {
+    if (!seen.has(rowKey(r))) {
       knownRows.value.push(r);
-      seen.add(String(r.stockId));
+      seen.add(rowKey(r));
     }
   });
 }
 
 /** 已选 = 填了正数出库量的行（跨搜索全集，右侧实时反映）。量清 0 / 清空即视为不出库该产品。 */
-const selectedRows = computed(() => knownRows.value.filter((r) => Number(quantityMap[r.stockId]) > 0));
+const selectedRows = computed(() => knownRows.value.filter((r) => Number(quantityMap[rowKey(r)]) > 0));
 
 /** 已选产品合并组（V6 row108）：同一产品编号的多个地块篮在右侧与打印单上合成一条。 */
 interface SelectedGroup {
@@ -342,7 +357,7 @@ interface SelectedGroup {
  * 已选产品（按产品编号合并）—— 甲方 V6 row108：
  * 「同一个产品属于不同地块时…只按产品编号进行累计，同一个产品不用多条记录，记录为一个重量显示」。
  *
- * ⚠️ 合并只在这层做，**提交仍按 stockId 逐行**（见 submit）：后端扣的是具体那个地块篮的库存。
+ * ⚠️ 合并只在这层做，**提交仍按候选行逐条**（见 submit）：后端扣的是具体那组篮的库存。
  */
 const selectedGroups = computed<SelectedGroup[]>(() => {
   const map = new Map<string, SelectedGroup>();
@@ -364,12 +379,12 @@ const selectedGroups = computed<SelectedGroup[]>(() => {
       map.set(key, g);
     }
     g.rows.push(r);
-    g.quantity += Number(quantityMap[r.stockId] || 0);
+    g.quantity += Number(quantityMap[rowKey(r)] || 0);
     g.amount += lineAmount(r);
   });
   return [...map.values()].map((g) => ({
     ...g,
-    unitPrice: uniformUnitPrice(g.rows.map((r) => Number(priceMap[r.stockId] || 0)))
+    unitPrice: uniformUnitPrice(g.rows.map((r) => Number(priceMap[rowKey(r)] || 0)))
   }));
 });
 
@@ -465,14 +480,15 @@ async function submit(print: boolean) {
     const res = await submitVegOutBatch({
       outDate: form.outDate,
       outDest: form.outDest,
-      // ⚠️ 提交按**库存行**逐条走，不按右侧合并后的产品走（V6 row108 的合并只在展示 / 打印层）：
-      // 后端扣的是具体那个「产品 × 地块」篮的库存，合并成一条它就不知道从哪个篮扣、
+      // ⚠️ 提交按**候选行**逐条走，不按右侧合并后的产品走（V6 row108 的合并只在展示 / 打印层）：
+      // 后端扣的是具体那个「产品 × 库位 × 地块」的篮组，按产品合并成一条它就不知道从哪组扣、
       // 也写不出正确的地块流水（月台待收货、地块追溯都依赖流水上的 plot_id）。
+      // 组内哪个篮先扣由后端按先进先出决定（row224 / D-0068），前端不参与。
       items: selectedRows.value.map((r) => ({
-        stockId: r.stockId,
-        quantity: Number(quantityMap[r.stockId]),
+        stockIds: r.stockIds,
+        quantity: Number(quantityMap[rowKey(r)]),
         // row194：单价随行提交，后端落成流水快照（改产品价格不影响历史单）
-        outUnitPrice: priceMap[r.stockId] === undefined ? undefined : Number(priceMap[r.stockId])
+        outUnitPrice: priceMap[rowKey(r)] === undefined ? undefined : Number(priceMap[rowKey(r)])
       }))
     });
     const batchNo = String((res as any)?.data ?? '');

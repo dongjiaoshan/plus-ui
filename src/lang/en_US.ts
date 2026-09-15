@@ -1551,6 +1551,7 @@ export default {
       outDest: 'Destination',
       productKinds: 'Kinds',
       totalWeight: 'Total Weight',
+      totalQty: 'Total Qty',
       operator: 'Operator'
     },
     detail: {
@@ -1674,6 +1675,11 @@ export default {
     },
     recordDialog: {
       title: 'Stock Records',
+      basketTab: 'Baskets',
+      basketCreateTime: 'In Time',
+      basketRemark: 'Remark',
+      basketStock: 'Stock',
+      basketHint: 'This row is merged from the baskets below; outbound deducts FIFO from the top.',
       checkId: 'Check No.',
       sysStock: 'System Stock',
       checkStock: 'Counted Stock',

@@ -1,6 +1,12 @@
 /** 毛菜间出库-可选产品行（row187 新增抽屉左侧） */
 export interface VegOutCandidateVO {
-  stockId: string;
+  /**
+   * 这一行背后的库存篮 id 组，先进先出序（row224 / D-0068）。
+   *
+   * 一行不再等于一个篮：同 (产品, 库位, 耳号, 地块, 三期) 的多个篮合并成一行、库存量取和。
+   * 提交时整组回传，服务端跨篮先进先出扣。行键不用它拼（见 rowKey：篮集会变，分组维度才稳定）。
+   */
+  stockIds: string[];
   productId: string;
   /**
    * 产品业务编号（t_warehouse_product_info.product_id，用户手填的产品编码）。
@@ -35,7 +41,10 @@ export interface VegOutBatchVO {
   outDate: string;
   outDest: string;
   productKinds: number;
+  /** 出库重量合计（kg）：只累加单位是 kg 的行，非 kg 的落在 totalQty（row220） */
   totalWeight: number | string;
+  /** 出库量合计（row220 新列）：单位不是 kg 的行的数量之和，混单位不带单位展示 */
+  totalQty?: number | string | null;
   /** 出库金额合计（row192）= Σ 出库量 × 出库单价快照 */
   totalAmount?: number | string | null;
   operatorId?: string;

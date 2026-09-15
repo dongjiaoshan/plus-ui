@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import type { LocationStockQuery, LocationStockVO, StockOutForm, StockTransferForm } from './stock/types';
+import type { LocationStockQuery, LocationStockVO, StockBasketVO, StockOutForm, StockTransferForm } from './stock/types';
 
 /**
  * 库存查询 API（WMS-MD-001）。
@@ -31,6 +31,20 @@ export const getStock = (id: number | string): AxiosPromise<LocationStockVO> => 
  *
  * @param locationId 库位 ID（可空，不传则取全部库存）
  */
+/**
+ * 合并行背后的各篮明细（row223 / D-0068「各篮明细（入库时间+重量）下沉到详情里看」）。
+ *
+ * 列表按 产品+库位+耳号+地块+三期+白条流水号 合并之后，篮这一层从列表上消失了，
+ * 这个端点是它唯一的去处 —— 没有它，工人对不出一行的合计是怎么来的。
+ */
+export const listStockBaskets = (stockIds: Array<number | string>): AxiosPromise<StockBasketVO[]> => {
+  return request({
+    url: '/djs/warehouse/stock/baskets',
+    method: 'get',
+    params: { stockIds: stockIds.join(',') }
+  });
+};
+
 export const listStockEarNos = (locationId?: number | string): AxiosPromise<string[]> => {
   return request({
     url: '/djs/warehouse/stock/earNos',

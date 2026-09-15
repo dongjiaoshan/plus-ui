@@ -84,7 +84,7 @@ const visible = ref(false);
 const submitting = ref(false);
 const formRef = ref<ElFormInstance>();
 const unit = ref('');
-const stockId = ref<string>('');
+const stockIds = ref<string[]>([]);
 const currentStock = ref<number | string | null>(null);
 /** 当前行是否三期货（`location_stock.third_phase`；与地块列同一个标识，不另判「有没有地块」）。 */
 const isThirdPhase = ref(false);
@@ -120,7 +120,7 @@ const emit = defineEmits<{ (e: 'success'): void }>();
 
 const open = (row: LocationStockVO) => {
   form.value = defaultForm();
-  stockId.value = String(row.id);
+  stockIds.value = (row.stockIds ?? []).map(String);
   unit.value = row.productUnit ?? '';
   currentStock.value = row.productStock ?? null;
   isThirdPhase.value = Number(row.thirdPhase) === THIRD_PHASE_FLAG;
@@ -144,7 +144,7 @@ const submit = () => {
       await submitInternalHandle({
         outDate: form.value.outDate,
         outDest: form.value.outDest,
-        items: [{ stockId: stockId.value, quantity: form.value.quantity }]
+        items: [{ stockIds: stockIds.value, quantity: form.value.quantity }]
       });
       proxy?.$modal.msgSuccess(t('common.opSuccess'));
       visible.value = false;

@@ -96,7 +96,7 @@ const maxQuantity = computed(() => {
 const today = () => todayYmd();
 
 const defaultForm = (): StockTransferForm => ({
-  id: '',
+  stockIds: [],
   transferDate: today(),
   quantity: undefined,
   remark: undefined
@@ -131,7 +131,7 @@ const emit = defineEmits<{ (e: 'success'): void }>();
 /** 打开转移弹窗：传入库存行（snowflake id 保持 string 防截断） */
 const open = (row: LocationStockVO) => {
   form.value = defaultForm();
-  form.value.id = String(row.id);
+  form.value.stockIds = (row.stockIds ?? []).map(String);
   unit.value = row.productUnit ?? '';
   fromLocation.value = row.locationName ?? '';
   currentStock.value = row.productStock ?? null;
@@ -153,7 +153,7 @@ const submit = () => {
     submitting.value = true;
     try {
       await pigTransfer({
-        id: form.value.id,
+        stockIds: form.value.stockIds,
         transferDate: form.value.transferDate,
         quantity: form.value.quantity,
         remark: form.value.remark

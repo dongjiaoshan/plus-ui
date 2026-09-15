@@ -9,7 +9,7 @@
       </el-radio-group>
     </div>
 
-    <!-- 猪肉产品：产品名称 / 退回量 / 单位（row214：候选来自字典「退回产品清单」，退回量不封顶；非 kg 单位允许两位小数） -->
+    <!-- 猪肉产品：产品名称 / 退回量 / 单位（row221：候选 = 退回产品清单 ∪ 当日到店的生产产品，两半规则不同，见 maxOf / precisionOf） -->
     <el-table v-if="activeCat === 'pork'" v-loading="loading" :data="porkRows" border class="op-table">
       <el-table-column :label="t('storeReturn.column.productName')" min-width="180" show-overflow-tooltip align="center" header-align="center">
         <template #default="{ row }">
@@ -21,7 +21,8 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :precision="isKg(row.productUnit) ? 3 : 2"
+            :max="maxOf(row)"
+            :precision="precisionOf(row)"
             :step="1"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
@@ -34,7 +35,7 @@
       </el-table-column>
     </el-table>
 
-    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row214：同猪肉，候选来自退回产品清单、不封顶） -->
+    <!-- 果蔬产品：产品名称 / 退回量 / 单位（row221：同猪肉，候选是清单 ∪ 当日到店生产产品的并集） -->
     <el-table v-else-if="activeCat === 'vegetable'" v-loading="loading" :data="vegRows" border class="op-table">
       <el-table-column
         :label="t('storeReturn.column.productName')"
@@ -49,7 +50,8 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :precision="isKg(row.productUnit) ? 3 : 2"
+            :max="maxOf(row)"
+            :precision="precisionOf(row)"
             :step="1"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
@@ -77,7 +79,8 @@
           <el-input-number
             v-model="row.returnQuantity"
             :min="0"
-            :precision="isKg(row.productUnit) ? 3 : 2"
+            :max="maxOf(row)"
+            :precision="precisionOf(row)"
             :step="1"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
@@ -120,10 +123,12 @@ interface MatrixRow {
   returnQuantity?: number;
   /** 退回产品重量(kg) */
   returnWeight?: number;
-  /** 到店量：row214 起后端恒不下发（退回量不封顶），字段留着只为兼容 VO 结构，UI 不再消费 */
+  /** 当日到店量：仅「当日到店的生产产品」行有值（清单产品不封顶，后端恒下发 null） */
   arrivedQuantity?: number;
-  /** 今日已退量（row214 起只做展示，不再参与封顶） */
+  /** 今日已退量 */
   returnedQuantity?: number;
+  /** 这一行是不是「退回产品清单」里的产品（row221：候选是两个来源的并集，规则按来源分流） */
+  inReturnList?: boolean;
 }
 
 const storeContext = useStoreContextStore();
@@ -175,6 +180,32 @@ function isKg(unit?: string): boolean {
   return u === 'kg' || u === '公斤';
 }
 
+/**
+ * 该行的退回量上限（row221）。
+ *
+ * - 清单产品（`inReturnList`）：**不封顶**，甲方 row214 原话「对于其退回量不做限制」（D-0055）。
+ * - 当日到店的生产产品：上限 = 当日到店量 − 今日已退。后端提交时会再算一遍同一条式子，
+ *   前端这道只是别让工人白填；两处算错一处都会被另一处兜住。
+ *
+ * 算出 0 时输入框会被禁掉，那正是「今天到的货已经退完了」该有的样子。
+ */
+function maxOf(row: MatrixRow): number | undefined {
+  if (row.inReturnList) return undefined;
+  if (row.arrivedQuantity === undefined || row.arrivedQuantity === null) return undefined;
+  return Math.max(0, Number(row.arrivedQuantity) - Number(row.returnedQuantity ?? 0));
+}
+
+/**
+ * 该行的录入精度（row221 把两套精度口径同时摆进了一张表）。
+ *
+ * - 清单产品：无论什么单位都两位小数（甲方 row214 / D-0054）。
+ * - 其余（当日到店的生产产品）：回到 D-0017 —— kg 类三位小数、计数类整数。
+ */
+function precisionOf(row: MatrixRow): number {
+  if (isKg(row.productUnit)) return 3;
+  return row.inReturnList ? 2 : 0;
+}
+
 /** 猪肉 tab：后端按字典「退回产品清单」里 belong_type=pork/white_bar 的产品返回候选（未选门店 → 空）。 */
 async function loadPorkCandidates() {
   if (!storeId.value) {
@@ -191,6 +222,7 @@ async function loadPorkCandidates() {
       subCategory: p.subCategory ?? 'pork',
       arrivedQuantity: p.arrivedQuantity,
       returnedQuantity: p.returnedQuantity,
+      inReturnList: p.inReturnList,
       returnQuantity: undefined,
       returnWeight: undefined
     }));
@@ -216,6 +248,7 @@ async function loadVegRows() {
       productUnit: p.productUnit,
       arrivedQuantity: p.arrivedQuantity,
       returnedQuantity: p.returnedQuantity,
+      inReturnList: p.inReturnList,
       returnQuantity: undefined,
       returnWeight: undefined
     }));
@@ -240,6 +273,7 @@ async function loadOtherRows() {
       productUnit: p.productUnit,
       arrivedQuantity: p.arrivedQuantity,
       returnedQuantity: p.returnedQuantity,
+      inReturnList: p.inReturnList,
       returnQuantity: undefined,
       returnWeight: undefined
     }));

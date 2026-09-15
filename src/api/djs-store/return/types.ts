@@ -76,10 +76,12 @@ export interface StoreReturnPorkCandidateVO {
   subCategory?: StoreReturnPorkSubCategory;
   /** 归属类型 djs_belong_type；gift_box 礼盒不可退回仓库（后端已剔除，前端二次过滤） */
   belongType?: string;
-  /** 可退量（退回量上限 row205）：三个 tab 统一取门店当日盘点台账 期初+入库−销售−赠送（不减损坏） */
+  /** 当日到店量：仅「当日到店的生产产品」行有值；清单产品不封顶，后端恒下发 null */
   arrivedQuantity?: number;
-  /** 今日已退量（row119）：剩余可退 = arrivedQuantity − returnedQuantity，即输入框 :max */
+  /** 今日已退量：到店行的剩余可退 = arrivedQuantity − returnedQuantity，即输入框 :max */
   returnedQuantity?: number;
+  /** 是不是「退回产品清单」里的产品（row221：候选=清单 ∪ 当日到店生产产品，规则按来源分流） */
+  inReturnList?: boolean;
 }
 
 /** 退回操作「果蔬产品」tab 候选行（= 该门店当天已确认到店的果蔬需求产品，按 product_id 去重） */
@@ -90,10 +92,12 @@ export interface StoreReturnVegCandidateVO {
   productUnit?: string;
   /** 归属类型 djs_belong_type；gift_box 礼盒不可退回仓库（后端已剔除，前端二次过滤） */
   belongType?: string;
-  /** 到店量（退回量上限 row41）= 当日（今天+昨天）该产品需求订购份数合计 */
+  /** 当日到店量：仅「当日到店的生产产品」行有值；清单产品不封顶，后端恒下发 null */
   arrivedQuantity?: number;
-  /** 今日已退量（row119）：剩余可退 = arrivedQuantity − returnedQuantity，即输入框 :max */
+  /** 今日已退量：到店行的剩余可退 = arrivedQuantity − returnedQuantity，即输入框 :max */
   returnedQuantity?: number;
+  /** 是不是「退回产品清单」里的产品（row221：候选=清单 ∪ 当日到店生产产品，规则按来源分流） */
+  inReturnList?: boolean;
 }
 
 /** 退回操作批量录入单行 */
@@ -265,4 +269,20 @@ export interface StoreReturnUnitForm {
   /** 退回单位（字典 djs_return_unit） */
   returnUnit: string;
   items: StoreReturnUnitItemForm[];
+}
+
+/**
+ * 门店退回操作页「退回门店」筛选项（{@code GET /djs/store/return/operation/owner-options}，V6 row222）。
+ *
+ * 取值是现有退回记录里出现过的门店 / 退回单位去重，不是全量门店档案。
+ */
+export interface StoreReturnOwnerOptionVO {
+  /** store=门店退回 / unit=单位退回 */
+  returnType: string;
+  /** 门店 id（returnType=store 时有值） */
+  storeId?: string;
+  /** 退回单位字典 value（returnType=unit 时有值） */
+  returnUnit?: string;
+  /** 列表「退回门店」列上显示的那个名字 */
+  label: string;
 }

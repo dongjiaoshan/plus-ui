@@ -101,7 +101,7 @@ const maxQuantity = computed(() => {
 const today = () => todayYmd();
 
 const defaultForm = (): StockOutForm => ({
-  id: '',
+  stockIds: [],
   outDate: today(),
   quantity: undefined,
   stockOutDest: '',
@@ -142,10 +142,10 @@ const rules = computed(() => ({
 
 const emit = defineEmits<{ (e: 'success'): void }>();
 
-/** 打开出库弹窗：传入库存行（snowflake id 保持 string 防截断） */
+/** 打开出库弹窗：传入库存行（一行 = 一组篮，snowflake id 保持 string 防截断） */
 const open = (row: LocationStockVO) => {
   form.value = defaultForm();
-  form.value.id = String(row.id);
+  form.value.stockIds = (row.stockIds ?? []).map(String);
   unit.value = row.productUnit ?? '';
   currentStock.value = row.productStock ?? null;
   visible.value = true;
@@ -165,7 +165,7 @@ const submit = () => {
     submitting.value = true;
     try {
       await stockOut({
-        id: form.value.id,
+        stockIds: form.value.stockIds,
         outDate: form.value.outDate,
         quantity: form.value.quantity,
         stockOutDest: form.value.stockOutDest,

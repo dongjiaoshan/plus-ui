@@ -1548,8 +1548,9 @@ export default {
       totalAmount: '出库金额',
       outDate: '出库日期',
       outDest: '出库去向',
-      productKinds: '出库果蔬品类数',
-      totalWeight: '出库果蔬重量',
+      productKinds: '出库品类数',
+      totalWeight: '出库重量',
+      totalQty: '出库量',
       operator: '出库操作人'
     },
     detail: {
@@ -1674,6 +1675,11 @@ export default {
     },
     recordDialog: {
       title: '出入库/盘点记录',
+      basketTab: '各篮明细',
+      basketCreateTime: '入库时间',
+      basketRemark: '备注',
+      basketStock: '库存量',
+      basketHint: '这一行由下面这几篮合并而来，出库按先进先出自动从最上面一篮开始扣。',
       checkId: '盘点单号',
       sysStock: '系统库存',
       checkStock: '实盘库存',

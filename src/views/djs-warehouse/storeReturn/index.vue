@@ -76,8 +76,8 @@ import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
 import { listReturnStoreDaily } from '@/api/djs-warehouse/return';
 import type { ReturnProductQuery, ReturnStoreDailyVO } from '@/api/djs-warehouse/return/types';
-import { listStore } from '@/api/djs-common/store';
-import type { StoreVO } from '@/api/djs-common/store/types';
+import { listReturnOwnerOptions } from '@/api/djs-store/return';
+import type { StoreReturnOwnerOptionVO } from '@/api/djs-store/return/types';
 import ReturnOpsDrawer from './components/ReturnOpsDrawer.vue';
 import UnitReturnCreateDialog from './components/UnitReturnCreateDialog.vue';
 import { useI18n } from 'vue-i18n';
@@ -97,13 +97,25 @@ const pageSize = ref(10);
 const searchModel = reactive<Record<string, any>>({
   returnDate: undefined,
   returnType: undefined,
-  storeId: undefined,
+  owner: undefined,
   returnStatus: undefined
 });
 
-/** 退回门店下拉数据源（单位退回没有门店，选类型=单位退回时禁用该条件）。 */
-const storeOptions = ref<StoreVO[]>([]);
-const storeSearchOptions = computed(() => storeOptions.value.map((s) => ({ label: s.storeName, value: String(s.id) })));
+/**
+ * 退回门店下拉数据源（row222）：现有退回记录里出现过的门店 / 退回单位去重，不是全量门店档案。
+ *
+ * 一个下拉里混着两种主体，故 value 带前缀区分：`store:<门店id>` / `unit:<退回单位字典value>`，
+ * 提交查询时再拆回 storeId / returnUnit 两个互斥条件。不做成两个下拉：列表上它们本来就共用
+ * 「退回门店」一列，拆成两个筛选框反而要用户先判断这一行是哪种类型。
+ */
+const ownerOptions = ref<StoreReturnOwnerOptionVO[]>([]);
+const OWNER_STORE = 'store';
+const ownerSearchOptions = computed(() =>
+  ownerOptions.value.map((o) => ({
+    label: o.label,
+    value: o.returnType === OWNER_STORE ? `store:${o.storeId}` : `unit:${o.returnUnit}`
+  }))
+);
 
 /** 退回类型下拉：走字典（store=门店退回 / unit=单位退回），不硬编码文案。 */
 const returnTypeOptions = computed<Array<{ label: string; value: string }>>(() =>
@@ -115,13 +127,13 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'returnDate', label: t('djs.warehouse.storeReturn.returnDate'), type: 'daterange' },
   { field: 'returnType', label: t('djs.warehouse.storeReturn.returnType'), type: 'select', options: returnTypeOptions.value },
   {
-    field: 'storeId',
+    field: 'owner',
     label: t('djs.warehouse.storeReturn.returnStore'),
     type: 'select',
-    options: storeSearchOptions.value,
-    clearable: true,
-    // 单位退回没有门店：选了「单位退回」还按门店筛必然查出空页，直接置灰比让用户白筛一次友好
-    disabled: searchModel.returnType === 'unit'
+    options: ownerSearchOptions.value,
+    clearable: true
+    // 不再按退回类型置灰：下拉里现在两种主体都有（门店项与单位项），
+    // 选中哪一项就下推哪一个条件，选「单位退回」时按单位筛是合法组合。
   },
   { field: 'returnStatus', label: t('djs.warehouse.storeReturn.returnStatus'), type: 'select', dictType: 'djs_store_return_status' }
 ]);
@@ -161,10 +173,16 @@ function openCreate() {
 function buildQueryParams(): ReturnProductQuery {
   const range = (searchModel.returnDate as string[] | undefined) ?? [];
   const returnType = searchModel.returnType || undefined;
+  // row222：下拉 value 形如 `store:<id>` / `unit:<字典value>`，在这里拆回两个互斥条件。
+  // 单位 value 本身可能含冒号，故只按**第一个**冒号切，右半原样保留。
+  const owner = (searchModel.owner as string | undefined) || '';
+  const sep = owner.indexOf(':');
+  const ownerKind = sep < 0 ? '' : owner.slice(0, sep);
+  const ownerVal = sep < 0 ? '' : owner.slice(sep + 1);
   return {
     returnType,
-    // 退回类型选了「单位退回」时丢弃门店条件：单位退回按定义没有门店，带着它只会查出空页
-    storeId: returnType === 'unit' ? undefined : searchModel.storeId || undefined,
+    storeId: ownerKind === OWNER_STORE ? ownerVal || undefined : undefined,
+    returnUnit: ownerKind === 'unit' ? ownerVal || undefined : undefined,
     returnStatus: searchModel.returnStatus || undefined,
     returnDateFrom: range[0] || undefined,
     returnDateTo: range[1] || undefined
@@ -194,11 +212,8 @@ async function loadList() {
 
 function handleSearch(payload?: Record<string, any>) {
   Object.assign(searchModel, payload ?? {});
-  // 退回类型 = 单位退回时清掉门店条件：单位退回按定义没有门店，留着旧值只会让人以为筛了门店，
-  // 而 buildQueryParams 又会把它丢掉 —— 干脆清空，屏上与下推条件保持一致。
-  if (searchModel.returnType === 'unit') {
-    searchModel.storeId = undefined;
-  }
+  // row222 起「退回门店」下拉里同时有门店项与退回单位项，「单位退回 + 某个单位」是**合法组合**，
+  // 不能再像以前那样一选单位退回就把它清掉（清掉等于把用户刚选的条件在他眼前抹了，还静默少筛一道）。
   pageNum.value = 1;
   loadList();
 }
@@ -225,13 +240,13 @@ function handleExport() {
   );
 }
 
-async function loadStoreOptions() {
-  const res: any = await listStore({ pageNum: 1, pageSize: 500 });
-  storeOptions.value = res?.rows ?? [];
+async function loadOwnerOptions() {
+  const res: any = await listReturnOwnerOptions();
+  ownerOptions.value = res?.data ?? [];
 }
 
 onMounted(() => {
   loadList();
-  loadStoreOptions();
+  loadOwnerOptions();
 });
 </script>

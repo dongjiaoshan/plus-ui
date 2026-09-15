@@ -132,7 +132,10 @@ function handleReprint() {
         productSpec: r.productSpec,
         productUnit: r.productUnit,
         quantity: Number(r.outWeight) || 0,
-        unitPrice: Number(r.outUnitPrice) || 0,
+        // ⚠️ 单价必须保留 undefined、不能 `|| 0`（row225）：后端在合并组内单价不一致时故意下发 null，
+        // 打印单看到 undefined 才会把单价列**留白**；降成 0 就会印出「单价 0.00 / 总金额 54.00」这种
+        // 自相矛盾的三联单，而且同一张单「新增时打的那张」（走原始行价 → 留白）与「重新打印」会印出两个版本。
+        unitPrice: r.outUnitPrice === undefined || r.outUnitPrice === null ? undefined : Number(r.outUnitPrice),
         // 后端 outAmount = 出库量 × 单价快照；万一为空则由合并函数按 量 × 单价 兜底
         amount: r.outAmount === undefined || r.outAmount === null ? undefined : Number(r.outAmount) || 0
       }))

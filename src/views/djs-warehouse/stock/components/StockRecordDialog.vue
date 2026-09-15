@@ -8,6 +8,28 @@
     </div>
 
     <el-tabs v-model="activeTab">
+      <!-- 各篮明细（row223 / D-0068「各篮明细（入库时间+重量）下沉到详情里看」）：
+           列表按 产品+库位+耳号+地块+三期+白条流水号 合并后，篮这一层从列表上消失了，
+           这里是它唯一的去处 —— 没有它，工人对不出一行的合计是怎么来的。
+           只在真发生了合并（basketCount > 1）时才出这个页签，单篮行摆一张只有一行的表是噪音。 -->
+      <el-tab-pane v-if="(anchor?.basketCount ?? 1) > 1" :label="t('stock.recordDialog.basketTab')" name="basket">
+        <div class="mb-2 text-sm text-gray-500">{{ t('stock.recordDialog.basketHint') }}</div>
+        <el-table v-loading="basketLoading" :data="basketList" border max-height="460">
+          <el-table-column prop="createTime" :label="t('stock.recordDialog.basketCreateTime')" min-width="170" align="center" header-align="center">
+            <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
+          </el-table-column>
+          <el-table-column prop="productStock" :label="t('stock.recordDialog.basketStock')" min-width="120" align="center" header-align="center">
+            <template #default="{ row }">{{ formatQtyByUnit(row.productStock, anchor?.productUnit) }}{{ anchor?.productUnit || '' }}</template>
+          </el-table-column>
+          <el-table-column prop="latestCheckTime" :label="t('stock.column.latestCheckTime')" min-width="170" align="center" header-align="center">
+            <template #default="{ row }">{{ row.latestCheckTime ? formatDateTime(row.latestCheckTime) : '-' }}</template>
+          </el-table-column>
+          <el-table-column prop="remark" :label="t('stock.recordDialog.basketRemark')" min-width="200" show-overflow-tooltip align="center" header-align="center">
+            <template #default="{ row }">{{ row.remark || '-' }}</template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+
       <!-- 入库记录 -->
       <el-tab-pane :label="t('stock.action.flowIn')" name="in">
         <el-table v-loading="inLoading" :data="inList" border max-height="460">
@@ -118,7 +140,9 @@ import { listFlowIn, listFlowOut } from '@/api/djs-warehouse/stockFlow';
 import type { StockFlowVO } from '@/api/djs-warehouse/stockFlow/types';
 import { listCheckLines } from '@/api/djs-warehouse/check';
 import type { StockCheckRecordVO } from '@/api/djs-warehouse/check/types';
-import type { LocationStockVO } from '@/api/djs-warehouse/stock/types';
+import type { LocationStockVO, StockBasketVO } from '@/api/djs-warehouse/stock/types';
+import { listStockBaskets } from '@/api/djs-warehouse/stock';
+import { formatQtyByUnit } from '@/utils/weight';
 import { lossByProduct } from '@/api/djs-warehouse/loss';
 import type { LossFlowVO } from '@/api/djs-warehouse/loss';
 import { feedLogByProduct } from '@/api/djs-warehouse/feedLog';
@@ -231,6 +255,25 @@ async function loadFeed() {
   }
 }
 
+/** 各篮明细（row223）：只在合并行上有意义，按列表那一行给的 stockIds 原样取、保持先进先出序。 */
+const basketList = ref<StockBasketVO[]>([]);
+const basketLoading = ref(false);
+
+async function loadBaskets() {
+  const ids = anchor.value?.stockIds ?? [];
+  if (ids.length <= 1) {
+    basketList.value = [];
+    return;
+  }
+  basketLoading.value = true;
+  try {
+    const res: any = await listStockBaskets(ids);
+    basketList.value = res?.data ?? [];
+  } finally {
+    basketLoading.value = false;
+  }
+}
+
 function open(row: LocationStockVO, kind: 'in' | 'out' | 'check' | 'loss' | 'feed') {
   anchor.value = row;
   activeTab.value = kind;
@@ -239,12 +282,14 @@ function open(row: LocationStockVO, kind: 'in' | 'out' | 'check' | 'loss' | 'fee
   checkList.value = [];
   lossList.value = [];
   feedList.value = [];
+  basketList.value = [];
   visible.value = true;
   loadIn();
   loadOut();
   loadCheck();
   loadLoss();
   loadFeed();
+  loadBaskets();
 }
 
 defineExpose({ open });

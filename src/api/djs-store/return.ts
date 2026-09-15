@@ -12,6 +12,7 @@ import type {
   StoreReturnConfirmForm,
   StoreReturnForm,
   StoreReturnOpsItemVO,
+  StoreReturnOwnerOptionVO,
   StoreReturnPorkCandidateVO,
   StoreReturnUnitCandidateVO,
   StoreReturnUnitForm,
@@ -125,6 +126,18 @@ export const listReturnOpsItems = (query?: StoreReturnQuery): AxiosPromise<Store
     url: '/djs/store/return/operation/items',
     method: 'get',
     params: query
+  });
+};
+
+/**
+ * 门店退回操作页「退回门店」筛选项：现有退回记录里出现过的门店 / 退回单位，去重（V6 row222）。
+ *
+ * 不接受筛选参数 —— 选项池必须是全量的，跟着当前搜索条件变会导致筛完只剩自己那一项。
+ */
+export const listReturnOwnerOptions = (): AxiosPromise<StoreReturnOwnerOptionVO[]> => {
+  return request({
+    url: '/djs/store/return/operation/owner-options',
+    method: 'get'
   });
 };
 

@@ -6,6 +6,10 @@
  */
 
 export interface LocationStockVO extends BaseEntity {
+  /** 这一行背后的库存篮 id 组，先进先出序（row223 / D-0068：一行 = 一组篮，行内操作整组提交） */
+  stockIds: string[];
+  /** 这一行合并了几个库存篮（≥1），排障用、不展示 */
+  basketCount?: number;
   id: number | string;
   /** service 层按 product_id FK 回填的产品业务码（如 P10002） */
   productCode?: string;
@@ -60,10 +64,11 @@ export interface LocationStockQuery extends PageQuery {
 /**
  * 库存查询行「产品出库」入参（DJS-FIX-WMS-RALN-B）。
  *
- * id = 库存行主键（snowflake，全链路 string 防截断）；后端按此取 locationId + productId。
+ * stockIds = 这一行背后的库存篮 id 组（snowflake，全链路 string 防截断），先进先出序。
+ * row223 / D-0068 起一行可能由多个篮合并而来，出库量由后端跨篮先进先出扣。
  */
 export interface StockOutForm {
-  id: number | string;
+  stockIds: Array<number | string>;
   /** 出库日期（默认当天，yyyy-MM-dd） */
   outDate: string;
   /** 出库量（> 0） */
@@ -76,11 +81,11 @@ export interface StockOutForm {
 /**
  * 库存查询行「猪肉转移」入参（WS13 / row143）：猪肉鲜品库 → 冻品库。
  *
- * id = 源库存行主键（snowflake，全链路 string 防截断）；后端按此取 locationId + productId + 当前库存，
- * 目标冻品库由后端按 location_type=frozen 解析。
+ * stockIds = 源库存篮 id 组（snowflake，全链路 string 防截断），先进先出序；后端逐篮取
+ * locationId + productId + 当前库存，目标冻品库由后端按 location_type=frozen 解析。
  */
 export interface StockTransferForm {
-  id: number | string;
+  stockIds: Array<number | string>;
   /** 转移日期（默认当天，yyyy-MM-dd） */
   transferDate: string;
   /** 转移量（> 0，≤ 当前库存） */
@@ -88,9 +93,15 @@ export interface StockTransferForm {
   remark?: string;
 }
 
-/** 毛菜间出库单项（row185 单条 / row187 批量共用） */
+/** 毛菜间出库单项（row185 产品内部处理 / row187 批量出库共用） */
 export interface VegOutItem {
-  stockId: number | string;
+  /**
+   * 这一项背后的库存篮 id 组，先进先出序（row224 / D-0068）。
+   *
+   * 候选列表上的一行可能由多个篮合并而来（同产品 / 库位 / 耳号 / 地块 / 三期 / 白条流水号），
+   * 整组提交、由后端跨篮先进先出扣。只出一个篮的场景（产品内部处理）传单元素数组即可。
+   */
+  stockIds: Array<number | string>;
   quantity: number | undefined;
 }
 
@@ -99,5 +110,20 @@ export interface VegOutSubmitForm {
   outDate: string;
   outDest: string;
   items: VegOutItem[];
+  remark?: string;
+}
+
+/**
+ * 库存查询合并行背后的单个库存篮（row223 / D-0068「各篮明细（入库时间+重量）下沉到详情里看」）。
+ */
+export interface StockBasketVO {
+  id: string;
+  /** 建篮时间 = 这一篮的入库时间（首次建篮时刻；后续补货 UPSERT 累加不改这个戳） */
+  createTime?: string;
+  /** 这一篮当前的库存量（按产品单位计） */
+  productStock?: number | string;
+  /** 这一篮最近一次盘点时间 */
+  latestCheckTime?: string;
+  /** 这一篮的备注（单篮字段，合并行上不展示） */
   remark?: string;
 }

@@ -106,6 +106,15 @@ const columns = computed<BizTableColumn[]>(() => [
     formatter: (row: BizRow) => fmtKg(row.totalWeight)
   },
   {
+    // row220：非 kg 单位的行汇总在这里。与出库重量是同一判据的两半（后端 BATCH_AGG_SQL），
+    // 故意不带单位——一张单里可能同时有袋 / 罐 / 枚，混着加只当粗汇总，逐行单位看详情。
+    prop: 'totalQty',
+    label: t('vegOut.column.totalQty'),
+    minWidth: COL_MIN_WIDTH,
+    align: 'center',
+    formatter: (row: BizRow) => fmtQty(row.totalQty)
+  },
+  {
     prop: 'totalAmount',
     label: t('vegOut.column.totalAmount'),
     minWidth: COL_MIN_WIDTH,
@@ -122,10 +131,29 @@ function fmtMoney(v: number | string | undefined | null): string {
   return Number.isNaN(n) ? String(v) : `¥${n.toFixed(2)}`;
 }
 
+/**
+ * 出库重量展示。0 显示成 `-`：这一列只累加 kg 行，纯非 kg 的单子恒为 0，
+ * 摆一个 `0.000kg` 会被读成「有货没统计上」，而 `-` 的语义就是「这单没有按 kg 计的货」——
+ * 与右边「出库量」那一列的空值占位保持对称（出库流水的量恒 > 0，合计不可能真是 0）。
+ */
 function fmtKg(v: number | string | undefined | null): string {
   if (v === undefined || v === null || v === '') return '-';
   const n = typeof v === 'number' ? v : Number(v);
-  return Number.isNaN(n) ? String(v) : `${formatQtyByUnit(n, 'kg')}kg`;
+  if (Number.isNaN(n)) return String(v);
+  return n === 0 ? '-' : `${formatQtyByUnit(n, 'kg')}kg`;
+}
+
+/**
+ * 出库量展示（row220 新列）：非 kg 行的数量合计，不带单位。
+ *
+ * 0 显示成 `-` 而不是 `0`：这一列对纯 kg 的单子恒为 0，摆一列 0 会让人以为「有货没统计上」，
+ * 而 `-` 的语义就是「这单没有非 kg 的货」。与出库重量那列（kg 单子恒有值）职责互补。
+ */
+function fmtQty(v: number | string | undefined | null): string {
+  if (v === undefined || v === null || v === '') return '-';
+  const n = typeof v === 'number' ? v : Number(v);
+  if (Number.isNaN(n)) return String(v);
+  return n === 0 ? '-' : String(Number(n.toFixed(3)));
 }
 
 /**

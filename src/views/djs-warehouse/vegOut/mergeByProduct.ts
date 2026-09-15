@@ -5,7 +5,7 @@
  * 库存是按「产品 × 地块」分篮存的（{@code t_warehouse_location_stock} 一篮一行），
  * 所以一个产品在候选列表里天然会出现多行。</p>
  *
- * <p><b>合并只发生在展示与打印层。</b>提交仍按库存行逐条走（{@code items[].stockId}）——
+ * <p><b>合并只发生在展示与打印层。</b>提交仍按候选行逐条走（{@code items[].stockIds}）——
  * 后端扣的是具体那个篮的库存，合并成一条它就不知道该从哪个篮扣、也扣不出正确的地块流水。</p>
  */
 
@@ -42,8 +42,11 @@ export function productMergeKey(p: MergeableProduct): string {
  * <p>不返回加权均价：均价四舍五入后「单价 × 数量 ≠ 总金额」，而这张三联单是财务凭证，
  * 印一个对不上的数比留白更糟。总金额一律取各行真实小计之和。</p>
  */
-export function uniformUnitPrice(prices: number[]): number | undefined {
+export function uniformUnitPrice(prices: Array<number | undefined>): number | undefined {
   if (!prices.length) return undefined;
+  // 组里只要有一行「单价未知」（后端对已合并且组内单价不一致的行下发 null），整组就没有单一单价可言。
+  // 少了这一句，未知会被当成 0 参与比较，一组全是未知时 uniformUnitPrice([0,0]) = 0，打印单印出「单价 0.00」。
+  if (prices.some((p) => p === undefined || p === null)) return undefined;
   const first = prices[0];
   return prices.every((p) => p === first) ? first : undefined;
 }
@@ -58,12 +61,15 @@ export type MergeablePrintRow = VegOutPrintRow & { productCode?: string | null }
  * 单价仅在组内一致时保留。</p>
  */
 export function mergeVegOutPrintRows(rows: MergeablePrintRow[]): VegOutPrintRow[] {
-  const groups = new Map<string, { row: VegOutPrintRow; prices: number[] }>();
+  const groups = new Map<string, { row: VegOutPrintRow; prices: Array<number | undefined> }>();
   rows.forEach((r) => {
     const key = productMergeKey(r);
     const qty = Number(r.quantity) || 0;
-    const price = Number(r.unitPrice) || 0;
-    const amount = r.amount !== undefined && r.amount !== null ? Number(r.amount) || 0 : qty * price;
+    // 单价保持「可未知」：`|| 0` 会把 undefined 压成 0，而 0 是一个合法单价，压完就再也分不清
+    // 「这行单价是 0」和「这行单价未知」——打印单据此决定留白还是印数字。
+    const price = r.unitPrice === undefined || r.unitPrice === null ? undefined : Number(r.unitPrice);
+    const amount =
+      r.amount !== undefined && r.amount !== null ? Number(r.amount) || 0 : qty * (price ?? 0);
     const hit = groups.get(key);
     if (hit) {
       hit.row.quantity += qty;
