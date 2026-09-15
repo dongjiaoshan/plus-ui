@@ -323,13 +323,14 @@ function fmtMoney(v: number | string | undefined | null): string {
  */
 const knownRows = ref<VegOutCandidateVO[]>([]);
 function rememberRows(rows: VegOutCandidateVO[]) {
-  const seen = new Set(knownRows.value.map((r) => rowKey(r)));
-  rows.forEach((r) => {
-    if (!seen.has(rowKey(r))) {
-      knownRows.value.push(r);
-      seen.add(rowKey(r));
-    }
-  });
+  // 同一个键**用新对象覆盖**，不是「已有就跳过」：行键现在是分组维度（稳定），而这一行背后的
+  // stockIds 与库存重量是会变的（抽屉开着时别人入了一篮、或某篮被扣到 0 掉出候选）。
+  // 跳过的话 knownRows 里那份会一直停在打开抽屉那一刻，提交带的是过期篮组 ——
+  // 屏幕上写着 74、后端按旧的两篮算成 42，工人看到一句对不上的报错。
+  // 已填的量与单价存在 quantityMap / priceMap 里、按同一个键索引，覆盖行对象不会把它们弄丢。
+  const byKey = new Map(knownRows.value.map((r) => [rowKey(r), r] as const));
+  rows.forEach((r) => byKey.set(rowKey(r), r));
+  knownRows.value = [...byKey.values()];
 }
 
 /** 已选 = 填了正数出库量的行（跨搜索全集，右侧实时反映）。量清 0 / 清空即视为不出库该产品。 */
