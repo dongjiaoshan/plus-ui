@@ -83,7 +83,7 @@ export interface AnnualIndicatorVO {
   marketingCount: number;
   /** kg，BigDecimal(2) */
   marketingWeight: number;
-  /** PSY 每头母猪年产断奶仔数，4 位小数 */
+  /** PSY 每头母猪年产断奶仔数（列 decimal(8,2)，不是百分比） */
   psy: number;
   /** 死亡率，4 位小数 (0~1) */
   mortalityRate: number;
