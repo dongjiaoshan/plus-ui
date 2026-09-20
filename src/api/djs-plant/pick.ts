@@ -9,6 +9,7 @@ import type {
   PickActivityVO
 } from './pick/types';
 import type { PlantDetailsVO } from './plan/types';
+import type { DateWindowStatusStatVO } from './common/types';
 
 /**
  * 采摘计划 + 采摘活动 API（PLT-PLAN-002）。
@@ -41,6 +42,19 @@ export const listPickPlanDetailsByCrop = (cropId: number | string): AxiosPromise
   return request({
     url: `/djs/plant/pick/plan/crop/${cropId}/details`,
     method: 'get'
+  });
+};
+
+/**
+ * 顶部统计版块：五档采摘状态的计数。
+ *
+ * 传与列表相同的筛选条件；后端会忽略其中的 pickStatus，其余条件照常生效。
+ */
+export const getPickPlanStatusStat = (query: PickPlanQuery): AxiosPromise<DateWindowStatusStatVO> => {
+  return request({
+    url: '/djs/plant/pick/plan/statusStat',
+    method: 'get',
+    params: query
   });
 };
 

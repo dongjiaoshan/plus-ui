@@ -2435,12 +2435,14 @@ export default {
     field: {
       cropName: '作物名称',
       marketBeginMonth: '上市月份',
-      marketEndMonth: '下架月份'
+      marketEndMonth: '下架月份',
+      marketStatus: '状态'
     },
     placeholder: {
       cropName: '请输入作物名称',
       marketBeginMonth: '请选择上市月份',
-      marketEndMonth: '请选择下架月份'
+      marketEndMonth: '请选择下架月份',
+      marketStatus: '请选择状态'
     },
     column: {
       cropImage: '作物图片',
@@ -2461,18 +2463,29 @@ export default {
   },
   pickPlan: {
     pageTitle: '采摘计划',
+    // 五档采摘状态：按最早 / 最晚采摘日期与当天现算，不是字典
+    // （与 marketPlan.status 同一套状态码、不同说法，后端 StatusLabelI18nSyncTest 守两边逐字一致）
+    status: {
+      pending: '待采摘',
+      upcoming: '即将采摘',
+      on_sale: '采摘中',
+      ending: '即将结束采摘',
+      off_shelf: '完成采摘'
+    },
     field: {
       planYear: '计划年份',
       planSeason: '计划季节',
       harvestStatus: '采摘状态',
-      cropName: '作物名称'
+      cropName: '作物名称',
+      pickStatus: '状态'
     },
     placeholder: {
       planSeason: '请选择季节',
       harvestStatus: '请选择采摘状态',
       team: '采摘班组',
       cropName: '请选择农作物',
-      cropNameInput: '请输入作物名称'
+      cropNameInput: '请输入作物名称',
+      pickStatus: '请选择状态'
     },
     column: {
       planNo: '计划号',
@@ -2481,6 +2494,7 @@ export default {
       crop: '作物',
       cropImage: '作物图片',
       cropName: '作物名称',
+      pickStatus: '状态',
       plotCount: '地块数',
       planEarliest: '最早采摘日期',
       planLatest: '最晚采摘日期',

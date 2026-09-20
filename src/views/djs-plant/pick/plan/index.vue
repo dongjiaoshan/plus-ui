@@ -1,5 +1,13 @@
 <template>
   <div class="p-2">
+    <!-- 顶部状态统计版块：五档计数，顺序按甲方点名的档位序（即将采摘在最前） -->
+    <div class="status-kpi-row">
+      <el-card v-for="card in statusCards" :key="card.code" shadow="hover" class="status-kpi-card">
+        <div class="status-kpi-label">{{ card.label }}</div>
+        <div class="status-kpi-value">{{ card.value ?? '-' }}</div>
+      </el-card>
+    </div>
+
     <BizTable
       ref="tableRef"
       :data="list"
@@ -29,6 +37,13 @@
           :src="row.cropImageUrl"
           :preview-src-list="[row.cropImageUrl]"
         />
+        <span v-else class="text-gray-400">—</span>
+      </template>
+      <!-- 状态：后端按最早/最晚采摘日期与当天现算，只回状态码，中文走 i18n；甲方点名「即将采摘」用红字 -->
+      <template #cell-pickStatus="{ row }">
+        <span v-if="row.pickStatus" :class="{ 'pick-status-danger': row.pickStatus === 'upcoming' }">
+          {{ t(`pickPlan.status.${row.pickStatus}`) }}
+        </span>
         <span v-else class="text-gray-400">—</span>
       </template>
       <template #cell-totalAcreage="{ row }">{{ row.totalAcreage != null ? `${row.totalAcreage} 亩` : '-' }}</template>
@@ -61,8 +76,10 @@ import BizTable from '@/components/BizTable/index.vue';
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import PickAdjustDrawer from './components/PickAdjustDrawer.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listPickPlan } from '@/api/djs-plant/pick';
+import { getPickPlanStatusStat, listPickPlan } from '@/api/djs-plant/pick';
 import type { PickPlanGroupVO, PickPlanQuery } from '@/api/djs-plant/pick/types';
+import type { DateWindowStatusCode, DateWindowStatusStatVO } from '@/api/djs-plant/common/types';
+import { DATE_WINDOW_STATUS_ORDER, dateWindowStatCount, dateWindowStatusOptions } from '@/api/djs-plant/common/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -78,10 +95,12 @@ interface PlanRow extends PickPlanGroupVO {
 const list = ref<PlanRow[]>([]);
 const total = ref(0);
 const loading = ref(false);
+const statusStat = ref<DateWindowStatusStatVO | null>(null);
 
 const searchModel = reactive<Record<string, any>>({
   cropName: undefined,
-  earliestRange: undefined
+  earliestRange: undefined,
+  pickStatus: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -95,14 +114,34 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
     field: 'earliestRange',
     label: t('pickPlan.column.planEarliest'),
     type: 'daterange'
+  },
+  {
+    // 甲方原话「数据通过采摘列表里的状态进行去重加载」：只列当前结果集里真有数据的档（D-0104）。
+    // 去重基准是统计版块那份计数，而它忽略状态条件本身 —— 所以选中一档后其余几档仍在，改选不会被锁死。
+    field: 'pickStatus',
+    label: t('pickPlan.field.pickStatus'),
+    type: 'select',
+    placeholder: t('pickPlan.placeholder.pickStatus'),
+    options: dateWindowStatusOptions(statusStat.value, (code) => t(`pickPlan.status.${code}`))
   }
 ]);
 
-// 列序：作物图片 / 作物名称 / 最早开始 / 最晚截止 / 计划种植亩数 / 当前已种植亩数 /
+/** 顶部统计卡：五档 label 直接复用状态 i18n，不另建一套文案。 */
+const statusCards = computed<Array<{ code: DateWindowStatusCode; label: string; value: number | undefined }>>(() =>
+  DATE_WINDOW_STATUS_ORDER.map((code) => ({
+    code,
+    label: t(`pickPlan.status.${code}`),
+    value: dateWindowStatCount(statusStat.value, code)
+  }))
+);
+
+// 列序：作物图片 / 作物名称 / 状态 / 最早开始 / 最晚截止 / 计划种植亩数 / 当前已种植亩数 /
 // 预计产量 / 当年已采摘量 / 当年种植地块总数 / 预计灾害损失量 / 采摘活动地块数 / 操作
+// 「状态」插在作物名称右侧（甲方截图里红框压在作物名称与最早采摘日期两列之间），不是放到表格最右
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropImageUrl', label: t('pickPlan.column.cropImage'), width: 80, align: 'center' },
   { prop: 'cropName', label: t('pickPlan.column.cropName'), minWidth: 120, showOverflowTooltip: true, align: 'center' },
+  { prop: 'pickStatus', label: t('pickPlan.column.pickStatus'), minWidth: 120, align: 'center' },
   { prop: 'planEarliest', label: t('pickPlan.column.planEarliest'), minWidth: 120, align: 'center' },
   { prop: 'planLatest', label: t('pickPlan.column.planLatest'), minWidth: 120, align: 'center' },
   { prop: 'totalAcreage', label: t('pickPlan.column.planPlantArea'), minWidth: 130, align: 'center' },
@@ -124,7 +163,8 @@ function buildQuery(): PickPlanQuery {
   return {
     cropName: searchModel.cropName || undefined,
     beginEarliest: begin,
-    endEarliest: end
+    endEarliest: end,
+    pickStatus: (searchModel.pickStatus as DateWindowStatusCode | undefined) || undefined
   };
 }
 
@@ -141,22 +181,42 @@ async function loadList() {
   }
 }
 
+/** 统计卡：跟列表用同一套筛选条件（状态条件由后端忽略），所以换筛选时要一起刷。 */
+async function loadStatusStat() {
+  try {
+    const res = await getPickPlanStatusStat(buildQuery());
+    statusStat.value = res.data;
+  } catch (e) {
+    // 统计卡拿不到就显 '-'，不阻塞下方列表
+    console.warn('[PickPlan] loadStatusStat failed', e);
+    statusStat.value = null;
+  }
+}
+
 function handleSearch(payload?: Record<string, any>) {
   Object.assign(searchModel, payload ?? {});
   loadList();
+  loadStatusStat();
 }
 
 function handleReset() {
   searchModel.cropName = undefined;
   searchModel.earliestRange = undefined;
+  searchModel.pickStatus = undefined;
   loadList();
+  loadStatusStat();
 }
 
 function handleExport() {
   const { begin, end } = rangeOf(searchModel.earliestRange);
   proxy?.download(
     'djs/plant/pick/plan/export',
-    { cropName: searchModel.cropName || undefined, beginEarliest: begin, endEarliest: end },
+    {
+      cropName: searchModel.cropName || undefined,
+      beginEarliest: begin,
+      endEarliest: end,
+      pickStatus: searchModel.pickStatus || undefined
+    },
     `pick_plan_${new Date().getTime()}.xlsx`
   );
 }
@@ -167,5 +227,39 @@ function handleAdjust(row: PlanRow) {
 
 onMounted(() => {
   loadList();
+  loadStatusStat();
 });
 </script>
+
+<style scoped>
+.status-kpi-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.status-kpi-card {
+  /* 一行 5 个等宽：弹性增长 + min-width 触发换行（窄到放不下才换） */
+  flex: 1 1 0;
+  min-width: 150px;
+  text-align: center;
+}
+
+.status-kpi-label {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 6px;
+}
+
+.status-kpi-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--el-color-primary);
+}
+
+/* 甲方点名：即将采摘用红色字体 */
+.pick-status-danger {
+  color: var(--el-color-danger);
+}
+</style>

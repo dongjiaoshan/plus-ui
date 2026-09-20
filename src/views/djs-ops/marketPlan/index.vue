@@ -1,5 +1,13 @@
 <template>
   <div class="p-2">
+    <!-- 顶部状态统计版块：五档全量计数（不是当前页），顺序按甲方点名的档位序 -->
+    <div class="status-kpi-row">
+      <el-card v-for="card in statusCards" :key="card.code" shadow="hover" class="status-kpi-card">
+        <div class="status-kpi-label">{{ card.label }}</div>
+        <div class="status-kpi-value">{{ card.value ?? '-' }}</div>
+      </el-card>
+    </div>
+
     <BizTable
       :data="list"
       :total="total"
@@ -48,8 +56,10 @@
 <script setup name="MarketPlanIndex" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizRow, BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
-import { listMarketPlan } from '@/api/djs-ops/marketPlan';
+import { getMarketPlanStatusStat, listMarketPlan } from '@/api/djs-ops/marketPlan';
 import type { MarketPlanQuery, MarketPlanVO } from '@/api/djs-ops/marketPlan/types';
+import type { DateWindowStatusCode, DateWindowStatusStatVO } from '@/api/djs-plant/common/types';
+import { DATE_WINDOW_STATUS_ORDER, dateWindowStatCount, dateWindowStatusOptions } from '@/api/djs-plant/common/types';
 import { useI18n } from 'vue-i18n';
 import { getCurrentInstance } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
@@ -62,13 +72,15 @@ const total = ref(0);
 const loading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
+const statusStat = ref<DateWindowStatusStatVO | null>(null);
 
-// 搜索：严格只有甲方点名的三项（作物名称模糊 / 上市月份 / 下架月份），不加隐式年份过滤
-// 列表展示精确到天，筛选仍按月——搜索框本身就是月份选择器，挑的是月、命中该月内所有日期
+// 搜索：甲方点名的四项（作物名称模糊 / 上市月份 / 下架月份 / 状态），不加隐式年份过滤
+// 列表展示精确到天，月份筛选仍按月——搜索框本身就是月份选择器，挑的是月、命中该月内所有日期
 const searchModel = reactive<Record<string, unknown>>({
   cropName: undefined,
   marketBeginMonth: undefined,
-  marketEndMonth: undefined
+  marketEndMonth: undefined,
+  marketStatus: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
@@ -92,8 +104,27 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
     type: 'month',
     placeholder: t('marketPlan.placeholder.marketEndMonth'),
     width: 180
+  },
+  {
+    // 甲方原话「数据通过列表里的状态进行去重加载」：只列当前结果集里真有数据的档（D-0104）。
+    // 去重基准是统计版块那份计数，而它忽略状态条件本身 —— 所以选中一档后其余几档仍在，改选不会被锁死。
+    field: 'marketStatus',
+    label: t('marketPlan.field.marketStatus'),
+    type: 'select',
+    placeholder: t('marketPlan.placeholder.marketStatus'),
+    options: dateWindowStatusOptions(statusStat.value, (code) => t(`marketPlan.status.${code}`)),
+    width: 180
   }
 ]);
+
+/** 顶部统计卡：五档 label 直接复用状态 i18n，不另建一套文案。 */
+const statusCards = computed<Array<{ code: DateWindowStatusCode; label: string; value: number | undefined }>>(() =>
+  DATE_WINDOW_STATUS_ORDER.map((code) => ({
+    code,
+    label: t(`marketPlan.status.${code}`),
+    value: dateWindowStatCount(statusStat.value, code)
+  }))
+);
 
 /**
  * 状态码 → el-tag 配色。状态本身是后端现算的五档，不是字典，所以配色表放前端。
@@ -149,6 +180,7 @@ function buildQueryParams(): MarketPlanQuery {
     cropName: (searchModel.cropName as string | undefined) || undefined,
     marketBeginMonth: (searchModel.marketBeginMonth as string | undefined) || undefined,
     marketEndMonth: (searchModel.marketEndMonth as string | undefined) || undefined,
+    marketStatus: (searchModel.marketStatus as DateWindowStatusCode | undefined) || undefined,
     pageNum: pageNum.value,
     pageSize: pageSize.value
   };
@@ -165,10 +197,27 @@ async function loadList() {
   }
 }
 
+/**
+ * 统计卡：跟列表用同一套筛选条件（状态条件由后端忽略），所以换筛选时要一起刷。
+ * 翻页不刷 —— 统计的是全量，与当前页无关。
+ */
+async function loadStatusStat() {
+  const { pageNum: _pn, pageSize: _ps, ...params } = buildQueryParams();
+  try {
+    const res = await getMarketPlanStatusStat(params);
+    statusStat.value = res.data;
+  } catch (e) {
+    // 统计卡拿不到就显 '-'，不阻塞下方列表
+    console.warn('[MarketPlan] loadStatusStat failed', e);
+    statusStat.value = null;
+  }
+}
+
 const handleSearch = (payload?: Record<string, unknown>) => {
   Object.assign(searchModel, payload ?? {});
   pageNum.value = 1;
   loadList();
+  loadStatusStat();
 };
 
 const handleReset = () => {
@@ -190,6 +239,7 @@ const handleExport = () => {
 
 onMounted(() => {
   loadList();
+  loadStatusStat();
 });
 </script>
 
@@ -198,5 +248,31 @@ onMounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 4px;
+}
+
+.status-kpi-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.status-kpi-card {
+  /* 一行 5 个等宽：弹性增长 + min-width 触发换行（窄到放不下才换） */
+  flex: 1 1 0;
+  min-width: 150px;
+  text-align: center;
+}
+
+.status-kpi-label {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 6px;
+}
+
+.status-kpi-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--el-color-primary);
 }
 </style>

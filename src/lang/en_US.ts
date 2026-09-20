@@ -2449,12 +2449,14 @@ export default {
     field: {
       cropName: 'Crop Name',
       marketBeginMonth: 'On-market Month',
-      marketEndMonth: 'Off-shelf Month'
+      marketEndMonth: 'Off-shelf Month',
+      marketStatus: 'Status'
     },
     placeholder: {
       cropName: 'Enter crop name',
       marketBeginMonth: 'Select on-market month',
-      marketEndMonth: 'Select off-shelf month'
+      marketEndMonth: 'Select off-shelf month',
+      marketStatus: 'Select a status'
     },
     column: {
       cropImage: 'Crop Image',
@@ -2475,18 +2477,27 @@ export default {
   },
   pickPlan: {
     pageTitle: 'Pick Plan',
+    status: {
+      pending: 'Not Yet Picking',
+      upcoming: 'Picking Soon',
+      on_sale: 'Picking',
+      ending: 'Picking Ending Soon',
+      off_shelf: 'Picking Done'
+    },
     field: {
       planYear: 'Plan Year',
       planSeason: 'Season',
       harvestStatus: 'Harvest Status',
-      cropName: 'Crop'
+      cropName: 'Crop',
+      pickStatus: 'Status'
     },
     placeholder: {
       planSeason: 'Pick a season',
       harvestStatus: 'Pick a harvest status',
       team: 'Harvest team',
       cropName: 'Select a crop',
-      cropNameInput: 'Enter crop name'
+      cropNameInput: 'Enter crop name',
+      pickStatus: 'Select a status'
     },
     column: {
       planNo: 'Plan No',
@@ -2495,6 +2506,7 @@ export default {
       crop: 'Crop',
       cropImage: 'Image',
       cropName: 'Crop',
+      pickStatus: 'Status',
       plotCount: 'Plots',
       planEarliest: 'Earliest Harvest Date',
       planLatest: 'Latest Harvest Date',

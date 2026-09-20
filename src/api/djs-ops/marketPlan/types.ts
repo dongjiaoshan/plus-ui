@@ -5,11 +5,18 @@
  * 雪花 id 全链路 string（后端 Jackson 全局把 Long 序列化成字符串）。
  */
 
-/** 列表查询条件：作物名称模糊 + 上市月份 + 下架月份（筛选粒度仍是月，格式 yyyy-MM）。 */
+import type { DateWindowStatusCode } from '@/api/djs-plant/common/types';
+
+/**
+ * 列表查询条件：作物名称模糊 + 上市月份 + 下架月份（筛选粒度仍是月，格式 yyyy-MM）+ 状态。
+ *
+ * 状态是后端按日期现算、库里没有的派生值，由后端取全量算完再过滤分页 —— 筛选跨页生效。
+ */
 export interface MarketPlanQuery {
   cropName?: string;
   marketBeginMonth?: string;
   marketEndMonth?: string;
+  marketStatus?: DateWindowStatusCode;
   pageNum?: number;
   pageSize?: number;
 }
@@ -33,7 +40,7 @@ export interface MarketPlanVO {
    * pending 待上市 / upcoming 即将上市 / on_sale 上市中 / ending 即将下市 / off_shelf 已下架；
    * 上市日期为空时为空。中文由前端按码查 i18n（marketPlan.status.*）。
    */
-  marketStatus?: string;
+  marketStatus?: DateWindowStatusCode;
   /** 状态中文名（后端导出 Excel 用，前端不读它） */
   marketStatusName?: string;
   /** 作物名称 */

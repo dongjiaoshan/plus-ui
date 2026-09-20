@@ -8,6 +8,8 @@
  * 注意：snowflake ID 全链路 string（契约 1）。
  */
 
+import type { DateWindowStatusCode } from '../common/types';
+
 // ============================================================
 // 采摘计划（按作物聚合 + 调整）
 // ============================================================
@@ -17,8 +19,13 @@ export interface PickPlanQuery {
   cropId?: number | string;
   /** 作物名称模糊筛选 */
   cropName?: string;
-  /** 采摘状态（原型外增强项，后端仍支持；默认不传） */
+  /** 明细上落库的采摘状态字典 djs_pick_status（原型外增强项，后端仍支持；默认不传） */
   harvestStatus?: string;
+  /**
+   * 列表「状态」列的五档码（按最早 / 最晚采摘日期与当天现算，不落库，与 harvestStatus 是两回事）。
+   * 后端算完状态后过滤，本列表不分页，故筛选与导出同口径。
+   */
+  pickStatus?: DateWindowStatusCode;
   /** 最早开始时间范围起（含） */
   beginEarliest?: string;
   /** 最早开始时间范围止（含） */
@@ -32,6 +39,14 @@ export interface PickPlanQuery {
 export interface PickPlanGroupVO {
   cropId: string;
   cropName?: string;
+  /**
+   * 五档状态码（后端按 planEarliest / planLatest 与当天现算）：
+   * pending 待采摘 / upcoming 即将采摘 / on_sale 采摘中 / ending 即将结束采摘 / off_shelf 完成采摘；
+   * 最早采摘日期为空时为空。中文由前端按码查 i18n（pickPlan.status.*）。
+   */
+  pickStatus?: DateWindowStatusCode;
+  /** 状态中文名（后端导出 Excel 用，前端不读它） */
+  pickStatusName?: string;
   /** 作物主图 public URL（后端 resolver 回填）。 */
   cropImageUrl?: string;
   plotCount: number;
