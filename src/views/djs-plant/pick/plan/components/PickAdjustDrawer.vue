@@ -79,11 +79,19 @@
       </el-table-column>
       <el-table-column :label="t('pickPlan.column.action')" width="200" fixed="right" align="center" header-align="center">
         <template #default="{ row }">
-          <template v-if="rowEditable(row as AdjustRow)">
-            <el-button v-hasPermi="['djs:plant:pick:adjust']" link type="primary" size="small" @click="openScheduleDialog(row as AdjustRow)">
+          <template v-if="canSetSchedule(row as AdjustRow) || canToggleActivity(row as AdjustRow)">
+            <el-button
+              v-if="canSetSchedule(row as AdjustRow)"
+              v-hasPermi="['djs:plant:pick:adjust']"
+              link
+              type="primary"
+              size="small"
+              @click="openScheduleDialog(row as AdjustRow)"
+            >
               {{ t('pickPlan.adjust.action.setSchedule') }}
             </el-button>
             <el-button
+              v-if="canToggleActivity(row as AdjustRow)"
               v-hasPermi="['djs:plant:pick:adjust']"
               link
               :type="(row as AdjustRow).isPick === 1 ? 'warning' : 'primary'"
@@ -108,8 +116,12 @@
             type="date"
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
+            :disabled="earliestLocked"
+            :placeholder="earliestLocked ? t('pickPlan.adjust.dialog.beginLockedPlaceholder') : ''"
             style="width: 100%"
           />
+          <!-- 禁用要说得出理由，否则用户会以为控件坏了 -->
+          <div v-if="earliestLocked" class="schedule-locked-tip">{{ t('pickPlan.adjust.dialog.beginLockedTip') }}</div>
         </el-form-item>
         <el-form-item :label="t('pickPlan.adjust.dialog.endDate')">
           <el-date-picker
@@ -148,9 +160,22 @@ interface AdjustRow extends PlantDetailsVO {
   plantDate?: string;
 }
 
-/** 采摘状态门控：仅 待开始(pending)/延期(delayed) 可操作；采摘中(picking)/已完成(completed) 锁定。 */
-function rowEditable(row: AdjustRow): boolean {
-  return row.harvestStatus !== 'picking' && row.harvestStatus !== 'completed';
+/** 字典 djs_pick_status：采摘中（实际已开采，实际开始采摘日期已回写）。 */
+const HARVEST_STATUS_PICKING = 'picking';
+/** 字典 djs_pick_status：已完成。 */
+const HARVEST_STATUS_COMPLETED = 'completed';
+
+/**
+ * 「设置采摘计划」门控：除已完成(completed)外都可开。
+ * 采摘中(picking) 也开，但弹框里只放行最晚采摘日期（见 earliestLocked）。
+ */
+function canSetSchedule(row: AdjustRow): boolean {
+  return row.harvestStatus !== HARVEST_STATUS_COMPLETED;
+}
+
+/** 「设为/取消采摘活动」门控：仅 待开始(pending)/延期(delayed) 可改；开采后游客采摘与否已成既成事实。 */
+function canToggleActivity(row: AdjustRow): boolean {
+  return row.harvestStatus !== HARVEST_STATUS_PICKING && row.harvestStatus !== HARVEST_STATUS_COMPLETED;
 }
 
 const visible = ref(false);
@@ -182,6 +207,12 @@ const scheduleForm = reactive<{ earliestHarvestdate?: string; lastHarvestdate?: 
   earliestHarvestdate: undefined,
   lastHarvestdate: undefined
 });
+
+/**
+ * 采摘中的行：实际开始采摘日期已回写落库，此时再改计划最早采摘日期会让两者自相矛盾，
+ * 故弹框里锁死最早采摘日期，只放行最晚采摘日期（后端 setSchedule 同口径兜底）。
+ */
+const earliestLocked = computed(() => currentRow.value?.harvestStatus === HARVEST_STATUS_PICKING);
 
 const togglingId = ref<string>('');
 
@@ -305,5 +336,14 @@ defineExpose({ open });
 /* 筛选区 inline label 不换行（避免「是否采摘活动」6 字被折成两行） */
 .pick-adjust-filter :deep(.el-form-item__label) {
   white-space: nowrap;
+}
+
+/* 「最早采摘日期已锁」说明：贴在日期控件下方，占一整行，不撑高 form-item 行距 */
+.schedule-locked-tip {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--el-text-color-secondary);
 }
 </style>

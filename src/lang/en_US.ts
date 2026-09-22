@@ -2571,7 +2571,10 @@ export default {
         beginDate: 'Start Date',
         endDate: 'End Date',
         beginRequired: 'Please select a start date',
-        dateOrder: 'End date must not be before start date'
+        dateOrder: 'End date must not be before start date',
+        beginLockedPlaceholder: 'Harvesting started, locked',
+        beginLockedTip:
+          'Harvesting has started on this plot and the actual start date is already recorded, so the start date can no longer be changed; only the end date can be adjusted.'
       }
     }
   },

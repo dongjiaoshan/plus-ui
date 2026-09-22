@@ -2559,7 +2559,9 @@ export default {
         beginDate: '开始采摘日期',
         endDate: '结束采摘日期',
         beginRequired: '请选择开始采摘日期',
-        dateOrder: '结束采摘日期不得早于开始采摘日期'
+        dateOrder: '结束采摘日期不得早于开始采摘日期',
+        beginLockedPlaceholder: '已开始采摘，不可修改',
+        beginLockedTip: '该地块已开始采摘，实际开始采摘日期已记录，开始采摘日期不可再改；只能调整结束采摘日期。'
       }
     }
   },
