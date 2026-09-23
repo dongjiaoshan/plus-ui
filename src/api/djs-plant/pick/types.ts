@@ -41,7 +41,7 @@ export interface PickPlanGroupVO {
   cropName?: string;
   /**
    * 五档状态码（后端按 planEarliest / planLatest 与当天现算）：
-   * pending 待采摘 / upcoming 即将采摘 / on_sale 采摘中 / ending 即将结束采摘 / off_shelf 完成采摘；
+   * pending 未到采摘期 / upcoming 临近采摘期 / on_sale 采摘期内 / ending 临近采摘末期 / off_shelf 已过采摘期；
    * 最早采摘日期为空时为空。中文由前端按码查 i18n（pickPlan.status.*）。
    */
   pickStatus?: DateWindowStatusCode;

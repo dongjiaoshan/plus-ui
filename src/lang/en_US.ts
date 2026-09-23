@@ -2478,18 +2478,18 @@ export default {
   pickPlan: {
     pageTitle: 'Pick Plan',
     status: {
-      pending: 'Not Yet Picking',
-      upcoming: 'Picking Soon',
-      on_sale: 'Picking',
-      ending: 'Picking Ending Soon',
-      off_shelf: 'Picking Done'
+      pending: 'Before Harvest Window',
+      upcoming: 'Harvest Window Approaching',
+      on_sale: 'In Harvest Window',
+      ending: 'Harvest Window Ending',
+      off_shelf: 'Harvest Window Passed'
     },
     field: {
       planYear: 'Plan Year',
       planSeason: 'Season',
       harvestStatus: 'Harvest Status',
       cropName: 'Crop',
-      pickStatus: 'Status'
+      pickStatus: 'Harvest Window Status'
     },
     placeholder: {
       planSeason: 'Pick a season',
@@ -2497,7 +2497,7 @@ export default {
       team: 'Harvest team',
       cropName: 'Select a crop',
       cropNameInput: 'Enter crop name',
-      pickStatus: 'Select a status'
+      pickStatus: 'Select a harvest window status'
     },
     column: {
       planNo: 'Plan No',
@@ -2506,7 +2506,7 @@ export default {
       crop: 'Crop',
       cropImage: 'Image',
       cropName: 'Crop',
-      pickStatus: 'Status',
+      pickStatus: 'Harvest Window Status',
       plotCount: 'Plots',
       planEarliest: 'Earliest Harvest Date',
       planLatest: 'Latest Harvest Date',

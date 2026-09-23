@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-    <!-- 顶部状态统计版块：五档计数，顺序按甲方点名的档位序（即将采摘在最前） -->
+    <!-- 顶部状态统计版块：五档计数，顺序按甲方点名的档位序（临近采摘期在最前） -->
     <div class="status-kpi-row">
       <el-card v-for="card in statusCards" :key="card.code" shadow="hover" class="status-kpi-card">
         <div class="status-kpi-label">{{ card.label }}</div>
@@ -39,7 +39,7 @@
         />
         <span v-else class="text-gray-400">—</span>
       </template>
-      <!-- 状态：后端按最早/最晚采摘日期与当天现算，只回状态码，中文走 i18n；甲方点名「即将采摘」用红字 -->
+      <!-- 作物采摘期状态：后端按最早/最晚采摘日期与当天现算，只回状态码，中文走 i18n；甲方点名「临近采摘期」（upcoming）用红字 -->
       <template #cell-pickStatus="{ row }">
         <span v-if="row.pickStatus" :class="{ 'pick-status-danger': row.pickStatus === 'upcoming' }">
           {{ t(`pickPlan.status.${row.pickStatus}`) }}
@@ -135,13 +135,13 @@ const statusCards = computed<Array<{ code: DateWindowStatusCode; label: string; 
   }))
 );
 
-// 列序：作物图片 / 作物名称 / 状态 / 最早开始 / 最晚截止 / 计划种植亩数 / 当前已种植亩数 /
+// 列序：作物图片 / 作物名称 / 作物采摘期状态 / 最早开始 / 最晚截止 / 计划种植亩数 / 当前已种植亩数 /
 // 预计产量 / 当年已采摘量 / 当年种植地块总数 / 预计灾害损失量 / 采摘活动地块数 / 操作
-// 「状态」插在作物名称右侧（甲方截图里红框压在作物名称与最早采摘日期两列之间），不是放到表格最右
+// 「作物采摘期状态」插在作物名称右侧（甲方截图里红框压在作物名称与最早采摘日期两列之间），不是放到表格最右
 const columns = computed<BizTableColumn[]>(() => [
   { prop: 'cropImageUrl', label: t('pickPlan.column.cropImage'), width: 80, align: 'center' },
   { prop: 'cropName', label: t('pickPlan.column.cropName'), minWidth: 120, showOverflowTooltip: true, align: 'center' },
-  { prop: 'pickStatus', label: t('pickPlan.column.pickStatus'), minWidth: 120, align: 'center' },
+  { prop: 'pickStatus', label: t('pickPlan.column.pickStatus'), minWidth: 140, align: 'center' },
   { prop: 'planEarliest', label: t('pickPlan.column.planEarliest'), minWidth: 120, align: 'center' },
   { prop: 'planLatest', label: t('pickPlan.column.planLatest'), minWidth: 120, align: 'center' },
   { prop: 'totalAcreage', label: t('pickPlan.column.planPlantArea'), minWidth: 130, align: 'center' },
@@ -258,7 +258,7 @@ onMounted(() => {
   color: var(--el-color-primary);
 }
 
-/* 甲方点名：即将采摘用红色字体 */
+/* 甲方点名：临近采摘期（upcoming）用红色字体 */
 .pick-status-danger {
   color: var(--el-color-danger);
 }

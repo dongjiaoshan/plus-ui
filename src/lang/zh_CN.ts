@@ -2463,21 +2463,22 @@ export default {
   },
   pickPlan: {
     pageTitle: '采摘计划',
-    // 五档采摘状态：按最早 / 最晚采摘日期与当天现算，不是字典
+    // 五档作物采摘期状态：按最早 / 最晚采摘日期与当天现算，不是字典；
+    // 与抽屉里落库的「采摘状态」(harvestStatus：待开始/采摘中/已完成) 是两回事，所以叫法刻意不重名
     // （与 marketPlan.status 同一套状态码、不同说法，后端 StatusLabelI18nSyncTest 守两边逐字一致）
     status: {
-      pending: '待采摘',
-      upcoming: '即将采摘',
-      on_sale: '采摘中',
-      ending: '即将结束采摘',
-      off_shelf: '完成采摘'
+      pending: '未到采摘期',
+      upcoming: '临近采摘期',
+      on_sale: '采摘期内',
+      ending: '临近采摘末期',
+      off_shelf: '已过采摘期'
     },
     field: {
       planYear: '计划年份',
       planSeason: '计划季节',
       harvestStatus: '采摘状态',
       cropName: '作物名称',
-      pickStatus: '状态'
+      pickStatus: '作物采摘期状态'
     },
     placeholder: {
       planSeason: '请选择季节',
@@ -2485,7 +2486,7 @@ export default {
       team: '采摘班组',
       cropName: '请选择农作物',
       cropNameInput: '请输入作物名称',
-      pickStatus: '请选择状态'
+      pickStatus: '请选择作物采摘期状态'
     },
     column: {
       planNo: '计划号',
@@ -2494,7 +2495,7 @@ export default {
       crop: '作物',
       cropImage: '作物图片',
       cropName: '作物名称',
-      pickStatus: '状态',
+      pickStatus: '作物采摘期状态',
       plotCount: '地块数',
       planEarliest: '最早采摘日期',
       planLatest: '最晚采摘日期',
