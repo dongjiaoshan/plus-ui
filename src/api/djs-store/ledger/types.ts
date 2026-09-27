@@ -32,6 +32,14 @@ export interface StoreLedgerLineVO {
   materialUnit?: string;
   /** 产品品类页签（DENGBO-R10）：pork=猪肉 / veg=果蔬 / other=其他 */
   belongTab?: StoreLedgerBelongTab;
+  /**
+   * 是不是「猪肉原材料行」（`belong_type ∈ (pork, white_bar)` 且 `product_attr=2`，V6-R215）——**由后端下发**
+   * （与落库同一判据）。true → 期末+损耗手填、退回量倒算；false → 期末手填、损耗倒算。
+   *
+   * ⚠️ 不要在前端自己推、也不要在「历史已盘、今日不在候选」那条分支写死 false：该产品可能因字典少配 /
+   * Redis 字典缓存为空而掉出候选，判据一分叉就会出现「页面按旧公式渲染、后端按新公式落库」（row215-F3）。
+   */
+  porkMaterialRow?: boolean;
   ledgerDate: string;
   openingQty: number | string;
   inboundQty: number | string;
@@ -53,6 +61,9 @@ export type StoreLedgerCategory = 'pork' | 'inbound' | 'stock';
 
 /** 产品品类页签（DENGBO-R10）：pork=猪肉产品 / veg=果蔬产品 / other=其他产品。 */
 export type StoreLedgerBelongTab = 'pork' | 'veg' | 'other';
+
+/** 当日现场打包消耗量，key 为原材料雪花 ID；未出现的产品消耗量为 0。 */
+export type StoreLedgerOnsiteConsumption = Record<string, number | string>;
 
 /** 当日盘点候选行（新增当日盘点 GET：猪肉产品 ∪ 新到货 ∪ 昨日库存 + 预填量）。 */
 export interface StoreLedgerCandidateVO {
@@ -91,7 +102,7 @@ export interface StoreLedgerBatchItem {
   openingQty?: number | string;
   /** 当日入库量（新到货只读 / 猪肉手动） */
   inboundQty?: number | string;
-  /** 销售量（手动） */
+  /** 销售量：普通行手填；猪肉原材料行回传已展示的最新打包消耗量，变化后须刷新再提交 */
   saleQty?: number | string;
   /** 赠送量（手动） */
   giftQty?: number | string;

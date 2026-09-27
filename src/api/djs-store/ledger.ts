@@ -5,6 +5,7 @@ import type {
   StoreLedgerCandidateVO,
   StoreLedgerHeaderVO,
   StoreLedgerLineVO,
+  StoreLedgerOnsiteConsumption,
   StoreLedgerQuery
 } from './ledger/types';
 
@@ -22,6 +23,10 @@ export const listStoreLedger = (query: StoreLedgerQuery): AxiosPromise<StoreLedg
 /** 新增当日盘点候选（门店关联产品全 SKU + 预填 saleQty/returnQty）。 */
 export const listStoreLedgerCandidates = (storeId: string, ledgerDate?: string): AxiosPromise<StoreLedgerCandidateVO[]> =>
   request({ url: '/djs/store/ledger/candidates', method: 'get', params: { storeId, ledgerDate } });
+
+/** 盘点编辑使用的最新现场打包消耗量，不受候选字典或当前库存筛选。 */
+export const getStoreLedgerOnsiteConsumption = (storeId: string, ledgerDate: string): AxiosPromise<StoreLedgerOnsiteConsumption> =>
+  request({ url: '/djs/store/ledger/onsite-consumption', method: 'get', params: { storeId, ledgerDate } });
 
 /** 当日盘点整表批量提交。 */
 export const batchSaveStoreLedger = (data: StoreLedgerBatchForm): AxiosPromise<number> =>

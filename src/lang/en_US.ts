@@ -4711,6 +4711,8 @@ export default {
       datePlaceholder: 'Select date',
       inboundRefreshed:
         'Inbound refreshed from latest deliveries: {list}. Re-check the closing stock before saving, otherwise loss will be overstated.',
+      refreshConsumption: 'Refresh packing consumption',
+      consumptionRefreshed: 'Packing consumption refreshed. Your entries were kept. Re-check the return quantities before saving.',
       emptyCandidates:
         "No products to check for this store today (only products with remaining stock from yesterday's check, and products from confirmed-received demands).",
       submit: 'Finish Check',

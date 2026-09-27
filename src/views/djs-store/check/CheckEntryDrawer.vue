@@ -10,9 +10,12 @@
           value-format="YYYY-MM-DD"
           :placeholder="t('storeLedger.entry.datePlaceholder')"
           :clearable="false"
-          :disabled="editMode"
+          :disabled="editMode || loading || refreshLoading"
           @change="loadCandidates"
         />
+        <el-button :loading="refreshLoading" :disabled="loading || submitLoading || !rows.length" @click="refreshOnsiteConsumption">
+          {{ t('storeLedger.entry.refreshConsumption') }}
+        </el-button>
       </div>
 
       <!-- 品类切换：猪肉产品 / 果蔬产品 / 其他产品（DENGBO-R10）。切换只过滤视图，提交保存全部行。 -->
@@ -144,7 +147,7 @@
 
     <template #footer>
       <el-button @click="visible = false">{{ t('common.cancel') }}</el-button>
-      <el-button type="primary" :loading="submitLoading" :disabled="!rows.length || !storeId" @click="handleSubmit">
+      <el-button type="primary" :loading="submitLoading" :disabled="loading || refreshLoading || !rows.length || !storeId" @click="handleSubmit">
         {{ t('storeLedger.entry.submit') }}
       </el-button>
     </template>
@@ -152,13 +155,14 @@
 </template>
 
 <script setup name="StoreCheckEntryDrawer" lang="ts">
-import { listStoreLedgerCandidates, batchSaveStoreLedger, getStoreLedgerDetail } from '@/api/djs-store/ledger';
+import { listStoreLedgerCandidates, batchSaveStoreLedger, getStoreLedgerDetail, getStoreLedgerOnsiteConsumption } from '@/api/djs-store/ledger';
 import type {
   StoreLedgerBatchItem,
   StoreLedgerBelongTab,
   StoreLedgerCandidateVO,
   StoreLedgerCategory,
-  StoreLedgerLineVO
+  StoreLedgerLineVO,
+  StoreLedgerOnsiteConsumption
 } from '@/api/djs-store/ledger/types';
 import { getWhiteBarSplitLoss } from '@/api/djs-store/loss';
 import { useI18n } from 'vue-i18n';
@@ -215,6 +219,10 @@ const storeId = ref<string>();
 const ledgerDate = ref<string>(todayStr());
 const loading = ref(false);
 const submitLoading = ref(false);
+const refreshLoading = ref(false);
+let drawerGeneration = 0;
+let loadRequestId = 0;
+let consumptionRequestId = 0;
 const rows = ref<EntryRow[]>([]);
 /** 当日该门店白条到店重量 kg（row37：新增/修改盘点抽屉顶部展示，数据源 getWhiteBarSplitLoss.arriveWeight）。 */
 const arriveWeight = ref(0);
@@ -331,19 +339,34 @@ async function loadCandidates() {
     rows.value = [];
     return;
   }
+  const generation = drawerGeneration;
+  const requestId = ++loadRequestId;
+  const requestedStore = storeId.value;
+  const requestedDate = ledgerDate.value;
+  const requestedEdit = editMode.value;
+  const isCurrent = () =>
+    visible.value &&
+    generation === drawerGeneration &&
+    requestId === loadRequestId &&
+    requestedStore === storeId.value &&
+    requestedDate === ledgerDate.value;
   loading.value = true;
   try {
     // row37：当日白条到店重量（顶部展示），与候选一同拉取。
-    const [res, lossRes] = await Promise.all([
-      listStoreLedgerCandidates(storeId.value, ledgerDate.value),
-      getWhiteBarSplitLoss(storeId.value, ledgerDate.value)
+    const [res, lossRes, consumptionRes] = await Promise.all([
+      listStoreLedgerCandidates(requestedStore, requestedDate),
+      getWhiteBarSplitLoss(requestedStore, requestedDate),
+      getStoreLedgerOnsiteConsumption(requestedStore, requestedDate)
     ]);
+    if (!isCurrent()) return;
+    const consumption = consumptionRes.data ?? {};
     arriveWeight.value = Number(lossRes.data?.arriveWeight ?? 0) || 0;
     const candidates = (res.data ?? []) as StoreLedgerCandidateVO[];
     // 修改模式（DENGBO-R13）：叠加已保存的盘点值，让用户在上次结果基础上更正。
-    const savedList: StoreLedgerLineVO[] = editMode.value
-      ? (((await getStoreLedgerDetail(storeId.value, ledgerDate.value)).data ?? []) as StoreLedgerLineVO[])
+    const savedList: StoreLedgerLineVO[] = requestedEdit
+      ? (((await getStoreLedgerDetail(requestedStore, requestedDate)).data ?? []) as StoreLedgerLineVO[])
       : [];
+    if (!isCurrent()) return;
     const savedByProduct = new Map<string, StoreLedgerLineVO>(savedList.map((s) => [String(s.productId), s]));
     const candidateRows = candidates.map((c) => {
       // 入库只读：后端 inboundReadonly 为准；猪肉产品行可手动编辑。
@@ -364,10 +387,8 @@ async function loadCandidates() {
         // 猪肉行（inboundReadonly=false）是用户按实重手填的，仍 saved 优先，否则上次的更正会被冲掉。
         inboundQty: inboundReadonly ? nz(c.inboundQty) : saved ? nz(saved.inboundQty) : nz(c.inboundQty),
         inboundReadonly,
-        // R215：猪肉原材料行的销售量 = 当日现场打包追溯码的原材料消耗量，与上面的只读入库量、下面的
-        // 退回量同属「服务端客观聚合」，恒取候选实时值。走 saved 优先会把它永久钉死在 0 ——
-        // 现场打包要求「先在门店盘点录入当日入库量」才放行，所以首次盘点保存时必然还没打包。
-        saleQty: c.porkMaterialRow ? nz(c.saleQty) : saved ? nz(saved.saleQty) : nz(c.saleQty),
+        // 猪肉原材料候选行与历史补齐行共用最新现场打包消耗，提交时由后端核对是否已变化。
+        saleQty: c.porkMaterialRow ? nz(consumption[String(c.productId)]) : saved ? nz(saved.saleQty) : nz(c.saleQty),
         giftQty: saved ? nz(saved.giftQty) : 0,
         returnSaleQty: saved ? nz(saved.returnQty) : nz(c.returnSaleQty),
         // row53：退回量（门店退回仓库，只读）恒取候选实时值——退回是当日退货模块聚合的客观量，
@@ -400,12 +421,12 @@ async function loadCandidates() {
     // 修改模式（DENGBO-R13）：已保存但当前已不在候选集里的产品（字典/库存/到货变化导致掉出候选）
     // 仍需能被更正 → 用已保存明细补齐成可编辑行，避免上次盘过的产品在修改时消失。
     const candidateIds = new Set(candidateRows.map((r) => r.productId));
-    const extraRows = savedList.filter((s) => !candidateIds.has(String(s.productId))).map(savedToRow);
+    const extraRows = savedList.filter((s) => !candidateIds.has(String(s.productId))).map((s) => savedToRow(s, consumption));
     rows.value = [...candidateRows, ...extraRows];
     // 默认落在第一个有数据的 tab（猪肉→果蔬→其他），避免开在空页签
     activeTab.value = TABS.find((tab) => rows.value.some((r) => r.belongTab === tab)) ?? 'pork';
   } finally {
-    loading.value = false;
+    if (isCurrent()) loading.value = false;
   }
 }
 
@@ -413,7 +434,7 @@ async function loadCandidates() {
  * 已保存明细行 → 可编辑行（修改模式补齐当前非候选的历史盘点产品，DENGBO-R13）。
  * 明细 VO 无 category / inboundReadonly：按品类推断——猪肉品类沿用「入库可编辑」口径，其余入库只读。
  */
-function savedToRow(s: StoreLedgerLineVO): EntryRow {
+function savedToRow(s: StoreLedgerLineVO, consumption: StoreLedgerOnsiteConsumption): EntryRow {
   const belongTab = (s.belongTab ?? 'other') as StoreLedgerBelongTab;
   const r: EntryRow = {
     productId: String(s.productId),
@@ -425,18 +446,47 @@ function savedToRow(s: StoreLedgerLineVO): EntryRow {
     openingQty: nz(s.openingQty),
     inboundQty: nz(s.inboundQty),
     inboundReadonly: belongTab !== 'pork',
-    saleQty: nz(s.saleQty),
+    saleQty: s.porkMaterialRow ? nz(consumption[String(s.productId)]) : nz(s.saleQty),
     giftQty: nz(s.giftQty),
     returnSaleQty: nz(s.returnQty),
     returnWhQty: nz(s.whReturnQty),
     closingQty: nz(s.closingQty),
     lossQty: nz(s.lossQty),
-    // 明细 VO 不带 porkMaterialRow（它是候选接口算的）。这条分支只覆盖「历史盘过、今天已不在候选里」的产品，
-    // 这类行本就不该再按 R215 倒算（今天没有现场打包消耗可取），按普通行处理即可。
-    porkMaterialRow: false
+    // 非候选的历史行仍使用后端产品判据，和保存时的公式分支一致。
+    porkMaterialRow: s.porkMaterialRow === true
   };
   recalc(r);
   return r;
+}
+
+/** 只更新现场打包消耗及其倒算退回量，保留本次尚未保存的手填值。 */
+async function refreshOnsiteConsumption() {
+  if (!storeId.value || loading.value || submitLoading.value) return;
+  const generation = drawerGeneration;
+  const requestId = ++consumptionRequestId;
+  const requestedStore = storeId.value;
+  const requestedDate = ledgerDate.value;
+  const isCurrent = () =>
+    visible.value &&
+    generation === drawerGeneration &&
+    requestId === consumptionRequestId &&
+    requestedStore === storeId.value &&
+    requestedDate === ledgerDate.value;
+  refreshLoading.value = true;
+  try {
+    const res = await getStoreLedgerOnsiteConsumption(requestedStore, requestedDate);
+    if (!isCurrent()) return;
+    const consumption = res.data ?? {};
+    for (const row of rows.value) {
+      if (row.porkMaterialRow) {
+        row.saleQty = nz(consumption[row.productId]);
+        recalc(row);
+      }
+    }
+    proxy?.$modal.msgWarning(t('storeLedger.entry.consumptionRefreshed'));
+  } finally {
+    if (isCurrent()) refreshLoading.value = false;
+  }
 }
 
 async function handleSubmit() {
@@ -482,6 +532,10 @@ async function handleSubmit() {
  *                不传则「新增当日盘点」（日期默认今天，可改）。
  */
 async function open(editCtx?: { ledgerDate: string }) {
+  // 每次打开独立计代，旧请求即便门店/日期相同也不能回填新的编辑会话。
+  drawerGeneration++;
+  refreshLoading.value = false;
+  loading.value = false;
   // 门店从父页传入（顶部 StoreSwitcher 当前门店），open 时预置，用户不可改
   storeId.value = props.storeId ? String(props.storeId) : undefined;
   editMode.value = !!editCtx;
