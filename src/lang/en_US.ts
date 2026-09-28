@@ -1,4 +1,7 @@
+import warehouseInout from './warehouseInout/en_US';
+
 export default {
+  warehouseInout,
   // 路由国际化
   route: {
     dashboard: 'Dashboard',

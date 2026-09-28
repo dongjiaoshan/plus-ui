@@ -45,6 +45,8 @@ export const FLOW_TYPE_OUT_VALUES: readonly string[] = [
   'prod_pick_out',
   'feed_out',
   'cut_out',
+  // V6 rows264/265: products dispatched directly from the cutting/intake workstation.
+  'cut_room_out',
   'check_out',
   'check_abnormal_out',
   'backstage_out',

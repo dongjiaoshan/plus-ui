@@ -1,4 +1,7 @@
+import warehouseInout from './warehouseInout/zh_CN';
+
 export default {
+  warehouseInout,
   // 路由国际化
   route: {
     dashboard: '首页',
