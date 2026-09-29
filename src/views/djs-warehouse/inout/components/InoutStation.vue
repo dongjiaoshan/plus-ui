@@ -25,6 +25,7 @@
             <span>{{ tr('receiveWeight') }}：{{ kg(source.pig.arriveWeight) }}</span>
           </template>
           <template v-else-if="source.bar">
+            <span class="bar-product-name">{{ source.bar.productName || '—' }}</span>
             <span class="bar-number">{{ tr('whiteBarNo') }}：{{ source.bar.whiteBarNo || '—' }}</span>
             <span>{{ tr('inTime') }}：{{ source.bar.inTime || '—' }}</span>
             <span>{{ tr('inWeight') }}：{{ kg(source.bar.inWeight) }}</span>
@@ -54,7 +55,7 @@
           <el-icon v-else class="product-image product-placeholder"><Box /></el-icon>
           <strong>{{ product.productName }}</strong>
           <span v-if="isBurn" class="product-count">
-            {{ isFull(product) && product.maxCount !== 2 ? tr('processed') : `${product.recordedCount || 0}/${product.maxCount || 1}` }}
+            {{ !product.isWhiteBar && isFull(product) ? tr('processed') : `${product.recordedCount || 0}/${product.maxCount || 1}` }}
           </span>
         </button>
         <el-empty v-if="selectedSource && !products.length && !productsLoading" :description="tr('noProducts')" :image-size="64" />
@@ -99,7 +100,12 @@
           <template v-if="destination === 'store' && isBurn">
             <label>{{ tr('store') }}</label>
             <el-select v-model="storeId" :placeholder="tr('selectStore')" :disabled="busy || storesLoading" class="destination-select">
-              <el-option v-for="store in stores" :key="store.storeId" :value="store.storeId" :label="`${store.storeName} (${store.copies})`" />
+              <el-option
+                v-for="store in stores"
+                :key="store.storeId"
+                :value="store.storeId"
+                :label="`${store.storeName} (${Number(store.copies).toFixed(0)}${tr('headUnit')})`"
+              />
             </el-select>
           </template>
           <div v-if="destination === 'store' && !isBurn && selectedProduct" class="store-demands" :aria-label="tr('storeDemand')">
@@ -140,6 +146,7 @@
         </section>
       </fieldset>
       <div class="panel-actions">
+        <p v-if="underDemand" class="under-demand" role="alert">{{ tr('underDemand') }}</p>
         <el-button
           v-hasPermi="['djs:warehouse:inout:submit']"
           type="primary"
@@ -256,11 +263,18 @@ function kg(value: string | number | undefined) {
 }
 function isFull(product: InoutProduct) {
   if (!isBurn.value) return false;
-  const count = product.isWhiteBar
-    ? products.value.filter((p) => p.isWhiteBar).reduce((total, p) => total + (p.recordedCount || 0), 0)
-    : product.recordedCount || 0;
-  return count >= (product.maxCount || 1);
+  if (product.canRecord === false) return true;
+  if ((product.recordedCount || 0) >= (product.maxCount || 1)) return true;
+  return product.isWhiteBar && products.value.filter((p) => p.isWhiteBar).reduce((total, p) => total + (p.recordedCount || 0), 0) >= 2;
 }
+const underDemand = computed(
+  () =>
+    !isBurn.value &&
+    destination.value === 'store' &&
+    !!selectedCutDemand.value &&
+    Number.isFinite(weight.value) &&
+    Number(weight.value) < Number(selectedCutDemand.value.minimumWeight)
+);
 const canSubmit = computed(
   () =>
     !!selectedSource.value &&
@@ -316,7 +330,11 @@ async function selectProduct(product: InoutProduct) {
   cutDemandKey.value = '';
   destination.value = isBurn.value ? 'warehouse' : 'outbound';
   storesLoading.value = false;
-  if (!isBurn.value || !product.isWhiteBar) return;
+  if (!isBurn.value) {
+    await loadCutDemands(generation, true);
+    return;
+  }
+  if (!product.isWhiteBar) return;
   storesLoading.value = true;
   try {
     const result = await getShipStores(product.productId);
@@ -341,17 +359,23 @@ async function selectDestination(value: BurnDestination | CutDestination) {
   destination.value = value;
   cutDemandKey.value = '';
   if (isBurn.value || value !== 'store' || !selectedProduct.value) return;
-  const generation = productGeneration;
+  await loadCutDemands(productGeneration, false);
+}
+
+async function loadCutDemands(generation: number, selectDefault: boolean) {
+  if (!selectedProduct.value) return;
   cutDemands.value = [];
   storesLoading.value = true;
   loadError.value = '';
   try {
     const result = await getCutStoreDemands(selectedProduct.value.productId);
-    if (generation !== productGeneration || destination.value !== 'store') return;
+    if (generation !== productGeneration || (!selectDefault && destination.value !== 'store')) return;
     cutDemands.value = result.data;
+    if (selectDefault) destination.value = cutDemands.value.length ? 'store' : 'outbound';
   } catch (error) {
-    if (generation === productGeneration && destination.value === 'store') {
+    if (generation === productGeneration && (selectDefault || destination.value === 'store')) {
       loadError.value = error instanceof Error ? error.message : tr('loadFailed');
+      if (selectDefault) selectedProductId.value = '';
     }
   } finally {
     if (generation === productGeneration) storesLoading.value = false;
@@ -679,6 +703,11 @@ label {
 }
 .panel-actions {
   margin-top: auto;
+  .under-demand {
+    margin: 8px 0;
+    color: var(--el-color-danger);
+    font-size: 14px;
+  }
   .submit-button {
     width: 100%;
     height: 46px;

@@ -40,7 +40,7 @@ import InoutStation from './InoutStation.vue';
 const pigId = '9260928000000001';
 const productId = '9260928000000002';
 const storeId = '9260928000000003';
-const whiteBar = { productId, productCode: 'HALF', productName: '白条', isWhiteBar: true, recordedCount: 0, maxCount: 2 };
+const whiteBar = { productId, productCode: 'HALF', productName: '白条', isWhiteBar: true, recordedCount: 0, maxCount: 1 };
 function deferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((done) => {
@@ -192,9 +192,9 @@ describe('row266 cut store demand', () => {
         minimumWeight: string;
       }[];
     }>();
-    api.getCutStoreDemands.mockReturnValueOnce(pending.promise);
     const wrapper = render('cut');
     await flushPromises();
+    api.getCutStoreDemands.mockReturnValueOnce(pending.promise);
     await wrapper.findAll('.destination-options button')[1].trigger('click');
     await wrapper.findAll('.product-card')[1].trigger('click');
     await flushPromises();
@@ -221,6 +221,91 @@ describe('row266 cut store demand', () => {
     await wrapper.findAll('.destination-options button')[1].trigger('click');
     await flushPromises();
     expect(wrapper.find('.store-demand-card').text()).toContain('二七滨江');
+    wrapper.unmount();
+  });
+});
+
+describe('historical half-bar eligibility', () => {
+  it('keeps a historical half read-only and selects the eligible right half', async () => {
+    api.getBurnProducts.mockResolvedValue({
+      data: [
+        { ...whiteBar, productName: '半扇', canRecord: false },
+        { ...whiteBar, productId: 'right', productName: '右半扇', canRecord: true }
+      ]
+    });
+    const wrapper = render();
+    await flushPromises();
+    const cards = wrapper.findAll('.product-card');
+    expect(cards[0].attributes('disabled')).toBeDefined();
+    expect(cards[1].attributes('disabled')).toBeUndefined();
+    expect(cards[1].attributes('aria-pressed')).toBe('true');
+    await wrapper.find('.test-weight').setValue('25');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(api.submitBurn).toHaveBeenCalledWith(expect.objectContaining({ productId: 'right' }));
+    wrapper.unmount();
+  });
+});
+
+describe('rows267-270 retest', () => {
+  it('lets the right half be entered after the left half is recorded, with one entry per product', async () => {
+    api.getBurnProducts.mockResolvedValue({
+      data: [
+        { ...whiteBar, productName: '左半扇', recordedCount: 1 },
+        { ...whiteBar, productId: '9260928000000009', productName: '右半扇', recordedCount: 0 }
+      ]
+    });
+    const wrapper = render();
+    await flushPromises();
+    const cards = wrapper.findAll('.product-card');
+    expect(cards[0].attributes('disabled')).toBeDefined();
+    expect(cards[1].attributes('disabled')).toBeUndefined();
+    expect(cards[0].text()).toContain('1/1');
+    expect(cards[1].text()).toContain('0/1');
+    expect(wrapper.find('.destination-select option').text()).toBe('QA门店 (2headUnit)');
+    wrapper.unmount();
+  });
+
+  it('automatically loads demand for a selected material and defaults to store only when demand exists', async () => {
+    api.getCutBars.mockResolvedValue({ data: [{ barInfoId: pigId, cutRecordId: '9260929000000099', productName: '右半扇' }] });
+    api.getCutProducts.mockResolvedValue({
+      data: [
+        { productId, productName: '通排' },
+        { productId: '9260929000000022', productName: '板油' }
+      ]
+    });
+    api.getCutStoreDemands.mockImplementation((id: string) =>
+      Promise.resolve({
+        data:
+          id === productId
+            ? [
+                {
+                  storeId,
+                  storeName: '二七滨江',
+                  productId: '9260929000000005',
+                  productName: '通排',
+                  productUnit: 'kg',
+                  demandQuantity: '2',
+                  minimumWeight: '2',
+                  measureWeight: '2'
+                }
+              ]
+            : []
+      })
+    );
+    const wrapper = render('cut');
+    await flushPromises();
+    expect(api.getCutStoreDemands).toHaveBeenCalledWith(productId);
+    expect(wrapper.find('.destination-options button.active').text()).toBe('storeDemand');
+    expect(wrapper.find('.source-card').text()).toContain('右半扇');
+    await wrapper.find('.store-demand-card').trigger('click');
+    await wrapper.find('.test-weight').setValue('1.999');
+    expect(wrapper.find('.under-demand').text()).toBe('underDemand');
+    expect(wrapper.find('.submit-button').attributes('disabled')).toBeDefined();
+    await wrapper.findAll('.product-card')[1].trigger('click');
+    await flushPromises();
+    expect(wrapper.find('.destination-options button.active').text()).toBe('warehouseOut');
+    expect(wrapper.find('.store-demand-card').exists()).toBe(false);
     wrapper.unmount();
   });
 });

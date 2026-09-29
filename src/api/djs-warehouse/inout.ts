@@ -37,6 +37,7 @@ export interface InoutProduct {
   recordedCount?: number;
   recordedWeight?: string | number;
   isWhiteBar?: boolean;
+  canRecord?: boolean;
 }
 
 export interface ShipStore {
