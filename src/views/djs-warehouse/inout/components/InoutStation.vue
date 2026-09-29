@@ -481,6 +481,10 @@ async function finish() {
   finishing.value = true;
   try {
     const { data: check } = source.pig ? await checkBurnFinish(sourceId) : await checkCutFinish(sourceId);
+    if (source.pig && check.confirmationRequired) {
+      await ElMessageBox.alert(check.message, source.label, { type: 'warning' });
+      return;
+    }
     await ElMessageBox.confirm(
       check.confirmationRequired ? check.message : tr(isBurn.value ? 'finishBurnConfirm' : 'finishCutConfirm'),
       source.label,

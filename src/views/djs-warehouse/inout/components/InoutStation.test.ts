@@ -17,7 +17,7 @@ const api = vi.hoisted(() => ({
   finishBurn: vi.fn(),
   finishCut: vi.fn()
 }));
-const messageBox = vi.hoisted(() => ({ confirm: vi.fn() }));
+const messageBox = vi.hoisted(() => ({ confirm: vi.fn(), alert: vi.fn() }));
 vi.mock('@/api/djs-warehouse/inout', () => api);
 vi.mock('@/api/system/dict/data', () => ({ getDicts: () => Promise.resolve({ data: [{ dictValue: 'kitchen', dictLabel: '食堂' }] }) }));
 vi.mock('@/store/modules/user', () => ({ useUserStore: () => ({ userId: 'qa' }) }));
@@ -85,6 +85,7 @@ beforeEach(() => {
   api.finishBurn.mockResolvedValue({ data: null });
   api.finishCut.mockResolvedValue({ data: null });
   messageBox.confirm.mockResolvedValue('confirm');
+  messageBox.alert.mockResolvedValue('confirm');
 });
 
 describe('row266 cut store demand', () => {
@@ -315,7 +316,7 @@ describe('completion confirmation', () => {
   function arrange(mode: 'burn' | 'cut', abnormal = false) {
     const check = mode === 'burn' ? api.checkBurnFinish : api.checkCutFinish;
     const finish = mode === 'burn' ? api.finishBurn : api.finishCut;
-    const message = mode === 'burn' ? '请确认录入的接收重量信息是否正确。' : '请确认白条是否已分割完成。';
+    const message = mode === 'burn' ? '当前白条重量有误，请联系管理员处理。' : '请确认白条是否已分割完成。';
     check.mockResolvedValue({ data: { confirmationRequired: abnormal, message: abnormal ? message : '' } });
     api.getCutBars.mockResolvedValue({ data: [{ barInfoId: pigId, cutRecordId, whiteBarNo: 'QA-HALF', inWeight: '40', remainingWeight: '35' }] });
     api.getCutProducts.mockResolvedValue({ data: [] });
@@ -334,7 +335,7 @@ describe('completion confirmation', () => {
     wrapper.unmount();
   });
 
-  it.each(['burn', 'cut'] as const)('does not finish %s when the weight warning is cancelled', async (mode) => {
+  it.each(['cut'] as const)('does not finish %s when the weight warning is cancelled', async (mode) => {
     const { finish, message } = arrange(mode, true);
     messageBox.confirm.mockRejectedValueOnce('cancel');
     const wrapper = render(mode);
@@ -347,7 +348,7 @@ describe('completion confirmation', () => {
     wrapper.unmount();
   });
 
-  it.each(['burn', 'cut'] as const)('requires explicit confirmation and prevents duplicate %s completion while the warning is open', async (mode) => {
+  it.each(['cut'] as const)('requires explicit confirmation and prevents duplicate %s completion while the warning is open', async (mode) => {
     const { finish, id, message } = arrange(mode, true);
     const dialog = deferred<'confirm'>();
     messageBox.confirm.mockReturnValueOnce(dialog.promise);
@@ -362,6 +363,18 @@ describe('completion confirmation', () => {
     dialog.resolve('confirm');
     await flushPromises();
     expect(finish).toHaveBeenCalledExactlyOnceWith(id, true);
+    wrapper.unmount();
+  });
+
+  it('blocks low-yield burn with alert only even after acknowledgement', async () => {
+    const { finish, message } = arrange('burn', true);
+    const wrapper = render();
+    await flushPromises();
+    await wrapper.find('.finish-button').trigger('click');
+    await flushPromises();
+    expect(messageBox.alert).toHaveBeenCalledWith(message, expect.any(String), expect.any(Object));
+    expect(messageBox.confirm).not.toHaveBeenCalled();
+    expect(finish).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 
