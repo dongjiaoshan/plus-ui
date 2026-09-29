@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
   getCutBars: vi.fn(),
   getCutProducts: vi.fn(),
   getShipStores: vi.fn(),
+  getCutStoreDemands: vi.fn(),
   getRecentOutDests: vi.fn(),
   submitBurn: vi.fn(),
   submitCut: vi.fn(),
@@ -76,6 +77,7 @@ beforeEach(() => {
   });
   api.getBurnProducts.mockResolvedValue({ data: [whiteBar] });
   api.getShipStores.mockResolvedValue({ data: [{ storeId, storeName: 'QA门店', copies: 2 }] });
+  api.getCutStoreDemands.mockResolvedValue({ data: [] });
   api.getRecentOutDests.mockResolvedValue({ data: [{ value: 'kitchen', label: '食堂', count: 8 }] });
   api.submitBurn.mockResolvedValue({ data: { receiptId: '9260928000000004' } });
   api.checkBurnFinish.mockResolvedValue({ data: { confirmationRequired: false, message: '' } });
@@ -83,6 +85,144 @@ beforeEach(() => {
   api.finishBurn.mockResolvedValue({ data: null });
   api.finishCut.mockResolvedValue({ data: null });
   messageBox.confirm.mockResolvedValue('confirm');
+});
+
+describe('row266 cut store demand', () => {
+  const productionProductId = '9260929000000005';
+  function arrange() {
+    api.getCutBars.mockResolvedValue({
+      data: [{ barInfoId: pigId, cutRecordId: '9260929000000099', whiteBarNo: 'QA-HALF', inWeight: '40', remainingWeight: '40' }]
+    });
+    api.getCutProducts.mockResolvedValue({ data: [{ productId, productName: '通排' }] });
+    api.getCutStoreDemands.mockResolvedValue({
+      data: [
+        {
+          storeId,
+          storeName: '二七滨江',
+          productId: productionProductId,
+          productName: '通排散装',
+          productUnit: 'kg',
+          demandQuantity: '15',
+          minimumWeight: '15',
+          measureWeight: null
+        }
+      ]
+    });
+    api.submitCut.mockResolvedValue({ data: { cutRecordId: '9260929000000099', receiptId: '9260929000000100' } });
+  }
+  it('puts store demand immediately after warehouse dispatch and submits the mapped production SKU with string IDs', async () => {
+    arrange();
+    const wrapper = render('cut');
+    await flushPromises();
+    expect(wrapper.findAll('.destination-options button').map((x) => x.text())).toEqual(['warehouseOut', 'storeDemand', 'fresh', 'frozen']);
+    await wrapper.findAll('.destination-options button')[1].trigger('click');
+    await flushPromises();
+    expect(wrapper.find('.store-demand-card').text()).toContain('二七滨江');
+    expect(wrapper.find('.store-demand-card').text()).toContain('15 kg');
+    await wrapper.find('.store-demand-card').trigger('click');
+    await wrapper.find('.test-weight').setValue('15');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(api.submitCut).toHaveBeenCalledWith(
+      expect.objectContaining({ productId, productionProductId, storeId, destination: 'store', weight: '15.000' })
+    );
+    expect(api.submitCut.mock.calls[0][0]).not.toHaveProperty('outDest');
+    wrapper.unmount();
+  });
+  it('blocks underweight and cancels over-measure without posting', async () => {
+    arrange();
+    api.getCutStoreDemands.mockResolvedValue({
+      data: [
+        {
+          storeId,
+          storeName: '二七滨江',
+          productId: productionProductId,
+          productName: '通排散装',
+          productUnit: 'kg',
+          demandQuantity: '15',
+          minimumWeight: '15',
+          measureWeight: '15'
+        }
+      ]
+    });
+    const wrapper = render('cut');
+    await flushPromises();
+    await wrapper.findAll('.destination-options button')[1].trigger('click');
+    await flushPromises();
+    await wrapper.find('.store-demand-card').trigger('click');
+    await wrapper.find('.test-weight').setValue('14.999');
+    expect(wrapper.find('.submit-button').attributes('disabled')).toBeDefined();
+    messageBox.confirm.mockRejectedValueOnce('cancel');
+    await wrapper.find('.test-weight').setValue('15.451');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(messageBox.confirm).toHaveBeenCalledTimes(1);
+    expect(api.submitCut).not.toHaveBeenCalled();
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(api.submitCut).toHaveBeenCalledWith(expect.objectContaining({ allowOverMeasure: true }));
+    wrapper.unmount();
+  });
+  it('never queries or displays store demand without a selected material', async () => {
+    arrange();
+    api.getCutProducts.mockResolvedValue({ data: [] });
+    const wrapper = render('cut');
+    await flushPromises();
+    expect(api.getCutStoreDemands).not.toHaveBeenCalled();
+    expect(wrapper.find('.store-demand-card').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('discards a late store lookup when the material changes and allows lookup retry after a failure', async () => {
+    arrange();
+    api.getCutProducts.mockResolvedValue({
+      data: [
+        { productId, productName: '通排' },
+        { productId: '9260929000000022', productName: '板油' }
+      ]
+    });
+    const pending = deferred<{
+      data: {
+        storeId: string;
+        storeName: string;
+        productId: string;
+        productName: string;
+        productUnit: string;
+        demandQuantity: string;
+        minimumWeight: string;
+      }[];
+    }>();
+    api.getCutStoreDemands.mockReturnValueOnce(pending.promise);
+    const wrapper = render('cut');
+    await flushPromises();
+    await wrapper.findAll('.destination-options button')[1].trigger('click');
+    await wrapper.findAll('.product-card')[1].trigger('click');
+    await flushPromises();
+    pending.resolve({
+      data: [
+        {
+          storeId,
+          storeName: '过期门店',
+          productId: productionProductId,
+          productName: '通排',
+          productUnit: 'kg',
+          demandQuantity: '15',
+          minimumWeight: '15'
+        }
+      ]
+    });
+    await flushPromises();
+    expect(wrapper.text()).not.toContain('过期门店');
+    api.getCutStoreDemands.mockRejectedValueOnce(new Error('需求查询失败'));
+    await wrapper.findAll('.destination-options button')[1].trigger('click');
+    await flushPromises();
+    expect(wrapper.find('.load-error').text()).toContain('需求查询失败');
+    expect(wrapper.find('.submit-button').attributes('disabled')).toBeDefined();
+    await wrapper.findAll('.destination-options button')[1].trigger('click');
+    await flushPromises();
+    expect(wrapper.find('.store-demand-card').text()).toContain('二七滨江');
+    wrapper.unmount();
+  });
 });
 
 describe('completion confirmation', () => {

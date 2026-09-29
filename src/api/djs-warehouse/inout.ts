@@ -59,7 +59,17 @@ export interface CompletionCheck {
   message: string;
 }
 export type BurnDestination = 'warehouse' | 'store' | 'outbound';
-export type CutDestination = 'fresh' | 'frozen' | 'outbound';
+export type CutDestination = 'fresh' | 'frozen' | 'outbound' | 'store';
+export interface CutStoreDemand {
+  storeId: string;
+  storeName: string;
+  productId: string;
+  productName: string;
+  productUnit: string;
+  demandQuantity: string | number;
+  minimumWeight: string | number;
+  measureWeight?: string | number;
+}
 export interface BurnSubmission {
   requestId: string;
   barInfoId: string;
@@ -77,6 +87,9 @@ export interface CutSubmission {
   weight: string;
   destination: CutDestination;
   outDest?: string;
+  storeId?: string;
+  productionProductId?: string;
+  allowOverMeasure?: boolean;
 }
 
 const base = '/djs/warehouse/inout';
@@ -84,6 +97,8 @@ export const getBurnPigs = (): AxiosPromise<BurnPig[]> => request({ url: `${base
 export const getBurnProducts = (barInfoId: string): AxiosPromise<InoutProduct[]> => request({ url: `${base}/burn/products`, params: { barInfoId } });
 export const getCutBars = (): AxiosPromise<CutBar[]> => request({ url: `${base}/cut/bars` });
 export const getCutProducts = (): AxiosPromise<InoutProduct[]> => request({ url: `${base}/cut/products` });
+export const getCutStoreDemands = (materialProductId: string): AxiosPromise<CutStoreDemand[]> =>
+  request({ url: `${base}/cut/store-demands`, params: { materialProductId } });
 export const getShipStores = (productId: string): AxiosPromise<ShipStore[]> => request({ url: `${base}/shipStores`, params: { productId } });
 export const getRecentOutDests = (): AxiosPromise<RecentDestination[]> => request({ url: `${base}/recentOutDests` });
 export const submitBurn = (data: BurnSubmission): AxiosPromise<InoutReceipt> => request({ url: `${base}/burn/submit`, method: 'post', data });

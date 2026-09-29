@@ -91,17 +91,34 @@
               type="button"
               :class="{ active: destination === option.value }"
               :aria-pressed="destination === option.value"
-              @click="destination = option.value"
+              @click="selectDestination(option.value)"
             >
               {{ option.label }}
             </button>
           </div>
-          <template v-if="destination === 'store'">
+          <template v-if="destination === 'store' && isBurn">
             <label>{{ tr('store') }}</label>
             <el-select v-model="storeId" :placeholder="tr('selectStore')" :disabled="busy || storesLoading" class="destination-select">
               <el-option v-for="store in stores" :key="store.storeId" :value="store.storeId" :label="`${store.storeName} (${store.copies})`" />
             </el-select>
           </template>
+          <div v-if="destination === 'store' && !isBurn && selectedProduct" class="store-demands" :aria-label="tr('storeDemand')">
+            <button
+              v-for="demand in cutDemands"
+              :key="`${demand.storeId}:${demand.productId}`"
+              type="button"
+              class="store-demand-card"
+              :class="{ active: cutDemandKey === `${demand.storeId}:${demand.productId}` }"
+              :aria-pressed="cutDemandKey === `${demand.storeId}:${demand.productId}`"
+              @click="cutDemandKey = `${demand.storeId}:${demand.productId}`"
+            >
+              <strong>{{ demand.storeName }}</strong>
+              <span>{{ demand.productName }}</span>
+              <span>{{ tr('demandQuantity') }}：{{ Number(demand.demandQuantity) }} {{ demand.productUnit }}</span>
+              <span v-if="Number(demand.minimumWeight) > 0">{{ tr('minimumWeight') }}：{{ kg(demand.minimumWeight) }}</span>
+            </button>
+            <p v-if="!storesLoading && !cutDemands.length">{{ tr('noStoreDemand') }}</p>
+          </div>
           <template v-if="destination === 'outbound'">
             <label>{{ tr('outDestination') }}</label>
             <el-select v-model="outDest" :placeholder="tr('selectOutDest')" :disabled="busy" clearable class="destination-select">
@@ -150,6 +167,7 @@ import {
   getCutBars,
   getCutProducts,
   getShipStores,
+  getCutStoreDemands,
   getRecentOutDests,
   submitBurn,
   submitCut,
@@ -161,6 +179,7 @@ import {
   type CutBar,
   type InoutProduct,
   type ShipStore,
+  type CutStoreDemand,
   type RecentDestination,
   type BurnDestination,
   type CutDestination
@@ -183,6 +202,9 @@ interface Source {
 const sources = ref<Source[]>([]);
 const products = ref<InoutProduct[]>([]);
 const stores = ref<ShipStore[]>([]);
+const cutDemands = ref<CutStoreDemand[]>([]);
+const cutDemandKey = ref('');
+const selectedCutDemand = computed(() => cutDemands.value.find((d) => `${d.storeId}:${d.productId}` === cutDemandKey.value));
 const recent = ref<RecentDestination[]>([]);
 const outOptions = ref<{ value: string; label: string }[]>([]);
 const selectedKey = ref('');
@@ -215,6 +237,7 @@ const destinationOptions = computed(() => {
   if (!isBurn.value)
     return [
       { value: 'outbound' as const, label: tr('warehouseOut') },
+      { value: 'store' as const, label: tr('storeDemand') },
       { value: 'fresh' as const, label: tr('fresh') },
       { value: 'frozen' as const, label: tr('frozen') }
     ];
@@ -245,7 +268,8 @@ const canSubmit = computed(
     !isFull(selectedProduct.value) &&
     Number.isFinite(weight.value) &&
     (weight.value || 0) > 0 &&
-    (destination.value !== 'store' || !!storeId.value) &&
+    (destination.value !== 'store' ||
+      (isBurn.value ? !!storeId.value : !!selectedCutDemand.value && Number(weight.value) >= Number(selectedCutDemand.value.minimumWeight))) &&
     (destination.value !== 'outbound' || !!outDest.value)
 );
 
@@ -258,6 +282,8 @@ async function selectSource(key: string, keepProduct = '') {
   weight.value = undefined;
   products.value = [];
   stores.value = [];
+  cutDemands.value = [];
+  cutDemandKey.value = '';
   storesLoading.value = false;
   if (!key) {
     productsLoading.value = false;
@@ -286,6 +312,8 @@ async function selectProduct(product: InoutProduct) {
   outDest.value = '';
   storeId.value = '';
   stores.value = [];
+  cutDemands.value = [];
+  cutDemandKey.value = '';
   destination.value = isBurn.value ? 'warehouse' : 'outbound';
   storesLoading.value = false;
   if (!isBurn.value || !product.isWhiteBar) return;
@@ -302,6 +330,27 @@ async function selectProduct(product: InoutProduct) {
     if (generation === productGeneration) {
       // A failed demand lookup is not evidence that no store needs stock.
       selectedProductId.value = '';
+      loadError.value = error instanceof Error ? error.message : tr('loadFailed');
+    }
+  } finally {
+    if (generation === productGeneration) storesLoading.value = false;
+  }
+}
+
+async function selectDestination(value: BurnDestination | CutDestination) {
+  destination.value = value;
+  cutDemandKey.value = '';
+  if (isBurn.value || value !== 'store' || !selectedProduct.value) return;
+  const generation = productGeneration;
+  cutDemands.value = [];
+  storesLoading.value = true;
+  loadError.value = '';
+  try {
+    const result = await getCutStoreDemands(selectedProduct.value.productId);
+    if (generation !== productGeneration || destination.value !== 'store') return;
+    cutDemands.value = result.data;
+  } catch (error) {
+    if (generation === productGeneration && destination.value === 'store') {
       loadError.value = error instanceof Error ? error.message : tr('loadFailed');
     }
   } finally {
@@ -366,10 +415,24 @@ async function submit() {
       await submitBurn({ ...payload, requestId: requests.forPayload(payload) });
       requests.acknowledge(payload);
     } else if (source.bar) {
+      let allowOverMeasure = false;
+      const demand = selectedCutDemand.value;
+      if (
+        destination.value === 'store' &&
+        demand &&
+        Number(demand.measureWeight) > 0 &&
+        Math.round(Number(common.weight) * 1e6) > Math.round(Number(demand.measureWeight) * 1.03 * 1e6)
+      ) {
+        await ElMessageBox.confirm(t('warehouseInout.overMeasure', { actual: common.weight, rule: demand.measureWeight }), tr('storeDemand'), {
+          type: 'warning'
+        });
+        allowOverMeasure = true;
+      }
       const payload = {
         ...common,
         ...(source.bar.cutRecordId ? { cutRecordId: source.bar.cutRecordId } : { inhouseId: source.bar.inhouseId }),
         destination: destination.value as CutDestination,
+        ...(destination.value === 'store' && demand ? { storeId: demand.storeId, productionProductId: demand.productId, allowOverMeasure } : {}),
         ...(destination.value === 'outbound' ? { outDest: outDest.value } : {})
       };
       const receipt = await submitCut({ ...payload, requestId: requests.forPayload(payload) });
@@ -413,6 +476,30 @@ onMounted(() => refresh());
 </script>
 
 <style scoped lang="scss">
+.store-demands {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 232px;
+  overflow-y: auto;
+}
+.store-demand-card {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  color: var(--el-text-color-primary);
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  &.active {
+    color: var(--el-color-primary);
+    border-color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+  }
+}
 .inout-station {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 370px;
@@ -565,6 +652,10 @@ label {
     flex: 1;
     min-height: 38px;
   }
+}
+.inout-station[data-mode='cut'] .destination-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .destination-options button,
 .recent-destinations button {
