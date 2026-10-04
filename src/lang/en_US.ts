@@ -4434,6 +4434,7 @@ export default {
       isAdjusted: 'Adjusted',
       arriveWeight: 'Pig Received Weight',
       pendingWeight: 'Pending Inbound Weight',
+      marketingWeight: 'Pig Marketing Weight',
       productWeight: 'Product Inbound Weight'
     },
     placeholder: {
@@ -4459,7 +4460,10 @@ export default {
       title: 'Adjust Product Inbound Weight'
     },
     rule: {
-      productWeight: 'Please enter the adjusted product inbound weight'
+      productWeight: 'Please enter the adjusted product inbound weight',
+      marketingWeightRequired: 'Record a valid pig marketing weight before adjusting the inbound weight',
+      inboundWeightUnavailable: 'The cumulative inbound weight is inconsistent. Refresh and retry, or check the inbound records',
+      noRemainingWeight: 'Other products have reached the pig marketing weight. Check and adjust their weights first'
     }
   },
   vegHandleRecord: {

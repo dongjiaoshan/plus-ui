@@ -4417,6 +4417,7 @@ export default {
       isAdjusted: '是否调整',
       arriveWeight: '猪只接收重量',
       pendingWeight: '待入库重量',
+      marketingWeight: '猪只出栏重量',
       productWeight: '产品入库重量'
     },
     placeholder: {
@@ -4442,7 +4443,10 @@ export default {
       title: '调整产品入库重量'
     },
     rule: {
-      productWeight: '请输入调整后的产品入库重量'
+      productWeight: '请输入调整后的产品入库重量',
+      marketingWeightRequired: '该猪只缺少有效出栏重量，请先补录出栏重量再调整',
+      inboundWeightUnavailable: '累计入库重量数据异常，请刷新后重试；仍异常时请核对入库记录',
+      noRemainingWeight: '其他产品累计入库重量已达到出栏重量，请先核对并调整其他产品重量'
     }
   },
   vegHandleRecord: {
