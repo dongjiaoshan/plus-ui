@@ -1,0 +1,248 @@
+// 果蔬入库 / 出库工作台共用版式：左侧卡片区 + 右侧操作栏（与猪只 / 白条工作台同一栅格）。
+.veg-station {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 370px;
+  gap: 14px;
+  padding: 16px;
+  min-height: calc(100vh - 105px);
+  background: var(--el-fill-color-light);
+}
+.station-main {
+  min-width: 0;
+}
+.station-title {
+  margin: 0 0 14px;
+  font-size: 22px;
+}
+.section-heading {
+  font-size: 16px;
+  margin: 14px 0 10px;
+}
+.card-area {
+  min-height: 120px;
+}
+.info-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  align-content: start;
+  min-width: 0;
+  text-align: left;
+  padding: 14px 16px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 8px;
+  background: var(--el-bg-color);
+  color: var(--el-text-color-regular);
+  font-size: 12px;
+  cursor: pointer;
+  &.active {
+    border-color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+  }
+  &:disabled {
+    cursor: not-allowed;
+  }
+  &.done {
+    opacity: 0.6;
+  }
+}
+.card-title {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 15px;
+  color: var(--el-text-color-primary);
+  overflow-wrap: anywhere;
+}
+.leaf {
+  color: var(--el-color-success);
+}
+.plot-code {
+  color: var(--el-color-warning-dark-2);
+  font-weight: 600;
+}
+.done-tag {
+  margin-left: auto;
+}
+.card-kv {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: var(--el-text-color-secondary);
+  b {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+  }
+  &.right {
+    text-align: right;
+  }
+}
+.metric {
+  color: var(--el-color-warning-dark-2) !important;
+}
+.location-text {
+  color: var(--el-color-primary) !important;
+  font-weight: 500;
+}
+.plot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  min-height: 90px;
+}
+.station-panel {
+  background: var(--el-bg-color);
+  border-radius: 8px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-self: start;
+  position: sticky;
+  top: 16px;
+}
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  label {
+    margin: 0;
+  }
+}
+.chip-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.crop-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--el-color-warning-light-5);
+  border-radius: 6px;
+  background: var(--el-color-warning-light-9);
+  color: var(--el-color-warning-dark-2);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.plot-chip {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+.entry-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.weight-label {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.info-section {
+  margin-top: 18px;
+}
+.info-title {
+  margin: 0 0 12px;
+  padding-left: 8px;
+  border-left: 3px solid var(--el-color-success);
+  font-size: 14px;
+}
+.field-label {
+  margin-top: 12px;
+}
+.required-mark {
+  color: var(--el-color-danger);
+  margin-left: 2px;
+}
+.selected-hint {
+  margin-left: 8px;
+  font-weight: 400;
+  color: var(--el-color-primary);
+}
+.option-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.option {
+  min-width: 64px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--el-border-color);
+  border-radius: 6px;
+  background: var(--el-bg-color);
+  color: var(--el-text-color-primary);
+  cursor: pointer;
+  &.active {
+    border-color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+    color: var(--el-color-primary);
+  }
+}
+.custom-input {
+  width: 96px;
+}
+.hint {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+.field-error {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--el-color-danger);
+}
+.destination-select {
+  width: 100%;
+}
+.panel-actions {
+  margin-top: auto;
+  .submit-button {
+    width: 100%;
+    height: 46px;
+    font-size: 17px;
+  }
+}
+button:disabled {
+  cursor: not-allowed;
+}
+@media (max-width: 1000px) {
+  .veg-station {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    padding: 10px;
+    gap: 10px;
+  }
+  .station-panel {
+    padding: 12px;
+  }
+}
+@media (max-width: 700px) {
+  .veg-station {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .station-panel {
+    position: static;
+  }
+}

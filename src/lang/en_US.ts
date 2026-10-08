@@ -2859,7 +2859,7 @@ export default {
       slaughterWeight: 'Slaughter Weight',
       avgSlaughterWeight: 'Avg Slaughter Weight',
       arriveWeight: 'Arrive Weight',
-      slaughterRate: 'Slaughter Rate(%)',
+      slaughterRate: 'Slaughter Yield(%)',
       barTotalWeight: 'Bar Total Weight',
       avgBarWeight: 'Avg Bar Weight',
       barYieldRate: 'Bar Yield Rate(%)',
@@ -2895,7 +2895,7 @@ export default {
     monthly: {
       statMonth: 'Stat Month',
       slaughterCount: 'Slaughter Count',
-      slaughterRate: 'Slaughter Rate(%)',
+      slaughterRate: 'Slaughter Yield(%)',
       barYieldRate: 'Bar Yield Rate(%)',
       cutYieldRate: 'Cut Yield Rate(%)'
     }

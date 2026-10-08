@@ -2847,7 +2847,7 @@ export default {
       slaughterWeight: '送宰总重',
       avgSlaughterWeight: '送宰均重',
       arriveWeight: '接收重量',
-      slaughterRate: '屠宰率(%)',
+      slaughterRate: '屠宰出品率(%)',
       barTotalWeight: '白条总重',
       avgBarWeight: '白条均重',
       barYieldRate: '白条出品率(%)',
@@ -2883,7 +2883,7 @@ export default {
     monthly: {
       statMonth: '统计月份',
       slaughterCount: '屠宰头数',
-      slaughterRate: '屠宰率(%)',
+      slaughterRate: '屠宰出品率(%)',
       barYieldRate: '白条出品率(%)',
       cutYieldRate: '分割出品率(%)'
     }
