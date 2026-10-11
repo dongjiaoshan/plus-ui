@@ -101,6 +101,12 @@ export interface VegOutSubmission {
   outDest?: string;
 }
 
+/** 将所选库存组的实时剩余库存计为毛菜处理损耗；重量由后端锁读。 */
+export interface VegOutFinish {
+  productId: string;
+  stockIds: string[];
+}
+
 const base = '/djs/warehouse/inout/veg';
 export const getVegCrops = (): AxiosPromise<VegCrop[]> => request({ url: `${base}/in/crops` });
 export const getVegPlots = (cropId: string): AxiosPromise<VegPlot[]> => request({ url: `${base}/in/plots`, params: { cropId } });
@@ -111,3 +117,4 @@ export const getVegOutProducts = (): AxiosPromise<VegOutProduct[]> => request({ 
 export const getVegOutStocks = (productId: string): AxiosPromise<VegOutStock[]> => request({ url: `${base}/out/stocks`, params: { productId } });
 export const getVegRecentOutDests = (): AxiosPromise<RecentDestination[]> => request({ url: `${base}/out/recentOutDests` });
 export const submitVegOut = (data: VegOutSubmission): AxiosPromise<void> => request({ url: `${base}/out/submit`, method: 'post', data });
+export const finishVegOut = (data: VegOutFinish): AxiosPromise<string[]> => request({ url: `${base}/out/finish`, method: 'post', data });

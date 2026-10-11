@@ -1,5 +1,5 @@
 <template>
-  <div class="veg-station">
+  <div class="veg-station veg-in-station">
     <main class="station-main">
       <h2 class="station-title">{{ tr('vegInTitle') }}</h2>
       <el-alert v-if="loadError" :title="loadError" type="error" :closable="false" show-icon />
@@ -156,10 +156,6 @@
             </el-input>
           </div>
           <p v-if="customMode && customText && customPercent === null" class="field-error" role="alert">{{ tr('invalidPercent') }}</p>
-          <label class="field-label">{{ tr('destination') }}</label>
-          <div class="option-row">
-            <button type="button" class="option active" aria-pressed="true">{{ destinationName || tr('freshVegRoom') }}</button>
-          </div>
         </section>
       </fieldset>
       <div class="panel-actions">
@@ -208,7 +204,6 @@ const kg = toKg;
 const crops = ref<VegCrop[]>([]);
 const plots = ref<VegPlot[]>([]);
 const teams = ref<VegTeamOption[]>([]);
-const destinationName = ref('');
 const selectedCropId = ref('');
 const selectedPlotId = ref('');
 const productId = ref('');
@@ -278,7 +273,7 @@ async function selectCrop(cropId: string, keepPlot = '') {
   try {
     const result = await getVegPlots(cropId);
     if (generation !== cropGeneration) return;
-    plots.value = result.data;
+    plots.value = result.data.filter((plot) => plot.weighStatus !== 'done');
     const previous = plots.value.find((p) => p.plantingRecordId === keepPlot && p.weighStatus !== 'done');
     if (previous) selectPlot(previous);
   } catch (error) {
@@ -297,7 +292,6 @@ async function refresh(keepCrop = selectedCropId.value, keepPlot = selectedPlotI
     if (generation !== refreshGeneration) return;
     crops.value = cropResult.data;
     teams.value = optionResult.data.teams;
-    destinationName.value = optionResult.data.destinationName || '';
     teamIds.value = teamIds.value.filter((id) => teams.value.some((team) => team.teamId === id));
     const crop = crops.value.find((c) => c.cropId === keepCrop) || crops.value[0];
     await selectCrop(crop?.cropId || '', crop?.cropId === keepCrop ? keepPlot : '');

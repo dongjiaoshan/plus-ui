@@ -76,9 +76,15 @@
           >
           <span v-if="selectedStock" class="plot-chip">{{ plotLabel(selectedStock) }} · {{ selectedStock.locationName }}</span>
         </div>
-        <el-button type="primary" class="finish-button" :disabled="busy || !selectedProduct" @click="finishProduct">{{
-          tr('vegFinishOut')
-        }}</el-button>
+        <el-button
+          v-hasPermi="['djs:warehouse:inout:outFinish']"
+          type="primary"
+          class="finish-button"
+          :loading="finishing"
+          :disabled="busy || !selectedStock"
+          @click="finishProduct"
+          >{{ tr('vegFinishOut') }}</el-button
+        >
       </div>
       <fieldset class="entry-fields" :disabled="busy || !selectedStock">
         <div class="weight-label">
@@ -149,7 +155,7 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { Grape, Location, Refresh } from '@element-plus/icons-vue';
 import { getDicts } from '@/api/system/dict/data';
 import type { RecentDestination } from '@/api/djs-warehouse/inout';
@@ -157,6 +163,7 @@ import {
   getVegOutProducts,
   getVegOutStocks,
   getVegRecentOutDests,
+  finishVegOut,
   submitVegOut,
   type VegOutDestination,
   type VegOutProduct,
@@ -184,7 +191,8 @@ const loading = ref(false);
 const stocksLoading = ref(false);
 const loadError = ref('');
 const submitting = ref(false);
-const busy = computed(() => submitting.value);
+const finishing = ref(false);
+const busy = computed(() => submitting.value || finishing.value);
 let productGeneration = 0;
 let refreshGeneration = 0;
 onBeforeUnmount(() => {
@@ -301,14 +309,31 @@ async function submit() {
   }
 }
 
-/** 出库完成：结束当前产品的出库作业（清空地块 / 重量 / 去向并刷新库存），不做任何记账。 */
+/** 出库完成：确认后将所选地块/库位库存组的实时剩余量计为毛菜处理损耗。 */
 async function finishProduct() {
-  if (busy.value) return;
-  selectedStockKey.value = '';
-  weight.value = undefined;
-  destination.value = 'warehouse';
-  outDest.value = '';
-  await refresh(selectedProductId.value, '');
+  const product = selectedProduct.value;
+  const stock = selectedStock.value;
+  if (busy.value || !product || !stock) return;
+  const stockIds = [...stock.stockIds];
+  finishing.value = true;
+  try {
+    await ElMessageBox.confirm(tr('vegOutFinishConfirm'), `${product.productName} · ${plotLabel(stock)} · ${stock.locationName || '—'}`, {
+      type: 'warning',
+      confirmButtonText: tr('confirmFinish')
+    });
+    await finishVegOut({ productId: product.productId, stockIds });
+    ElMessage.success(tr('vegOutFinished'));
+    selectedStockKey.value = '';
+    weight.value = undefined;
+    destination.value = 'warehouse';
+    outDest.value = '';
+    await refresh(product.productId, '');
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(tr('vegOutFinishFailed'));
+    // 取消或失败均保留选择和输入；request.ts 同时展示服务端的具体拒绝原因。
+  } finally {
+    finishing.value = false;
+  }
 }
 
 onMounted(() => refresh());

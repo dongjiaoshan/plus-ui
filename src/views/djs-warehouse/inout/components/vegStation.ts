@@ -1,8 +1,26 @@
 /** 果蔬入库 / 出库工作台的纯逻辑（V6 row282 / row283），抽出来单测。 */
 
-/** 卡片列表一页 3 列 × 2 行；超过一页向右滑动翻页（甲方：信息显示三列，过多时左右滑动）。 */
-export const CARD_COLUMNS = 3;
-export const CARD_ROWS = 2;
+/** 窄卡按容器分列，每页最多五行，超出的卡片横向翻页。 */
+export const CARD_COLUMNS = 5;
+export const CARD_ROWS = 5;
+export const CARD_WIDTH = 240;
+/** 卡片可收窄到的下限：差十几像素就能多排一列时收窄卡片，不留整列空白。 */
+export const CARD_MIN_WIDTH = 224;
+/** 卡片间距（与 .veg-pager-page 的 gap 一致）。 */
+export const CARD_GAP = 12;
+/** 卡片尚未渲染时估算行数用的卡高；渲染后以实测卡高为准。 */
+export const CARD_HEIGHT = 98;
+
+/**
+ * 每页列数按容器宽度、行数按卡片区可用高度（实测卡高 + 间距）计算，最多 5 列 × 5 行。
+ * 可用高度由调用方扣掉卡片区上方位置与下方地块 / 库存区预留，短屏自动减行。
+ */
+export function cardPageLayout(width: number, availableHeight: number, rowHeight = CARD_HEIGHT + CARD_GAP): { columns: number; rows: number } {
+  return {
+    columns: Math.max(1, Math.min(CARD_COLUMNS, Math.floor((width + CARD_GAP) / (CARD_MIN_WIDTH + CARD_GAP)))),
+    rows: Math.max(1, Math.min(CARD_ROWS, Math.floor((availableHeight + CARD_GAP) / rowHeight)))
+  };
+}
 
 export function chunkPages<T>(items: readonly T[], size = CARD_COLUMNS * CARD_ROWS): T[][] {
   const pages: T[][] = [];

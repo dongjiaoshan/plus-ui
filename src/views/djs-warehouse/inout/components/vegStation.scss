@@ -228,6 +228,48 @@ label {
 button:disabled {
   cursor: not-allowed;
 }
+.veg-in-station {
+  .station-panel {
+    padding: 12px;
+    gap: 10px;
+  }
+  .weight-label {
+    margin-bottom: 6px;
+    label {
+      margin-bottom: 0;
+    }
+  }
+  .info-section {
+    margin-top: 10px;
+  }
+  .info-title {
+    margin-bottom: 6px;
+  }
+  .field-label {
+    margin-top: 8px;
+    margin-bottom: 5px;
+  }
+  .option-row {
+    gap: 6px;
+  }
+  .option {
+    min-height: 30px;
+    padding: 4px 10px;
+  }
+  .panel-actions .submit-button {
+    height: 40px;
+  }
+  :deep(.numpad-display) {
+    height: 38px;
+    margin-bottom: 8px;
+  }
+  :deep(.numpad-keys) {
+    gap: 6px;
+  }
+  :deep(.numpad-key) {
+    height: 34px;
+  }
+}
 @media (max-width: 1000px) {
   .veg-station {
     grid-template-columns: minmax(0, 1fr) 320px;

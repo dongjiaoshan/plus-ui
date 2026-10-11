@@ -11,9 +11,10 @@ const api = vi.hoisted(() => ({
   getVegOutProducts: vi.fn(),
   getVegOutStocks: vi.fn(),
   getVegRecentOutDests: vi.fn(),
-  submitVegOut: vi.fn()
+  submitVegOut: vi.fn(),
+  finishVegOut: vi.fn()
 }));
-const message = vi.hoisted(() => ({ success: vi.fn(), warning: vi.fn() }));
+const message = vi.hoisted(() => ({ success: vi.fn(), warning: vi.fn(), error: vi.fn() }));
 const messageBox = vi.hoisted(() => ({ confirm: vi.fn() }));
 vi.mock('@/api/djs-warehouse/inoutVeg', () => api);
 vi.mock('@/api/system/dict/data', () => ({
@@ -42,7 +43,7 @@ vi.mock('../../production/packEntry/components/WeightNumpad.vue', () => ({
 }));
 import VegInStation from './VegInStation.vue';
 import VegOutStation from './VegOutStation.vue';
-import { chunkPages, defaultProductId, isValidWeight, toCustomPercent } from './vegStation';
+import { cardPageLayout, chunkPages, defaultProductId, isValidWeight, toCustomPercent } from './vegStation';
 
 const stubs = {
   ElButton: { props: ['disabled'], template: '<button :disabled="disabled"><slot /></button>' },
@@ -78,8 +79,20 @@ function buttonByText(wrapper: ReturnType<typeof mount>, selector: string, text:
 }
 
 describe('vegStation helpers', () => {
-  it('pages cards three columns by two rows', () => {
-    expect(chunkPages([1, 2, 3, 4, 5, 6, 7]).map((p) => p.length)).toEqual([6, 1]);
+  it('uses narrow cards and no more than five rows for the available screen', () => {
+    expect(cardPageLayout(1280, 600, 110)).toEqual({ columns: 5, rows: 5 });
+    expect(cardPageLayout(810, 430, 110)).toEqual({ columns: 3, rows: 4 });
+    // 差十几像素排不下一列 240 的卡时收窄卡片多排一列
+    expect(cardPageLayout(980, 600, 110)).toEqual({ columns: 4, rows: 5 });
+    // 卡被长名字撑高时按实测行高减行，不让下方区域被挤出首屏
+    expect(cardPageLayout(810, 430, 143)).toEqual({ columns: 3, rows: 3 });
+    expect(cardPageLayout(240, 40)).toEqual({ columns: 1, rows: 1 });
+    expect(
+      chunkPages(
+        Array.from({ length: 26 }, (_, i) => i),
+        25
+      ).map((p) => p.length)
+    ).toEqual([25, 1]);
   });
   it('accepts only custom percentages between 1 and 99', () => {
     expect(['0', '100', '12.5', 'a', ''].map(toCustomPercent)).toEqual([null, null, null, null, null]);
@@ -133,7 +146,7 @@ describe('row282 果蔬入库管理', () => {
     messageBox.confirm.mockResolvedValue('confirm');
   });
 
-  it('shows crop and plot cards, selects the first crop and keeps the fresh-veg room as the only destination', async () => {
+  it('shows pending plot cards and keeps the fixed fresh-veg destination out of the operation panel', async () => {
     const wrapper = mount(VegInStation, { global });
     await flushPromises();
     expect(wrapper.findAll('.crop-card').map((c) => c.text())).toEqual([expect.stringContaining('黄瓜'), expect.stringContaining('茄子')]);
@@ -141,11 +154,10 @@ describe('row282 果蔬入库管理', () => {
     expect(wrapper.find('.crop-chip').text()).toContain('黄瓜');
     expect(api.getVegPlots).toHaveBeenCalledWith(cropId);
     const plots = wrapper.findAll('.plot-card');
-    expect(plots).toHaveLength(2);
-    expect(plots[1].attributes('disabled')).toBeDefined();
-    expect(plots[1].text()).toContain('weighDone');
+    expect(plots).toHaveLength(1);
+    expect(wrapper.findAll('.plot-card.done')).toHaveLength(0);
     const destination = wrapper.findAll('.info-section .option').filter((b) => b.text() === '毛菜鲜品库');
-    expect(destination).toHaveLength(1);
+    expect(destination).toHaveLength(0);
     expect(wrapper.text()).not.toContain('蔬菜保鲜');
   });
 
@@ -241,6 +253,8 @@ describe('row283 果蔬出库管理', () => {
       ]
     });
     api.submitVegOut.mockResolvedValue({ data: null });
+    api.finishVegOut.mockResolvedValue({ data: ['loss1'] });
+    messageBox.confirm.mockResolvedValue('confirm');
   });
 
   it('lists products with plot count and total, and plot cards with location plus a no-plot card', async () => {
@@ -295,13 +309,48 @@ describe('row283 果蔬出库管理', () => {
     expect(buttonByText(wrapper, '.submit-button', 'confirmOut').attributes('disabled')).toBeDefined();
   });
 
-  it('finish dispatch clears the selection without writing anything', async () => {
+  it('requires a stock group before finishing dispatch', async () => {
+    const wrapper = mount(VegOutStation, { global });
+    await flushPromises();
+    expect(buttonByText(wrapper, '.finish-button', 'vegFinishOut').attributes('disabled')).toBeDefined();
+  });
+
+  it('confirms dispatch completion and sends only the selected product and stock group', async () => {
     const wrapper = mount(VegOutStation, { global });
     await flushPromises();
     await wrapper.findAll('.stock-card')[0].trigger('click');
     await buttonByText(wrapper, '.finish-button', 'vegFinishOut').trigger('click');
     await flushPromises();
+    expect(messageBox.confirm).toHaveBeenCalledWith('vegOutFinishConfirm', expect.stringContaining('大白菜'), expect.any(Object));
+    expect(api.finishVegOut).toHaveBeenCalledWith({ productId, stockIds: ['s1', 's2'] });
     expect(wrapper.findAll('.stock-card.active')).toHaveLength(0);
     expect(api.submitVegOut).not.toHaveBeenCalled();
+  });
+
+  it('cancel leaves the selected stock and input unchanged without calling finish', async () => {
+    messageBox.confirm.mockRejectedValueOnce('cancel');
+    const wrapper = mount(VegOutStation, { global });
+    await flushPromises();
+    await wrapper.findAll('.stock-card')[0].trigger('click');
+    await wrapper.find('.test-weight').setValue('10');
+    await buttonByText(wrapper, '.finish-button', 'vegFinishOut').trigger('click');
+    await flushPromises();
+    expect(api.finishVegOut).not.toHaveBeenCalled();
+    expect(wrapper.findAll('.stock-card.active')).toHaveLength(1);
+    expect((wrapper.find('.test-weight').element as HTMLInputElement).value).toBe('10');
+  });
+
+  it('a rejected finish preserves the input and selected stock for correction', async () => {
+    api.finishVegOut.mockRejectedValueOnce(new Error('stock changed'));
+    const wrapper = mount(VegOutStation, { global });
+    await flushPromises();
+    await wrapper.findAll('.stock-card')[0].trigger('click');
+    await wrapper.find('.test-weight').setValue('10');
+    await buttonByText(wrapper, '.recent-destinations .option', '矿山').trigger('click');
+    await buttonByText(wrapper, '.finish-button', 'vegFinishOut').trigger('click');
+    await flushPromises();
+    expect(wrapper.findAll('.stock-card.active')).toHaveLength(1);
+    expect((wrapper.find('.test-weight').element as HTMLInputElement).value).toBe('10');
+    expect((wrapper.find('.out-dest').element as HTMLSelectElement).value).toBe('mine');
   });
 });

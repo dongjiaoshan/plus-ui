@@ -47,6 +47,7 @@
                 :max="maxOf(r)"
                 :controls="false"
                 class="cell-num"
+                @change="r.confirmInput = normalizeConfirmQty(r, r.confirmInput)"
               />
               <span v-else>{{ readonlyConfirmText(r) }}</span>
               <span class="cell-suffix">{{ metricSuffix(r) }}</span>
@@ -103,13 +104,14 @@ import type { ReturnStoreDailyVO } from '@/api/djs-warehouse/return/types';
 import LocationSelect from '@/components/LocationSelect/index.vue';
 import { useI18n } from 'vue-i18n';
 import {
-  decimalsFor,
+  KG_DECIMALS,
   defaultConfirmInput,
   defaultLocationOf,
   fromConfirmWeight,
   maxQty,
   metricIsKg,
   metricSuffix,
+  normalizeConfirmQty,
   toConfirmWeight,
   toNum
 } from '../metric';
@@ -178,14 +180,13 @@ function mustDiscardReason(r: OpsRow): string {
     : t('djs.warehouse.storeReturn.onlyDiscardNoRatio');
 }
 
-/** 第三列小数位：kg → 3 位（D-0017）；非 kg → 清单内 2 位 / 否则整数（D-0054）。 */
-function precisionOf(r: OpsRow): number {
-  return metricIsKgRow(r) ? 3 : decimalsFor(r);
+/** 第三列小数位：kg → 3 位（D-0017）；非 kg 不设 precision（整数不补成 1.0），由 normalizeConfirmQty 截到一位（D-0145）。 */
+function precisionOf(r: OpsRow): number | undefined {
+  return metricIsKgRow(r) ? KG_DECIMALS : undefined;
 }
 
 function stepOf(r: OpsRow): number {
-  const p = precisionOf(r);
-  return p === 0 ? 1 : Number((1 / 10 ** p).toFixed(p));
+  return metricIsKgRow(r) ? 0.001 : 1;
 }
 
 function maxOf(r: OpsRow): number | undefined {
@@ -206,7 +207,7 @@ function formatQty(v: number | string | undefined | null, r: OpsRow): string {
   const n = toNum(v);
   if (n === null) return '—';
   const unit = r.productUnit || '';
-  const text = metricIsKgRow(r) ? n.toFixed(3) : String(Number(n.toFixed(decimalsFor(r) || 3)));
+  const text = metricIsKgRow(r) ? n.toFixed(3) : String(Number(n.toFixed(3)));
   return `${text}${unit}`;
 }
 
@@ -219,7 +220,7 @@ function hydrate(rows: StoreReturnOpsItemVO[]) {
     row.isDiscard = mustDiscard(row) ? 1 : Number(r.isDiscard ?? 0);
     const dft = defaultConfirmInput(row);
     const n = toNum(dft);
-    row.confirmInput = n === null ? undefined : n;
+    row.confirmInput = n === null ? undefined : normalizeConfirmQty(row, n);
     row.locationId = defaultLocationOf(r.defaultLocationId, r.locationOptions);
     return row;
   });
@@ -267,6 +268,7 @@ async function handleSubmit() {
   if (!targets.length) return;
 
   for (const r of targets) {
+    r.confirmInput = normalizeConfirmQty(r, r.confirmInput);
     const n = toNum(r.confirmInput);
     if (n === null || n <= 0) {
       proxy?.$modal.msgError(t('djs.warehouse.storeReturn.confirmRequired', { name: r.productName ?? '' }));

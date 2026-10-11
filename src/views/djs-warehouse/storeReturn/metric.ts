@@ -8,7 +8,7 @@
  * 口径一句话：**按退回单位（产品单位）分流**。
  *   - 退回单位 = kg → 仓库过秤，录重量，标题「仓库称重重量」，三位小数（D-0017）；
  *   - 退回单位 ≠ kg → 仓库不过秤，按退回单位确认件数，标题「仓库确认量」，默认 = 退回量，
- *     清单内产品两位小数、清单外整数（D-0054 的 fallback）。
+ *     非 kg 最多一位小数（D-0145），整数不补零。
  *
  * 界面上录的是**退回单位**的量，提交给后端的 `receivedQty` / `receivedWeight` 仍是**原材料量**
  * —— 后端 `inboundReturnBasket` 按原材料记库存，换算放在 {@link toConfirmWeight} 这一层做。
@@ -26,7 +26,7 @@ export interface ReturnMetricInput {
   returnWeight?: number | string | null;
   /** 计量规则：一件该产品折算多少原材料；缺省按 1 */
   materialNum?: number | string | null;
-  /** 是否配在字典「退回产品清单」里，决定非 kg 行的小数位 */
+  /** 是否配在字典「退回产品清单」里，不再决定录入精度 */
   inReturnList?: boolean;
   /** 后端判定的「能否做单位换算」；false → 锁行（瞎猜会把 3 只记成 3 kg 进库存） */
   canConvert?: boolean;
@@ -53,13 +53,16 @@ export function metricSuffix(it: ReturnMetricInput): string {
   return metricIsKg(it) ? 'kg' : (it.productUnit || '');
 }
 
-/** 非 kg 口径允许几位小数（D-0054 的 fallback）：清单内 2 位、清单外 0 位（整数）。 */
+/** D-0145：非 kg 最多一位小数，kg 保留三位。清单归属不再影响精度。 */
 export function decimalsFor(it: ReturnMetricInput): number {
-  return it.inReturnList === true ? 2 : 0;
+  return metricIsKg(it) ? KG_DECIMALS : 1;
 }
 
 /** kg 口径的小数位（D-0017：kg 可录三位小数）。 */
 export const KG_DECIMALS = 3;
+
+/** 已处理行回显的小数位：按实际确认量显示，历史两位小数的门店退回与单位退回（两位）不能被舍成一位。 */
+const ECHO_DECIMALS = 2;
 
 /** 数值归一：字符串 → number，无效返 null（不当 0 用）。 */
 export function toNum(v: number | string | null | undefined): number | null {
@@ -115,8 +118,8 @@ export function fromConfirmWeight(it: ReturnMetricInput, stored: number | string
   if (metricIsKg(it)) return String(n);
   const ratio = toNum(it.materialNum);
   const factor = ratio !== null && ratio > 0 ? ratio : 1;
-  // 回显位数跟录入位数同口径，免得「录 2 份」回来变成「2.00 份」
-  return String(Number((n / factor).toFixed(decimalsFor(it))));
+  // 按实际确认量回显并去尾零：「录 2 份」回来仍是「2」，历史的 1.25 也照原数显示
+  return String(Number((n / factor).toFixed(ECHO_DECIMALS)));
 }
 
 /**
@@ -162,9 +165,28 @@ export function normalizeInput(it: ReturnMetricInput, raw: string): { text: stri
   }
   const cap = maxQty(it);
   if (cap !== null && intText !== '' && Number(text) > cap) {
+    // 撞上限取退回量本身：历史两位小数的退回量（1.25 / 0.05）也要能按原数全收
     return { text: String(cap), capped: true };
   }
   return { text, capped: false };
+}
+
+/** 截到一位小数（不四舍五入，避免超过退回量）。 */
+function floorOneDecimal(n: number): number {
+  return Math.floor(Math.max(0, n) * 10 + 1e-8) / 10;
+}
+
+/**
+ * 数字框确认量归一（D-0145）：kg 行原样（数字框按三位控制）；非 kg 新录入截到一位。
+ * 达到或超过退回量时取退回量本身 —— 默认值就是退回量，历史两位小数的退回量（1.25 / 0.05）
+ * 必须能按原数全收，否则小于 0.1 的行会被截成 0、整单提交不了。
+ */
+export function normalizeConfirmQty(it: ReturnMetricInput, value: number | undefined | null): number | undefined {
+  if (value === null || value === undefined || !Number.isFinite(value)) return undefined;
+  if (metricIsKg(it)) return value;
+  const cap = maxQty(it);
+  if (cap !== null && value >= cap) return cap;
+  return floorOneDecimal(value);
 }
 
 /**

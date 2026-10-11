@@ -147,11 +147,12 @@ export function returnMetricUnit(productUnit: string | null | undefined, materia
  *
  * 计量单位由**原材料单位**决定（原材料单位为空则看产品单位）：
  * - 原材料单位 = KG → `received_weight` 是重量，`X.XXXkg`（3 位小数）；
- * - 原材料单位 ≠ KG → `received_weight` 是件数，`整数 + 产品单位`（如 `1枚` / `30份`）。
+ * - 原材料单位 ≠ KG → `received_weight` 是件数，`数量（去尾零）+ 原材料单位`（如 `30枚` / `1.2罐`，D-0145 非 kg 可带小数）。
  *
  * @example formatReceivedAmount(2, 'kg', undefined)   // '2.000kg'   （里脊肉：无原材料，回落产品单位 kg）
  * @example formatReceivedAmount(0.08, '份', 'kg')     // '0.080kg'   （干货礼盒：原材料按 kg）
- * @example formatReceivedAmount(30, '份', '枚')       // '30份'      （蛋礼盒：原材料按枚 → 件数，显产品单位）
+ * @example formatReceivedAmount(30, '份', '枚')       // '30枚'      （蛋礼盒：原材料按枚 → 件数）
+ * @example formatReceivedAmount(1.2, '罐', undefined)  // '1.2罐'     （无原材料，回落产品单位）
  * @returns 格式化文本；无效值（null / undefined / '' / NaN）返回 ''，由调用方决定空值占位符。
  */
 export function formatReceivedAmount(
@@ -166,7 +167,7 @@ export function formatReceivedAmount(
   // 后缀必须跟判据同源：received_weight 本身就是按**原材料单位**计量的
   // （干羊肚菌礼盒退 1 份 → 库存流水实写 0.080 到「干羊肚菌(kg)」），
   // 用产品单位标会把 30 枚鸡蛋写成「30份」= 仓库收了 30 个礼盒，而门店只退了 1 个。
-  return `${Math.round(n)}${metric}`;
+  return `${Number(n.toFixed(3))}${metric}`;
 }
 
 /**
