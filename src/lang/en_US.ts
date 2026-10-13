@@ -692,6 +692,8 @@ export default {
     toFatten: {
       action: 'To Fattening',
       title: 'Convert to Fattening Pig',
+      confirmMessage: 'Convert this breeding sow to a fattening pig?',
+      permanentNotice: 'This conversion is permanent. The pig cannot be kept for breeding again. Its breeding history is retained.',
       transferDate: 'Transfer Date',
       transferDatePlaceholder: 'Select transfer date',
       transferDateRequired: 'Transfer date is required',

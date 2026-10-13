@@ -64,8 +64,6 @@ export interface VegInSubmission {
 
 export interface VegInFinish {
   plantingRecordId: string;
-  teamIds: string[];
-  perfPercent: number;
 }
 
 /** 果蔬出库产品卡：跨库位合计。 */

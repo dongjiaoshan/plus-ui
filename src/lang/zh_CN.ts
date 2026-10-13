@@ -688,8 +688,10 @@ export default {
       fireEvent: '触发事件'
     },
     toFatten: {
-      action: '转为育肥猪',
-      title: '转为育肥猪',
+      action: '转育肥猪',
+      title: '转育肥猪',
+      confirmMessage: '是否将种母猪转为育肥猪？',
+      permanentNotice: '确认后该猪只将永久作为育肥猪，不可再次留种；历史繁殖记录保留。',
       transferDate: '转移日期',
       transferDatePlaceholder: '请选择转移日期',
       transferDateRequired: '请选择转移日期',
@@ -2845,7 +2847,7 @@ export default {
       statDate: '统计日期',
       slaughterCount: '屠宰头数',
       slaughterWeight: '送宰总重',
-      avgSlaughterWeight: '送宰均重',
+      avgSlaughterWeight: '屠宰均重',
       arriveWeight: '接收重量',
       slaughterRate: '屠宰出品率(%)',
       barTotalWeight: '白条总重',

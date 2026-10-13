@@ -122,7 +122,7 @@ export interface StoreReturnConfirmForm {
   locationId?: string;
   /**
    * 仓库实收量 / 实收重量 —— 都是**原材料量**。
-   * admin 抽屉界面按退回单位录，提交前乘 materialNum 换算（与 mp metric.ts#toConfirmWeight 同源）。
+   * D-0149：admin 抽屉按原材料单位录入，直接提交；与小程序确认量契约一致。
    */
   receivedQty?: number;
   receivedWeight?: number;
@@ -201,13 +201,13 @@ export interface StoreReturnOpsItemVO {
   productId?: string;
   productName?: string;
   productSpec?: string;
-  /** 产品单位 = 退回单位：决定第三列标题 / 后缀 / 精度 */
+  /** 产品单位 = 门店退回量的单位，仓库确认按原材料单位 */
   productUnit?: string;
   /** 原材料单位（缺省已由后端回落产品单位） */
   materialUnit?: string;
-  /** 计量规则（一件折算多少原材料，缺配回落 1）；提交前乘它换算回原材料量 */
+  /** 计量规则（一件折算多少原材料，缺配回落 1）；用于折算默认量与原有上限 */
   materialNum?: number;
-  /** 是否配在「退回产品清单」里 → 非 kg 行两位小数的判据 */
+  /** 是否配在「退回产品清单」里；不再决定确认量精度 */
   inReturnList?: boolean;
   /** 能否退回入库（false → 只能产品丢弃） */
   canInbound?: boolean;

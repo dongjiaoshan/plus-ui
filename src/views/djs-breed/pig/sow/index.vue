@@ -26,7 +26,14 @@
       </template>
       <template #action="{ row }">
         <!-- row162：后备种母猪「转为育肥猪」——与「全部」页签同一入口，母猪页签是管后备母猪的人最先看的地方 -->
-        <el-button v-if="canToFatten(row as unknown as PigVO)" type="warning" link size="small" @click="openToFatten(row as unknown as PigVO)">
+        <el-button
+          v-if="canToFatten(row as unknown as PigVO)"
+          v-hasPermi="['djs:breed:event:transfer']"
+          type="warning"
+          link
+          size="small"
+          @click="openToFatten(row as unknown as PigVO)"
+        >
           {{ t('pig.toFatten.action') }}
         </el-button>
         <el-button v-hasPermi="['djs:breed:pig:edit']" type="primary" link size="small" @click="openEditEarNo(row as unknown as PigVO)">
@@ -59,6 +66,7 @@ import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { usePigListByType } from '../composables/usePigListByType';
 import ToFattenDialog from '../components/ToFattenDialog.vue';
+import { canToFatten } from '../to-fatten';
 import EditEarNoDialog from '../components/EditEarNoDialog.vue';
 import type { PigVO } from '@/api/djs-breed/pig/types';
 import type { BizTableColumn, SearchFieldSchema } from '@/components/BizTable/types';
@@ -93,11 +101,6 @@ const columns: BizTableColumn[] = [
   { prop: 'birthDate', label: t('pig.column.birthDate'), width: 120, align: 'center', formatter: 'date', visible: false },
   { prop: 'remark', label: t('pig.column.remark'), minWidth: 120, visible: false }
 ];
-
-/** row162：仅「后备」状态的种母猪显示「转为育肥猪」（与后端 toFatten 前置校验同口径）。 */
-function canToFatten(row: PigVO): boolean {
-  return row?.pigType === 'sow' && row?.currentStatus === 'HB';
-}
 
 const toFattenRef = ref<{ open: (row: PigVO) => void }>();
 function openToFatten(row: PigVO) {

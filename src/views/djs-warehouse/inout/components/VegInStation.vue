@@ -336,22 +336,13 @@ async function finish() {
     ElMessage.warning(tr('vegFinishHasWeight'));
     return;
   }
-  const percent = effectivePercent.value;
-  if (!teamIds.value.length) {
-    ElMessage.warning(tr('selectTeam'));
-    return;
-  }
-  if (percent === null) {
-    ElMessage.warning(tr('invalidPercent'));
-    return;
-  }
   finishing.value = true;
   try {
     await ElMessageBox.confirm(tr('vegFinishConfirm'), plot.plotCode || tr('plotInfo'), {
       type: 'warning',
       confirmButtonText: tr('confirmFinish')
     });
-    await finishVegIn({ plantingRecordId: plot.plantingRecordId, teamIds: [...teamIds.value], perfPercent: percent });
+    await finishVegIn({ plantingRecordId: plot.plantingRecordId });
     ElMessage.success(tr('vegFinished'));
     await refresh(selectedCropId.value, '');
   } catch {

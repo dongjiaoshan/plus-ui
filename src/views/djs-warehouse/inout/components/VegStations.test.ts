@@ -216,7 +216,25 @@ describe('row282 果蔬入库管理', () => {
     await finish.trigger('click');
     await flushPromises();
     expect(messageBox.confirm).toHaveBeenCalled();
-    expect(api.finishVegIn).toHaveBeenCalledWith({ plantingRecordId: plotA, teamIds: [team1], perfPercent: 100 });
+    expect(api.finishVegIn).toHaveBeenCalledWith({ plantingRecordId: plotA });
+  });
+
+  it.each([undefined, '0'])('row300 finishes with weight %s without a team or valid performance input', async (pendingWeight) => {
+    const wrapper = mount(VegInStation, { global });
+    await flushPromises();
+    await wrapper.findAll('.plot-card')[0].trigger('click');
+    if (pendingWeight !== undefined) await wrapper.find('.test-weight').setValue(pendingWeight);
+    await buttonByText(wrapper, '.option', 'custom').trigger('click');
+    await wrapper.find('.custom-input').setValue('0');
+
+    await buttonByText(wrapper, '.finish-button', 'vegFinishIn').trigger('click');
+    await flushPromises();
+
+    expect(messageBox.confirm).toHaveBeenCalled();
+    expect(api.finishVegIn).toHaveBeenCalledWith({ plantingRecordId: plotA });
+    expect(api.submitVegIn).not.toHaveBeenCalled();
+    expect(message.warning).not.toHaveBeenCalled();
+    expect(message.success).toHaveBeenCalledWith('vegFinished');
   });
 });
 
