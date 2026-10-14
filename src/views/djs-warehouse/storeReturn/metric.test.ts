@@ -167,3 +167,41 @@ describe('row304 KG确认20%容差', () => {
     expect(fromConfirmWeight(eggplant, 0.5)).toBe('0.5');
   });
 });
+
+describe('row305 其他分组KG按实际称重', () => {
+  const chicken = { productUnit: '只', materialUnit: 'kg', returnQuantity: 0.5, materialNum: 0.5, unlimitedConfirmWeight: true };
+
+  it('保留原默认重量，实际称重可超过120%，提交不再次折料', () => {
+    expect(defaultConfirmInput(chicken)).toBe('0.25');
+    expect(maxQty(chicken)).toBeNull();
+    expect(normalizeInput(chicken, '2.3')).toEqual({ text: '2.3', capped: false });
+    expect(normalizeInput({ ...chicken, maxConfirmQty: 0.3 }, '123.456')).toEqual({ text: '123.456', capped: false });
+    expect(toConfirmWeight(chicken, '2.3')).toBe(2.3);
+    expect(normalizeConfirmQty(chicken, 123.456)).toBe(123.456);
+  });
+
+  it('直接实称不依赖计量比例或退回基数，KG仍最多三位', () => {
+    const unconfigured = { productUnit: '只', materialUnit: '公斤', unlimitedConfirmWeight: true };
+    expect(canConvert(unconfigured)).toBe(true);
+    expect(maxQty(unconfigured)).toBeNull();
+    expect(normalizeInput(unconfigured, '2.3459')).toEqual({ text: '2.345', capped: false });
+    expect(normalizeInput(unconfigured, '999.999')).toEqual({ text: '999.999', capped: false });
+  });
+
+  it('解限标识不改变非KG数量封顶、精度和历史全收', () => {
+    const count = { productUnit: '盒', materialUnit: '份', returnQuantity: 1, materialNum: 3, unlimitedConfirmWeight: true };
+    expect(maxQty(count)).toBe(3);
+    expect(normalizeInput(count, '3.1')).toEqual({ text: '3', capped: true });
+    expect(normalizeInput(count, '1.23')).toEqual({ text: '1.2', capped: false });
+    expect(canConvert({ productUnit: '盒', materialUnit: '份', unlimitedConfirmWeight: true })).toBe(false);
+    expect(fromConfirmWeight(chicken, '0.125')).toBe('0.125');
+  });
+
+  it('未获后端解限的KG行继续120%，并保持缺比例保护', () => {
+    const limited = { ...chicken, unlimitedConfirmWeight: false };
+    expect(maxQty(limited)).toBe(0.3);
+    expect(normalizeInput(limited, '2.3')).toEqual({ text: '0.3', capped: true });
+    expect(maxQty({ ...limited, unlimitedConfirmWeight: undefined })).toBe(0.3);
+    expect(canConvert({ productUnit: '只', materialUnit: 'kg', unlimitedConfirmWeight: false })).toBe(false);
+  });
+});

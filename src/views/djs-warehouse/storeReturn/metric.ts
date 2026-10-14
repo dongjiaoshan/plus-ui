@@ -6,7 +6,7 @@
  * `received_qty` / `received_weight` 必须是同一个数（验收 §3 第 5 条）。
  *
  * D-0149 / row302：仓库确认按原材料单位录入和显示；门店退回量仍按产品单位显示。
- * 原材料 kg 保留三位，非 kg 新录入最多一位（D-0145）；KG 上限为默认原材料量的120%（D-0151）。
+ * 原材料 kg 保留三位，非 kg 新录入最多一位（D-0145）；受限KG上限为默认原材料量的120%（D-0151），其他分组KG实称不封顶（D-0152）。
  *
  * 输入值已经是原材料量，提交和历史回显不再乘除计量规则；数据库与库存记账语义不变。
  */
@@ -25,6 +25,8 @@ export interface ReturnMetricInput {
   materialNum?: number | string | null;
   /** 后端给出的原材料数量上限；为 null 时按退回量及计量规则推导 */
   maxConfirmQty?: number | string | null;
+  /** 其他分组KG确认按实际称重，不使用退回量折算上限；由后端确认策略判定 */
+  unlimitedConfirmWeight?: boolean;
   /** 是否配在字典「退回产品清单」里，不再决定录入精度 */
   inReturnList?: boolean;
   /** 后端判定的「能否做单位换算」；false → 锁行（瞎猜会把 3 只记成 3 kg 进库存） */
@@ -78,6 +80,7 @@ export function toNum(v: number | string | null | undefined): number | null {
  */
 export function maxQty(it: ReturnMetricInput): number | null {
   if (metricIsKg(it)) {
+    if (it.unlimitedConfirmWeight === true) return null;
     const base = originalConfirmQuantity(it);
     if (base === null || base <= 0) return null;
     const serverCap = toNum(it.maxConfirmQty);
@@ -141,6 +144,7 @@ export function fromConfirmWeight(_it: ReturnMetricInput, stored: number | strin
  */
 export function canConvert(it: ReturnMetricInput): boolean {
   if (it.canConvert !== undefined) return it.canConvert;
+  if (metricIsKg(it) && it.unlimitedConfirmWeight === true) return true;
   if (isKgUnit(it.productUnit)) return true;
   const mUnit = (it.materialUnit || '').trim();
   const pUnit = (it.productUnit || '').trim();

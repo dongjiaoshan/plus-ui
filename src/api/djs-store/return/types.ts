@@ -213,6 +213,8 @@ export interface StoreReturnOpsItemVO {
   canInbound?: boolean;
   /** 能否做单位换算（false → 锁行，后端也拒） */
   canConvert?: boolean;
+  /** 其他分组的KG确认可直接按实际称重，不按退回量/计量规则封顶 */
+  unlimitedConfirmWeight?: boolean;
   returnQuantity?: number;
   returnWeight?: number;
   receivedQty?: number;
