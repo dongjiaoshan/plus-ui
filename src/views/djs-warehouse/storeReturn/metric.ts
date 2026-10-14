@@ -6,7 +6,7 @@
  * `received_qty` / `received_weight` 必须是同一个数（验收 §3 第 5 条）。
  *
  * D-0149 / row302：仓库确认按原材料单位录入和显示；门店退回量仍按产品单位显示。
- * 原材料 kg 保留三位，非 kg 新录入最多一位（D-0145）；默认值和原有上限等值折算成原材料量。
+ * 原材料 kg 保留三位，非 kg 新录入最多一位（D-0145）；KG 上限为默认原材料量的120%（D-0151）。
  *
  * 输入值已经是原材料量，提交和历史回显不再乘除计量规则；数据库与库存记账语义不变。
  */
@@ -73,10 +73,17 @@ export function toNum(v: number | string | null | undefined): number | null {
 }
 
 /**
- * 保留原有上限，改用原材料量表达：非 kg 产品的退回量 × 计量规则。
- * 产品本身按 kg 退回 / 退回量缺失时仍不另加上限，交由后端原有重量规则处理。
+ * KG 称重允许在原默认量上增加20%，按三位精度向下取上限，避免舍入后超过20%。
+ * 非 KG 数量仍使用原材料数量上限。
  */
 export function maxQty(it: ReturnMetricInput): number | null {
+  if (metricIsKg(it)) {
+    const base = originalConfirmQuantity(it);
+    if (base === null || base <= 0) return null;
+    const serverCap = toNum(it.maxConfirmQty);
+    if (serverCap !== null && serverCap > 0) return serverCap;
+    return Math.floor((Math.round(base * 1000) * 12) / 10) / 1000;
+  }
   if (isKgUnit(it.productUnit)) return null;
   const n = toNum(it.returnQuantity);
   if (n === null || n <= 0) return null;
@@ -89,17 +96,24 @@ export function maxQty(it: ReturnMetricInput): number | null {
 function materialQuantity(it: ReturnMetricInput, qty: number): number {
   const ratio = toNum(it.materialNum);
   const factor = isKgUnit(it.productUnit) ? 1 : ratio !== null && ratio > 0 ? ratio : 1;
-  return Number((qty * factor).toFixed(KG_DECIMALS));
+  // 退回量和计量规则均为 DECIMAL(12,3)，先按千分整数相乘再 HALF_UP。
+  // 直接 toFixed 会把 0.1 × 0.145 的半位误舍为 0.014，与后端 0.015 不同。
+  const quantityMillis = Math.round(qty * 1000);
+  const factorMillis = Math.round(factor * 1000);
+  return Math.round((quantityMillis * factorMillis) / 1000) / 1000;
 }
 
-/** 待处理行预填折算后的原材料量；缺退回量时回落门店申报重量。 */
-export function defaultConfirmInput(it: ReturnMetricInput): string {
-  const cap = maxQty(it);
-  if (cap !== null) return String(cap);
+/** 原默认原材料量；KG 退回量透传，其他产品按计量比例折算。 */
+function originalConfirmQuantity(it: ReturnMetricInput): number | null {
   const qty = toNum(it.returnQuantity);
-  if (qty !== null && qty > 0) return String(materialQuantity(it, qty));
-  const weight = toNum(it.returnWeight);
-  return weight !== null ? String(weight) : '';
+  if (qty !== null && qty > 0) return materialQuantity(it, qty);
+  return toNum(it.returnWeight);
+}
+
+/** 待处理预填原默认量，允许的20%称重余量不参与预填。 */
+export function defaultConfirmInput(it: ReturnMetricInput): string {
+  const base = metricIsKg(it) ? originalConfirmQuantity(it) : (maxQty(it) ?? originalConfirmQuantity(it));
+  return base !== null ? String(base) : '';
 }
 
 /**

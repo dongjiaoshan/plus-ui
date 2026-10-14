@@ -21,9 +21,9 @@ describe('row302 仓库确认按原材料单位', () => {
     expect(metricIsKg(cowpea)).toBe(true);
     expect(metricSuffix(cowpea)).toBe('kg');
     expect(defaultConfirmInput(cowpea)).toBe('0.3');
-    expect(maxQty(cowpea)).toBe(0.3);
+    expect(maxQty(cowpea)).toBe(0.36);
     expect(defaultConfirmInput(pork)).toBe('1');
-    expect(maxQty(pork)).toBe(1);
+    expect(maxQty(pork)).toBe(1.2);
   });
 
   it('原材料份和产品盒分开，默认和上限折成6份', () => {
@@ -49,11 +49,11 @@ describe('row302 仓库确认按原材料单位', () => {
     expect(fromConfirmWeight(eggs, 37.5)).toBe('37.5');
   });
 
-  it('原料单位缺省回落产品单位，产品kg的原有重量上限仍由后端处理', () => {
+  it('原料单位缺省回落产品单位，产品kg同样允许原值加20%', () => {
     const kg = { productUnit: '公斤', returnQuantity: 2, returnWeight: 2 };
     expect(metricIsKg(kg)).toBe(true);
     expect(metricSuffix(kg)).toBe('kg');
-    expect(maxQty(kg)).toBeNull();
+    expect(maxQty(kg)).toBe(2.4);
     expect(defaultConfirmInput(kg)).toBe('2');
     expect(metricSuffix({ productUnit: '份', materialUnit: '  ' })).toBe('份');
     expect(maxQty({ productUnit: '份', returnQuantity: 0 })).toBeNull();
@@ -69,8 +69,8 @@ describe('row302 仓库确认按原材料单位', () => {
     expect(normalizeInput(countedMaterial, '1.')).toEqual({ text: '1.', capped: false });
   });
 
-  it('KG输入保留原有等值上限，不能把退1份0.3kg变成可确认5kg', () => {
-    expect(normalizeInput(cowpea, '5')).toEqual({ text: '0.3', capped: true });
+  it('KG输入最多增加20%，不能把退1份0.3kg变成可确认5kg', () => {
+    expect(normalizeInput(cowpea, '5')).toEqual({ text: '0.36', capped: true });
     expect(normalizeInput(countedMaterial, '9')).toEqual({ text: '6', capped: true });
   });
 
@@ -111,7 +111,59 @@ describe('admin 数字输入框保留一位精度及历史全收', () => {
     expect(normalizeConfirmQty(historical, 5)).toBe(0.125);
     expect(normalizeConfirmQty(historical, 0.124)).toBe(0.1);
     expect(normalizeConfirmQty(cowpea, 0.28)).toBe(0.28);
-    expect(normalizeConfirmQty(cowpea, 5)).toBe(0.3);
+    expect(normalizeConfirmQty(cowpea, 5)).toBe(0.36);
     expect(normalizeConfirmQty(cowpea, undefined)).toBeUndefined();
+  });
+});
+
+describe('row304 KG确认20%容差', () => {
+  it('半位折算与后端HALF_UP一致，两端原值和120%上限不受浮点误差影响', () => {
+    for (const [ratio, base, cap] of [
+      [0.145, 0.015, 0.018],
+      [0.135, 0.014, 0.016],
+      [0.125, 0.013, 0.015]
+    ]) {
+      const row = { productUnit: '份', materialUnit: 'kg', returnQuantity: 0.1, materialNum: ratio };
+      expect(defaultConfirmInput(row)).toBe(String(base));
+      expect(maxQty(row)).toBe(cap);
+      expect(defaultConfirmInput({ ...row, maxConfirmQty: cap })).toBe(String(base));
+      expect(normalizeInput(row, String(cap))).toEqual({ text: String(cap), capped: false });
+    }
+  });
+
+  const eggplant = { productUnit: '份', materialUnit: 'kg', returnQuantity: 0.5, materialNum: 0.5 };
+
+  it('截图原值0.25仍作默认，0.30允许，0.301和更大值夹回0.30', () => {
+    expect(defaultConfirmInput(eggplant)).toBe('0.25');
+    expect(maxQty(eggplant)).toBe(0.3);
+    expect(normalizeInput(eggplant, '0.30')).toEqual({ text: '0.3', capped: false });
+    expect(normalizeInput(eggplant, '0.301')).toEqual({ text: '0.3', capped: true });
+    expect(toConfirmWeight(eggplant, '0.3')).toBe(0.3);
+    expect(defaultConfirmInput({ ...eggplant, maxConfirmQty: 0.3 })).toBe('0.25');
+  });
+
+  it('直接公斤及缺退回量的门店申报重量使用相同基数和容差', () => {
+    const direct = { productUnit: '公斤', returnQuantity: 0.25, returnWeight: 0.25 };
+    expect(defaultConfirmInput(direct)).toBe('0.25');
+    expect(maxQty(direct)).toBe(0.3);
+    expect(maxQty({ productUnit: 'kg', returnWeight: 0.25 })).toBe(0.3);
+    expect(defaultConfirmInput({ productUnit: 'kg', returnWeight: 0.25 })).toBe('0.25');
+  });
+
+  it('微量上限向下取三位，不把0.0036四舍五入到超20%的0.004', () => {
+    const tiny = { productUnit: 'kg', returnQuantity: 0.003 };
+    expect(maxQty(tiny)).toBe(0.003);
+    expect(normalizeInput(tiny, '0.004')).toEqual({ text: '0.003', capped: true });
+    expect(maxQty({ productUnit: 'kg', returnQuantity: 0.234 })).toBe(0.28);
+    expect(maxQty({ productUnit: 'kg', returnQuantity: 0.29 })).toBe(0.348);
+    expect(maxQty({ productUnit: 'kg', returnQuantity: 10000000.04 })).toBe(12000000.048);
+  });
+
+  it('非KG数量不增加20%，历史实收超过现行上限也仍按原数回显', () => {
+    const count = { productUnit: '盒', materialUnit: '份', returnQuantity: 1, materialNum: 3 };
+    expect(maxQty(count)).toBe(3);
+    expect(defaultConfirmInput(count)).toBe('3');
+    expect(normalizeInput(count, '3.1')).toEqual({ text: '3', capped: true });
+    expect(fromConfirmWeight(eggplant, 0.5)).toBe('0.5');
   });
 });
