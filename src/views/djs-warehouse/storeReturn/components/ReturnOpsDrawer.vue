@@ -26,7 +26,14 @@
       </div>
 
       <el-table :data="items" row-key="id" border height="480" class="ops-table">
-        <el-table-column prop="productName" :label="t('djs.warehouse.storeReturn.productName')" min-width="150" show-overflow-tooltip align="center" header-align="center" />
+        <el-table-column
+          prop="productName"
+          :label="t('djs.warehouse.storeReturn.productName')"
+          min-width="150"
+          show-overflow-tooltip
+          align="center"
+          header-align="center"
+        />
         <el-table-column prop="productSpec" :label="t('djs.warehouse.storeReturn.productSpec')" min-width="110" align="center" header-align="center">
           <template #default="{ row: r }">{{ r.productSpec || '—' }}</template>
         </el-table-column>
@@ -34,7 +41,7 @@
           <template #default="{ row: r }">{{ formatQty(r.returnQuantity, r) }}</template>
         </el-table-column>
 
-        <!-- 仓库确认量：待处理行可填（默认 = 退回量），已处理行回显当时确认量 -->
+        <!-- 仓库确认量按原材料单位：默认等值折算退回量，已处理行原数回显 -->
         <el-table-column :label="t('djs.warehouse.storeReturn.confirmQuantity')" min-width="200" align="center" header-align="center">
           <template #default="{ row: r }">
             <div class="confirm-cell">
@@ -47,6 +54,7 @@
                 :max="maxOf(r)"
                 :controls="false"
                 class="cell-num"
+                @change="r.confirmInput = normalizeConfirmQty(r, r.confirmInput)"
               />
               <span v-else>{{ readonlyConfirmText(r) }}</span>
               <span class="cell-suffix">{{ metricSuffix(r) }}</span>
@@ -75,7 +83,9 @@
               <el-option :label="t('djs.warehouse.storeReturn.handleDiscard')" :value="1" />
             </el-select>
             <template v-else>
-              <span>{{ Number(r.isDiscard) === 1 ? t('djs.warehouse.storeReturn.handleDiscard') : t('djs.warehouse.storeReturn.handleInbound') }}</span>
+              <span>{{
+                Number(r.isDiscard) === 1 ? t('djs.warehouse.storeReturn.handleDiscard') : t('djs.warehouse.storeReturn.handleInbound')
+              }}</span>
               <el-tooltip v-if="isEditable(r) && mustDiscard(r)" :content="mustDiscardReason(r)" placement="top">
                 <el-icon class="hint-icon"><QuestionFilled /></el-icon>
               </el-tooltip>
@@ -103,13 +113,15 @@ import type { ReturnStoreDailyVO } from '@/api/djs-warehouse/return/types';
 import LocationSelect from '@/components/LocationSelect/index.vue';
 import { useI18n } from 'vue-i18n';
 import {
-  decimalsFor,
+  KG_DECIMALS,
   defaultConfirmInput,
   defaultLocationOf,
   fromConfirmWeight,
+  isKgUnit,
   maxQty,
   metricIsKg,
   metricSuffix,
+  normalizeConfirmQty,
   toConfirmWeight,
   toNum
 } from '../metric';
@@ -173,19 +185,16 @@ function mustDiscard(r: OpsRow): boolean {
 }
 
 function mustDiscardReason(r: OpsRow): string {
-  return r.canInbound === false
-    ? t('djs.warehouse.storeReturn.onlyDiscardNoMaterial')
-    : t('djs.warehouse.storeReturn.onlyDiscardNoRatio');
+  return r.canInbound === false ? t('djs.warehouse.storeReturn.onlyDiscardNoMaterial') : t('djs.warehouse.storeReturn.onlyDiscardNoRatio');
 }
 
-/** 第三列小数位：kg → 3 位（D-0017）；非 kg → 清单内 2 位 / 否则整数（D-0054）。 */
-function precisionOf(r: OpsRow): number {
-  return metricIsKgRow(r) ? 3 : decimalsFor(r);
+/** 第三列小数位：kg → 3 位（D-0017）；非 kg 不设 precision（整数不补成 1.0），由 normalizeConfirmQty 截到一位（D-0145）。 */
+function precisionOf(r: OpsRow): number | undefined {
+  return metricIsKgRow(r) ? KG_DECIMALS : undefined;
 }
 
 function stepOf(r: OpsRow): number {
-  const p = precisionOf(r);
-  return p === 0 ? 1 : Number((1 / 10 ** p).toFixed(p));
+  return metricIsKgRow(r) ? 0.001 : 1;
 }
 
 function maxOf(r: OpsRow): number | undefined {
@@ -196,7 +205,7 @@ function metricIsKgRow(r: OpsRow): boolean {
   return metricIsKg(r);
 }
 
-/** 已处理行的确认量回显：库里是原材料量，换算回退回单位再显示（与 mp fromConfirmWeight 同源）。 */
+/** 已处理行按原材料量直接回显，与小程序及库存记账单位一致。 */
 function readonlyConfirmText(r: OpsRow): string {
   const text = fromConfirmWeight(r, r.receivedWeight);
   return text === '' ? '—' : text;
@@ -206,20 +215,20 @@ function formatQty(v: number | string | undefined | null, r: OpsRow): string {
   const n = toNum(v);
   if (n === null) return '—';
   const unit = r.productUnit || '';
-  const text = metricIsKgRow(r) ? n.toFixed(3) : String(Number(n.toFixed(decimalsFor(r) || 3)));
+  const text = isKgUnit(unit) ? n.toFixed(3) : String(Number(n.toFixed(3)));
   return `${text}${unit}`;
 }
 
 const pendingItems = computed(() => items.value.filter((r) => r.returnStatus !== 'received'));
 
-/** 后端下推的判据落成本地可编辑态：默认确认量 = 退回量；默认库位 = 产品对应存储库位；默认处理方式 = 产品入库。 */
+/** 默认确认量为折算后的原材料量；默认库位和处理方式沿用原有规则。 */
 function hydrate(rows: StoreReturnOpsItemVO[]) {
   items.value = rows.map((r) => {
     const row: OpsRow = { ...r };
     row.isDiscard = mustDiscard(row) ? 1 : Number(r.isDiscard ?? 0);
     const dft = defaultConfirmInput(row);
     const n = toNum(dft);
-    row.confirmInput = n === null ? undefined : n;
+    row.confirmInput = n === null ? undefined : normalizeConfirmQty(row, n);
     row.locationId = defaultLocationOf(r.defaultLocationId, r.locationOptions);
     return row;
   });
@@ -267,13 +276,13 @@ async function handleSubmit() {
   if (!targets.length) return;
 
   for (const r of targets) {
+    r.confirmInput = normalizeConfirmQty(r, r.confirmInput);
     const n = toNum(r.confirmInput);
     if (n === null || n <= 0) {
       proxy?.$modal.msgError(t('djs.warehouse.storeReturn.confirmRequired', { name: r.productName ?? '' }));
       return;
     }
-    // 换算成原材料量后必须仍 > 0：0.001 份 × 0.25 = 0.000，后端 @Positive 会拒。
-    // 这里先拦，比让整单跑到一半吃 400 好（后面的行已经入库了）。
+    // 原材料量保留三位后必须仍 > 0，避免整单提交到一半才被后端 @Positive 拒绝。
     if (!isDiscardRow(r) && toConfirmWeight(r, n) <= 0) {
       proxy?.$modal.msgError(t('djs.warehouse.storeReturn.confirmTooSmall', { name: r.productName ?? '' }));
       return;
@@ -288,8 +297,7 @@ async function handleSubmit() {
   let done = 0;
   try {
     for (const r of targets) {
-      // 界面按**退回单位**录，提交给后端的 receivedQty/receivedWeight 必须是**原材料量** ——
-      // 与 mp metric.ts#toConfirmWeight 同一套换算，否则同一张单两端口径不同。
+      // D-0149：输入已经是原材料量，和小程序一样直接提交，不再乘计量规则。
       const confirmWeight = toConfirmWeight(r, r.confirmInput);
       try {
         await confirmStoreReturn({

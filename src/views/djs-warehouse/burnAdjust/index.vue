@@ -38,22 +38,32 @@
           {{ current?.productName || '-' }}
         </el-descriptions-item>
         <el-descriptions-item :label="t('burnAdjust.field.arriveWeight')">
-          {{ weightText(current?.arriveWeight) }}
+          {{ weightText(receivedWeight) }}
         </el-descriptions-item>
-        <el-descriptions-item :label="t('burnAdjust.field.pendingWeight')">
-          {{ weightText(current?.pendingWeight) }}
+        <el-descriptions-item :label="t('burnAdjust.field.marketingWeight')">
+          {{ weightText(current?.marketingWeight) }}
         </el-descriptions-item>
       </el-descriptions>
 
+      <el-alert v-if="adjustWarning" :title="adjustWarning" type="warning" :closable="false" class="mb-[16px]" />
+
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item :label="t('burnAdjust.field.productWeight')" prop="productWeight">
-          <el-input-number v-model="form.productWeight" :min="0.001" :max="maxWeight" :precision="3" :step="0.1" style="width: 100%" />
+          <el-input-number
+            v-model="form.productWeight"
+            :min="maxWeight < 0.001 ? 0 : 0.001"
+            :max="maxWeight"
+            :disabled="missingMarketingWeight || maxWeight < 0.001"
+            :precision="3"
+            :step="0.1"
+            style="width: 100%"
+          />
         </el-form-item>
       </el-form>
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" :loading="submitting" @click="submit">{{ t('common.confirm') }}</el-button>
+          <el-button type="primary" :loading="submitting" :disabled="!canSubmit" @click="submit">{{ t('common.confirm') }}</el-button>
           <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
         </div>
       </template>
@@ -220,16 +230,47 @@ const formRef = ref<ElFormInstance>();
 const current = ref<BurnInhouseAdjustVO>();
 const form = reactive<{ productWeight: number | undefined }>({ productWeight: undefined });
 
-/**
- * 可填上限 = 猪只接收重量 − 其它产出行已入库重量 = 待入库重量 + 本行当前重量。
- * 未称重（接收重量为空）时不设上限，与后端「arrive 为空跳过上限校验」同口径。
- */
-const maxWeight = computed<number>(() => {
-  const row = current.value;
-  if (!row || row.arriveWeight == null || row.arriveWeight === '') return Number.MAX_SAFE_INTEGER;
-  const pending = Number(row.pendingWeight ?? 0);
-  const self = Number(row.productWeight ?? 0);
-  return Number((pending + self).toFixed(3));
+/** 三位小数统一换算成克再相加，避免 0.3 − 0.1 一类浮点误差缩小可录上限。 */
+function grams(value: number | string | undefined): number | undefined {
+  if (value == null || value === '') return undefined;
+  const weight = Number(value);
+  return Number.isFinite(weight) && weight >= 0 ? Math.round(weight * 1000) : undefined;
+}
+
+const missingMarketingWeight = computed(() => (grams(current.value?.marketingWeight) ?? 0) <= 0);
+const otherWeightGrams = computed(() => {
+  const total = grams(current.value?.inboundedWeight);
+  const self = grams(current.value?.productWeight);
+  return total == null || self == null || total < self ? undefined : total - self;
+});
+
+/** 可录本行上限 = 出栏重 − 其他产品全历史累计；缺少可核验重量时禁调。 */
+const maxWeight = computed(() => {
+  const marketing = grams(current.value?.marketingWeight);
+  const other = otherWeightGrams.value;
+  return marketing == null || other == null ? 0 : Math.max(marketing - other, 0) / 1000;
+});
+const adjustWarning = computed(() => {
+  if (missingMarketingWeight.value) return t('burnAdjust.rule.marketingWeightRequired');
+  if (otherWeightGrams.value == null) return t('burnAdjust.rule.inboundWeightUnavailable');
+  return maxWeight.value < 0.001 ? t('burnAdjust.rule.noRemainingWeight') : '';
+});
+/** 接收重量预览 = 其他产品累计 + 本行新重，随着用户输入即时变化。 */
+const receivedWeight = computed(() => {
+  const other = otherWeightGrams.value;
+  const self = grams(form.productWeight);
+  return other == null || self == null ? undefined : (other + self) / 1000;
+});
+const canSubmit = computed(() => {
+  const self = form.productWeight;
+  return (
+    current.value?.burnFinished !== 1 &&
+    !missingMarketingWeight.value &&
+    self != null &&
+    Number.isFinite(self) &&
+    self >= 0.001 &&
+    self <= maxWeight.value
+  );
 });
 
 const rules = computed(() => ({
@@ -249,8 +290,9 @@ function handleClosed() {
 }
 
 function submit() {
+  if (!canSubmit.value || submitting.value) return;
   formRef.value?.validate(async (valid: boolean) => {
-    if (!valid || !current.value || form.productWeight == null) return;
+    if (!valid || !canSubmit.value || !current.value || form.productWeight == null) return;
     submitting.value = true;
     try {
       await adjustBurnInhouseWeight({ id: String(current.value.id), productWeight: form.productWeight });

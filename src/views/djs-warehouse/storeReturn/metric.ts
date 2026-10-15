@@ -5,28 +5,29 @@
  * 同一张退回单在 admin 抽屉处理和在小程序处理，写进 `t_store_return` 的
  * `received_qty` / `received_weight` 必须是同一个数（验收 §3 第 5 条）。
  *
- * 口径一句话：**按退回单位（产品单位）分流**。
- *   - 退回单位 = kg → 仓库过秤，录重量，标题「仓库称重重量」，三位小数（D-0017）；
- *   - 退回单位 ≠ kg → 仓库不过秤，按退回单位确认件数，标题「仓库确认量」，默认 = 退回量，
- *     清单内产品两位小数、清单外整数（D-0054 的 fallback）。
+ * D-0149 / row302：仓库确认按原材料单位录入和显示；门店退回量仍按产品单位显示。
+ * 原材料 kg 保留三位，非 kg 新录入最多一位（D-0145）；受限KG上限为默认原材料量的120%（D-0151），其他分组KG实称不封顶（D-0152）。
  *
- * 界面上录的是**退回单位**的量，提交给后端的 `receivedQty` / `receivedWeight` 仍是**原材料量**
- * —— 后端 `inboundReturnBasket` 按原材料记库存，换算放在 {@link toConfirmWeight} 这一层做。
+ * 输入值已经是原材料量，提交和历史回显不再乘除计量规则；数据库与库存记账语义不变。
  */
 
 /** 该行参与计量判定所需的字段（= {@link StoreReturnOpsItemVO} / 候选项的子集）。 */
 export interface ReturnMetricInput {
-  /** 退回单位（产品单位），判据本身 */
+  /** 产品单位，门店退回量的单位 */
   productUnit?: string | null;
-  /** 原材料单位；只用来判「这一行到底要不要换算」，不是分流判据 */
+  /** 仓库确认单位；缺省回落产品单位 */
   materialUnit?: string | null;
-  /** 退回量（按退回单位），非 kg 行的默认值与上限 */
+  /** 退回量（按产品单位），折算后用作默认值与原有上限 */
   returnQuantity?: number | string | null;
   /** 门店申报重量(kg)，退回量缺失时的 kg 行兜底默认值 */
   returnWeight?: number | string | null;
   /** 计量规则：一件该产品折算多少原材料；缺省按 1 */
   materialNum?: number | string | null;
-  /** 是否配在字典「退回产品清单」里，决定非 kg 行的小数位 */
+  /** 后端给出的原材料数量上限；为 null 时按退回量及计量规则推导 */
+  maxConfirmQty?: number | string | null;
+  /** 其他分组KG确认按实际称重，不使用退回量折算上限；由后端确认策略判定 */
+  unlimitedConfirmWeight?: boolean;
+  /** 是否配在字典「退回产品清单」里，不再决定录入精度 */
   inReturnList?: boolean;
   /** 后端判定的「能否做单位换算」；false → 锁行（瞎猜会把 3 只记成 3 kg 进库存） */
   canConvert?: boolean;
@@ -38,9 +39,14 @@ export function isKgUnit(unit?: string | null): boolean {
   return s === 'kg' || s === '公斤';
 }
 
-/** 该行是否走「过秤录 kg」口径 —— 判据是**退回单位**，不是原材料单位。 */
+/** 仓库确认单位。后端未下发原材料单位时保留产品单位兜底。 */
+function confirmUnit(it: ReturnMetricInput): string {
+  return it.materialUnit?.trim() || it.productUnit?.trim() || '';
+}
+
+/** 该行是否按原材料重量录入。 */
 export function metricIsKg(it: ReturnMetricInput): boolean {
-  return isKgUnit(it.productUnit);
+  return isKgUnit(confirmUnit(it));
 }
 
 /** 第三列标题：kg 行「仓库称重重量」/ 非 kg 行「仓库确认量」。 */
@@ -48,14 +54,14 @@ export function metricIsWeightLabel(it: ReturnMetricInput): boolean {
   return metricIsKg(it);
 }
 
-/** 输入框后缀：kg 行显 kg，非 kg 行显退回单位（甲方「单位和退回单位一致」）。 */
+/** 输入框后缀与仓库确认量同为原材料单位。 */
 export function metricSuffix(it: ReturnMetricInput): string {
-  return metricIsKg(it) ? 'kg' : (it.productUnit || '');
+  return metricIsKg(it) ? 'kg' : confirmUnit(it);
 }
 
-/** 非 kg 口径允许几位小数（D-0054 的 fallback）：清单内 2 位、清单外 0 位（整数）。 */
+/** D-0145：非 kg 最多一位小数，kg 保留三位。清单归属不再影响精度。 */
 export function decimalsFor(it: ReturnMetricInput): number {
-  return it.inReturnList === true ? 2 : 0;
+  return metricIsKg(it) ? KG_DECIMALS : 1;
 }
 
 /** kg 口径的小数位（D-0017：kg 可录三位小数）。 */
@@ -69,54 +75,65 @@ export function toNum(v: number | string | null | undefined): number | null {
 }
 
 /**
- * 非 kg 口径的可录上限 = 退回量本身（按退回单位）。
- * kg 口径 / 缺值 → null（不封顶，由后端重量分支的规则兜）。
+ * KG 称重允许在原默认量上增加20%，按三位精度向下取上限，避免舍入后超过20%。
+ * 非 KG 数量仍使用原材料数量上限。
  */
 export function maxQty(it: ReturnMetricInput): number | null {
-  if (metricIsKg(it)) return null;
+  if (metricIsKg(it)) {
+    if (it.unlimitedConfirmWeight === true) return null;
+    const base = originalConfirmQuantity(it);
+    if (base === null || base <= 0) return null;
+    const serverCap = toNum(it.maxConfirmQty);
+    if (serverCap !== null && serverCap > 0) return serverCap;
+    return Math.floor((Math.round(base * 1000) * 12) / 10) / 1000;
+  }
+  if (isKgUnit(it.productUnit)) return null;
   const n = toNum(it.returnQuantity);
-  return n !== null && n > 0 ? n : null;
+  if (n === null || n <= 0) return null;
+  const serverCap = toNum(it.maxConfirmQty);
+  if (serverCap !== null && serverCap > 0) return serverCap;
+  return materialQuantity(it, n);
 }
 
-/** 待处理行的默认值：非 kg → 退回量；kg → 退回量（缺省回落门店申报重量）。 */
-export function defaultConfirmInput(it: ReturnMetricInput): string {
-  const cap = maxQty(it);
-  if (cap !== null) return String(cap);
-  const qty = toNum(it.returnQuantity);
-  if (qty !== null) return String(qty);
-  const weight = toNum(it.returnWeight);
-  return weight !== null ? String(weight) : '';
-}
-
-/**
- * 界面上录的是**退回单位**的量，提交给后端的 `receivedQty` / `receivedWeight` 是**原材料量**。
- *
- * 2 份 × material_num 0.250 = 0.500 kg 入库；1 份 30 枚礼盒 × 30 = 30 枚。
- * kg 行 material_num 恒 1（退回单位就是原材料单位），乘完等于原值。
- * 结果保留 3 位（后端列是 DECIMAL(12,3)，不裁会被 MySQL 静默四舍五入）。
- */
-export function toConfirmWeight(it: ReturnMetricInput, input: string | number | undefined | null): number {
-  const qty = toNum(input) ?? 0;
-  if (metricIsKg(it)) return qty;
+/** 将门店退回量折算为原材料量，仅用于默认值与上限，不用于确认提交。 */
+function materialQuantity(it: ReturnMetricInput, qty: number): number {
   const ratio = toNum(it.materialNum);
-  const factor = ratio !== null && ratio > 0 ? ratio : 1;
-  return Number((qty * factor).toFixed(3));
+  const factor = isKgUnit(it.productUnit) ? 1 : ratio !== null && ratio > 0 ? ratio : 1;
+  // 退回量和计量规则均为 DECIMAL(12,3)，先按千分整数相乘再 HALF_UP。
+  // 直接 toFixed 会把 0.1 × 0.145 的半位误舍为 0.014，与后端 0.015 不同。
+  const quantityMillis = Math.round(qty * 1000);
+  const factorMillis = Math.round(factor * 1000);
+  return Math.round((quantityMillis * factorMillis) / 1000) / 1000;
+}
+
+/** 原默认原材料量；KG 退回量透传，其他产品按计量比例折算。 */
+function originalConfirmQuantity(it: ReturnMetricInput): number | null {
+  const qty = toNum(it.returnQuantity);
+  if (qty !== null && qty > 0) return materialQuantity(it, qty);
+  return toNum(it.returnWeight);
+}
+
+/** 待处理预填原默认量，允许的20%称重余量不参与预填。 */
+export function defaultConfirmInput(it: ReturnMetricInput): string {
+  const base = metricIsKg(it) ? originalConfirmQuantity(it) : (maxQty(it) ?? originalConfirmQuantity(it));
+  return base !== null ? String(base) : '';
 }
 
 /**
- * {@link toConfirmWeight} 的**逆运算** —— 把库里存的原材料量换算回退回单位，用于**已处理行的回显**。
- *
- * 漏掉这一半会把「门店退 1 份、仓库收 30 枚」显示成「仓库确认量 30 份」
- * （标题/后缀已按退回单位走，数却还是原材料量），比原来的「仓库接收量 30 枚」更错。
+ * 仓库输入已经是原材料量，直接提交；保留三位以对齐 DECIMAL(12,3)。
  */
-export function fromConfirmWeight(it: ReturnMetricInput, stored: number | string | null | undefined): string {
+export function toConfirmWeight(_it: ReturnMetricInput, input: string | number | undefined | null): number {
+  const qty = toNum(input) ?? 0;
+  return Number(qty.toFixed(KG_DECIMALS));
+}
+
+/**
+ * 历史确认量本来就是原材料量，原数回显，完整保留最多三位并去尾零。
+ */
+export function fromConfirmWeight(_it: ReturnMetricInput, stored: number | string | null | undefined): string {
   const n = toNum(stored);
   if (n === null) return '';
-  if (metricIsKg(it)) return String(n);
-  const ratio = toNum(it.materialNum);
-  const factor = ratio !== null && ratio > 0 ? ratio : 1;
-  // 回显位数跟录入位数同口径，免得「录 2 份」回来变成「2.00 份」
-  return String(Number((n / factor).toFixed(decimalsFor(it))));
+  return String(Number(n.toFixed(KG_DECIMALS)));
 }
 
 /**
@@ -127,7 +144,8 @@ export function fromConfirmWeight(it: ReturnMetricInput, stored: number | string
  */
 export function canConvert(it: ReturnMetricInput): boolean {
   if (it.canConvert !== undefined) return it.canConvert;
-  if (metricIsKg(it)) return true;
+  if (metricIsKg(it) && it.unlimitedConfirmWeight === true) return true;
+  if (isKgUnit(it.productUnit)) return true;
   const mUnit = (it.materialUnit || '').trim();
   const pUnit = (it.productUnit || '').trim();
   if (!mUnit || mUnit.toLowerCase() === pUnit.toLowerCase()) return true;
@@ -145,26 +163,38 @@ export function canConvert(it: ReturnMetricInput): boolean {
  */
 export function normalizeInput(it: ReturnMetricInput, raw: string): { text: string; capped: boolean } {
   const s = String(raw ?? '');
-  if (metricIsKg(it)) {
-    // kg：只允许数字与一个小数点，最多三位
-    const cleaned = s.replace(/[^\d.]/g, '');
-    const [i, ...rest] = cleaned.split('.');
-    const text = rest.length ? `${i}.${rest.join('').slice(0, KG_DECIMALS)}` : i;
-    return { text, capped: false };
+  const [intText, ...fracParts] = s.replace(/[^\d.]/g, '').split('.');
+  const fraction = fracParts.join('');
+  const cap = maxQty(it);
+  const rawValue = Number(`${intText}.${fraction}`);
+  // 截位前识别全收：历史两位退回量折算后可能有三位，不能先截成一位再比较。
+  if (cap !== null && rawValue >= cap) {
+    return { text: String(cap), capped: rawValue > cap };
   }
-  const [rawInt, rawFrac = ''] = s.split('.');
-  const intText = rawInt.replace(/\D/g, '');
   const decimals = decimalsFor(it);
   let text = intText;
   if (decimals > 0 && s.includes('.')) {
     // 保留用户正在输入的「1.」这种中间态，否则小数点一敲就被抹掉、永远录不进小数
-    text = `${intText}.${rawFrac.replace(/\D/g, '').slice(0, decimals)}`;
-  }
-  const cap = maxQty(it);
-  if (cap !== null && intText !== '' && Number(text) > cap) {
-    return { text: String(cap), capped: true };
+    text = `${intText}.${fraction.slice(0, decimals)}`;
   }
   return { text, capped: false };
+}
+
+/** 截到一位小数（不四舍五入，避免超过退回量）。 */
+function floorOneDecimal(n: number): number {
+  return Math.floor(Math.max(0, n) * 10 + 1e-8) / 10;
+}
+
+/**
+ * 数字框确认量归一（D-0145）：kg 行原样（数字框按三位控制）；非 kg 新录入截到一位。
+ * 达到或超过折算后的上限时完整保留上限，以支持历史退回量全收。
+ */
+export function normalizeConfirmQty(it: ReturnMetricInput, value: number | undefined | null): number | undefined {
+  if (value === null || value === undefined || !Number.isFinite(value)) return undefined;
+  const cap = maxQty(it);
+  if (cap !== null && value >= cap) return cap;
+  if (metricIsKg(it)) return value;
+  return floorOneDecimal(value);
 }
 
 /**

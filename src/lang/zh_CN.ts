@@ -688,8 +688,10 @@ export default {
       fireEvent: '触发事件'
     },
     toFatten: {
-      action: '转为育肥猪',
-      title: '转为育肥猪',
+      action: '转育肥猪',
+      title: '转育肥猪',
+      confirmMessage: '是否将种母猪转为育肥猪？',
+      permanentNotice: '确认后该猪只将永久作为育肥猪，不可再次留种；历史繁殖记录保留。',
       transferDate: '转移日期',
       transferDatePlaceholder: '请选择转移日期',
       transferDateRequired: '请选择转移日期',
@@ -2845,9 +2847,9 @@ export default {
       statDate: '统计日期',
       slaughterCount: '屠宰头数',
       slaughterWeight: '送宰总重',
-      avgSlaughterWeight: '送宰均重',
+      avgSlaughterWeight: '屠宰均重',
       arriveWeight: '接收重量',
-      slaughterRate: '屠宰率(%)',
+      slaughterRate: '屠宰出品率(%)',
       barTotalWeight: '白条总重',
       avgBarWeight: '白条均重',
       barYieldRate: '白条出品率(%)',
@@ -2883,7 +2885,7 @@ export default {
     monthly: {
       statMonth: '统计月份',
       slaughterCount: '屠宰头数',
-      slaughterRate: '屠宰率(%)',
+      slaughterRate: '屠宰出品率(%)',
       barYieldRate: '白条出品率(%)',
       cutYieldRate: '分割出品率(%)'
     }
@@ -4417,6 +4419,7 @@ export default {
       isAdjusted: '是否调整',
       arriveWeight: '猪只接收重量',
       pendingWeight: '待入库重量',
+      marketingWeight: '猪只出栏重量',
       productWeight: '产品入库重量'
     },
     placeholder: {
@@ -4442,7 +4445,10 @@ export default {
       title: '调整产品入库重量'
     },
     rule: {
-      productWeight: '请输入调整后的产品入库重量'
+      productWeight: '请输入调整后的产品入库重量',
+      marketingWeightRequired: '该猪只缺少有效出栏重量，请先补录出栏重量再调整',
+      inboundWeightUnavailable: '累计入库重量数据异常，请刷新后重试；仍异常时请核对入库记录',
+      noRemainingWeight: '其他产品累计入库重量已达到出栏重量，请先核对并调整其他产品重量'
     }
   },
   vegHandleRecord: {

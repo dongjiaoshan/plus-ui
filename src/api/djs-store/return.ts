@@ -100,8 +100,8 @@ export const listOtherReturnCandidates = (storeId: string): AxiosPromise<StoreRe
 /**
  * 仓库确认实收（原型「退回记录」仓库确认入库，pending→received 联动外购入库）。
  *
- * `receivedQty` / `receivedWeight` 传的都是**原材料量**：admin「门店退回操作」抽屉里界面按
- * **退回单位**录，提交前必须乘 `materialNum` 换算（与 mp `metric.ts#toConfirmWeight` 同一套），
+ * `receivedQty` / `receivedWeight` 传的都是**原材料量**：D-0149 下 admin 抽屉与小程序
+ * 直接按原材料单位录入和提交；`materialNum` 只用于折算默认量和原有上限，
  * 否则同一张单 admin 处理与 mp 处理会写出两个数。
  */
 export const confirmStoreReturn = (data: StoreReturnConfirmForm) => {

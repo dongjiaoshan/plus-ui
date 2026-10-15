@@ -24,6 +24,7 @@
             :max="maxOf(row)"
             :precision="precisionOf(row)"
             :step="1"
+            @change="normalizeQuantity(row)"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
             style="width: 180px"
@@ -53,6 +54,7 @@
             :max="maxOf(row)"
             :precision="precisionOf(row)"
             :step="1"
+            @change="normalizeQuantity(row)"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
             style="width: 180px"
@@ -82,6 +84,7 @@
             :max="maxOf(row)"
             :precision="precisionOf(row)"
             :step="1"
+            @change="normalizeQuantity(row)"
             :placeholder="t('storeReturn.operation.quantityPlaceholder')"
             controls-position="right"
             style="width: 180px"
@@ -109,6 +112,7 @@ import type { StoreReturnBatchItem, StoreReturnPorkSubCategory } from '@/api/djs
 import { useStoreContextStore } from '@/store/modules/storeContext';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
+import { normalizeReturnQuantity, returnInputPrecision } from './quantity';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -195,15 +199,13 @@ function maxOf(row: MatrixRow): number | undefined {
   return Math.max(0, Number(row.arrivedQuantity) - Number(row.returnedQuantity ?? 0));
 }
 
-/**
- * 该行的录入精度（row221 把两套精度口径同时摆进了一张表）。
- *
- * - 清单产品：无论什么单位都两位小数（甲方 row214 / D-0054）。
- * - 其余（当日到店的生产产品）：回到 D-0017 —— kg 类三位小数、计数类整数。
- */
-function precisionOf(row: MatrixRow): number {
-  if (isKg(row.productUnit)) return 3;
-  return row.inReturnList ? 2 : 0;
+/** D-0145：KG 三位，非 KG 按需一位，整数保持原展示。 */
+function precisionOf(row: MatrixRow): number | undefined {
+  return returnInputPrecision(row.productUnit);
+}
+
+function normalizeQuantity(row: MatrixRow) {
+  row.returnQuantity = normalizeReturnQuantity(row.returnQuantity, row.productUnit, maxOf(row));
 }
 
 /** 猪肉 tab：后端按字典「退回产品清单」里 belong_type=pork/white_bar 的产品返回候选（未选门店 → 空）。 */
@@ -295,6 +297,7 @@ async function handleSubmit() {
   }
   // 流程性问题 row15：唯一录入项是退回量。退回产品重量由前端按单位派生——
   //   产品单位为 kg → 退回产品重量 = 退回量；非 kg → 退回产品重量 = 0。
+  allRows.value.forEach(normalizeQuantity);
   const items: StoreReturnBatchItem[] = allRows.value
     .filter((r) => (r.returnQuantity ?? 0) > 0)
     .map((r) => ({

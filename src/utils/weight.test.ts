@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatLossQuantityByUnit, formatOrderQuantity, formatQtyByUnit, WHITE_BAR_DEMAND_UNIT } from './weight';
+import { formatLossQuantityByUnit, formatOrderQuantity, formatQtyByUnit, formatReceivedAmount, WHITE_BAR_DEMAND_UNIT } from './weight';
 
 describe('需求数量展示口径', () => {
   it('白条订单保持用户下单的原始数量，不做半片换算或 kg 补零', () => {
@@ -72,5 +72,14 @@ describe('库存数量展示口径（入库/出库记录 · 盘点明细 · 采�
     expect(formatQtyByUnit(undefined, '袋')).toBe('');
     expect(formatQtyByUnit('', '袋')).toBe('');
     expect(formatQtyByUnit('abc', '袋')).toBe('');
+  });
+});
+
+describe('门店退回仓库实收量', () => {
+  it('件数口径按实收量去尾零显示，不再取整（row298 / D-0145）', () => {
+    expect(formatReceivedAmount('1.200', '罐', undefined)).toBe('1.2罐');
+    expect(formatReceivedAmount(30, '份', '枚')).toBe('30枚');
+    expect(formatReceivedAmount(0.08, '份', 'kg')).toBe('0.080kg');
+    expect(formatReceivedAmount(null, '份', '枚')).toBe('');
   });
 });

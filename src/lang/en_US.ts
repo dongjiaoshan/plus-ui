@@ -692,6 +692,8 @@ export default {
     toFatten: {
       action: 'To Fattening',
       title: 'Convert to Fattening Pig',
+      confirmMessage: 'Convert this breeding sow to a fattening pig?',
+      permanentNotice: 'This conversion is permanent. The pig cannot be kept for breeding again. Its breeding history is retained.',
       transferDate: 'Transfer Date',
       transferDatePlaceholder: 'Select transfer date',
       transferDateRequired: 'Transfer date is required',
@@ -2859,7 +2861,7 @@ export default {
       slaughterWeight: 'Slaughter Weight',
       avgSlaughterWeight: 'Avg Slaughter Weight',
       arriveWeight: 'Arrive Weight',
-      slaughterRate: 'Slaughter Rate(%)',
+      slaughterRate: 'Slaughter Yield(%)',
       barTotalWeight: 'Bar Total Weight',
       avgBarWeight: 'Avg Bar Weight',
       barYieldRate: 'Bar Yield Rate(%)',
@@ -2895,7 +2897,7 @@ export default {
     monthly: {
       statMonth: 'Stat Month',
       slaughterCount: 'Slaughter Count',
-      slaughterRate: 'Slaughter Rate(%)',
+      slaughterRate: 'Slaughter Yield(%)',
       barYieldRate: 'Bar Yield Rate(%)',
       cutYieldRate: 'Cut Yield Rate(%)'
     }
@@ -4434,6 +4436,7 @@ export default {
       isAdjusted: 'Adjusted',
       arriveWeight: 'Pig Received Weight',
       pendingWeight: 'Pending Inbound Weight',
+      marketingWeight: 'Pig Marketing Weight',
       productWeight: 'Product Inbound Weight'
     },
     placeholder: {
@@ -4459,7 +4462,10 @@ export default {
       title: 'Adjust Product Inbound Weight'
     },
     rule: {
-      productWeight: 'Please enter the adjusted product inbound weight'
+      productWeight: 'Please enter the adjusted product inbound weight',
+      marketingWeightRequired: 'Record a valid pig marketing weight before adjusting the inbound weight',
+      inboundWeightUnavailable: 'The cumulative inbound weight is inconsistent. Refresh and retry, or check the inbound records',
+      noRemainingWeight: 'Other products have reached the pig marketing weight. Check and adjust their weights first'
     }
   },
   vegHandleRecord: {

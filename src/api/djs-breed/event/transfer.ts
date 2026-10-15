@@ -1,7 +1,7 @@
 import type { AxiosPromise } from 'axios';
 import request from '@/utils/request';
 
-/** 后备种母猪「转为育肥猪」入参（admin row162） */
+/** 种母猪永久「转育肥猪」入参（D-0150，复用admin row162端点） */
 export interface ToFattenForm {
   /** 猪只 ID */
   pigId: number | string;
@@ -11,16 +11,16 @@ export interface ToFattenForm {
   newBarnId?: number | string;
   /** 转移栏位 ID（空则沿用当前栏位） */
   newPenId?: number | string;
-  /** 转移负责人 userId（养殖部人员；空则回落登录用户） */
+  /** 转移负责人 userId（空则使用登录用户） */
   operator?: string;
   remark?: string;
 }
 
 /**
- * 后备种母猪转为育肥猪：状态 后备(HB) → 育肥(YF)、类型 种母猪 → 育肥猪，
- * 并写一条转移记录 + 一条 TO_FATTEN 事件台账。
+ * 繁殖已结束且无未断奶仔猪的种母猪永久转为育肥猪，历史繁殖记录保留。
+ * 复用转移记录及 TRANSFER + TO_FATTEN 两条事件台账。
  */
-export function toFatten(data: ToFattenForm): AxiosPromise<any> {
+export function toFatten(data: ToFattenForm): AxiosPromise<unknown> {
   return request({
     url: '/djs/breed/event/transfer/to-fatten',
     method: 'post',

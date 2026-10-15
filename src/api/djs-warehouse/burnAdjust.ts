@@ -44,9 +44,11 @@ export interface BurnInhouseAdjustVO {
   adjustBy?: string;
   /** 调整人姓名 */
   adjustByName?: string;
-  /** 猪只接收重量 kg（燎毛间称重录的头皮肉重量；未称重为空） */
+  /** 猪只接收重量 kg（产品全历史累计入库重量） */
   arriveWeight?: number | string;
-  /** 该白条已入库产品重量合计 kg（含本行） */
+  /** 猪只出栏重量 kg，累计接收重量不得超过此值；缺失时不能调整 */
+  marketingWeight?: number | string;
+  /** 该白条全历史燎毛入库流水累计重量 kg（含本行，含已消费的产品） */
   inboundedWeight?: number | string;
   /** 待入库重量 kg = 接收重量 − 已入库合计（含本行），钳 0；未称重为空 */
   pendingWeight?: number | string;
