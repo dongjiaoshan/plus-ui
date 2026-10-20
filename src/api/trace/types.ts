@@ -155,8 +155,10 @@ export interface TracePlotVo {
 export interface TracePlotRecordVo {
   /** 农事日期 */
   date?: string;
-  /** 农事类型原码值（前端映射中文） */
+  /** 农事类型原码值 */
   workType?: string;
+  /** 农事类型中文名（后端按字典 djs_farm_work_type 现取；缺省时用 labels.ts 内置对照） */
+  workTypeLabel?: string;
   /** 详情（备注） */
   detail?: string;
   /** 记录人姓名（后端已翻译，无裸 id） */

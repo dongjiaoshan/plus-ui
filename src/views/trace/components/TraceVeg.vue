@@ -105,7 +105,7 @@
 import { ArrowRight } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import type { PublicTraceVo } from '@/api/trace/types';
-import { traceContentLabel, farmWorkTypeLabel } from '@/api/trace/labels';
+import { traceContentLabel, plotRecordLabel } from '@/api/trace/labels';
 import TraceLayout from './TraceLayout.vue';
 
 const props = defineProps<{ trace: PublicTraceVo; code: string }>();
@@ -126,11 +126,14 @@ const plotTag = computed(() => plot.value?.plotName || product.value?.plotName |
 const workSummary = computed(() => {
   const recs = plotRecords.value;
   if (recs.length === 0) return t('tracePublic.growEntry.view');
-  const counts: Record<string, number> = {};
+  const counts = new Map<string, { label: string; n: number }>();
   recs.forEach((r) => {
-    if (r.workType) counts[r.workType] = (counts[r.workType] ?? 0) + 1;
+    if (!r.workType) return;
+    const c = counts.get(r.workType);
+    if (c) c.n += 1;
+    else counts.set(r.workType, { label: plotRecordLabel(r), n: 1 });
   });
-  const parts = Object.entries(counts).map(([k, n]) => `${farmWorkTypeLabel(k)} ${n}`);
+  const parts = [...counts.values()].map((c) => `${c.label} ${c.n}`);
   return parts.join(' / ');
 });
 

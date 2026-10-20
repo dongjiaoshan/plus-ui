@@ -81,6 +81,11 @@ export function farmWorkTypeLabel(code?: string): string {
   return key ? t(`tracePublic.workType.${key}`) : code;
 }
 
+/** 农事记录行的名称：后端按字典给的优先（与 C 端、后台字典同名），没有再用内置对照。 */
+export function plotRecordLabel(r: { workType?: string; workTypeLabel?: string }): string {
+  return r.workTypeLabel || farmWorkTypeLabel(r.workType);
+}
+
 /** pig.sex 码 → 中文 label（未知码返原码值）。 */
 export function pigSexLabel(code?: string): string {
   if (!code) return '';
