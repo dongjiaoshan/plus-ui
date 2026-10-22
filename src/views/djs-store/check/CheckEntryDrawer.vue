@@ -384,8 +384,13 @@ async function loadCandidates() {
         // row23：**只读**的当日入库恒取候选实时值 —— 它是「当日发往该店」的客观聚合，
         // 盘过一次之后仓库再送一批货，这个数必须跟着涨（口径同下面的 returnWhQty）。
         // 走 saved 优先会把首次盘点时的快照钉死，后到的货永远统计不进来。
-        // 猪肉行（inboundReadonly=false）是用户按实重手填的，仍 saved 优先，否则上次的更正会被冲掉。
-        inboundQty: inboundReadonly ? nz(c.inboundQty) : saved ? nz(saved.inboundQty) : nz(c.inboundQty),
+        // 猪肉行（inboundReadonly=false）可能按分割实重手改过，取上次保存值，再叠加保存之后才到店的那批
+        // （row307：同日分两批到店、第一批到了就先盘点，第二批不能丢）。
+        inboundQty: inboundReadonly
+          ? nz(c.inboundQty)
+          : saved
+            ? Number((nz(saved.inboundQty) + nz(c.inboundArrivedAfterSave)).toFixed(3))
+            : nz(c.inboundQty),
         inboundReadonly,
         // 猪肉原材料候选行与历史补齐行共用最新现场打包消耗，提交时由后端核对是否已变化。
         saleQty: c.porkMaterialRow ? nz(consumption[String(c.productId)]) : saved ? nz(saved.saleQty) : nz(c.saleQty),
@@ -406,13 +411,13 @@ async function loadCandidates() {
       recalc(r);
       return r;
     });
-    // row23：只读入库量改成恒取实时值后，「上次盘完又到了货」的行会当场变大，而期末库存仍是上次
-    // 实盘的旧数 → recalc 出来的损耗跟着虚增（实测：鸡蛋 入库 1→4，损耗从 1 静默变 4）。
+    // row23/row307：「上次盘完又到了货」的行入库会当场变大，而期末库存仍是上次实盘的旧数 →
+    // recalc 出来的损耗（猪肉原材料行是退回量）跟着虚增（实测：鸡蛋 入库 1→4，损耗从 1 静默变 4）。
     // 这个数一旦被原样保存，账上就凭空多出一笔损耗，货其实还在货架上。故必须提示用户重新核对期末。
     const inboundChanged = candidateRows
       .filter((r) => {
         const saved = savedByProduct.get(r.productId);
-        return r.inboundReadonly && saved && nz(saved.inboundQty) !== r.inboundQty;
+        return saved && nz(saved.inboundQty) !== r.inboundQty;
       })
       .map((r) => `${r.productName}（${nz(savedByProduct.get(r.productId)?.inboundQty)} → ${r.inboundQty}）`);
     if (inboundChanged.length) {

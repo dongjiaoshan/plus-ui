@@ -4397,6 +4397,7 @@ export default {
       exhausted: 'This white bar has no remaining weight to pack',
       overWeight: 'Pack weight exceeds remaining ({remain}kg)',
       materialRemain: 'Material left',
+      noMaterialProduct: 'No products with material left (no material received today, or it has all been packed)',
       materialOverWeight: 'Pack weight exceeds today\'s remaining packable amount of material "{material}" ({remain}g left)',
       materialNoInbound: 'Store stocktake has no inbound quantity for material "{material}" today — record it in store stocktake first',
       pickCut: 'Select Cut',
@@ -4719,7 +4720,7 @@ export default {
       storePlaceholder: 'Select store',
       datePlaceholder: 'Select date',
       inboundRefreshed:
-        'Inbound refreshed from latest deliveries: {list}. Re-check the closing stock before saving, otherwise loss will be overstated.',
+        'Inbound refreshed from latest deliveries: {list}. Re-check the closing stock before saving, otherwise loss (return quantity for pork raw materials) will be overstated.',
       refreshConsumption: 'Refresh packing consumption',
       consumptionRefreshed: 'Packing consumption refreshed. Your entries were kept. Re-check the return quantities before saving.',
       emptyCandidates:

@@ -51,6 +51,12 @@
                    取数 = 门店盘点录入的原材料入库量 − 当日已打包量；盘点未录入则为 0。 -->
               <div class="cut-material">{{ t('storeTrace.pork.materialRemain') }} {{ materialRemainG(c.value) }}g</div>
             </div>
+            <el-empty
+              v-if="packLoaded && !cutOptions.length"
+              class="cut-empty"
+              :description="t('storeTrace.pork.noMaterialProduct')"
+              :image-size="80"
+            />
           </div>
         </el-card>
       </el-col>
@@ -154,6 +160,8 @@ function pigKey(p: TraceablePigVO): string {
 const labelDialogRef = ref<InstanceType<typeof TraceLabelDialog>>();
 // 门店猪肉打包产品（生产车间「门店打包间」workshop=5，邓博 2026-06-21 定调）；空则回退部位字典
 const packProducts = ref<StorePackProductVO[]>([]);
+// 首次拉取完成前不出任何卡片：否则请求在途时会先闪出部位字典的 0g 卡（与「只列有原材料的产品」相悖）
+const packLoaded = ref(false);
 
 // 部位中文名 → 本地原型抠图兜底（前腿肉/五花肉/排骨/肘子/大排，从原型截图裁出）；图库命中则覆盖
 const LOCAL_CUT_IMG: Record<string, string> = {
@@ -173,16 +181,28 @@ const form = reactive<{ cutLabel?: string; weight?: number }>({ cutLabel: undefi
 const selectedPig = computed(() => pigs.value.find((p) => pigKey(p) === selectedKey.value) ?? null);
 // 产品卡数据源：优先「门店打包间(workshop=5)」产品（产品名做卡片标题 + 生码 cutLabel）；
 // 无 workshop=5 产品时回退旧部位字典 djs_pork_cut_product，保证功能不空。
+// row308：只列对应原材料当日还有剩余的产品（剩余 0 的打不了包，不再一口气全列出来）。
 const cutOptions = computed<{ label: string; value: string; productThumb?: string; imageOssId?: string }[]>(() => {
+  if (!packLoaded.value) {
+    return [];
+  }
   if (packProducts.value.length) {
-    return packProducts.value.map((p) => ({
-      label: p.productName,
-      value: p.productName,
-      productThumb: p.productThumb,
-      imageOssId: p.imageOssId
-    }));
+    return packProducts.value
+      .filter((p) => Number(p.materialRemainingQty ?? 0) > 0)
+      .map((p) => ({
+        label: p.productName,
+        value: p.productName,
+        productThumb: p.productThumb,
+        imageOssId: p.imageOssId
+      }));
   }
   return (djs_pork_cut_product?.value ?? []) as { label: string; value: string }[];
+});
+// 打包把某原材料用完后它的产品卡会消失：已选中的产品随之清掉，避免对着看不见的卡继续生码。
+watch(cutOptions, (opts) => {
+  if (form.cutLabel && !opts.some((c) => c.value === form.cutLabel)) {
+    form.cutLabel = undefined;
+  }
 });
 
 /**
@@ -245,6 +265,8 @@ async function loadPackProducts() {
   } catch (e) {
     console.warn('[PorkTracePanel] loadPackProducts failed', e);
     packProducts.value = [];
+  } finally {
+    packLoaded.value = true;
   }
 }
 
@@ -477,6 +499,11 @@ onMounted(async () => {
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     grid-auto-rows: min-content;
     gap: 16px;
+
+    // 没有可打包产品时的空状态占满整行，不挤在第一格里
+    .cut-empty {
+      grid-column: 1 / -1;
+    }
 
     .cut-card {
       display: flex;

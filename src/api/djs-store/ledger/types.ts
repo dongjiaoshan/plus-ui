@@ -83,6 +83,8 @@ export interface StoreLedgerCandidateVO {
   inboundQty: number | string;
   /** 入库量是否只读（新到货=true 不可编辑；猪肉=false 可手动且有上限） */
   inboundReadonly?: boolean;
+  /** 该日盘点行上次保存之后才到店的材料外售成品实称重（kg）；修改盘点时猪肉行在上次保存值上叠加（row307） */
+  inboundArrivedAfterSave?: number | string;
   /** 预填销售量（销售流水当日聚合） */
   saleQty: number | string;
   /** 预填退货量（顾客退货 customer_to_store 当日聚合，手动可改） */
