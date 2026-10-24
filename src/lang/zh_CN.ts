@@ -2083,7 +2083,7 @@ export default {
     label: {
       varietyOrigin: '品种来源',
       qualityDesc: '作物说明',
-      relatedProduct: '关联产品编号',
+      relatedProduct: '关联产品',
       historyPlantCount: '历史种植次数',
       avgYield: '平均亩产(kg/亩)',
       maxYield: '最大亩产(kg/亩)',
@@ -2136,7 +2136,6 @@ export default {
       plantingSeason: '种植季节',
       cycle: '生长周期',
       predictedPer: '预计亩产(kg/亩)',
-      pickUnitPrice: '绩效单价',
       createTime: '创建时间'
     },
     field: {
@@ -2158,8 +2157,7 @@ export default {
       fertilizationInterval: '施肥间隔(天)',
       irrigationInterval: '浇灌间隔(天)',
       predictedPer: '预计亩产(kg/亩)',
-      qualityDesc: '品质描述',
-      pickUnitPrice: '绩效单价(元/公斤)'
+      qualityDesc: '品质描述'
     },
     placeholder: {
       cropCode: '请输入作物编码（如 C001）',

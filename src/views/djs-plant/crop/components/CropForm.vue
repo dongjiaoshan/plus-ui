@@ -207,19 +207,17 @@ const defaultForm = (): CropInfoForm => ({
   varietyOrigin: undefined,
   cropFamily: undefined,
   cropGenus: undefined,
-  relatedProduct: undefined,
   plantingSeason: undefined,
   sowingPeriod: undefined,
   maxCycle: undefined,
   minCycle: undefined,
   predictedPer: undefined,
-  qualityDesc: undefined,
-  pickUnitPrice: undefined
+  qualityDesc: undefined
 });
 
 const form = ref<CropInfoForm>(defaultForm());
 
-// 关联产品候选 = belong_type=vegetable 且 product_attr=2（原材料）；relatedProduct 存产品主键 id BIGINT FK
+// 产品配置行的产品候选 = belong_type=vegetable 且 product_attr=2（原材料）；存产品主键 id BIGINT FK
 const productOptions = ref<ProductInfoVO[]>([]);
 let productsLoaded = false;
 const loadProductOptions = async () => {
@@ -341,8 +339,7 @@ const openEdit = async (id: number | string) => {
   form.value = {
     ...defaultForm(),
     ...data,
-    predictedPer: data.predictedPer != null ? Number(data.predictedPer) : undefined,
-    pickUnitPrice: data.pickUnitPrice != null ? Number(data.pickUnitPrice) : undefined
+    predictedPer: data.predictedPer != null ? Number(data.predictedPer) : undefined
   };
   activeTab.value = 'basic';
   visible.value = true;
