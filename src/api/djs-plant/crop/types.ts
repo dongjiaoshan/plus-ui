@@ -13,8 +13,7 @@ export interface CropInfoVO extends BaseEntity {
   cropFamily?: string;
   /** 作物属（自由文本，例 芸薹属） */
   cropGenus?: string;
-  relatedProduct?: number | string;
-  /** 关联产品名称（后端按 relatedProduct → t_warehouse_product_info.product_name 批量 enrich） */
+  /** 关联产品名称（后端按作物产品配置的全部产品名「、」拼接） */
   relatedProductName?: string;
   plantingSeason?: string;
   sowingPeriod?: string;
@@ -24,7 +23,6 @@ export interface CropInfoVO extends BaseEntity {
   irrigationInterval?: number;
   predictedPer?: number | string;
   qualityDesc?: string;
-  pickUnitPrice?: number | string;
   /** 主图 ossId（IMG-LIB-001 L1，自动匹配/手改） */
   imageOssId?: string | null;
   /** 图来源（0 自动 / 1 手动） */
@@ -58,7 +56,6 @@ export interface CropInfoForm {
   cropFamily?: string;
   /** 作物属（自由文本，例 芸薹属） */
   cropGenus?: string;
-  relatedProduct?: number | string;
   /** 多选逗号分隔（spring,summer 等） */
   plantingSeason?: string;
   sowingPeriod?: string;
@@ -68,7 +65,6 @@ export interface CropInfoForm {
   irrigationInterval?: number;
   predictedPer?: number;
   qualityDesc?: string;
-  pickUnitPrice?: number;
 }
 
 export interface CropInfoQuery extends PageQuery {

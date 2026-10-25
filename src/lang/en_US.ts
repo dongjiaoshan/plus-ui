@@ -2096,7 +2096,7 @@ export default {
     label: {
       varietyOrigin: 'Variety Source',
       qualityDesc: 'Crop Description',
-      relatedProduct: 'Related Product No.',
+      relatedProduct: 'Related Products',
       historyPlantCount: 'Planting Times',
       avgYield: 'Avg Yield (kg/mu)',
       maxYield: 'Max Yield (kg/mu)',
@@ -2149,7 +2149,6 @@ export default {
       plantingSeason: 'Season',
       cycle: 'Cycle',
       predictedPer: 'Predicted Yield (kg/mu)',
-      pickUnitPrice: 'Performance Unit Price',
       createTime: 'Created'
     },
     field: {
@@ -2171,8 +2170,7 @@ export default {
       fertilizationInterval: 'Fertilization Interval (days)',
       irrigationInterval: 'Irrigation Interval (days)',
       predictedPer: 'Predicted Yield (kg/mu)',
-      qualityDesc: 'Quality Description',
-      pickUnitPrice: 'Performance Unit Price (yuan/kg)'
+      qualityDesc: 'Quality Description'
     },
     placeholder: {
       cropCode: 'Enter crop code (e.g. C001)',

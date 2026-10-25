@@ -325,15 +325,14 @@ const cropStats = ref<CropPlotStatVO[]>([]);
 
 /**
  * 果蔬统计索引「产品 id → 统计值」。归并由 api 层的 buildCropPlotStatByProduct 负责：
- * 同一基础果蔬产品可能被多条作物指向（如「甘蓝」挂两条测试作物），地块数与预计产量必须累加、
- * 日期取 min/max，直接按 relatedProduct 建 Map 会互相覆盖漏算。
+ * 同一产品出现多次时地块数与预计产量必须累加、日期取 min/max，直接按 primaryProductId 建 Map 会互相覆盖漏算。
  */
 const cropStatMap = computed<Record<string, CropPlotStatByProduct>>(() => buildCropPlotStatByProduct(cropStats.value));
 
 /**
  * 果蔬产品行 → 作物统计（与后端展示名解析同一条映射链）：
  * 原材料产品 id = `product_material ?? product.id`（成品挂原材料，基础果蔬自身即原材料）
- * → `t_plant_crop_info.related_product` 命中作物。查不到返回 undefined，列渲染回落 '—'。
+ * → 主产品（作物产品配置首行）为它的作物。查不到返回 undefined，列渲染回落 '—'。
  */
 function cropStatOf(row: ProductInfoVO): CropPlotStatByProduct | undefined {
   const key = row.productMaterial ?? row.id;
