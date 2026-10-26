@@ -98,7 +98,9 @@
                 :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')"
                 unit="kg"
                 :precision="3"
+                collapse-on-auto-fill
               />
+              <TareSelector :tare="tare" />
             </div>
 
             <!-- 出库位置：固定三按钮（分割车间 / 发货月台 / 仓库出库） -->
@@ -156,6 +158,9 @@ import WeightNumpad from '../components/WeightNumpad.vue';
 import { PREVIEW_BADGE, blockSubmitInPreview, isPreviewMode, previewBars } from '../_preview';
 import ScaleFillBar from '../components/ScaleFillBar.vue';
 import DestToggle from '../components/DestToggle.vue';
+import TareSelector from '../components/TareSelector.vue';
+import { useTare } from '../components/useTare';
+import { confirmWeighing } from '../components/confirmWeighing';
 import { usePackEntryOptions } from '../useOptions';
 import { listPickupItems, submitPickup, submitWhiteBarOut, submitWarehouseOut } from '@/api/djs-warehouse/packEntry';
 import type { BarPickupItemVO } from '@/api/djs-warehouse/packEntry';
@@ -222,6 +227,8 @@ const pickupDefault = () => ({
   warehouseOutDest: '' as string
 });
 const pickupForm = ref(pickupDefault());
+// 去皮（V7-R4）：productWeight 是称重，上限校验与提交用实重
+const tare = useTare('bar_pickup', () => pickupForm.value.productWeight);
 
 /** 卡片唯一键：产出行卡用 inhouseId，整只兜底卡用 barInfoId。 */
 /** 重量展示：最多 3 位小数并去掉尾随 0（后端是 DECIMAL(x,3)，但计算值会带 63.4000000000000006 这种浮点尾巴）。 */
@@ -329,14 +336,32 @@ async function handleSubmit() {
   // 领用称重校验：必填 + 不超过该白条入库重量（product_weight = 该产出行白条入库重量）。
   // 上限用入库重量而非整猪出栏重量（marketing_weight）——半只白条入库重量 << 整猪出栏重量，
   // 用出栏重量做上限会放行超量领用（领满=相等仍放行，后端再做累计口径校验）。
-  const pickupWeight = pickupForm.value.productWeight;
-  if (!pickupWeight || pickupWeight <= 0) {
+  const grossWeight = pickupForm.value.productWeight;
+  if (!grossWeight || grossWeight <= 0) {
     notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
+    return;
+  }
+  const pickupWeight = tare.net.value;
+  if (pickupWeight === undefined || pickupWeight <= 0) {
+    notifyMissing(t('tareSpec.station.netNotPositive'));
     return;
   }
   if (it.productWeight != null && pickupWeight > Number(it.productWeight)) {
     notifyMissing(t('djs.warehouse.packEntry.pickupWeightExceed', { weight: Number(it.productWeight) }));
     return;
+  }
+  if (pickupForm.value.outDest === 'ship' && !pickupForm.value.storeId) {
+    notifyMissing(t('djs.warehouse.packEntry.shipStoreRequired'));
+    return;
+  }
+  if (pickupForm.value.outDest === 'warehouse' && !pickupForm.value.warehouseOutDest) {
+    notifyMissing(t('djs.warehouse.packEntry.outDestRequired'));
+    return;
+  }
+  try {
+    await confirmWeighing({ direction: 'out', gross: grossWeight, tare: tare.tareKg.value, net: pickupWeight, destination: pickupDestinationText() });
+  } catch {
+    return; // 取消二次确认：保留录入
   }
   submitting.value = true;
   try {
@@ -347,10 +372,6 @@ async function handleSubmit() {
       ElMessage.success(t('djs.warehouse.packEntry.pickupSuccess'));
     } else if (pickupForm.value.outDest === 'ship') {
       // 发货月台：白条/猪肉发货出库。来源 inhouse 优先取该产出行 id；整只兜底卡回落按耳号匹配 whiteBar 来源。
-      if (!pickupForm.value.storeId) {
-        notifyMissing(t('djs.warehouse.packEntry.shipStoreRequired'));
-        return;
-      }
       const sourceInhouseId = resolveSourceInhouseId(it);
       if (sourceInhouseId == null) {
         notifyMissing(t('djs.warehouse.packEntry.shipSourceNotFound'));
@@ -359,11 +380,7 @@ async function handleSubmit() {
       await submitWhiteBarOut({ sourceInhouseId, productWeight: pickupWeight, storeId: pickupForm.value.storeId });
       ElMessage.success(t('djs.warehouse.packEntry.shipOutSuccess'));
     } else {
-      // 仓库出库：白条/猪肉出库到仓库（不发往门店），须选出库去向（字典 djs_stock_out_dest）。
-      if (!pickupForm.value.warehouseOutDest) {
-        notifyMissing(t('djs.warehouse.packEntry.outDestRequired'));
-        return;
-      }
+      // 仓库出库：白条/猪肉出库到仓库（不发往门店），须选出库去向（字典 djs_stock_out_dest，已在确认前校验）。
       const sourceInhouseId = resolveSourceInhouseId(it);
       if (sourceInhouseId == null) {
         notifyMissing(t('djs.warehouse.packEntry.shipSourceNotFound'));
@@ -378,6 +395,21 @@ async function handleSubmit() {
   } finally {
     submitting.value = false;
   }
+}
+
+/** 二次确认弹框里的去向文案：出库位置 + 发货门店 / 仓库出库去向 */
+function pickupDestinationText(): string {
+  const f = pickupForm.value;
+  const option = outDestOptions.value.find((o) => o.value === f.outDest)?.label || '';
+  if (f.outDest === 'ship') {
+    const store = shipStores.value.find((s) => String(s.storeId) === String(f.storeId))?.storeName;
+    return store ? `${option}：${store}` : option;
+  }
+  if (f.outDest === 'warehouse') {
+    const dest = stockOutDestOptions.value.find((d) => d.value === f.warehouseOutDest)?.label;
+    return dest ? `${option}：${dest}` : option;
+  }
+  return option;
 }
 
 /**

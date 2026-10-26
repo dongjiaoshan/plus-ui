@@ -92,7 +92,8 @@
           <label>{{ tr('inWeight') }}</label>
           <ScaleFillBar v-model="weight" :in-gram="false" />
         </div>
-        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('inWeight')" />
+        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('inWeight')" collapse-on-auto-fill />
+        <TareSelector :tare="tare" />
         <section class="info-section">
           <h4 class="info-title">{{ tr('inInfo') }}</h4>
           <label class="field-label"
@@ -194,6 +195,9 @@ import {
 } from '@/api/djs-warehouse/inoutVeg';
 import ScaleFillBar from '../../production/packEntry/components/ScaleFillBar.vue';
 import WeightNumpad from '../../production/packEntry/components/WeightNumpad.vue';
+import TareSelector from '../../production/packEntry/components/TareSelector.vue';
+import { useTare } from '../../production/packEntry/components/useTare';
+import { confirmWeighing } from '../../production/packEntry/components/confirmWeighing';
 import VegCardPager from './VegCardPager.vue';
 import { PERF_PRESETS, defaultProductId, isValidWeight, selectableProducts, toCustomPercent, toKg } from './vegStation';
 
@@ -208,6 +212,9 @@ const selectedCropId = ref('');
 const selectedPlotId = ref('');
 const productId = ref('');
 const weight = ref<number>();
+// 去皮（V7-R4）：weight 是称重，提交用实重
+const tare = useTare('veg_in', weight);
+const netWeight = tare.net;
 const teamIds = ref<string[]>([]);
 const perfPercent = ref<number>(100);
 const customMode = ref(false);
@@ -235,7 +242,7 @@ const canSubmit = computed(
   () =>
     !!selectedPlot.value &&
     selectedPlot.value.weighStatus !== 'done' &&
-    isValidWeight(weight.value) &&
+    isValidWeight(netWeight.value) &&
     teamIds.value.length > 0 &&
     effectivePercent.value !== null &&
     (!products.value.length || !!selectedProduct.value)
@@ -309,13 +316,22 @@ async function refresh(keepCrop = selectedCropId.value, keepPlot = selectedPlotI
 async function submit() {
   const plot = selectedPlot.value;
   const percent = effectivePercent.value;
-  if (busy.value || !canSubmit.value || !plot || percent === null || weight.value === undefined) return;
+  const net = netWeight.value;
+  if (busy.value || !canSubmit.value || !plot || percent === null || weight.value === undefined || net === undefined) return;
   submitting.value = true;
   try {
+    await confirmWeighing({
+      direction: 'in',
+      gross: weight.value,
+      tare: tare.tareKg.value,
+      net,
+      destinationLabel: tr('inProduct'),
+      destination: selectedProduct.value?.productName || plot.plotCode || ''
+    });
     await submitVegIn({
       plantingRecordId: plot.plantingRecordId,
       ...(productId.value ? { productId: productId.value } : {}),
-      weight: weight.value.toFixed(3),
+      weight: net.toFixed(3),
       teamIds: [...teamIds.value],
       perfPercent: percent
     });
@@ -323,7 +339,7 @@ async function submit() {
     weight.value = undefined;
     await refresh(selectedCropId.value, plot.plantingRecordId);
   } catch {
-    // request.ts 已提示服务端原因；保留输入以便修正后重试。
+    // 取消确认，或 request.ts 已提示服务端原因；保留输入以便修正后重试。
   } finally {
     submitting.value = false;
   }

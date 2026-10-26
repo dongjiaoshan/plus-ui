@@ -171,6 +171,7 @@
                 "
                 :unit="selectedUnit"
                 :precision="numpadPrecision"
+                :collapse-on-auto-fill="showScaleBar"
               />
               <!-- row74（Kevin 2026-07-14）：所有打包一律不展示「剩余可打包份数」提示。
                  remainingPackableCopies computed 仍保留，供份数模式提交前的 copiesExceed 前端软校验用（见 submit 校验）。 -->

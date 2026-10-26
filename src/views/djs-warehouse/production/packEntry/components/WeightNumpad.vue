@@ -4,7 +4,7 @@
       <input class="numpad-input" :value="buffer" :placeholder="placeholder" inputmode="decimal" @input="onInput" @blur="normalize" />
       <span v-if="unit" class="numpad-unit">{{ unit }}</span>
     </div>
-    <div class="numpad-keys">
+    <div v-show="!collapsed" class="numpad-keys">
       <button v-for="key in keys" :key="key" type="button" class="numpad-key" @click="press(key)">
         {{ key }}
       </button>
@@ -16,8 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Back } from '@element-plus/icons-vue';
+import { useScaleConfigStore } from '@/store/modules/scaleConfig';
 
 /**
  * 触屏数字小键盘（仓库工平板录产品重量）。对齐打包/分割原型右侧 panel 的 1-9·0·. + 退格。
@@ -30,13 +31,22 @@ const props = withDefaults(
     unit?: string;
     /** 小数位上限（重量 3 位 / 盒数 0 位） */
     precision?: number;
+    /**
+     * 秤录重的重量键盘传 true：「自动填入」开时收起按键只留重量框，关掉时展开供手输（V7-R3）。
+     * 盒数 / 份数等非秤录入的键盘不传，始终展开。
+     */
+    collapseOnAutoFill?: boolean;
   }>(),
   {
     placeholder: '',
     unit: '',
-    precision: 3
+    precision: 3,
+    collapseOnAutoFill: false
   }
 );
+
+const scaleCfg = useScaleConfigStore();
+const collapsed = computed<boolean>(() => props.collapseOnAutoFill && scaleCfg.autoFill);
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: number | undefined): void;

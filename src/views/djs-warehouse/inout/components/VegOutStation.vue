@@ -91,7 +91,8 @@
           <label>{{ tr('outWeight') }}</label>
           <ScaleFillBar v-model="weight" :in-gram="false" />
         </div>
-        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('outWeight')" />
+        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('outWeight')" collapse-on-auto-fill />
+        <TareSelector :tare="tare" />
         <p v-if="overStock" class="field-error" role="alert">{{ tr('overStock') }}</p>
         <section class="info-section">
           <label class="field-label">{{ tr('destination') }}</label>
@@ -171,6 +172,9 @@ import {
 } from '@/api/djs-warehouse/inoutVeg';
 import ScaleFillBar from '../../production/packEntry/components/ScaleFillBar.vue';
 import WeightNumpad from '../../production/packEntry/components/WeightNumpad.vue';
+import TareSelector from '../../production/packEntry/components/TareSelector.vue';
+import { useTare } from '../../production/packEntry/components/useTare';
+import { confirmWeighing } from '../../production/packEntry/components/confirmWeighing';
 import VegCardPager from './VegCardPager.vue';
 import { isValidWeight, toKg } from './vegStation';
 
@@ -185,6 +189,9 @@ const recent = ref<RecentDestination[]>([]);
 const selectedProductId = ref('');
 const selectedStockKey = ref('');
 const weight = ref<number>();
+// 去皮（V7-R4）：weight 是称重，库存校验与提交用实重
+const tare = useTare('veg_out', weight);
+const netWeight = tare.net;
 const destination = ref<VegOutDestination>('warehouse');
 const outDest = ref('');
 const loading = ref(false);
@@ -209,14 +216,14 @@ const selectedStock = computed(() => stocks.value.find((s) => stockKey(s) === se
 const overStock = computed(
   () =>
     !!selectedStock.value &&
-    isValidWeight(weight.value) &&
-    Math.round(weight.value * 1000) > Math.round(Number(selectedStock.value.stockWeight) * 1000)
+    isValidWeight(netWeight.value) &&
+    Math.round(netWeight.value * 1000) > Math.round(Number(selectedStock.value.stockWeight) * 1000)
 );
 const canSubmit = computed(
   () =>
     !!selectedProduct.value &&
     !!selectedStock.value &&
-    isValidWeight(weight.value) &&
+    isValidWeight(netWeight.value) &&
     !overStock.value &&
     (destination.value === 'feed' || !!outDest.value)
 );
@@ -288,14 +295,18 @@ async function refresh(keepProduct = selectedProductId.value, keepStock = select
 async function submit() {
   const product = selectedProduct.value;
   const stock = selectedStock.value;
-  if (busy.value || !canSubmit.value || !product || !stock || weight.value === undefined) return;
+  const net = netWeight.value;
+  if (busy.value || !canSubmit.value || !product || !stock || weight.value === undefined || net === undefined) return;
   submitting.value = true;
   const keep = stockKey(stock);
   try {
+    const option = destinationOptions.value.find((o) => o.value === destination.value)?.label || '';
+    const dest = destination.value === 'warehouse' ? outOptions.value.find((o) => o.value === outDest.value)?.label : '';
+    await confirmWeighing({ direction: 'out', gross: weight.value, tare: tare.tareKg.value, net, destination: dest ? `${option}：${dest}` : option });
     await submitVegOut({
       productId: product.productId,
       stockIds: [...stock.stockIds],
-      weight: weight.value.toFixed(3),
+      weight: net.toFixed(3),
       destination: destination.value,
       ...(destination.value === 'warehouse' ? { outDest: outDest.value } : {})
     });
@@ -303,7 +314,7 @@ async function submit() {
     weight.value = undefined;
     await refresh(product.productId, keep);
   } catch {
-    // request.ts 已提示服务端原因；保留输入以便修正后重试。
+    // 取消确认，或 request.ts 已提示服务端原因；保留输入以便修正后重试。
   } finally {
     submitting.value = false;
   }

@@ -1,7 +1,11 @@
 import warehouseInout from './warehouseInout/zh_CN';
+import tareSpec from './tareSpec/zh_CN';
+import cutOutDaily from './cutOutDaily/zh_CN';
 
 export default {
   warehouseInout,
+  tareSpec,
+  cutOutDaily,
   // 路由国际化
   route: {
     dashboard: '首页',

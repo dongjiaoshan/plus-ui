@@ -82,7 +82,8 @@
           <label>{{ selectedProduct?.productName || tr('productWeight') }}</label>
           <ScaleFillBar v-model="weight" :in-gram="false" />
         </div>
-        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('weightPlaceholder')" />
+        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('weightPlaceholder')" collapse-on-auto-fill />
+        <TareSelector :tare="tare" />
         <section class="destination-section">
           <label>{{ tr('destination') }}</label>
           <div class="destination-options">
@@ -193,6 +194,9 @@ import {
 } from '@/api/djs-warehouse/inout';
 import ScaleFillBar from '../../production/packEntry/components/ScaleFillBar.vue';
 import WeightNumpad from '../../production/packEntry/components/WeightNumpad.vue';
+import TareSelector from '../../production/packEntry/components/TareSelector.vue';
+import { useTare } from '../../production/packEntry/components/useTare';
+import { confirmWeighing } from '../../production/packEntry/components/confirmWeighing';
 import { operationKey } from './operationKey';
 
 const props = defineProps<{ mode: 'burn' | 'cut' }>();
@@ -219,6 +223,9 @@ const selectedProductId = ref('');
 const selectedSource = computed(() => sources.value.find((s) => s.key === selectedKey.value));
 const selectedProduct = computed(() => products.value.find((p) => p.productId === selectedProductId.value));
 const weight = ref<number>();
+// 去皮（V7-R4）：weight 是称重，提交与需求校验一律用实重 netWeight
+const tare = useTare(props.mode === 'burn' ? 'pig_in' : 'cut_out', weight);
+const netWeight = tare.net;
 const destination = ref<BurnDestination | CutDestination>('outbound');
 const storeId = ref('');
 const outDest = ref('');
@@ -272,18 +279,18 @@ const underDemand = computed(
     !isBurn.value &&
     destination.value === 'store' &&
     !!selectedCutDemand.value &&
-    Number.isFinite(weight.value) &&
-    Number(weight.value) < Number(selectedCutDemand.value.minimumWeight)
+    Number.isFinite(netWeight.value) &&
+    Number(netWeight.value) < Number(selectedCutDemand.value.minimumWeight)
 );
 const canSubmit = computed(
   () =>
     !!selectedSource.value &&
     !!selectedProduct.value &&
     !isFull(selectedProduct.value) &&
-    Number.isFinite(weight.value) &&
-    (weight.value || 0) > 0 &&
+    Number.isFinite(netWeight.value) &&
+    (netWeight.value || 0) > 0 &&
     (destination.value !== 'store' ||
-      (isBurn.value ? !!storeId.value : !!selectedCutDemand.value && Number(weight.value) >= Number(selectedCutDemand.value.minimumWeight))) &&
+      (isBurn.value ? !!storeId.value : !!selectedCutDemand.value && Number(netWeight.value) >= Number(selectedCutDemand.value.minimumWeight))) &&
     (destination.value !== 'outbound' || !!outDest.value)
 );
 
@@ -425,9 +432,31 @@ async function submit() {
   submitting.value = true;
   const source = selectedSource.value;
   const productId = selectedProduct.value.productId;
-  const common = { productId, weight: Number(weight.value).toFixed(3) };
+  const common = { productId, weight: Number(netWeight.value).toFixed(3) };
   let nextKey = source.key;
   try {
+    // 超计量告警先于最终确认：工人先知道超了，再在二次确认里看总账点「确定」
+    let allowOverMeasure = false;
+    const demand = selectedCutDemand.value;
+    if (
+      !isBurn.value &&
+      destination.value === 'store' &&
+      demand &&
+      Number(demand.measureWeight) > 0 &&
+      Math.round(Number(common.weight) * 1e6) > Math.round(Number(demand.measureWeight) * 1.03 * 1e6)
+    ) {
+      await ElMessageBox.confirm(t('warehouseInout.overMeasure', { actual: common.weight, rule: demand.measureWeight }), tr('storeDemand'), {
+        type: 'warning'
+      });
+      allowOverMeasure = true;
+    }
+    await confirmWeighing({
+      direction: isOutbound.value ? 'out' : 'in',
+      gross: Number(weight.value),
+      tare: tare.tareKg.value,
+      net: Number(netWeight.value),
+      destination: destinationText()
+    });
     if (isBurn.value && source.pig) {
       const payload = {
         ...common,
@@ -439,19 +468,6 @@ async function submit() {
       await submitBurn({ ...payload, requestId: requests.forPayload(payload) });
       requests.acknowledge(payload);
     } else if (source.bar) {
-      let allowOverMeasure = false;
-      const demand = selectedCutDemand.value;
-      if (
-        destination.value === 'store' &&
-        demand &&
-        Number(demand.measureWeight) > 0 &&
-        Math.round(Number(common.weight) * 1e6) > Math.round(Number(demand.measureWeight) * 1.03 * 1e6)
-      ) {
-        await ElMessageBox.confirm(t('warehouseInout.overMeasure', { actual: common.weight, rule: demand.measureWeight }), tr('storeDemand'), {
-          type: 'warning'
-        });
-        allowOverMeasure = true;
-      }
       const payload = {
         ...common,
         ...(source.bar.cutRecordId ? { cutRecordId: source.bar.cutRecordId } : { inhouseId: source.bar.inhouseId }),
@@ -467,10 +483,24 @@ async function submit() {
     ElMessage.success(tr('saved'));
     await refresh(nextKey, productId);
   } catch {
-    // request.ts displays the server/transport failure; preserve the weight and request ID for retry.
+    // Cancelled confirmation, or request.ts displays the server/transport failure; preserve the weight and request ID for retry.
   } finally {
     submitting.value = false;
   }
+}
+
+/** 二次确认弹框里的去向文案：选项名 + 门店 / 仓库出库去向 */
+function destinationText(): string {
+  const option = destinationOptions.value.find((o) => o.value === destination.value)?.label || '';
+  if (destination.value === 'store') {
+    const store = isBurn.value ? stores.value.find((s) => s.storeId === storeId.value)?.storeName : selectedCutDemand.value?.storeName;
+    return store ? `${option}：${store}` : option;
+  }
+  if (destination.value === 'outbound') {
+    const dest = outOptions.value.find((o) => o.value === outDest.value)?.label;
+    return dest ? `${option}：${dest}` : option;
+  }
+  return option;
 }
 
 async function finish() {

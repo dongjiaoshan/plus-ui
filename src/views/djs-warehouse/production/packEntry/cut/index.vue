@@ -83,7 +83,14 @@
               <div class="panel-label">{{ t('djs.warehouse.packEntry.productWeight') }}</div>
               <ScaleFillBar v-model="curWeight" :in-gram="false" />
             </div>
-            <WeightNumpad v-model="curWeight" :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')" unit="kg" :precision="3" />
+            <WeightNumpad
+              v-model="curWeight"
+              :placeholder="t('djs.warehouse.packEntry.weightPlaceholder')"
+              unit="kg"
+              :precision="3"
+              collapse-on-auto-fill
+            />
+            <TareSelector :tare="tare" />
           </div>
 
           <!-- 入库位置 button-toggle（冻品库/鲜品库 等冷库库位）。
@@ -125,6 +132,9 @@ import ProductCardGrid from '../components/ProductCardGrid.vue';
 import WeightNumpad from '../components/WeightNumpad.vue';
 import ScaleFillBar from '../components/ScaleFillBar.vue';
 import DestToggle from '../components/DestToggle.vue';
+import TareSelector from '../components/TareSelector.vue';
+import { useTare } from '../components/useTare';
+import { confirmWeighing } from '../components/confirmWeighing';
 // 【临时】一体秤验收预览数据；秤上验收通过后连同 _preview.ts 一起删
 import { PREVIEW_BADGE, blockSubmitInPreview, isPreviewMode, previewCutProducts, previewCuttable } from '../_preview';
 import { usePackEntryOptions } from '../useOptions';
@@ -219,6 +229,8 @@ const form = ref<{ cutRecordId: number | string | ''; locationId: number | strin
 // 当前录入的单件分割产品（卡片选品 + numpad 录重 → 确认入库逐件提交）
 const selectedProductId = ref<number | string | ''>('');
 const curWeight = ref<number | undefined>(undefined);
+// 去皮（V7-R4）：curWeight 是称重，剩余量校验与提交用实重
+const tare = useTare('bar_cut', curWeight);
 
 // row122①：取消「按所选产品存储库位过滤/锁定入库库位」的逻辑 —— 入库库位始终全量可选、默认猪肉鲜品库、可自由改。
 const selectedCut = computed(() => cuttable.value.find((r) => String(r.id) === String(form.value.cutRecordId)));
@@ -246,22 +258,39 @@ async function handleCutOut() {
     notifyMissing(t('djs.warehouse.packEntry.productWeightRequired'));
     return;
   }
+  const netWeight = tare.net.value;
+  if (netWeight === undefined || netWeight <= 0) {
+    notifyMissing(t('tareSpec.station.netNotPositive'));
+    return;
+  }
   if (!form.value.locationId) {
     notifyMissing(t('djs.warehouse.packEntry.locationRequired'));
     return;
   }
   // 超量软校验（前端，与后端同口径：本次重量 ≤ 当前剩余可分割重量；后端为硬校验兜底）
   const remaining = selectedCut.value?.remainingWeight;
-  if (remaining != null && curWeight.value > Number(remaining)) {
+  if (remaining != null && netWeight > Number(remaining)) {
     notifyMissing(t('djs.warehouse.packEntry.cutOutExceed', { remaining: Number(remaining).toFixed(3) }));
     return;
+  }
+  try {
+    await confirmWeighing({
+      direction: 'in',
+      gross: curWeight.value,
+      tare: tare.tareKg.value,
+      net: netWeight,
+      destinationLabel: t('djs.warehouse.packEntry.inLocation'),
+      destination: locationOptions.value.find((o) => String(o.value) === String(form.value.locationId))?.label || ''
+    });
+  } catch {
+    return; // 取消二次确认：保留录入
   }
   cutOutSubmitting.value = true;
   try {
     await submitCutOut({
       cutRecordId: form.value.cutRecordId as number | string,
       locationId: form.value.locationId as number | string,
-      partItems: [{ productId: selectedProductId.value as number | string, productWeight: curWeight.value }]
+      partItems: [{ productId: selectedProductId.value as number | string, productWeight: netWeight }]
     });
     ElMessage.success(t('djs.warehouse.packEntry.cutOutSuccess'));
     // 逐件录入：清当前产品/重量，保留分割单 + 库位方便连续称重
