@@ -57,6 +57,10 @@
         >
           {{ t('demand.action.batchConfirm') }}<template v-if="confirmableSelectedCount > 0"> ({{ confirmableSelectedCount }})</template>
         </el-button>
+        <!-- V7-R8：需求单打印（按需求日期 × 门店出订货单）；「需求调整管理」复用本页时不出 -->
+        <el-button v-if="!adjustMode" v-hasPermi="['djs:warehouse:demand:print']" type="primary" plain icon="Printer" @click="onOpenPrint">
+          {{ t('demandPrint.button') }}
+        </el-button>
       </template>
 
       <template #cell-demandStatus="{ row }">
@@ -76,6 +80,8 @@
 
     <!-- 查看需求：右侧抽屉（点蒙层自动关闭，每次打开重拉，无缓存）替代原整页子路由 -->
     <DemandConfirmDrawer ref="confirmDrawerRef" :adjust-mode="adjustMode" @changed="reloadAll" />
+
+    <DemandPrintDialog v-if="!adjustMode" ref="printDialogRef" :store-options="storeOptions" />
   </div>
 </template>
 
@@ -85,6 +91,7 @@ import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '
 import DemandCart from './components/DemandCart.vue';
 import DemandConfirmDrawer from './components/DemandConfirmDrawer.vue';
 import DemandKpiBar from './components/DemandKpiBar.vue';
+import DemandPrintDialog from './components/DemandPrintDialog.vue';
 import { batchConfirmDemand, listDemandGroup } from '@/api/djs-warehouse/demand';
 import type { DemandGroupStatusCode, DemandGroupVO, DemandManageQuery, DemandProductType } from '@/api/djs-warehouse/demand/types';
 import { listStore } from '@/api/djs-common/store';
@@ -119,6 +126,7 @@ const tableRef = ref<BizTableExpose>();
 const cartRef = ref<{ open: () => void; visible: boolean }>();
 const kpiBarRef = ref<{ refresh: () => void }>();
 const confirmDrawerRef = ref<{ open: (row: DemandGroupVO) => void; visible: boolean }>();
+const printDialogRef = ref<{ open: () => void }>();
 
 const list = ref<DemandGroupVO[]>([]);
 const total = ref(0);
@@ -347,6 +355,11 @@ function handlePageChange(p: number, s: number) {
 }
 function handleAdd() {
   cartRef.value?.open();
+}
+
+/** V7-R8：打开需求单打印弹框。 */
+function onOpenPrint() {
+  printDialogRef.value?.open();
 }
 
 /** 点「查看需求」→ 右侧抽屉下钻该日该产品各门店明细（每次打开重拉，无缓存）。 */

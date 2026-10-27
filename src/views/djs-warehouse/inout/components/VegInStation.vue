@@ -326,7 +326,17 @@ async function submit() {
       tare: tare.tareKg.value,
       net,
       destinationLabel: tr('inProduct'),
-      destination: selectedProduct.value?.productName || plot.plotCode || ''
+      destination: selectedProduct.value?.productName || plot.plotCode || '',
+      extraRows: [
+        {
+          label: tr('pickTeam'),
+          value: teams.value
+            .filter((team) => teamIds.value.includes(team.teamId))
+            .map((team) => team.teamName)
+            .join('、')
+        },
+        { label: tr('perfPercent'), value: `${percent}%` }
+      ]
     });
     await submitVegIn({
       plantingRecordId: plot.plantingRecordId,

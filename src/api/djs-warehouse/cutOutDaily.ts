@@ -65,7 +65,6 @@ export interface CutOutDailyDetailVO {
   /** 单位（恒 kg） */
   unit?: string;
   /** 猪只耳号（无耳号后端兜 "-"） */
-  earNo?: string;
   /** 出库时间 yyyy-MM-dd HH:mm:ss */
   outTime?: string;
 }

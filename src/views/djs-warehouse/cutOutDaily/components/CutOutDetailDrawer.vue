@@ -19,7 +19,6 @@
         <template #default="{ row }">{{ formatQtyByUnit((row as CutOutDailyDetailVO).quantity, 'kg') }}</template>
       </el-table-column>
       <el-table-column :label="t('cutOutDaily.detail.unit')" prop="unit" min-width="70" align="center" />
-      <el-table-column :label="t('cutOutDaily.detail.earNo')" prop="earNo" min-width="120" align="center" show-overflow-tooltip />
       <el-table-column :label="t('cutOutDaily.detail.outTime')" prop="outTime" min-width="160" align="center" />
     </el-table>
   </el-drawer>

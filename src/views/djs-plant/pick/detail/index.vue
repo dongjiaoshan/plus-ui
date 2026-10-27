@@ -77,7 +77,7 @@ const columns = computed<BizTableColumn[]>(() => [
   {
     prop: 'pickDate',
     label: t('pickDetail.column.pickDate'),
-    minWidth: 130,
+    minWidth: 170,
     align: 'center',
     formatter: (r: BizRow) => (r.pickDate != null ? String(r.pickDate) : '-')
   },

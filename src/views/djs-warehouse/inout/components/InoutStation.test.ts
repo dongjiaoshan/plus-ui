@@ -102,18 +102,41 @@ describe('V7 tare and second confirmation', () => {
     expect(tareApi.listTareOptions).toHaveBeenCalledWith('pig_in');
     expect(wrapper.find('.tare-options button.active').text()).toContain('塑料筐');
     await wrapper.find('.test-weight').setValue('50');
-    expect(wrapper.find('.tare-summary').text()).toContain('49.000Kg');
+    expect(wrapper.find('.tare-net').text()).toContain('49.000Kg');
     await wrapper.find('.submit-button').trigger('click');
     await flushPromises();
     expect(weighing.confirmWeighing).toHaveBeenCalledWith({ direction: 'out', gross: 50, tare: 1, net: 49, destination: 'store：QA门店' });
     expect(api.submitBurn.mock.calls[0][0]).toMatchObject({ weight: '49.000', destination: 'store', storeId });
     wrapper.unmount();
   });
+  it('puts 不去皮 first and selects it when the page has no default spec', async () => {
+    tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: false }] });
+    const wrapper = render();
+    await flushPromises();
+    const buttons = wrapper.findAll('.tare-options button');
+    expect(buttons[0].text()).toBe('none');
+    expect(buttons[0].classes()).toContain('active');
+    wrapper.unmount();
+  });
+  it('shows the pig age frozen at marketing on the card, and nothing when unknown', async () => {
+    api.getBurnPigs.mockResolvedValue({
+      data: [
+        { id: pigId, barId: 'QA-PIG', earNo: 'QA-EAR', marketingTime: '2026-09-28 08:00:00', status: 'pending_singe', ageDays: 183 },
+        { id: '9260928000000099', barId: 'QA-PIG2', earNo: 'QA-EAR2', marketingTime: '2026-09-27 08:00:00', status: 'pending_singe' }
+      ]
+    });
+    const wrapper = render();
+    await flushPromises();
+    const cards = wrapper.findAll('.source-card');
+    expect(cards[0].find('.age-days').text()).toBe('ageDays 183dayUnit');
+    expect(cards[1].find('.age-days').exists()).toBe(false);
+    wrapper.unmount();
+  });
   it('choosing no tare submits the gross weight', async () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: true }] });
     const wrapper = render();
     await flushPromises();
-    await wrapper.findAll('.tare-options button').at(-1)!.trigger('click');
+    await wrapper.findAll('.tare-options button')[0].trigger('click');
     await wrapper.find('.test-weight').setValue('50');
     await wrapper.find('.submit-button').trigger('click');
     await flushPromises();

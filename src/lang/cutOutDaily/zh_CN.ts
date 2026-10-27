@@ -22,7 +22,6 @@ export default {
     productName: '产品名称',
     quantity: '出库量',
     unit: '单位',
-    earNo: '猪只耳号',
     outTime: '出库时间',
     exportFileName: '猪肉日分割出库明细'
   }

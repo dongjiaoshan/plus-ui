@@ -151,8 +151,8 @@
 <script setup lang="ts">
 /**
  * 果蔬出库管理（V6 row283）：库存里的果蔬产品（不区分库位合计）→ 地块库存卡（同库位一组篮，
- * 无地块库存单独成卡）→ 称重 → 去向「仓库出库 / 猪养殖饲料」。记账在后端毛菜间出库口径：
- * 仓库出库写出库流水；猪养殖饲料按有机饲喂写每日饲喂记录 + 出库流水。
+ * 无地块库存单独成卡）→ 称重 → 去向「仓库出库 / 猪养殖饲料 / 家禽饲料」。记账在后端毛菜间出库口径：
+ * 仓库出库写出库流水；猪养殖饲料 / 家禽饲料按有机饲喂写每日饲喂记录（饲喂类型分别为猪 / 家禽）+ 出库流水。
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -209,7 +209,8 @@ onBeforeUnmount(() => {
 
 const destinationOptions = computed<{ value: VegOutDestination; label: string }[]>(() => [
   { value: 'warehouse', label: tr('warehouseOut') },
-  { value: 'feed', label: tr('pigFeed') }
+  { value: 'feed', label: tr('pigFeed') },
+  { value: 'poultry_feed', label: tr('poultryFeed') }
 ]);
 const selectedProduct = computed(() => products.value.find((p) => p.productId === selectedProductId.value));
 const selectedStock = computed(() => stocks.value.find((s) => stockKey(s) === selectedStockKey.value));
@@ -225,7 +226,7 @@ const canSubmit = computed(
     !!selectedStock.value &&
     isValidWeight(netWeight.value) &&
     !overStock.value &&
-    (destination.value === 'feed' || !!outDest.value)
+    (destination.value !== 'warehouse' || !!outDest.value)
 );
 
 function stockKey(stock: VegOutStock) {

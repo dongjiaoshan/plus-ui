@@ -1,33 +1,36 @@
 <template>
-  <BizTable
-    ref="tableRef"
-    :data="list"
-    :total="total"
-    :loading="loading"
-    :columns="columns"
-    :search-schema="searchSchema"
-    :search-model="searchModel"
-    :page-num="pageNum"
-    :page-size="pageSize"
-    perm-prefix="djs:warehouse:cutOutDaily"
-    :show-add="false"
-    :show-batch-del="false"
-    :show-export="false"
-    :show-row-edit="false"
-    :show-row-del="false"
-    :action-width="100"
-    @search="handleSearch"
-    @reset="handleReset"
-    @page-change="handlePageChange"
-  >
-    <template #action="{ row }">
-      <el-button v-hasPermi="['djs:warehouse:cutOutDaily:query']" link type="primary" size="small" @click="handleView(row as CutOutDailyVO)">
-        {{ t('cutOutDaily.action.view') }}
-      </el-button>
-    </template>
-  </BizTable>
+  <div class="p-2">
+    <!-- 单根节点：布局 <transition mode="out-in"> 遇多根会让下一个标签页渲染空白 -->
+    <BizTable
+      ref="tableRef"
+      :data="list"
+      :total="total"
+      :loading="loading"
+      :columns="columns"
+      :search-schema="searchSchema"
+      :search-model="searchModel"
+      :page-num="pageNum"
+      :page-size="pageSize"
+      perm-prefix="djs:warehouse:cutOutDaily"
+      :show-add="false"
+      :show-batch-del="false"
+      :show-export="false"
+      :show-row-edit="false"
+      :show-row-del="false"
+      :action-width="100"
+      @search="handleSearch"
+      @reset="handleReset"
+      @page-change="handlePageChange"
+    >
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:warehouse:cutOutDaily:query']" link type="primary" size="small" @click="handleView(row as CutOutDailyVO)">
+          {{ t('cutOutDaily.action.view') }}
+        </el-button>
+      </template>
+    </BizTable>
 
-  <CutOutDetailDrawer ref="drawerRef" />
+    <CutOutDetailDrawer ref="drawerRef" />
+  </div>
 </template>
 
 <script setup name="CutOutDaily" lang="ts">

@@ -22,7 +22,6 @@ export default {
     productName: 'Product name',
     quantity: 'Quantity',
     unit: 'Unit',
-    earNo: 'Ear tag',
     outTime: 'Outbound time',
     exportFileName: 'pork-cut-outbound-details'
   }

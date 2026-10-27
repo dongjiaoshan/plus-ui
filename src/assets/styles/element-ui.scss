@@ -162,6 +162,37 @@
   box-shadow: var(--app-shadow-md);
 }
 
+/* 称重页出入库二次确认（confirmWeighing）：触屏工位，弹框与按钮放大、按钮居中 */
+.el-message-box.weigh-confirm-box {
+  width: 520px;
+  max-width: calc(100vw - 32px);
+  padding: 24px 28px;
+
+  .el-message-box__title {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  /* 内容区撑满弹框：各行左标签右数值、问句居中 */
+  .el-message-box__container,
+  .el-message-box__message {
+    flex: 1;
+    width: 100%;
+  }
+
+  .el-message-box__btns {
+    justify-content: center;
+    gap: 24px;
+    padding-top: 16px;
+  }
+
+  .weigh-confirm-btn {
+    min-width: 140px;
+    height: 48px;
+    font-size: 18px;
+  }
+}
+
 .el-message,
 .el-notification,
 .el-alert {

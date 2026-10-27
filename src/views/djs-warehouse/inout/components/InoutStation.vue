@@ -17,7 +17,10 @@
           :aria-pressed="source.key === selectedKey"
           @click="selectSource(source.key)"
         >
-          <strong>{{ source.label }}</strong>
+          <div class="source-head">
+            <strong>{{ source.label }}</strong>
+            <span v-if="source.pig?.ageDays != null" class="age-days">{{ tr('ageDays') }} {{ source.pig.ageDays }}{{ tr('dayUnit') }}</span>
+          </div>
           <template v-if="source.pig">
             <span>{{ tr('marketingTime') }}：{{ source.pig.marketingTime || '—' }}</span>
             <span>{{ tr('marketingWeight') }}：{{ kg(source.pig.marketingWeight) }}</span>
@@ -608,6 +611,18 @@ onMounted(() => refresh());
 .active {
   border-color: var(--el-color-primary) !important;
   background: var(--el-color-primary-light-9) !important;
+}
+.source-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.age-days {
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--el-color-danger);
 }
 .remaining {
   color: var(--el-color-warning-dark-2);

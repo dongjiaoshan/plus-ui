@@ -201,7 +201,17 @@ describe('row282 果蔬入库管理', () => {
     await buttonByText(wrapper, '.submit-button', 'confirmIn').trigger('click');
     await flushPromises();
     expect(weighing.confirmWeighing).toHaveBeenCalledWith(
-      expect.objectContaining({ direction: 'in', gross: 12.5, tare: 1.2, net: 11.3, destination: '黄瓜' })
+      expect.objectContaining({
+        direction: 'in',
+        gross: 12.5,
+        tare: 1.2,
+        net: 11.3,
+        destination: '黄瓜',
+        extraRows: [
+          { label: 'pickTeam', value: '一组' },
+          { label: 'perfPercent', value: '100%' }
+        ]
+      })
     );
     expect(api.submitVegIn).toHaveBeenCalledWith(expect.objectContaining({ weight: '11.300' }));
   });

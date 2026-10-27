@@ -1,11 +1,13 @@
 import warehouseInout from './warehouseInout/en_US';
 import tareSpec from './tareSpec/en_US';
 import cutOutDaily from './cutOutDaily/en_US';
+import demandPrint from './demandPrint/en_US';
 
 export default {
   warehouseInout,
   tareSpec,
   cutOutDaily,
+  demandPrint,
   // 路由国际化
   route: {
     dashboard: 'Dashboard',
@@ -1641,7 +1643,8 @@ export default {
       quantity: 'Out Qty',
       outDest: 'Destination',
       destVegDock: 'Veg Dock',
-      destFeed: 'Feed',
+      destFeed: 'Pig Feed',
+      destPoultryFeed: 'Poultry Feed',
       thirdPhaseNoDock:
         'Phase III produce does not go through the veg dock: it is not plot-managed and never ships to stores, ' +
         'while dock receiving moves goods into the store supply pool. Use "Product Outbound" or "Veg Room Outbound" instead.'
@@ -2947,7 +2950,9 @@ export default {
       cropName: 'Crop',
       cropNamePlaceholder: 'Enter crop name',
       feedType: 'Source',
-      feedTypePlaceholder: 'Select source'
+      feedTypePlaceholder: 'Select source',
+      feedAnimal: 'Feed Type',
+      feedAnimalPlaceholder: 'Select feed type'
     },
     column: {
       feedDate: 'Date',
@@ -2956,6 +2961,7 @@ export default {
       productName: 'Product Name',
       feedWeight: 'Feed Weight',
       feedType: 'Source',
+      feedAnimal: 'Feed Type',
       operator: 'Operator',
       totalWeight: 'Organic Feed Total Weight',
       boxCount: 'Confirmed Crates',

@@ -1,13 +1,17 @@
 <template>
-  <!-- 去皮（V7-R4）：标题上方先给「称重 / 去皮 / 实重」，下面列本页可选规格 + 不去皮 -->
+  <!-- 去皮（V7-R4）：标题上方先给「称重 / 去皮」，实重单独一行放大；下面「不去皮」排第一，再列本页可选规格 -->
   <section v-if="tare.options.value.length" class="tare-selector">
     <p class="tare-summary">
-      {{ t('tareSpec.station.gross') }}：{{ kg(tare.grossKg.value) }}，{{ t('tareSpec.station.tareWeight') }}：{{ kg(tare.tareKg.value) }}，{{
-        t('tareSpec.station.net')
-      }}：<strong :class="{ invalid: (tare.net.value ?? 1) <= 0 }">{{ kg(tare.net.value) }}</strong>
+      {{ t('tareSpec.station.gross') }}：{{ kg(tare.grossKg.value) }}，{{ t('tareSpec.station.tareWeight') }}：{{ kg(tare.tareKg.value) }}
+    </p>
+    <p class="tare-net">
+      {{ t('tareSpec.station.net') }}：<strong :class="{ invalid: (tare.net.value ?? 1) <= 0 }">{{ kg(tare.net.value) }}</strong>
     </p>
     <label class="tare-title">{{ t('tareSpec.station.tare') }}</label>
     <div class="tare-options">
+      <button type="button" :class="{ active: tare.selectedId.value === '' }" :aria-pressed="tare.selectedId.value === ''" @click="tare.select('')">
+        <span>{{ t('tareSpec.station.none') }}</span>
+      </button>
       <button
         v-for="o in tare.options.value"
         :key="o.id"
@@ -18,9 +22,6 @@
       >
         <span>{{ o.specName }}</span>
         <small>{{ kg(o.tareWeight) }}</small>
-      </button>
-      <button type="button" :class="{ active: tare.selectedId.value === '' }" :aria-pressed="tare.selectedId.value === ''" @click="tare.select('')">
-        <span>{{ t('tareSpec.station.none') }}</span>
       </button>
     </div>
   </section>
@@ -49,11 +50,16 @@ function kg(v: number | undefined): string {
   font-size: 13px;
   color: var(--el-text-color-regular);
 }
-.tare-summary strong {
-  font-size: 16px;
+.tare-net {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--el-text-color-regular);
+}
+.tare-net strong {
+  font-size: 20px;
   color: var(--el-color-primary);
 }
-.tare-summary strong.invalid {
+.tare-net strong.invalid {
   color: var(--el-color-danger);
 }
 .tare-title {

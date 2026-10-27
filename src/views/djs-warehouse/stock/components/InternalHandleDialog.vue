@@ -1,5 +1,5 @@
 <template>
-  <!-- row185：形态与「产品出库」保持一致（el-dialog + 点蒙层自动关），仅出库去向收窄为两项 -->
+  <!-- row185：形态与「产品出库」保持一致（el-dialog + 点蒙层自动关），仅出库去向收窄为固定三项 -->
   <el-dialog
     v-model="visible"
     :title="t('stock.internalDialog.title')"
@@ -67,9 +67,10 @@ const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 /**
- * 出库去向固定两项（row185 甲方明确「保留为两项」）：
- * 果蔬月台 veg_dock / 饲料饲喂 feed。不走字典全量下拉，也不复用 filterManualOutDest
- * （feed 在 HIDDEN_OUT_DEST 里被隐藏，但本场景甲方要它可选）。
+ * 出库去向固定三项：果蔬月台 veg_dock / 猪只饲料 feed / 家禽饲料 poultry_feed
+ * （row185 原为「果蔬月台 / 饲料饲喂」两项，V7 行19 把饲料饲喂拆成猪只饲料与家禽饲料，
+ * 两者都写出库流水 + 有机饲喂记录）。不走字典全量下拉，也不复用 filterManualOutDest
+ * （两个饲料值在 HIDDEN_OUT_DEST 里被隐藏，但本场景甲方要它们可选）。
  *
  * 三期货（row101）：「果蔬月台」**保留可见但禁选** —— 甲方报的原话就是「不显示果蔬月台」，
  * 直接删掉这一项会让人以为功能又没了；禁选 + 下方就地写明原因，才回答得了「为什么选不了」。
@@ -77,7 +78,8 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
  */
 const destOptions = computed(() => [
   { value: 'veg_dock', label: t('stock.internalDialog.destVegDock'), disabled: isThirdPhase.value },
-  { value: 'feed', label: t('stock.internalDialog.destFeed'), disabled: false }
+  { value: 'feed', label: t('stock.internalDialog.destFeed'), disabled: false },
+  { value: 'poultry_feed', label: t('stock.internalDialog.destPoultryFeed'), disabled: false }
 ]);
 
 const visible = ref(false);

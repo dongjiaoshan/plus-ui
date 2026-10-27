@@ -1,11 +1,13 @@
 import warehouseInout from './warehouseInout/zh_CN';
 import tareSpec from './tareSpec/zh_CN';
 import cutOutDaily from './cutOutDaily/zh_CN';
+import demandPrint from './demandPrint/zh_CN';
 
 export default {
   warehouseInout,
   tareSpec,
   cutOutDaily,
+  demandPrint,
   // 路由国际化
   route: {
     dashboard: '首页',
@@ -1641,7 +1643,8 @@ export default {
       quantity: '出库量',
       outDest: '出库去向',
       destVegDock: '果蔬月台',
-      destFeed: '饲料饲喂',
+      destFeed: '猪只饲料',
+      destPoultryFeed: '家禽饲料',
       thirdPhaseNoDock:
         '三期作物不走果蔬月台：三期不纳入地块管理、也不发到门店，而月台收货后货会进蔬菜保鲜库（门店取货的池子）。' +
         '出库请用本行的「产品出库」或「毛菜间出库管理」，进出数量照常记账。'
@@ -2935,7 +2938,9 @@ export default {
       cropName: '作物搜索',
       cropNamePlaceholder: '请输入作物名称',
       feedType: '提供位置',
-      feedTypePlaceholder: '请选择提供位置'
+      feedTypePlaceholder: '请选择提供位置',
+      feedAnimal: '饲喂类型',
+      feedAnimalPlaceholder: '请选择饲喂类型'
     },
     column: {
       feedDate: '日期',
@@ -2944,6 +2949,7 @@ export default {
       productName: '产品名称',
       feedWeight: '饲喂饲料量',
       feedType: '提供位置',
+      feedAnimal: '饲喂类型',
       operator: '操作人',
       totalWeight: '有机饲喂总重量',
       boxCount: '仓库确认框数',
