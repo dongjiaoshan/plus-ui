@@ -36,7 +36,7 @@ export const FLOW_TYPE_IN_VALUES: readonly string[] = [
 /**
  * 出库方式下拉可选值。
  *
- * loss / ship_out / pack_consume（生产发货与领用后损耗）后端展示口径已排除，下拉同步不提供。
+ * 损耗类（loss / pick_loss / settle_loss）与 ship_out / pack_consume（生产发货）后端展示口径已排除，下拉同步不提供。
  */
 export const FLOW_TYPE_OUT_VALUES: readonly string[] = [
   'pick_out',
@@ -44,6 +44,7 @@ export const FLOW_TYPE_OUT_VALUES: readonly string[] = [
   'dept_pick_out',
   'prod_pick_out',
   'feed_out',
+  'pick_feed',
   'cut_out',
   // V6 rows264/265: products dispatched directly from the cutting/intake workstation.
   'cut_room_out',
