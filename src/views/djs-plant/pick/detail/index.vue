@@ -69,15 +69,36 @@ const searchModel = reactive<Record<string, unknown>>({
 const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'pickDateRange', label: t('pickDetail.field.pickDate'), type: 'daterange' },
   { field: 'cropName', label: t('pickDetail.field.cropName'), type: 'input', placeholder: t('pickDetail.placeholder.cropName') },
-  { field: 'statSource', label: t('pickDetail.column.statSource'), type: 'select', clearable: true, options: statSourceOptions.value, placeholder: t('pickDetail.placeholder.statSource') },
-  { field: 'teamId', label: t('pickDetail.field.team'), type: 'select', clearable: true, options: teamOptions.value, placeholder: t('pickDetail.placeholder.team') }
+  {
+    field: 'statSource',
+    label: t('pickDetail.column.statSource'),
+    type: 'select',
+    clearable: true,
+    options: statSourceOptions.value,
+    placeholder: t('pickDetail.placeholder.statSource')
+  },
+  {
+    field: 'teamId',
+    label: t('pickDetail.field.team'),
+    type: 'select',
+    clearable: true,
+    options: teamOptions.value,
+    placeholder: t('pickDetail.placeholder.team')
+  }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
   {
+    prop: 'recordTime',
+    label: t('pickDetail.column.recordTime'),
+    minWidth: 170,
+    align: 'center',
+    formatter: (r: BizRow) => (r.recordTime != null ? String(r.recordTime) : '-')
+  },
+  {
     prop: 'pickDate',
     label: t('pickDetail.column.pickDate'),
-    minWidth: 170,
+    minWidth: 130,
     align: 'center',
     formatter: (r: BizRow) => (r.pickDate != null ? String(r.pickDate) : '-')
   },

@@ -1,6 +1,7 @@
 export default {
   button: '需求单打印',
   title: '需求单打印',
+  confirmedOnlyHint: '仅打印已确认的需求，请先确认需求后进行打印',
   field: {
     demandDate: '需求日期',
     store: '需求门店'
@@ -21,8 +22,8 @@ export default {
     reset: '重置',
     print: '打印'
   },
-  empty: '所选日期与门店下暂无需求',
-  emptySheet: '该门店当日无有效需求，无需打印',
+  empty: '所选日期与门店下暂无已确认需求',
+  emptySheet: '该门店当日无已确认需求，无需打印',
   sheet: {
     titleSuffix: '订货单',
     demandDate: '订货日期',
@@ -35,6 +36,9 @@ export default {
     unit: '单位',
     remark: '备注',
     prepared: '是否已备完货',
-    unitHead: '头'
+    unitHead: '头',
+    preparedBy: '制单人',
+    printDate: '制单日期',
+    footerStore: '门店'
   }
 };

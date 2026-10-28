@@ -1,6 +1,7 @@
 export default {
   button: 'Print demand sheets',
   title: 'Print demand sheets',
+  confirmedOnlyHint: 'Only confirmed demands are printed. Confirm demands before printing.',
   field: {
     demandDate: 'Demand date',
     store: 'Store'
@@ -21,8 +22,8 @@ export default {
     reset: 'Reset',
     print: 'Print'
   },
-  empty: 'No demand for the selected dates and stores',
-  emptySheet: 'No valid demand for this store on this date',
+  empty: 'No confirmed demand for the selected dates and stores',
+  emptySheet: 'No confirmed demand for this store on this date',
   sheet: {
     titleSuffix: 'Order sheet',
     demandDate: 'Order date',
@@ -35,6 +36,9 @@ export default {
     unit: 'Unit',
     remark: 'Remark',
     prepared: 'Prepared',
-    unitHead: 'head'
+    unitHead: 'head',
+    preparedBy: 'Prepared by',
+    printDate: 'Prepared on',
+    footerStore: 'Store'
   }
 };

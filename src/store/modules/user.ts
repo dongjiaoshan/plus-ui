@@ -74,6 +74,7 @@ export const useUserStore = defineStore('user', () => {
   };
 
   return {
+    name,
     userId,
     tenantId,
     token,

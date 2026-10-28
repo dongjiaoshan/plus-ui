@@ -14,7 +14,10 @@ const labels: DemandSheetLabels = {
   unit: '单位',
   remark: '备注',
   prepared: '是否已备完货',
-  unitHead: '头'
+  unitHead: '头',
+  preparedBy: '制单人',
+  printDate: '制单日期',
+  footerStore: '门店'
 };
 
 afterEach(() => {
@@ -52,7 +55,8 @@ describe('需求单打印', () => {
           { productId: '5', productName: '鸡蛋', demandQuantity: '3.000', productUnit: '个' }
         ]
       },
-      labels
+      labels,
+      { preparedBy: '当前<管理员>', printDate: '2026-10-28' }
     );
 
     const printed = document.createElement('div');
@@ -64,5 +68,9 @@ describe('需求单打印', () => {
     expect(printed.querySelector('script')).toBeNull();
     expect(rows.every((row) => row.children[6].textContent === '')).toBe(true);
     expect(html).toContain('@page { size: A4 landscape;');
+    expect(html).toContain('margin: 0;');
+    expect(printed.querySelector('.print-footer')?.textContent).toContain('制单人：当前<管理员>');
+    expect(printed.querySelector('.print-footer')?.textContent).toContain('制单日期：2026-10-28');
+    expect(printed.querySelector('.print-footer')?.textContent).toContain('门店：验收店');
   });
 });

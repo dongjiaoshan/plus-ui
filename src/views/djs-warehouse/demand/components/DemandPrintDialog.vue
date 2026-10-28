@@ -4,10 +4,16 @@
   搜索：需求日期区间（默认今日 ~ 明日）+ 需求门店（多选）。
   列表：需求日期 / 需求品类数 / 需求门店 / 操作（打印），全部居中。一行 = 一张门店订货单（需求日期 × 门店）。
   打印：拉该门店该日明细 → printDemandSheet 生成 A4 横向订货单 → 浏览器打印。
-  数据源：GET /djs/warehouse/demand/print/list、/print/detail（口径同需求管理汇总列表：排除已取消 / 已删除）。
+  数据源：GET /djs/warehouse/demand/print/list、/print/detail（仅已确认且未删除的需求，D-0151）。
 -->
 <template>
   <el-dialog v-model="visible" :title="t('demandPrint.title')" width="760px" append-to-body destroy-on-close>
+    <template #header="{ titleId, titleClass }">
+      <div class="print-dialog-heading">
+        <span :id="titleId" :class="titleClass">{{ t('demandPrint.title') }}</span>
+        <small class="print-confirmed-hint">{{ t('demandPrint.confirmedOnlyHint') }}</small>
+      </div>
+    </template>
     <el-form :inline="true" class="print-search" @submit.prevent>
       <el-form-item :label="t('demandPrint.field.demandDate')">
         <el-date-picker
@@ -66,6 +72,7 @@
 <script setup lang="ts">
 import { getDemandPrintDetail, listDemandPrintSheet, type DemandPrintSheetVO } from '@/api/djs-warehouse/demandPrint';
 import { shiftYmd, todayYmd } from '@/utils/date';
+import { useUserStore } from '@/store/modules/user';
 import { printDemandSheet, type DemandSheetLabels } from '../printDemandSheet';
 import { useI18n } from 'vue-i18n';
 
@@ -76,6 +83,7 @@ const props = defineProps<{ storeOptions: { label: string; value: number | strin
 const storeOptions = computed(() => props.storeOptions);
 
 const { t } = useI18n();
+const userStore = useUserStore();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const visible = ref(false);
@@ -141,7 +149,10 @@ function sheetLabels(): DemandSheetLabels {
     unit: t('demandPrint.sheet.unit'),
     remark: t('demandPrint.sheet.remark'),
     prepared: t('demandPrint.sheet.prepared'),
-    unitHead: t('demandPrint.sheet.unitHead')
+    unitHead: t('demandPrint.sheet.unitHead'),
+    preparedBy: t('demandPrint.sheet.preparedBy'),
+    printDate: t('demandPrint.sheet.printDate'),
+    footerStore: t('demandPrint.sheet.footerStore')
   };
 }
 
@@ -156,7 +167,10 @@ async function onPrint(row: DemandPrintSheetVO) {
       proxy?.$modal.msgWarning(t('demandPrint.emptySheet'));
       return;
     }
-    printDemandSheet(detail, sheetLabels());
+    printDemandSheet(detail, sheetLabels(), {
+      preparedBy: userStore.nickname || userStore.name,
+      printDate: todayYmd()
+    });
   } finally {
     printingKey.value = '';
   }
@@ -177,6 +191,16 @@ defineExpose({ open });
 </script>
 
 <style scoped>
+.print-dialog-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.print-confirmed-hint {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
 .print-search :deep(.el-form-item) {
   margin-bottom: 12px;
 }

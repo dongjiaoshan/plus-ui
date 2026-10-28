@@ -2615,6 +2615,7 @@ export default {
       statSource: '请选择统计来源'
     },
     column: {
+      recordTime: '记录时间',
       pickDate: '采摘日期',
       cropName: '作物名称',
       productName: '产品名称',

@@ -2627,6 +2627,7 @@ export default {
       statSource: 'Select stat source'
     },
     column: {
+      recordTime: 'Recorded At',
       pickDate: 'Pick Date',
       cropName: 'Crop',
       productName: 'Product',

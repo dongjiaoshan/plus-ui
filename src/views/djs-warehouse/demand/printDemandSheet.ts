@@ -9,7 +9,7 @@
  * 文字保持矢量，不走 html2canvas 光栅化。纸张 A4 横向（`@page { size: A4 landscape }`）。
  *
  * 分页交给浏览器排版：产品多时自然换页，`thead { display: table-header-group }` 让表头每页重复，
- * `tr { break-inside: avoid }` 防止一行被拆到两页。标题与信息条只在首页出现（样张即单页形态）。
+ * 普通行尽量不跨页，超过可用页高的长备注行允许拆页。标题与信息条只在首页出现。
  */
 import type { DemandPrintDetailVO } from '@/api/djs-warehouse/demandPrint';
 import { formatOrderQuantity, formatQtyByUnit } from '@/utils/weight';
@@ -29,6 +29,14 @@ export interface DemandSheetLabels {
   prepared: string;
   /** 白条单位（与需求管理列表一致：白条按「头」展示） */
   unitHead: string;
+  preparedBy: string;
+  printDate: string;
+  footerStore: string;
+}
+
+export interface DemandPrintContext {
+  preparedBy: string;
+  printDate: string;
 }
 
 /** 白条产品类别值（djs_belong_type）。 */
@@ -43,7 +51,7 @@ function esc(v: unknown): string {
   return String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-function buildHtml(detail: DemandPrintDetailVO, labels: DemandSheetLabels): string {
+function buildHtml(detail: DemandPrintDetailVO, labels: DemandSheetLabels, context: DemandPrintContext): string {
   const storeName = detail.storeName ?? '';
   const rows = (detail.items ?? [])
     .map((it, i) => {
@@ -71,6 +79,7 @@ function buildHtml(detail: DemandPrintDetailVO, labels: DemandSheetLabels): stri
     <table>
       ${COLGROUP}
       <thead>
+        <tr class="print-top-space"><td colspan="7"></td></tr>
         <tr>
           <th>${esc(labels.seq)}</th>
           <th class="name">${esc(labels.productName)}</th>
@@ -82,14 +91,21 @@ function buildHtml(detail: DemandPrintDetailVO, labels: DemandSheetLabels): stri
         </tr>
       </thead>
       <tbody>${rows}</tbody>
-    </table>`;
+      <tfoot><tr class="print-bottom-space"><td colspan="7"></td></tr></tfoot>
+    </table>
+    <footer class="print-footer">
+      <span>${esc(labels.preparedBy)}：${esc(context.preparedBy)}</span>
+      <span>${esc(labels.printDate)}：${esc(context.printDate)}</span>
+      <span>${esc(labels.footerStore)}：${esc(storeName)}</span>
+    </footer>`;
 }
 
 const STYLE = `
-@page { size: A4 landscape; margin: 10mm; }
+@page { size: A4 landscape; margin: 0; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; color: #333;
              -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { width: calc(100% - 20mm); margin: 0 auto; padding-top: 10mm; }
 h1 { margin: 0 0 5mm; font-size: 6mm; text-align: center; font-weight: 700; letter-spacing: 0.3mm; }
 /* 信息条三段等分、各段居中（样张：日期 / 门店 / 品类总数横向均布） */
 .meta { display: grid; grid-template-columns: repeat(3, 1fr); background: #f5f7fa; border-radius: 1.5mm;
@@ -99,21 +115,44 @@ h1 { margin: 0 0 5mm; font-size: 6mm; text-align: center; font-weight: 700; lett
 table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 3.4mm; }
 /* 表头每页重复 + 行不跨页拆开 */
 thead { display: table-header-group; }
+tfoot { display: table-footer-group; }
 tr { break-inside: avoid; page-break-inside: avoid; }
+tr.print-splittable { break-inside: auto; page-break-inside: auto; }
 th, td { border: 0.25mm solid #ccc; height: 8.5mm; padding: 0 2mm; text-align: center; word-break: break-all; }
 th { background: #f5f7fa; font-weight: 700; color: #222; }
 /* 样张产品名称列左对齐，其余居中 */
 th.name, td.name { text-align: left; }
+/* 页边距为零以去掉浏览器网址；重复的表格留白为每页保留安全边距及页脚空间。 */
+.print-top-space td { height: 10mm; border: 0; padding: 0; }
+.print-bottom-space td { height: 20mm; border: 0; padding: 0; }
+.print-footer { position: fixed; bottom: 7mm; left: 10mm; right: 10mm; display: flex;
+                justify-content: space-between; gap: 4mm; font-size: 3.2mm; line-height: 1.5; }
+.print-footer span { overflow-wrap: anywhere; }
 `;
+
+/** 按实际 A4 排版宽度测量，避免超高首行把表头和整张表推离标题页。 */
+function prepareRowBreaks(doc: Document, pageHeight: number): void {
+  const table = doc.querySelector('table');
+  const rows = table?.tBodies[0]?.rows;
+  if (!table || !rows?.length) return;
+  const headerHeight = table.tHead?.getBoundingClientRect().height ?? 0;
+  const footerHeight = table.tFoot?.getBoundingClientRect().height ?? 0;
+  const fullPageHeight = pageHeight - headerHeight - footerHeight;
+  Array.from(rows).forEach((row, index) => {
+    const rect = row.getBoundingClientRect();
+    const available = index === 0 ? pageHeight - footerHeight - rect.top : fullPageHeight;
+    if (rect.height > available) row.classList.add('print-splittable');
+  });
+}
 
 /**
  * 打印一张门店订货单。
  *
  * iframe 必须真实挂进文档（不能 display:none，否则部分浏览器不渲染内容），打印完成后延时移除。
  */
-export function printDemandSheet(detail: DemandPrintDetailVO, labels: DemandSheetLabels): void {
+export function printDemandSheet(detail: DemandPrintDetailVO, labels: DemandSheetLabels, context: DemandPrintContext): void {
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:297mm;height:210mm;border:0;';
   document.body.appendChild(iframe);
   const cw = iframe.contentWindow;
   if (!cw) {
@@ -124,11 +163,13 @@ export function printDemandSheet(detail: DemandPrintDetailVO, labels: DemandShee
   const doc = cw.document;
   doc.open();
   doc.write(
-    `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${STYLE}</style></head><body>${buildHtml(detail, labels)}</body></html>`
+    `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${STYLE}</style></head><body>${buildHtml(detail, labels, context)}</body></html>`
   );
   doc.close();
   // 等排版完成再唤起打印；浏览器以 --kiosk-printing 启动时 print() 静默送默认打印机，否则弹系统框
-  cw.setTimeout(() => {
+  cw.setTimeout(async () => {
+    await doc.fonts?.ready;
+    prepareRowBreaks(doc, iframe.clientHeight);
     cw.focus();
     cw.print();
     window.setTimeout(() => iframe.remove(), 1000);
