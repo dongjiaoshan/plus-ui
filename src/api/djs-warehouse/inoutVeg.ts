@@ -89,7 +89,8 @@ export interface VegOutStock {
   stockIds: string[];
 }
 
-export type VegOutDestination = 'warehouse' | 'feed';
+/** warehouse 仓库出库 / feed 猪养殖饲料 / poultry_feed 家禽饲料（后两者写有机饲喂记录）。 */
+export type VegOutDestination = 'warehouse' | 'feed' | 'poultry_feed';
 
 export interface VegOutSubmission {
   productId: string;

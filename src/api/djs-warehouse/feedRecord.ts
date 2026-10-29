@@ -9,10 +9,15 @@ import { AxiosPromise } from 'axios';
  * over t_warehouse_feed_log 分页列表，覆盖毛菜处理间（veg_handle）+ 仓库领用（warehouse）两类来源。
  */
 
+/** 饲喂类型（字典 djs_feed_animal）：pig 猪只饲料 / poultry 家禽饲料 */
+export type FeedAnimal = 'pig' | 'poultry';
+
 /** 有机饲喂记录行 */
 export interface FeedRecordVO {
   /** 饲喂时间（精确到时分秒，yyyy-MM-dd HH:mm:ss） */
   feedDate: string;
+  /** 饲喂类型 djs_feed_animal 原始值（pig 猪只饲料 / poultry 家禽饲料） */
+  feedAnimal?: FeedAnimal;
   /** 作物 ID（仓库来源行为空） */
   cropId?: number | string;
   /** 作物名称（仓库来源行为空） */
@@ -41,6 +46,8 @@ export interface FeedRecordQuery {
   cropName?: string;
   /** 提供位置 djs_feed_type（veg_handle / warehouse） */
   feedType?: string;
+  /** 饲喂类型 djs_feed_animal（空 = 不限） */
+  feedAnimal?: FeedAnimal;
   /** 起始日期 yyyy-MM-dd */
   dateFrom?: string;
   /** 截止日期 yyyy-MM-dd */
@@ -60,10 +67,12 @@ export const listFeedRecord = (query: FeedRecordQuery): AxiosPromise<FeedRecordV
   });
 };
 
-/** 有机饲喂**按日汇总**行（一天一条；admin 行199 主列表 / mp 行268 卡片共用后端） */
+/** 有机饲喂**按日汇总**行（一天 × 一种饲喂类型一条；admin 行199 主列表 / mp 行268 卡片共用后端） */
 export interface FeedDailyVO {
   /** 饲喂日期（yyyy-MM-dd，仅日期） */
   feedDate: string;
+  /** 饲喂类型（框数确认按 日期 × 饲喂类型 各一条） */
+  feedAnimal: FeedAnimal;
   /** 当日总重量(kg)，三位小数 */
   totalWeight?: number | string;
   /** 当日明细条数 */
@@ -78,8 +87,10 @@ export interface FeedDailyVO {
   confirmTime?: string | null;
 }
 
-/** 日汇总查询参数（只吃日期范围；作物名/提供位置是明细维度不参与汇总筛选） */
+/** 日汇总查询参数（只吃日期范围 + 饲喂类型；作物名/提供位置是明细维度不参与汇总筛选） */
 export interface FeedDailyQuery {
+  /** 饲喂类型（空 = 猪只饲料 / 家禽饲料都出，各自一行） */
+  feedAnimal?: FeedAnimal;
   dateFrom?: string;
   dateTo?: string;
   pageNum?: number;

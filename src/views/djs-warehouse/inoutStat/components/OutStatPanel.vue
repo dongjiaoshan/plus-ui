@@ -1,35 +1,41 @@
 <template>
-  <BizTable
-    ref="tableRef"
-    :data="list"
-    :total="total"
-    :loading="loading"
-    :columns="columns"
-    :search-schema="searchSchema"
-    :search-model="searchModel"
-    :dict-types="['djs_stock_out_dest', 'djs_product_type']"
-    :page-num="pageNum"
-    :page-size="pageSize"
-    perm-prefix="djs:warehouse:inoutStat"
-    show-export
-    :show-add="false"
-    :show-batch-del="false"
-    :show-row-edit="false"
-    :show-row-del="false"
-    @search="handleSearch"
-    @reset="handleReset"
-    @export="handleExport"
-    @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
-  >
-    <!-- row186 第 1 点：列表最后新增操作列，功能为「查看详情」 -->
-    <template #action="{ row }">
-      <el-button v-hasPermi="['djs:warehouse:inoutStat:list']" link type="primary" size="small" @click="handleDetail(row as InoutStatOutVO)">
-        {{ t('inoutStat.action.detail') }}
-      </el-button>
-    </template>
-  </BizTable>
+  <div class="p-2">
+    <SearchForm v-model:model="searchModel" :schema="searchSchema" :visible="showSearch" @search="handleSearch" @reset="handleReset" />
+    <StatSummary direction="out" :summary="summary" />
+    <el-alert class="mb-3" :title="t('inoutStat.summary.outScope')" type="info" :closable="false" />
+    <BizTable
+      ref="tableRef"
+      :data="list"
+      :total="total"
+      :loading="loading"
+      :columns="columns"
+      :dict-types="['djs_stock_out_dest', 'djs_product_type']"
+      :page-num="pageNum"
+      :page-size="pageSize"
+      perm-prefix="djs:warehouse:inoutStat"
+      show-export
+      :show-add="false"
+      :show-batch-del="false"
+      :show-row-edit="false"
+      :show-row-del="false"
+      @search="handleSearch"
+      @reset="handleReset"
+      @export="handleExport"
+      @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
+    >
+      <template #toolbar-extra>
+        <el-button circle icon="Search" :title="t('inoutStat.action.toggleSearch')" @click="showSearch = !showSearch" />
+      </template>
+      <!-- row186 第 1 点：列表最后新增操作列，功能为「查看详情」 -->
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:warehouse:inoutStat:list']" link type="primary" size="small" @click="handleDetail(row as InoutStatOutVO)">
+          {{ t('inoutStat.action.detail') }}
+        </el-button>
+      </template>
+    </BizTable>
 
-  <OutDetailDialog ref="detailRef" />
+    <OutDetailDialog ref="detailRef" />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -40,8 +46,17 @@
  * 前端只负责搜索条件与展示 —— 这样导出的 Excel 与页面逐列一致（甲方第 5 点）。
  */
 import BizTable from '@/components/BizTable/index.vue';
+import SearchForm from '@/components/BizTable/SearchForm.vue';
+import StatSummary from './StatSummary.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listOutStat, type InoutStatDetailFilter, type InoutStatOutVO, type InoutStatQuery } from '@/api/djs-warehouse/inoutStat';
+import {
+  getOutStatSummary,
+  type InoutStatSummaryVO,
+  listOutStat,
+  type InoutStatDetailFilter,
+  type InoutStatOutVO,
+  type InoutStatQuery
+} from '@/api/djs-warehouse/inoutStat';
 import OutDetailDialog from './OutDetailDialog.vue';
 import { defaultDateRange } from '../options';
 import { formatQtyByUnit } from '@/utils/weight';
@@ -65,12 +80,15 @@ const detailRef = ref<{
 
 const list = ref<InoutStatOutVO[]>([]);
 const total = ref(0);
+const summary = ref<InoutStatSummaryVO>({});
+let requestSerial = 0;
 const loading = ref(false);
+const showSearch = ref(true);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
 /** 默认近一个月（上月同日 → 今天）；重置也回到这个区间，而不是清空 */
-const searchModel = reactive<Record<string, any>>({
+const searchModel = reactive<{ dateRange: string[]; productName?: string; productType: Array<string | number>; stockOutDest: string[] }>({
   dateRange: defaultDateRange(),
   productName: undefined,
   productType: [],
@@ -91,6 +109,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'productTypeName', label: t('inoutStat.column.productType'), minWidth: 100, align: 'center' },
   { prop: 'productSpec', label: t('inoutStat.column.productSpec'), minWidth: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'outDestName', label: t('inoutStat.column.outDest'), minWidth: 120, align: 'center', showOverflowTooltip: true },
+  { prop: 'storeName', label: t('inoutStat.column.storeName'), minWidth: 140, align: 'center', showOverflowTooltip: true },
   {
     prop: 'outboundQty',
     label: t('inoutStat.column.outboundQty'),
@@ -110,26 +129,28 @@ function buildQuery(): Omit<InoutStatQuery, 'pageNum' | 'pageSize'> {
     dateTo: to || undefined,
     productName: searchModel.productName || undefined,
     productTypes:
-      Array.isArray(searchModel.productType) && searchModel.productType.length
-        ? searchModel.productType.map((v: string | number) => Number(v))
-        : undefined,
+      Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType.map((v) => Number(v)) : undefined,
     stockOutDests: Array.isArray(searchModel.stockOutDest) && searchModel.stockOutDest.length ? searchModel.stockOutDest : undefined
   };
 }
 
 async function loadList() {
+  const serial = ++requestSerial;
+  const query = buildQuery();
   loading.value = true;
   try {
-    // request 拦截器已把响应拆成业务体（TableDataInfo），声明的 AxiosPromise 泛型对不上，按实际结构收窄
-    const res = (await listOutStat({ ...buildQuery(), pageNum: pageNum.value, pageSize: pageSize.value })) as unknown as StatListPayload;
-    list.value = res.rows ?? [];
-    total.value = res.total ?? 0;
+    const [res, totals] = await Promise.all([listOutStat({ ...query, pageNum: pageNum.value, pageSize: pageSize.value }), getOutStatSummary(query)]);
+    if (serial !== requestSerial) return;
+    const page = res as unknown as StatListPayload;
+    list.value = page.rows ?? [];
+    total.value = page.total ?? 0;
+    summary.value = totals.data ?? {};
   } finally {
-    loading.value = false;
+    if (serial === requestSerial) loading.value = false;
   }
 }
 
-function handleSearch(payload?: Record<string, any>) {
+function handleSearch(payload?: Record<string, unknown>) {
   Object.assign(searchModel, payload ?? {});
   pageNum.value = 1;
   loadList();

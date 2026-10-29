@@ -1,7 +1,13 @@
 import warehouseInout from './warehouseInout/zh_CN';
+import tareSpec from './tareSpec/zh_CN';
+import cutOutDaily from './cutOutDaily/zh_CN';
+import demandPrint from './demandPrint/zh_CN';
 
 export default {
   warehouseInout,
+  tareSpec,
+  cutOutDaily,
+  demandPrint,
   // 路由国际化
   route: {
     dashboard: '首页',
@@ -1637,7 +1643,8 @@ export default {
       quantity: '出库量',
       outDest: '出库去向',
       destVegDock: '果蔬月台',
-      destFeed: '饲料饲喂',
+      destFeed: '猪只饲料',
+      destPoultryFeed: '家禽饲料',
       thirdPhaseNoDock:
         '三期作物不走果蔬月台：三期不纳入地块管理、也不发到门店，而月台收货后货会进蔬菜保鲜库（门店取货的池子）。' +
         '出库请用本行的「产品出库」或「毛菜间出库管理」，进出数量照常记账。'
@@ -2608,6 +2615,7 @@ export default {
       statSource: '请选择统计来源'
     },
     column: {
+      recordTime: '记录时间',
       pickDate: '采摘日期',
       cropName: '作物名称',
       productName: '产品名称',
@@ -2741,6 +2749,18 @@ export default {
     }
   },
   inoutStat: {
+    summary: {
+      inProducts: '产品入库品种数',
+      inWeight: '重量产品入库总重量',
+      inQuantity: '非重量产品入库量',
+      inTypes: '入库方式种类',
+      suppliers: '供应商种类',
+      outProducts: '产品出库品种数',
+      outWeight: '重量产品出库总重量',
+      outQuantity: '非重量产品出库量',
+      outTypes: '出库去向种类',
+      outScope: '包含门店发货；未关联门店的历史出库显示“-”；非重量产品按原单位数值合计。'
+    },
     tab: {
       in: '入库统计',
       out: '出库统计'
@@ -2755,6 +2775,7 @@ export default {
       noSupplier: '无供应商'
     },
     action: {
+      toggleSearch: '显示/隐藏搜索',
       detail: '查看详情'
     },
     detail: {
@@ -2776,6 +2797,7 @@ export default {
       export: '导出'
     },
     column: {
+      storeName: '出库门店',
       productCode: '产品编码',
       productName: '产品名称',
       productType: '产品类型',
@@ -2931,7 +2953,9 @@ export default {
       cropName: '作物搜索',
       cropNamePlaceholder: '请输入作物名称',
       feedType: '提供位置',
-      feedTypePlaceholder: '请选择提供位置'
+      feedTypePlaceholder: '请选择提供位置',
+      feedAnimal: '饲喂类型',
+      feedAnimalPlaceholder: '请选择饲喂类型'
     },
     column: {
       feedDate: '日期',
@@ -2940,6 +2964,7 @@ export default {
       productName: '产品名称',
       feedWeight: '饲喂饲料量',
       feedType: '提供位置',
+      feedAnimal: '饲喂类型',
       operator: '操作人',
       totalWeight: '有机饲喂总重量',
       boxCount: '仓库确认框数',
@@ -3608,8 +3633,8 @@ export default {
       kpiCutProductWeight: '白条分割产品总重量',
       kpiVegReceiveKinds: '果蔬月台接收品种数',
       kpiVegReceiveWeight: '果蔬月台接收总重量',
-      kpiVegHandleKinds: '毛菜处理果蔬品种数',
-      kpiVegHandleWeight: '毛菜处理果蔬总重量',
+      kpiVegHandleKinds: '毛菜处理间果蔬品种接收数',
+      kpiVegHandleWeight: '毛菜处理间果蔬接收总重量',
       kpiVegProductKinds: '果蔬产品种类',
       kpiVegProductWeight: '果蔬产品总重',
       returnTabPork: '猪肉产品',

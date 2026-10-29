@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-    <!-- 搜索区：只留日期范围（默认近一个月）。作物名 / 提供位置是明细维度，日汇总层不参与筛选 -->
+    <!-- 搜索区：日期范围（默认近一个月）+ 饲喂类型。作物名 / 提供位置是明细维度，日汇总层不参与筛选 -->
     <el-card shadow="never" class="mb-2">
       <el-form :inline="true" @submit.prevent>
         <el-form-item :label="t('feedRecord.field.dateRange')">
@@ -13,6 +13,11 @@
             style="width: 260px"
           />
         </el-form-item>
+        <el-form-item :label="t('feedRecord.field.feedAnimal')">
+          <el-select v-model="feedAnimal" :placeholder="t('feedRecord.field.feedAnimalPlaceholder')" clearable style="width: 160px">
+            <el-option v-for="d in djs_feed_animal" :key="d.value" :label="d.label" :value="d.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="Search" @click="handleSearch">{{ t('feedRecord.action.search') }}</el-button>
           <el-button icon="Refresh" @click="handleReset">{{ t('feedRecord.action.reset') }}</el-button>
@@ -23,6 +28,9 @@
     <el-card shadow="never">
       <el-table v-loading="loading" :data="list" border>
         <el-table-column :label="t('feedRecord.column.feedDate')" prop="feedDate" min-width="160" align="center" header-align="center" />
+        <el-table-column :label="t('feedRecord.column.feedAnimal')" prop="feedAnimal" min-width="120" align="center" header-align="center">
+          <template #default="{ row }"><dict-tag :options="djs_feed_animal" :value="row.feedAnimal" /></template>
+        </el-table-column>
         <el-table-column :label="t('feedRecord.column.totalWeight')" prop="totalWeight" min-width="160" align="center" header-align="center">
           <template #default="{ row }">{{ formatWeight3(row.totalWeight) }}</template>
         </el-table-column>
@@ -49,7 +57,7 @@
       <pagination v-show="total > 0" v-model:page="pageNum" v-model:limit="pageSize" :total="total" @pagination="fetchList" />
     </el-card>
 
-    <!-- 当日明细弹窗：复用原明细端点，传单日 dateFrom=dateTo -->
+    <!-- 当日明细弹窗：复用原明细端点，传单日 dateFrom=dateTo + 该行饲喂类型 -->
     <el-dialog v-model="detailVisible" :title="detailTitle" width="900px" append-to-body>
       <el-table v-loading="detailLoading" :data="detailList" border max-height="460">
         <el-table-column :label="t('feedRecord.column.feedDate')" prop="feedDate" min-width="170" align="center" header-align="center">
@@ -102,16 +110,18 @@
 </template>
 
 <script setup name="FeedRecord" lang="ts">
-import { listFeedDaily, listFeedRecord, type FeedDailyVO, type FeedRecordVO } from '@/api/djs-warehouse/feedRecord';
+import { listFeedDaily, listFeedRecord, type FeedAnimal, type FeedDailyVO, type FeedRecordVO } from '@/api/djs-warehouse/feedRecord';
 import { parseTime, lastMonthRange } from '@/utils/ruoyi';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { djs_feed_type } = toRefs<Record<string, any>>(proxy?.useDict('djs_feed_type'));
+const { djs_feed_type, djs_feed_animal } = toRefs<Record<string, any>>(proxy?.useDict('djs_feed_type', 'djs_feed_animal'));
 
 /** 日期范围（默认近一个月，'YYYY-MM-DD' 二元组）。 */
 const dateRange = ref<[string, string] | undefined>(lastMonthRange());
+/** 饲喂类型筛选（空 = 猪只饲料 / 家禽饲料都看，同一天两种各一行）。 */
+const feedAnimal = ref<FeedAnimal | ''>('');
 
 const loading = ref(false);
 const list = ref<FeedDailyVO[]>([]);
@@ -119,10 +129,11 @@ const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
-/** 日汇总只吃日期范围。 */
+/** 日汇总只吃日期范围 + 饲喂类型。 */
 function buildQuery() {
   const range = dateRange.value ?? [];
   return {
+    feedAnimal: feedAnimal.value || undefined,
     dateFrom: range[0] || undefined,
     dateTo: range[1] || undefined
   };
@@ -150,6 +161,7 @@ function handleSearch() {
 
 function handleReset() {
   dateRange.value = lastMonthRange();
+  feedAnimal.value = '';
   pageNum.value = 1;
   fetchList();
 }
@@ -159,15 +171,20 @@ const detailVisible = ref(false);
 const detailLoading = ref(false);
 const detailList = ref<FeedRecordVO[]>([]);
 const detailDate = ref('');
-const detailTitle = computed(() => `${t('feedRecord.detailTitle')}（${detailDate.value}）`);
+const detailAnimal = ref<FeedAnimal>('pig');
+const detailAnimalLabel = computed(
+  () => (djs_feed_animal.value as DictDataOption[] | undefined)?.find((d) => d.value === detailAnimal.value)?.label ?? detailAnimal.value
+);
+const detailTitle = computed(() => `${t('feedRecord.detailTitle')}（${detailDate.value} ${detailAnimalLabel.value}）`);
 
-/** 当日明细查询参数：明细端点按 [dateFrom, dateTo] 闭区间取，单日就把两端设成同一天。 */
+/** 当日明细查询参数：明细端点按 [dateFrom, dateTo] 闭区间取，单日就把两端设成同一天；只看该行饲喂类型。 */
 function detailQuery() {
-  return { dateFrom: detailDate.value, dateTo: detailDate.value };
+  return { dateFrom: detailDate.value, dateTo: detailDate.value, feedAnimal: detailAnimal.value };
 }
 
 async function openDetail(row: FeedDailyVO) {
   detailDate.value = row.feedDate;
+  detailAnimal.value = row.feedAnimal;
   detailVisible.value = true;
   detailLoading.value = true;
   try {
@@ -181,7 +198,7 @@ async function openDetail(row: FeedDailyVO) {
 
 /** 导出当日明细（走原明细导出端点）。 */
 function handleExportDetail() {
-  proxy?.download('djs/warehouse/feedRecord/export', detailQuery(), `有机饲喂记录_${detailDate.value}.xlsx`);
+  proxy?.download('djs/warehouse/feedRecord/export', detailQuery(), `有机饲喂记录_${detailDate.value}_${detailAnimalLabel.value}.xlsx`);
 }
 
 function formatDateTime(v?: string): string {

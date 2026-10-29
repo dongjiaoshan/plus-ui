@@ -10,6 +10,8 @@ export interface BurnPig {
   receiveTime?: string;
   arriveWeight?: string | number;
   status: string;
+  /** 出栏当时日龄（出栏记录冻结值）；外购 / 无出栏记录时缺省 */
+  ageDays?: number;
 }
 
 export interface CutBar {

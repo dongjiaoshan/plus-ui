@@ -17,6 +17,10 @@ const api = vi.hoisted(() => ({
 const message = vi.hoisted(() => ({ success: vi.fn(), warning: vi.fn(), error: vi.fn() }));
 const messageBox = vi.hoisted(() => ({ confirm: vi.fn() }));
 vi.mock('@/api/djs-warehouse/inoutVeg', () => api);
+const tareApi = vi.hoisted(() => ({ listTareOptions: vi.fn() }));
+const weighing = vi.hoisted(() => ({ confirmWeighing: vi.fn() }));
+vi.mock('@/api/djs-warehouse/tareSpec', () => tareApi);
+vi.mock('../../production/packEntry/components/confirmWeighing', () => weighing);
 vi.mock('@/api/system/dict/data', () => ({
   getDicts: () =>
     Promise.resolve({
@@ -108,6 +112,8 @@ describe('vegStation helpers', () => {
 describe('row282 果蔬入库管理', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    tareApi.listTareOptions.mockResolvedValue({ data: [] });
+    weighing.confirmWeighing.mockResolvedValue('confirm');
     api.getVegCrops.mockResolvedValue({
       data: [
         { cropId, cropName: '黄瓜', expectedYield: '350', harvestWeight: '120' },
@@ -184,6 +190,32 @@ describe('row282 果蔬入库管理', () => {
     expect(message.success).toHaveBeenCalledWith('vegInSaved');
   });
 
+  it('weighs in the net weight and confirms with the product as the stock-in target', async () => {
+    tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '菜筐', tareWeight: 1.2, selected: true }] });
+    const wrapper = mount(VegInStation, { global });
+    await flushPromises();
+    expect(tareApi.listTareOptions).toHaveBeenCalledWith('veg_in');
+    await wrapper.findAll('.plot-card')[0].trigger('click');
+    await wrapper.find('.test-weight').setValue('12.5');
+    await buttonByText(wrapper, '.option', '一组').trigger('click');
+    await buttonByText(wrapper, '.submit-button', 'confirmIn').trigger('click');
+    await flushPromises();
+    expect(weighing.confirmWeighing).toHaveBeenCalledWith(
+      expect.objectContaining({
+        direction: 'in',
+        gross: 12.5,
+        tare: 1.2,
+        net: 11.3,
+        destination: '黄瓜',
+        extraRows: [
+          { label: 'pickTeam', value: '一组' },
+          { label: 'perfPercent', value: '100%' }
+        ]
+      })
+    );
+    expect(api.submitVegIn).toHaveBeenCalledWith(expect.objectContaining({ weight: '11.300' }));
+  });
+
   it('opens a custom percent input that only accepts 1-99', async () => {
     const wrapper = mount(VegInStation, { global });
     await flushPromises();
@@ -244,6 +276,8 @@ describe('row283 果蔬出库管理', () => {
   const shelf = '9261008000000202';
   beforeEach(() => {
     vi.clearAllMocks();
+    tareApi.listTareOptions.mockResolvedValue({ data: [] });
+    weighing.confirmWeighing.mockResolvedValue('confirm');
     api.getVegOutProducts.mockResolvedValue({
       data: [
         { productId, productName: '大白菜', plotCount: 1, totalStock: '200' },
@@ -315,6 +349,33 @@ describe('row283 果蔬出库管理', () => {
     await buttonByText(wrapper, '.submit-button', 'confirmOut').trigger('click');
     await flushPromises();
     expect(api.submitVegOut).toHaveBeenCalledWith({ productId, stockIds: ['s3'], weight: '3.500', destination: 'feed' });
+  });
+
+  it('deducts the tare before the stock check and submit, and confirms as stock-out', async () => {
+    tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '菜筐', tareWeight: 0.5, selected: true }] });
+    const wrapper = mount(VegOutStation, { global });
+    await flushPromises();
+    expect(tareApi.listTareOptions).toHaveBeenCalledWith('veg_out');
+    await wrapper.findAll('.stock-card')[1].trigger('click');
+    await buttonByText(wrapper, '.destination-options .option', 'pigFeed').trigger('click');
+    await wrapper.find('.test-weight').setValue('80.5');
+    expect(wrapper.find('.field-error').exists()).toBe(false);
+    await buttonByText(wrapper, '.submit-button', 'confirmOut').trigger('click');
+    await flushPromises();
+    expect(weighing.confirmWeighing).toHaveBeenCalledWith({ direction: 'out', gross: 80.5, tare: 0.5, net: 80, destination: 'pigFeed' });
+    expect(api.submitVegOut).toHaveBeenCalledWith({ productId, stockIds: ['s3'], weight: '80.000', destination: 'feed' });
+  });
+
+  it('a cancelled confirmation does not dispatch', async () => {
+    weighing.confirmWeighing.mockRejectedValueOnce('cancel');
+    const wrapper = mount(VegOutStation, { global });
+    await flushPromises();
+    await wrapper.findAll('.stock-card')[1].trigger('click');
+    await buttonByText(wrapper, '.destination-options .option', 'pigFeed').trigger('click');
+    await wrapper.find('.test-weight').setValue('3');
+    await buttonByText(wrapper, '.submit-button', 'confirmOut').trigger('click');
+    await flushPromises();
+    expect(api.submitVegOut).not.toHaveBeenCalled();
   });
 
   it('blocks weights above the selected card stock', async () => {

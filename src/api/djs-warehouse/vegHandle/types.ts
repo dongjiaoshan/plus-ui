@@ -62,6 +62,8 @@ export interface VegHandleQuery {
 /** 采摘明细行（admin 只读列表）。 */
 export interface PickDetailVO {
   id?: number | string;
+  /** 记录时间 yyyy-MM-dd HH:mm:ss。 */
+  recordTime?: string;
   /** 采摘日期 yyyy-MM-dd。 */
   pickDate?: string;
   cropName?: string;

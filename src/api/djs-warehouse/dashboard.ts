@@ -131,9 +131,9 @@ export interface WarehouseDashboardChartsVo {
   todayWhiteBarWeight: number;
   /** 出栏猪只总重（kg，今日 bar_info marketing_weight 合计） */
   todayMarketingWeight: number;
-  /** 毛菜处理果蔬品种数（种，今日 record_type=1 已称重去重作物数） */
+  /** 毛菜处理间果蔬品种接收数（种，今日毛菜间入库 veg_stock_in 去重产品数） */
   todayVegHandleKinds: number;
-  /** 毛菜处理果蔬总重量（kg，今日 record_type=1 已称重 record_weight 合计） */
+  /** 毛菜处理间果蔬接收总重量（kg，今日毛菜间入库 veg_stock_in 合计） */
   todayVegHandleWeight: number;
   /** 分割白条（头） */
   todayCutBarCount: number;

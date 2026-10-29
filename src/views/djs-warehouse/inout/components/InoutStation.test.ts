@@ -19,6 +19,10 @@ const api = vi.hoisted(() => ({
 }));
 const messageBox = vi.hoisted(() => ({ confirm: vi.fn(), alert: vi.fn() }));
 vi.mock('@/api/djs-warehouse/inout', () => api);
+const tareApi = vi.hoisted(() => ({ listTareOptions: vi.fn() }));
+const weighing = vi.hoisted(() => ({ confirmWeighing: vi.fn() }));
+vi.mock('@/api/djs-warehouse/tareSpec', () => tareApi);
+vi.mock('../../production/packEntry/components/confirmWeighing', () => weighing);
 vi.mock('@/api/system/dict/data', () => ({ getDicts: () => Promise.resolve({ data: [{ dictValue: 'kitchen', dictLabel: '食堂' }] }) }));
 vi.mock('@/store/modules/user', () => ({ useUserStore: () => ({ userId: 'qa' }) }));
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key.split('.').pop() }) }));
@@ -86,6 +90,100 @@ beforeEach(() => {
   api.finishCut.mockResolvedValue({ data: null });
   messageBox.confirm.mockResolvedValue('confirm');
   messageBox.alert.mockResolvedValue('confirm');
+  tareApi.listTareOptions.mockResolvedValue({ data: [] });
+  weighing.confirmWeighing.mockResolvedValue('confirm');
+});
+
+describe('V7 tare and second confirmation', () => {
+  it('submits the net weight after tare and shows gross / tare / net / destination in the confirmation', async () => {
+    tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: true }] });
+    const wrapper = render();
+    await flushPromises();
+    expect(tareApi.listTareOptions).toHaveBeenCalledWith('pig_in');
+    expect(wrapper.find('.tare-options button.active').text()).toContain('塑料筐');
+    await wrapper.find('.test-weight').setValue('50');
+    expect(wrapper.find('.tare-net').text()).toContain('49.000Kg');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(weighing.confirmWeighing).toHaveBeenCalledWith({ direction: 'out', gross: 50, tare: 1, net: 49, destination: 'store：QA门店' });
+    expect(api.submitBurn.mock.calls[0][0]).toMatchObject({ weight: '49.000', destination: 'store', storeId });
+    wrapper.unmount();
+  });
+  it('puts 不去皮 first and selects it when the page has no default spec', async () => {
+    tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: false }] });
+    const wrapper = render();
+    await flushPromises();
+    const buttons = wrapper.findAll('.tare-options button');
+    expect(buttons[0].text()).toBe('none');
+    expect(buttons[0].classes()).toContain('active');
+    wrapper.unmount();
+  });
+  it('shows the pig age frozen at marketing on the card, and nothing when unknown', async () => {
+    api.getBurnPigs.mockResolvedValue({
+      data: [
+        { id: pigId, barId: 'QA-PIG', earNo: 'QA-EAR', marketingTime: '2026-09-28 08:00:00', status: 'pending_singe', ageDays: 183 },
+        { id: '9260928000000099', barId: 'QA-PIG2', earNo: 'QA-EAR2', marketingTime: '2026-09-27 08:00:00', status: 'pending_singe' }
+      ]
+    });
+    const wrapper = render();
+    await flushPromises();
+    const cards = wrapper.findAll('.source-card');
+    expect(cards[0].find('.age-days').text()).toBe('ageDays 183dayUnit');
+    expect(cards[1].find('.age-days').exists()).toBe(false);
+    wrapper.unmount();
+  });
+  it('choosing no tare submits the gross weight', async () => {
+    tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: true }] });
+    const wrapper = render();
+    await flushPromises();
+    await wrapper.findAll('.tare-options button')[0].trigger('click');
+    await wrapper.find('.test-weight').setValue('50');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(api.submitBurn.mock.calls[0][0]).toMatchObject({ weight: '50.000' });
+    wrapper.unmount();
+  });
+  it('blocks submit when the tare leaves no net weight', async () => {
+    tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '大筐', tareWeight: 5, selected: true }] });
+    const wrapper = render();
+    await flushPromises();
+    await wrapper.find('.test-weight').setValue('5');
+    expect(wrapper.find('.submit-button').attributes('disabled')).toBeDefined();
+    wrapper.unmount();
+  });
+  it('says tare was not applied when the specs cannot be loaded, and still submits the gross weight', async () => {
+    tareApi.listTareOptions.mockRejectedValue(new Error('boom'));
+    const wrapper = render();
+    await flushPromises();
+    expect(wrapper.find('.tare-load-failed').text()).toBe('loadFailed');
+    await wrapper.find('.test-weight').setValue('12');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(api.submitBurn.mock.calls[0][0]).toMatchObject({ weight: '12.000' });
+    wrapper.unmount();
+  });
+  it('cancelling the confirmation posts nothing and keeps the weight', async () => {
+    weighing.confirmWeighing.mockRejectedValueOnce('cancel');
+    const wrapper = render();
+    await flushPromises();
+    await wrapper.find('.test-weight').setValue('32.125');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(weighing.confirmWeighing).toHaveBeenCalledWith(expect.objectContaining({ direction: 'out', net: 32.125, tare: 0 }));
+    expect(api.submitBurn).not.toHaveBeenCalled();
+    expect((wrapper.find('.test-weight').element as HTMLInputElement).value).toBe('32.125');
+    wrapper.unmount();
+  });
+  it('asks with the stock-in title when the product goes to the warehouse', async () => {
+    api.getBurnProducts.mockResolvedValue({ data: [{ ...whiteBar, isWhiteBar: false, defaultLocationName: '猪肉鲜品库' }] });
+    const wrapper = render();
+    await flushPromises();
+    await wrapper.find('.test-weight').setValue('20');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(weighing.confirmWeighing).toHaveBeenCalledWith(expect.objectContaining({ direction: 'in', destination: '猪肉鲜品库' }));
+    wrapper.unmount();
+  });
 });
 
 describe('row266 cut store demand', () => {
@@ -158,9 +256,12 @@ describe('row266 cut store demand', () => {
     await wrapper.find('.submit-button').trigger('click');
     await flushPromises();
     expect(messageBox.confirm).toHaveBeenCalledTimes(1);
+    // 超计量告警被取消时，最终确认框根本不出现
+    expect(weighing.confirmWeighing).not.toHaveBeenCalled();
     expect(api.submitCut).not.toHaveBeenCalled();
     await wrapper.find('.submit-button').trigger('click');
     await flushPromises();
+    expect(messageBox.confirm.mock.invocationCallOrder[1]).toBeLessThan(weighing.confirmWeighing.mock.invocationCallOrder[0]);
     expect(api.submitCut).toHaveBeenCalledWith(expect.objectContaining({ allowOverMeasure: true }));
     wrapper.unmount();
   });
