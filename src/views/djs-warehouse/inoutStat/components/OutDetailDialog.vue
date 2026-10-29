@@ -58,6 +58,7 @@
         header-align="center"
         show-overflow-tooltip
       />
+      <el-table-column :label="t('inoutStat.column.storeName')" prop="storeName" min-width="140" align="center" show-overflow-tooltip />
       <el-table-column :label="t('inoutStat.detail.outOperator')" prop="operatorName" min-width="110" align="center" header-align="center" />
       <el-table-column :label="t('inoutStat.detail.outTime')" prop="createTime" min-width="160" align="center" header-align="center" />
     </el-table>
@@ -120,7 +121,8 @@ function open(row: InoutStatOutVO, listQuery: Omit<InoutStatDetailFilter, 'produ
   rowKey.value = {
     ...listQuery,
     productCode: row.productCode ?? '',
-    outDest
+    outDest,
+    storeId: row.storeId
   };
   rowProductName.value = row.productName ?? '';
   baseDateRange.value = listQuery.dateFrom && listQuery.dateTo ? [listQuery.dateFrom, listQuery.dateTo] : [];

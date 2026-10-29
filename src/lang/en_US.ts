@@ -2761,6 +2761,18 @@ export default {
     }
   },
   inoutStat: {
+    summary: {
+      inProducts: 'Inbound product kinds',
+      inWeight: 'Inbound KG total',
+      inQuantity: 'Inbound non-KG quantity',
+      inTypes: 'Inbound method kinds',
+      suppliers: 'Supplier kinds',
+      outProducts: 'Outbound product kinds',
+      outWeight: 'Outbound KG total',
+      outQuantity: 'Outbound non-KG quantity',
+      outTypes: 'Outbound destination kinds',
+      outScope: 'Includes store shipments. Historical flows without a store link show “-”. Non-KG values are summed in their original units.'
+    },
     tab: {
       in: 'Inbound Stats',
       out: 'Outbound Stats'
@@ -2775,6 +2787,7 @@ export default {
       noSupplier: 'No Supplier'
     },
     action: {
+      toggleSearch: 'Show/hide search',
       detail: 'View Details'
     },
     detail: {
@@ -2796,6 +2809,7 @@ export default {
       export: 'Export'
     },
     column: {
+      storeName: 'Outbound store',
       productCode: 'Product Code',
       productName: 'Product Name',
       productType: 'Product Type',
@@ -3635,8 +3649,8 @@ export default {
       kpiCutProductWeight: 'Cut Product Weight',
       kpiVegReceiveKinds: 'Veg Received Varieties',
       kpiVegReceiveWeight: 'Veg Received Weight',
-      kpiVegHandleKinds: 'Veg Handled Varieties',
-      kpiVegHandleWeight: 'Veg Handled Weight',
+      kpiVegHandleKinds: 'Raw vegetable varieties received',
+      kpiVegHandleWeight: 'Raw vegetables received weight',
       kpiVegProductKinds: 'Veg Product Kinds',
       kpiVegProductWeight: 'Veg Product Weight',
       returnTabPork: 'Pork',

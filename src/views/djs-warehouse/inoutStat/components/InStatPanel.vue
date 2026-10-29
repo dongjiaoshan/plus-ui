@@ -1,35 +1,40 @@
 <template>
-  <BizTable
-    ref="tableRef"
-    :data="list"
-    :total="total"
-    :loading="loading"
-    :columns="columns"
-    :search-schema="searchSchema"
-    :search-model="searchModel"
-    :dict-types="['djs_product_type']"
-    :page-num="pageNum"
-    :page-size="pageSize"
-    perm-prefix="djs:warehouse:inoutStat"
-    show-export
-    :show-add="false"
-    :show-batch-del="false"
-    :show-row-edit="false"
-    :show-row-del="false"
-    @search="handleSearch"
-    @reset="handleReset"
-    @export="handleExport"
-    @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
-  >
-    <!-- row186 第 1 点：列表最后新增操作列，功能为「查看详情」 -->
-    <template #action="{ row }">
-      <el-button v-hasPermi="['djs:warehouse:inoutStat:list']" link type="primary" size="small" @click="handleDetail(row as InoutStatInVO)">
-        {{ t('inoutStat.action.detail') }}
-      </el-button>
-    </template>
-  </BizTable>
+  <div class="p-2">
+    <SearchForm v-model:model="searchModel" :schema="searchSchema" :visible="showSearch" @search="handleSearch" @reset="handleReset" />
+    <StatSummary direction="in" :summary="summary" />
+    <BizTable
+      ref="tableRef"
+      :data="list"
+      :total="total"
+      :loading="loading"
+      :columns="columns"
+      :dict-types="['djs_product_type']"
+      :page-num="pageNum"
+      :page-size="pageSize"
+      perm-prefix="djs:warehouse:inoutStat"
+      show-export
+      :show-add="false"
+      :show-batch-del="false"
+      :show-row-edit="false"
+      :show-row-del="false"
+      @search="handleSearch"
+      @reset="handleReset"
+      @export="handleExport"
+      @page-change="(pn: number, ps: number) => handlePageChange(pn, ps)"
+    >
+      <template #toolbar-extra>
+        <el-button circle icon="Search" :title="t('inoutStat.action.toggleSearch')" @click="showSearch = !showSearch" />
+      </template>
+      <!-- row186 第 1 点：列表最后新增操作列，功能为「查看详情」 -->
+      <template #action="{ row }">
+        <el-button v-hasPermi="['djs:warehouse:inoutStat:list']" link type="primary" size="small" @click="handleDetail(row as InoutStatInVO)">
+          {{ t('inoutStat.action.detail') }}
+        </el-button>
+      </template>
+    </BizTable>
 
-  <InDetailDialog ref="detailRef" />
+    <InDetailDialog ref="detailRef" />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -41,8 +46,17 @@
  * 日期区间放开后行数可能上万，走后端分页（不做一次返全量前端内滚）。
  */
 import BizTable from '@/components/BizTable/index.vue';
+import SearchForm from '@/components/BizTable/SearchForm.vue';
+import StatSummary from './StatSummary.vue';
 import type { BizRow, BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listInStat, type InoutStatDetailFilter, type InoutStatInVO, type InoutStatQuery } from '@/api/djs-warehouse/inoutStat';
+import {
+  getInStatSummary,
+  type InoutStatSummaryVO,
+  listInStat,
+  type InoutStatDetailFilter,
+  type InoutStatInVO,
+  type InoutStatQuery
+} from '@/api/djs-warehouse/inoutStat';
 import InDetailDialog from './InDetailDialog.vue';
 import { useSupplierOptions } from '@/composables/useSupplierOptions';
 import { FLOW_TYPE_IN_VALUES } from '@/views/djs-warehouse/flow/scope';
@@ -69,7 +83,10 @@ const detailRef = ref<{
 
 const list = ref<InoutStatInVO[]>([]);
 const total = ref(0);
+const summary = ref<InoutStatSummaryVO>({});
+let requestSerial = 0;
 const loading = ref(false);
+const showSearch = ref(true);
 const pageNum = ref(1);
 const pageSize = ref(10);
 
@@ -85,7 +102,13 @@ const inModeOptions = computed(() =>
 );
 
 /** 默认近一个月（上月同日 → 今天）；重置也回到这个区间，而不是清空 */
-const searchModel = reactive<Record<string, any>>({
+const searchModel = reactive<{
+  dateRange: string[];
+  productName?: string;
+  productType: Array<string | number>;
+  flowType: string[];
+  supplier?: string;
+}>({
   dateRange: defaultDateRange(),
   productName: undefined,
   productType: [],
@@ -130,9 +153,7 @@ function buildQuery(): Omit<InoutStatQuery, 'pageNum' | 'pageSize'> {
     dateTo: to || undefined,
     productName: searchModel.productName || undefined,
     productTypes:
-      Array.isArray(searchModel.productType) && searchModel.productType.length
-        ? searchModel.productType.map((v: string | number) => Number(v))
-        : undefined,
+      Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType.map((v) => Number(v)) : undefined,
     flowTypes: Array.isArray(searchModel.flowType) && searchModel.flowType.length ? searchModel.flowType : undefined,
     // 「无供应商」是空桶没有 ID，用独立开关表达；两者互斥，永远只传一个
     supplierId: supplier && supplier !== NO_SUPPLIER_VALUE ? supplier : undefined,
@@ -141,18 +162,22 @@ function buildQuery(): Omit<InoutStatQuery, 'pageNum' | 'pageSize'> {
 }
 
 async function loadList() {
+  const serial = ++requestSerial;
+  const query = buildQuery();
   loading.value = true;
   try {
-    // request 拦截器已把响应拆成业务体（TableDataInfo），声明的 AxiosPromise 泛型对不上，按实际结构收窄
-    const res = (await listInStat({ ...buildQuery(), pageNum: pageNum.value, pageSize: pageSize.value })) as unknown as StatListPayload;
-    list.value = res.rows ?? [];
-    total.value = res.total ?? 0;
+    const [res, totals] = await Promise.all([listInStat({ ...query, pageNum: pageNum.value, pageSize: pageSize.value }), getInStatSummary(query)]);
+    if (serial !== requestSerial) return;
+    const page = res as unknown as StatListPayload;
+    list.value = page.rows ?? [];
+    total.value = page.total ?? 0;
+    summary.value = totals.data ?? {};
   } finally {
-    loading.value = false;
+    if (serial === requestSerial) loading.value = false;
   }
 }
 
-function handleSearch(payload?: Record<string, any>) {
+function handleSearch(payload?: Record<string, unknown>) {
   Object.assign(searchModel, payload ?? {});
   pageNum.value = 1;
   loadList();

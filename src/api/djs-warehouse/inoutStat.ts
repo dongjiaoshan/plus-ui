@@ -66,6 +66,9 @@ export interface InoutStatOutVO {
   productUnit?: string;
   /** 出库去向原始值（「未指定」那一桶是空串）；「查看详情」下钻要拿它当分组键 */
   stockOutDest?: string;
+  /** 关联门店ID，完整雪花ID保持string。 */
+  storeId?: string;
+  storeName?: string;
 }
 
 /** 入库统计分页 */
@@ -102,6 +105,8 @@ export interface InoutStatDetailQuery extends InoutStatQuery {
   supplierName?: string;
   /** 出库去向原始值（仅出库明细）：「未指定」那一桶传 undefined 或空串都行 */
   outDest?: string;
+  /** 关联门店分组键；空值只查询未关联门店的汇总行。 */
+  storeId?: string;
   /** 记录人（stock_flow.operator_id，与「入库记录」页的操作人同一口径） */
   operatorId?: string | number;
 }
@@ -138,6 +143,7 @@ export interface InoutStatOutDetailVO {
   /** 出库量带单位展示串 */
   outQtyLabel?: string;
   outDestName?: string;
+  storeName?: string;
   operatorName?: string;
   createTime?: string;
 }
@@ -159,3 +165,19 @@ export const listOutStatDetail = (params: InoutStatDetailQuery): AxiosPromise<In
     params
   });
 };
+
+/** 全部筛选结果汇总，数值不受当前页大小影响。 */
+export interface InoutStatSummaryVO {
+  productCount?: number;
+  weightQty?: number | string;
+  nonWeightQty?: number | string;
+  flowTypeCount?: number;
+  supplierCount?: number;
+  outDestCount?: number;
+}
+
+export const getInStatSummary = (params: Omit<InoutStatQuery, 'pageNum' | 'pageSize'>): AxiosPromise<InoutStatSummaryVO> =>
+  request({ url: '/djs/warehouse/inoutStat/in/summary', method: 'get', params });
+
+export const getOutStatSummary = (params: Omit<InoutStatQuery, 'pageNum' | 'pageSize'>): AxiosPromise<InoutStatSummaryVO> =>
+  request({ url: '/djs/warehouse/inoutStat/out/summary', method: 'get', params });

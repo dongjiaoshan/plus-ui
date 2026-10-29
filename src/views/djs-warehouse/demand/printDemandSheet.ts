@@ -6,7 +6,7 @@
  * 「是否已备完货」列打印为空，供仓库打印后在纸面上手工勾选登记（系统不回写）。
  *
  * 实现沿用毛菜间出库单 `vegOut/printSheet.ts` 的「隐藏 iframe + @page + cw.print()」骨架：
- * 文字保持矢量，不走 html2canvas 光栅化。纸张 A4 横向（`@page { size: A4 landscape }`）。
+ * 文字保持矢量，不走 html2canvas 光栅化。纸张 A4 纵向（`@page { size: A4 portrait }`）。
  *
  * 分页交给浏览器排版：产品多时自然换页，`thead { display: table-header-group }` 让表头每页重复，
  * 普通行尽量不跨页，超过可用页高的长备注行允许拆页。标题与信息条只在首页出现。
@@ -101,7 +101,7 @@ function buildHtml(detail: DemandPrintDetailVO, labels: DemandSheetLabels, conte
 }
 
 const STYLE = `
-@page { size: A4 landscape; margin: 0; }
+@page { size: A4 portrait; margin: 0; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; color: #333;
              -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -152,7 +152,7 @@ function prepareRowBreaks(doc: Document, pageHeight: number): void {
  */
 export function printDemandSheet(detail: DemandPrintDetailVO, labels: DemandSheetLabels, context: DemandPrintContext): void {
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:297mm;height:210mm;border:0;';
+  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:210mm;height:297mm;border:0;';
   document.body.appendChild(iframe);
   const cw = iframe.contentWindow;
   if (!cw) {

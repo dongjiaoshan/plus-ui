@@ -67,7 +67,10 @@ describe('需求单打印', () => {
     expect(rows[0].children[5].textContent).toBe(remark);
     expect(printed.querySelector('script')).toBeNull();
     expect(rows.every((row) => row.children[6].textContent === '')).toBe(true);
-    expect(html).toContain('@page { size: A4 landscape;');
+    expect(html).toContain('@page { size: A4 portrait;');
+    const frame = document.querySelector('iframe');
+    expect(frame?.style.width).toBe('210mm');
+    expect(frame?.style.height).toBe('297mm');
     expect(html).toContain('margin: 0;');
     expect(printed.querySelector('.print-footer')?.textContent).toContain('制单人：当前<管理员>');
     expect(printed.querySelector('.print-footer')?.textContent).toContain('制单日期：2026-10-28');

@@ -2749,6 +2749,18 @@ export default {
     }
   },
   inoutStat: {
+    summary: {
+      inProducts: '产品入库品种数',
+      inWeight: '重量产品入库总重量',
+      inQuantity: '非重量产品入库量',
+      inTypes: '入库方式种类',
+      suppliers: '供应商种类',
+      outProducts: '产品出库品种数',
+      outWeight: '重量产品出库总重量',
+      outQuantity: '非重量产品出库量',
+      outTypes: '出库去向种类',
+      outScope: '包含门店发货；未关联门店的历史出库显示“-”；非重量产品按原单位数值合计。'
+    },
     tab: {
       in: '入库统计',
       out: '出库统计'
@@ -2763,6 +2775,7 @@ export default {
       noSupplier: '无供应商'
     },
     action: {
+      toggleSearch: '显示/隐藏搜索',
       detail: '查看详情'
     },
     detail: {
@@ -2784,6 +2797,7 @@ export default {
       export: '导出'
     },
     column: {
+      storeName: '出库门店',
       productCode: '产品编码',
       productName: '产品名称',
       productType: '产品类型',
@@ -3619,8 +3633,8 @@ export default {
       kpiCutProductWeight: '白条分割产品总重量',
       kpiVegReceiveKinds: '果蔬月台接收品种数',
       kpiVegReceiveWeight: '果蔬月台接收总重量',
-      kpiVegHandleKinds: '毛菜处理果蔬品种数',
-      kpiVegHandleWeight: '毛菜处理果蔬总重量',
+      kpiVegHandleKinds: '毛菜处理间果蔬品种接收数',
+      kpiVegHandleWeight: '毛菜处理间果蔬接收总重量',
       kpiVegProductKinds: '果蔬产品种类',
       kpiVegProductWeight: '果蔬产品总重',
       returnTabPork: '猪肉产品',
