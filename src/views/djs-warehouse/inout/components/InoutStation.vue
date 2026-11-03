@@ -12,7 +12,7 @@
           :key="source.key"
           type="button"
           class="source-card"
-          :class="{ active: source.key === selectedKey }"
+          :class="{ active: source.key === selectedKey, 'over-age': isOverAge(source) }"
           :disabled="busy || loading"
           :aria-pressed="source.key === selectedKey"
           @click="selectSource(source.key)"
@@ -458,7 +458,8 @@ async function submit() {
       gross: Number(weight.value),
       tare: tare.tareKg.value,
       net: Number(netWeight.value),
-      destination: destinationText()
+      destination: destinationText(),
+      warning: isBurn.value && destination.value === 'store' && isOverAge(source) ? tr('overAgeStoreWarning') : undefined
     });
     if (isBurn.value && source.pig) {
       const payload = {
@@ -490,6 +491,12 @@ async function submit() {
   } finally {
     submitting.value = false;
   }
+}
+
+/** 日龄超过一年的猪：卡片换底色提醒，送门店时确认框加红字（V7-R30） */
+const OVER_AGE_DAYS = 365;
+function isOverAge(source: Source): boolean {
+  return source.pig?.ageDays != null && source.pig.ageDays > OVER_AGE_DAYS;
 }
 
 /** 二次确认弹框里的去向文案：选项名 + 门店 / 仓库出库去向 */
@@ -606,6 +613,11 @@ onMounted(() => refresh());
   strong {
     font-size: 15px;
     color: var(--el-text-color-primary);
+  }
+  /* 超龄猪未选中时用暖色底提醒；选中后由 .active 的 !important 覆盖为选中态 */
+  &.over-age {
+    border-color: var(--el-color-warning-light-5);
+    background: var(--el-color-warning-light-8);
   }
 }
 .active {

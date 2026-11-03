@@ -4,6 +4,7 @@ export default {
   productList: 'Products',
   ageDays: 'Age',
   dayUnit: ' d',
+  overAgeStoreWarning: 'This pig is over 365 days old. Are you sure it should go to the store?',
   pigTitle: 'Pig intake',
   cutTitle: 'Carcass cutting and dispatch',
   refresh: 'Refresh',

@@ -4,6 +4,7 @@ export default {
   productList: '产品列表',
   ageDays: '日龄',
   dayUnit: '天',
+  overAgeStoreWarning: '该猪只日龄已超过365天，是否确认需要送往门店？',
   pigTitle: '猪只入库管理',
   cutTitle: '白条分割出库管理',
   refresh: '刷新',

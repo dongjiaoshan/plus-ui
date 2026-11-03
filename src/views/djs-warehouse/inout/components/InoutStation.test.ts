@@ -132,6 +132,37 @@ describe('V7 tare and second confirmation', () => {
     expect(cards[1].find('.age-days').exists()).toBe(false);
     wrapper.unmount();
   });
+  it('marks pigs older than 365 days and warns in red before sending one to a store', async () => {
+    api.getBurnPigs.mockResolvedValue({
+      data: [
+        { id: pigId, barId: 'QA-PIG', earNo: 'QA-EAR', marketingTime: '2026-09-28 08:00:00', status: 'pending_singe', ageDays: 366 },
+        { id: '9260928000000099', barId: 'QA-PIG2', earNo: 'QA-EAR2', marketingTime: '2026-09-27 08:00:00', status: 'pending_singe', ageDays: 365 }
+      ]
+    });
+    const wrapper = render();
+    await flushPromises();
+    const cards = wrapper.findAll('.source-card');
+    expect(cards[0].classes()).toContain('over-age');
+    expect(cards[1].classes()).not.toContain('over-age');
+    await wrapper.find('.test-weight').setValue('50');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(weighing.confirmWeighing.mock.calls[0][0]).toMatchObject({ destination: 'store：QA门店', warning: 'overAgeStoreWarning' });
+    wrapper.unmount();
+  });
+  it('does not warn about age when the pig goes to the white-bar store', async () => {
+    api.getBurnPigs.mockResolvedValue({
+      data: [{ id: pigId, barId: 'QA-PIG', earNo: 'QA-EAR', marketingTime: '2026-09-28 08:00:00', status: 'pending_singe', ageDays: 400 }]
+    });
+    api.getShipStores.mockResolvedValue({ data: [] });
+    const wrapper = render();
+    await flushPromises();
+    await wrapper.find('.test-weight').setValue('50');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(weighing.confirmWeighing.mock.calls[0][0].warning).toBeUndefined();
+    wrapper.unmount();
+  });
   it('choosing no tare submits the gross weight', async () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: true }] });
     const wrapper = render();

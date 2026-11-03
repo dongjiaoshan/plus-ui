@@ -17,6 +17,8 @@ export interface WeighingConfirm {
   destinationLabel?: string;
   /** 去向之后追加的行（如果蔬入库的采摘班组、绩效百分比） */
   extraRows?: { label: string; value: string }[];
+  /** 提问上方的红色加粗提醒（如超龄猪送门店），缺省不显示 */
+  warning?: string;
 }
 
 /**
@@ -41,6 +43,15 @@ export function confirmWeighing(c: WeighingConfirm): Promise<unknown> {
       c.destination || '—'
     ),
     ...(c.extraRows ?? []).map((r) => row(r.label, r.value || '—')),
+    ...(c.warning
+      ? [
+          h(
+            'p',
+            { class: 'weigh-confirm-warning', style: 'margin:16px 0 0;font-size:18px;font-weight:700;color:var(--el-color-danger);text-align:center' },
+            c.warning
+          )
+        ]
+      : []),
     h(
       'p',
       { style: 'margin:16px 0 0;font-size:18px;font-weight:600;text-align:center' },
