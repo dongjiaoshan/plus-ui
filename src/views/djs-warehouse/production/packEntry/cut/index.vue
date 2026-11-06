@@ -16,13 +16,15 @@
               :key="String(r.id)"
               type="button"
               class="cut-chip"
-              :class="{ active: String(form.cutRecordId) === String(r.id) }"
+              :class="{ active: String(form.cutRecordId) === String(r.id), 'over-age': isOverAgeDays(r.ageDays) }"
               @click="form.cutRecordId = r.id"
             >
               <div class="chip-line chip-line-ear">
                 <el-icon><PriceTag /></el-icon>
                 <!-- 外购无耳号：回退显白条标识号/白条编号(barId)，最后才回退 CUT 业务码（FIX-WMS-OUTSOURCE-001 行53） -->
                 <span class="chip-main">{{ r.earNo ?? r.markId ?? r.barId ?? r.cutId }}</span>
+                <!-- 日龄（V7 第35行）：同猪只入库管理只显示「368天」，空不显示 -->
+                <span v-if="r.ageDays != null" class="chip-age">{{ r.ageDays }}{{ t('warehouseInout.dayUnit') }}</span>
               </div>
               <div v-if="r.pickupWeight != null" class="chip-line">
                 {{ t('djs.warehouse.packEntry.whiteBarWeightShort') }}：{{ Number(r.pickupWeight).toFixed(3) }}kg
@@ -89,6 +91,7 @@
               unit="kg"
               :precision="3"
               collapse-on-auto-fill
+              v-bind="tare.numpadProps.value"
             />
             <TareSelector :tare="tare" />
           </div>
@@ -135,6 +138,7 @@ import DestToggle from '../components/DestToggle.vue';
 import TareSelector from '../components/TareSelector.vue';
 import { useTare } from '../components/useTare';
 import { confirmWeighing } from '../components/confirmWeighing';
+import { isOverAgeDays } from '../components/overAge';
 // 【临时】一体秤验收预览数据；秤上验收通过后连同 _preview.ts 一起删
 import { PREVIEW_BADGE, blockSubmitInPreview, isPreviewMode, previewCutProducts, previewCuttable } from '../_preview';
 import { usePackEntryOptions } from '../useOptions';
@@ -290,7 +294,7 @@ async function handleCutOut() {
     await submitCutOut({
       cutRecordId: form.value.cutRecordId as number | string,
       locationId: form.value.locationId as number | string,
-      partItems: [{ productId: selectedProductId.value as number | string, productWeight: netWeight }]
+      partItems: [{ productId: selectedProductId.value as number | string, productWeight: netWeight, ...tare.weighPayload() }]
     });
     ElMessage.success(t('djs.warehouse.packEntry.cutOutSuccess'));
     // 逐件录入：清当前产品/重量，保留分割单 + 库位方便连续称重
@@ -364,7 +368,8 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../components/overAge.scss' as overAge;
 /* ===== 一体秤 dense 布局（顶尖 ACLAS 安卓一体秤：可视区 1472×634，navbar 50 + tagsview 34 已占 84）=====
    目标：整页零滚动，底部「确认入库」完整可见。范式与已定稿的肉品打包页（SkuPackForm .pack-station--dense）逐条对齐：
    ① 贴顶：容器 padding 顶部 0；页标题挪进左列，右操作台顶到可视区最上沿
@@ -406,7 +411,8 @@ onMounted(async () => {
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  width: 200px;
+  /* 宽度按「常见 18 位耳号 + 日龄 368天」单行放下反推（V7 第35行，Playwright 几何断言过） */
+  width: 236px;
   flex: 0 0 auto;
   padding: 8px 12px;
   border: 1px solid var(--el-color-warning);
@@ -423,6 +429,10 @@ onMounted(async () => {
   background: var(--el-color-warning-light-7);
   box-shadow: 0 0 0 3px var(--el-color-warning-light-5);
 }
+/* 超龄白条（> 365 天）：未选中 / 选中两态与猪只入库管理同一份样式 */
+.cut-chip {
+  @include overAge.over-age-card('.active');
+}
 .chip-line {
   font-size: 12px;
   color: var(--el-text-color-secondary);
@@ -431,11 +441,19 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
 }
 .chip-main {
   font-weight: 600;
   font-size: 14px;
   color: var(--el-color-warning-dark-2);
+  white-space: nowrap;
+  min-width: 0;
+}
+.chip-age {
+  @include overAge.age-days-badge;
+  margin-left: auto;
+  font-size: 14px;
 }
 .station-body {
   flex: 1;

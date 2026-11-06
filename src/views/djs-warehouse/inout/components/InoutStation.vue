@@ -18,8 +18,8 @@
           @click="selectSource(source.key)"
         >
           <div class="source-head">
-            <strong>{{ source.label }}</strong>
-            <span v-if="source.pig?.ageDays != null" class="age-days">{{ tr('ageDays') }} {{ source.pig.ageDays }}{{ tr('dayUnit') }}</span>
+            <strong class="source-label">{{ source.label }}</strong>
+            <span v-if="source.pig?.ageDays != null" class="age-days">{{ source.pig.ageDays }}{{ tr('dayUnit') }}</span>
           </div>
           <template v-if="source.pig">
             <span>{{ tr('marketingTime') }}：{{ source.pig.marketingTime || '—' }}</span>
@@ -28,7 +28,7 @@
             <span>{{ tr('receiveWeight') }}：{{ kg(source.pig.arriveWeight) }}</span>
           </template>
           <template v-else-if="source.bar">
-            <span class="bar-product-name">{{ source.bar.productName || '—' }}</span>
+            <span class="bar-product-name" :class="halfSideClass(source.bar.productName)">{{ source.bar.productName || '—' }}</span>
             <span class="bar-number">{{ tr('whiteBarNo') }}：{{ source.bar.whiteBarNo || '—' }}</span>
             <span>{{ tr('inTime') }}：{{ source.bar.inTime || '—' }}</span>
             <span>{{ tr('inWeight') }}：{{ kg(source.bar.inWeight) }}</span>
@@ -85,7 +85,14 @@
           <label>{{ selectedProduct?.productName || tr('productWeight') }}</label>
           <ScaleFillBar v-model="weight" :in-gram="false" />
         </div>
-        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('weightPlaceholder')" collapse-on-auto-fill />
+        <WeightNumpad
+          v-model="weight"
+          unit="kg"
+          :precision="3"
+          :placeholder="tr('weightPlaceholder')"
+          collapse-on-auto-fill
+          v-bind="tare.numpadProps.value"
+        />
         <TareSelector :tare="tare" />
         <section class="destination-section">
           <label>{{ tr('destination') }}</label>
@@ -200,6 +207,7 @@ import WeightNumpad from '../../production/packEntry/components/WeightNumpad.vue
 import TareSelector from '../../production/packEntry/components/TareSelector.vue';
 import { useTare } from '../../production/packEntry/components/useTare';
 import { confirmWeighing } from '../../production/packEntry/components/confirmWeighing';
+import { isOverAgeDays } from '../../production/packEntry/components/overAge';
 import { operationKey } from './operationKey';
 
 const props = defineProps<{ mode: 'burn' | 'cut' }>();
@@ -435,7 +443,7 @@ async function submit() {
   submitting.value = true;
   const source = selectedSource.value;
   const productId = selectedProduct.value.productId;
-  const common = { productId, weight: Number(netWeight.value).toFixed(3) };
+  const common = { productId, weight: Number(netWeight.value).toFixed(3), ...tare.weighPayload() };
   let nextKey = source.key;
   try {
     // 超计量告警先于最终确认：工人先知道超了，再在二次确认里看总账点「确定」
@@ -493,10 +501,15 @@ async function submit() {
   }
 }
 
-/** 日龄超过一年的猪：卡片换底色提醒，送门店时确认框加红字（V7-R30） */
-const OVER_AGE_DAYS = 365;
+/** 日龄超过一年的猪：卡片未选中 / 选中都换超龄样式提醒，送门店时确认框加红字（V7 第30/34行） */
+/** 左 / 右半扇用不同底色的醒目标签区分，避免工人选错半扇（V7 第39行）；名称里没有左右字样时不加色。 */
+function halfSideClass(name?: string): string {
+  if (name?.includes('左')) return 'bar-side-left';
+  if (name?.includes('右')) return 'bar-side-right';
+  return '';
+}
 function isOverAge(source: Source): boolean {
-  return source.pig?.ageDays != null && source.pig.ageDays > OVER_AGE_DAYS;
+  return isOverAgeDays(source.pig?.ageDays);
 }
 
 /** 二次确认弹框里的去向文案：选项名 + 门店 / 仓库出库去向 */
@@ -544,6 +557,7 @@ onMounted(() => refresh());
 </script>
 
 <style scoped lang="scss">
+@use '../../production/packEntry/components/overAge.scss' as overAge;
 .store-demands {
   display: grid;
   gap: 8px;
@@ -614,11 +628,7 @@ onMounted(() => refresh());
     font-size: 15px;
     color: var(--el-text-color-primary);
   }
-  /* 超龄猪未选中时用暖色底提醒；选中后由 .active 的 !important 覆盖为选中态 */
-  &.over-age {
-    border-color: var(--el-color-warning-light-5);
-    background: var(--el-color-warning-light-8);
-  }
+  @include overAge.over-age-card('.active');
 }
 .active {
   border-color: var(--el-color-primary) !important;
@@ -630,11 +640,34 @@ onMounted(() => refresh());
   justify-content: space-between;
   gap: 8px;
 }
+.source-label {
+  min-width: 0;
+  white-space: nowrap;
+}
 .age-days {
-  flex-shrink: 0;
+  @include overAge.age-days-badge;
+  font-size: 18px;
+}
+/* 产品名称（左半扇 / 右半扇）：加大加粗的标签，左蓝右绿，选中卡片的浅蓝底上也靠边框和字色分得开 */
+.bar-product-name {
+  align-self: flex-start;
+  padding: 1px 10px;
   font-size: 18px;
   font-weight: 700;
-  color: var(--el-color-danger);
+  line-height: 1.5;
+  color: var(--el-text-color-primary);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  &.bar-side-left {
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+    border-color: var(--el-color-primary-light-3);
+  }
+  &.bar-side-right {
+    color: var(--el-color-success-dark-2);
+    background: var(--el-color-success-light-9);
+    border-color: var(--el-color-success-light-3);
+  }
 }
 .remaining {
   color: var(--el-color-warning-dark-2);

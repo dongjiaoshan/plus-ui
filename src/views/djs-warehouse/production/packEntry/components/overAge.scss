@@ -1,0 +1,24 @@
+// 超龄猪卡片样式（猪只入库管理 InoutStation + 白条分割管理 packEntry/cut 共用，V7 第34/35行）。
+// 用法：在卡片选择器里 `@include over-age-card('.active');`，参数是该页「选中」的 class。
+// 两页普通卡分别是中性色 / 暖黄色，超龄统一用红色系，未选中、选中两种状态都与普通卡区分开；
+// 选中态加粗边框 + 外发光，一眼看得出「这张是选中的」。选中态带 !important，压过页面里带 !important 的通用 .active。
+@mixin over-age-card($active) {
+  &.over-age {
+    border-color: var(--el-color-danger-light-3);
+    background: var(--el-color-danger-light-9);
+  }
+  &.over-age#{$active} {
+    border-width: 2px;
+    border-color: var(--el-color-danger) !important;
+    background: var(--el-color-danger-light-8) !important;
+    box-shadow: 0 0 0 3px var(--el-color-danger-light-5);
+  }
+}
+
+// 卡片右上角日龄「368天」：不换行、不被压缩，留给耳号的宽度由耳号自身 nowrap 保证单行
+@mixin age-days-badge {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--el-color-danger);
+}

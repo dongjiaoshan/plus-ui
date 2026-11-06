@@ -92,7 +92,7 @@
           <label>{{ tr('inWeight') }}</label>
           <ScaleFillBar v-model="weight" :in-gram="false" />
         </div>
-        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('inWeight')" collapse-on-auto-fill />
+        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('inWeight')" collapse-on-auto-fill v-bind="tare.numpadProps.value" />
         <TareSelector :tare="tare" />
         <section class="info-section">
           <h4 class="info-title">{{ tr('inInfo') }}</h4>
@@ -342,6 +342,7 @@ async function submit() {
       plantingRecordId: plot.plantingRecordId,
       ...(productId.value ? { productId: productId.value } : {}),
       weight: net.toFixed(3),
+      ...tare.weighPayload(),
       teamIds: [...teamIds.value],
       perfPercent: percent
     });

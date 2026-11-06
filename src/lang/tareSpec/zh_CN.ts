@@ -34,6 +34,8 @@ export default {
     outDestination: '出库去向',
     inDestination: '入库位置',
     askIn: '是否确定入库？',
-    askOut: '是否确定出库？'
+    askOut: '是否确定出库？',
+    expandKeys: '展开键盘',
+    collapseKeys: '收起键盘'
   }
 };

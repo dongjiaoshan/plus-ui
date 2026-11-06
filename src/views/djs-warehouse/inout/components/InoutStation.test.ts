@@ -34,9 +34,10 @@ vi.mock('element-plus', async (original) => ({
 vi.mock('../../production/packEntry/components/ScaleFillBar.vue', () => ({ default: { template: '<span />' } }));
 vi.mock('../../production/packEntry/components/WeightNumpad.vue', () => ({
   default: {
-    props: ['modelValue'],
+    props: ['modelValue', 'displayValue', 'displayLabel', 'displayHint'],
     emits: ['update:modelValue'],
-    template: '<input class="test-weight" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" />'
+    template:
+      '<div><input class="test-weight" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" /><p v-if="displayLabel" class="test-net">{{ displayLabel }} {{ displayValue }} | {{ displayHint }}</p></div>'
   }
 }));
 import InoutStation from './InoutStation.vue';
@@ -102,11 +103,18 @@ describe('V7 tare and second confirmation', () => {
     expect(tareApi.listTareOptions).toHaveBeenCalledWith('pig_in');
     expect(wrapper.find('.tare-options button.active').text()).toContain('塑料筐');
     await wrapper.find('.test-weight').setValue('50');
-    expect(wrapper.find('.tare-net').text()).toContain('49.000Kg');
+    // 大框显示实重，按键改的仍是称重；小字给称重 / 去皮
+    expect(wrapper.find('.test-net').text()).toBe('net 49 | gross：50.000Kg，tareWeight：1.000Kg');
     await wrapper.find('.submit-button').trigger('click');
     await flushPromises();
     expect(weighing.confirmWeighing).toHaveBeenCalledWith({ direction: 'out', gross: 50, tare: 1, net: 49, destination: 'store：QA门店' });
-    expect(api.submitBurn.mock.calls[0][0]).toMatchObject({ weight: '49.000', destination: 'store', storeId });
+    expect(api.submitBurn.mock.calls[0][0]).toMatchObject({
+      weight: '49.000',
+      grossWeight: '50.000',
+      tareWeight: '1.000',
+      destination: 'store',
+      storeId
+    });
     wrapper.unmount();
   });
   it('puts 不去皮 first and selects it when the page has no default spec', async () => {
@@ -128,7 +136,8 @@ describe('V7 tare and second confirmation', () => {
     const wrapper = render();
     await flushPromises();
     const cards = wrapper.findAll('.source-card');
-    expect(cards[0].find('.age-days').text()).toBe('ageDays 183dayUnit');
+    // 只显示「183天」，不带「日龄」二字（V7 第34行）
+    expect(cards[0].find('.age-days').text()).toBe('183dayUnit');
     expect(cards[1].find('.age-days').exists()).toBe(false);
     wrapper.unmount();
   });
@@ -144,6 +153,14 @@ describe('V7 tare and second confirmation', () => {
     const cards = wrapper.findAll('.source-card');
     expect(cards[0].classes()).toContain('over-age');
     expect(cards[1].classes()).not.toContain('over-age');
+    // 选中的超龄卡同时带 over-age + active → 走共享 overAge.scss 的「超龄选中」样式（颜色由 E2E 断言）
+    expect(cards[0].classes()).toEqual(expect.arrayContaining(['over-age', 'active']));
+    await cards[1].trigger('click');
+    await flushPromises();
+    expect(wrapper.findAll('.source-card')[0].classes()).not.toContain('active');
+    expect(wrapper.findAll('.source-card')[0].classes()).toContain('over-age');
+    await wrapper.findAll('.source-card')[0].trigger('click');
+    await flushPromises();
     await wrapper.find('.test-weight').setValue('50');
     await wrapper.find('.submit-button').trigger('click');
     await flushPromises();
@@ -171,7 +188,8 @@ describe('V7 tare and second confirmation', () => {
     await wrapper.find('.test-weight').setValue('50');
     await wrapper.find('.submit-button').trigger('click');
     await flushPromises();
-    expect(api.submitBurn.mock.calls[0][0]).toMatchObject({ weight: '50.000' });
+    expect(api.submitBurn.mock.calls[0][0]).toMatchObject({ weight: '50.000', grossWeight: '50.000', tareWeight: '0.000' });
+    expect(wrapper.find('.test-net').exists()).toBe(false);
     wrapper.unmount();
   });
   it('blocks submit when the tare leaves no net weight', async () => {
@@ -399,6 +417,25 @@ describe('rows267-270 retest', () => {
     wrapper.unmount();
   });
 
+  it('shows 左半扇 / 右半扇 as colour-coded bold labels so the wrong half is not picked', async () => {
+    api.getCutBars.mockResolvedValue({
+      data: [
+        { barInfoId: pigId, cutRecordId: '9260929000000081', productName: '左半扇', whiteBarNo: 'L' },
+        { barInfoId: '9260929000000082', cutRecordId: '9260929000000082', productName: '右半扇', whiteBarNo: 'R' },
+        { barInfoId: '9260929000000083', cutRecordId: '9260929000000083', productName: '半扇', whiteBarNo: 'N' }
+      ]
+    });
+    api.getCutProducts.mockResolvedValue({ data: [{ productId, productName: '通排' }] });
+    const wrapper = render('cut');
+    await flushPromises();
+    const names = wrapper.findAll('.bar-product-name');
+    const byText = Object.fromEntries(names.map((n) => [n.text(), n.classes()]));
+    expect(byText['左半扇']).toContain('bar-side-left');
+    expect(byText['右半扇']).toContain('bar-side-right');
+    expect(byText['半扇']).not.toContain('bar-side-left');
+    expect(byText['半扇']).not.toContain('bar-side-right');
+    wrapper.unmount();
+  });
   it('automatically loads demand for a selected material and defaults to store only when demand exists', async () => {
     api.getCutBars.mockResolvedValue({ data: [{ barInfoId: pigId, cutRecordId: '9260929000000099', productName: '右半扇' }] });
     api.getCutProducts.mockResolvedValue({

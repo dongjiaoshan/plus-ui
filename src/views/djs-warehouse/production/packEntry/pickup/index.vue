@@ -99,6 +99,7 @@
                 unit="kg"
                 :precision="3"
                 collapse-on-auto-fill
+                v-bind="tare.numpadProps.value"
               />
               <TareSelector :tare="tare" />
             </div>
@@ -364,11 +365,13 @@ async function handleSubmit() {
     return; // 取消二次确认：保留录入
   }
   submitting.value = true;
+  // 另存称重 / 皮重（D-0147），三个出库去向都带
+  const weighed = tare.weighPayload();
   try {
     if (pickupForm.value.outDest === 'cut') {
       // 分割车间：按燎毛产出行领用（inhouseId 非空 → 后端拆条消耗，领满才建整猪 cut_record）；
       // 整只兜底卡 inhouseId 缺省 → 整猪路径。带现场过磅，后端再校验累计 ≤ 出栏重量。
-      await submitPickup({ barInfoId: it.barInfoId, inhouseId: it.inhouseId, pickupWeight });
+      await submitPickup({ barInfoId: it.barInfoId, inhouseId: it.inhouseId, pickupWeight, ...weighed });
       ElMessage.success(t('djs.warehouse.packEntry.pickupSuccess'));
     } else if (pickupForm.value.outDest === 'ship') {
       // 发货月台：白条/猪肉发货出库。来源 inhouse 优先取该产出行 id；整只兜底卡回落按耳号匹配 whiteBar 来源。
@@ -377,7 +380,7 @@ async function handleSubmit() {
         notifyMissing(t('djs.warehouse.packEntry.shipSourceNotFound'));
         return;
       }
-      await submitWhiteBarOut({ sourceInhouseId, productWeight: pickupWeight, storeId: pickupForm.value.storeId });
+      await submitWhiteBarOut({ sourceInhouseId, productWeight: pickupWeight, storeId: pickupForm.value.storeId, ...weighed });
       ElMessage.success(t('djs.warehouse.packEntry.shipOutSuccess'));
     } else {
       // 仓库出库：白条/猪肉出库到仓库（不发往门店），须选出库去向（字典 djs_stock_out_dest，已在确认前校验）。
@@ -386,7 +389,7 @@ async function handleSubmit() {
         notifyMissing(t('djs.warehouse.packEntry.shipSourceNotFound'));
         return;
       }
-      await submitWarehouseOut({ sourceInhouseId, productWeight: pickupWeight, outDest: pickupForm.value.warehouseOutDest });
+      await submitWarehouseOut({ sourceInhouseId, productWeight: pickupWeight, outDest: pickupForm.value.warehouseOutDest, ...weighed });
       ElMessage.success(t('djs.warehouse.packEntry.warehouseOutSuccess'));
     }
     pickupForm.value = pickupDefault();

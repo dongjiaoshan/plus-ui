@@ -1,15 +1,19 @@
 import { computed, onActivated, onMounted, ref, toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { listTareOptions, type TareOption, type TarePosition } from '@/api/djs-warehouse/tareSpec';
 
 /**
- * 称重页去皮（V7-R4，口径 D-0147 fallback）：
+ * 称重页去皮（V7-R4，口径 D-0147 / D-0158）：
  * - 只列配置到本页（可选位置含 position）的规格；实际默认项（多个默认取更新时间最近）排第一并预选。
- * - 重量框仍是「称重」（秤读数或手输），扣皮后的实重 = 称重 − 去皮，提交与校验一律用实重。
- * - 本页没配任何规格时整块不显示，实重 = 称重，页面行为与之前一致。
+ * - 录入（秤自动填入 / 键盘手输）的仍是「称重」（秤读数），实重 = 称重 − 去皮，提交与校验一律用实重。
+ * - 选了去皮规格时重量大框改显示实重，下方小字给称重与去皮（numpadProps 绑到 WeightNumpad）；
+ *   提交时除实重外另存称重与皮重（weighPayload）。
+ * - 本页没配任何规格 / 选「不去皮」时大框照常显示称重，实重 = 称重，页面行为与之前一致。
  * 单位 kg（六个去皮页录入都是 kg 三位小数）。
  */
 export function useTare(position: TarePosition, gross: MaybeRefOrGetter<number | undefined>) {
+  const { t } = useI18n();
   const options = ref<TareOption[]>([]);
   /** '' = 不去皮 */
   const selectedId = ref('');
@@ -47,7 +51,28 @@ export function useTare(position: TarePosition, gross: MaybeRefOrGetter<number |
     selectedId.value = id;
   }
 
-  return { options, selectedId, selected, tareKg, grossKg, net, loadFailed, load, select };
+  /** 绑到 WeightNumpad（v-bind）：选了规格 → 大框显示实重 + 小字「称重：x，去皮：y」；否则空对象，大框照旧 */
+  const numpadProps = computed<{ displayValue?: number; displayLabel?: string; displayHint?: string }>(() => {
+    if (!selected.value) return {};
+    return {
+      displayValue: net.value,
+      displayLabel: t('tareSpec.station.net'),
+      displayHint: `${t('tareSpec.station.gross')}：${kgText(grossKg.value)}，${t('tareSpec.station.tareWeight')}：${kgText(tareKg.value)}`
+    };
+  });
+
+  /** 提交时另存的称重 / 皮重（kg 三位小数字符串；不去皮皮重 = "0.000"）。调用方已保证称重有值 */
+  function weighPayload(): { grossWeight: string; tareWeight: string } {
+    // 与 net 同口径按整数克（千分位）取整，保证 grossWeight − tareWeight 与提交的实重逐位相等
+    const milli = (v: number) => (Math.round(v * 1000) / 1000).toFixed(3);
+    return { grossWeight: milli(grossKg.value ?? 0), tareWeight: milli(tareKg.value) };
+  }
+
+  return { options, selectedId, selected, tareKg, grossKg, net, loadFailed, load, select, numpadProps, weighPayload };
 }
 
 export type TareState = ReturnType<typeof useTare>;
+
+function kgText(v: number | undefined): string {
+  return v == null ? '—' : `${Number(v).toFixed(3)}Kg`;
+}

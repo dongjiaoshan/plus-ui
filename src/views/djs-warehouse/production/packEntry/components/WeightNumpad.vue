@@ -1,9 +1,21 @@
 <template>
   <div class="numpad">
-    <div class="numpad-display">
+    <!-- 选了去皮规格：大框显示实重（只读），按键 / 秤自动填入改的仍是称重（modelValue）；下方小字给出称重与去皮 -->
+    <template v-if="netMode">
+      <div class="numpad-display numpad-display--net" role="status">
+        <span class="numpad-net-label">{{ displayLabel }}</span>
+        <span class="numpad-net" :class="{ invalid: netInvalid }">{{ netText }}</span>
+        <span v-if="unit" class="numpad-unit">{{ unit }}</span>
+      </div>
+      <p v-if="displayHint" class="numpad-hint">{{ displayHint }}</p>
+    </template>
+    <div v-else class="numpad-display">
       <input class="numpad-input" :value="buffer" :placeholder="placeholder" inputmode="decimal" @input="onInput" @blur="normalize" />
       <span v-if="unit" class="numpad-unit">{{ unit }}</span>
     </div>
+    <button v-if="collapsible" type="button" class="numpad-toggle" :aria-expanded="!collapsed" @click="expanded = !expanded">
+      {{ collapsed ? t('tareSpec.station.expandKeys') : t('tareSpec.station.collapseKeys') }}
+    </button>
     <div v-show="!collapsed" class="numpad-keys">
       <button v-for="key in keys" :key="key" type="button" class="numpad-key" @click="press(key)">
         {{ key }}
@@ -17,6 +29,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Back } from '@element-plus/icons-vue';
 import { useScaleConfigStore } from '@/store/modules/scaleConfig';
 
@@ -32,21 +45,51 @@ const props = withDefaults(
     /** 小数位上限（重量 3 位 / 盒数 0 位） */
     precision?: number;
     /**
-     * 秤录重的重量键盘传 true：「自动填入」开时收起按键只留重量框，关掉时展开供手输（V7-R3）。
-     * 盒数 / 份数等非秤录入的键盘不传，始终展开。
+     * 秤录重的重量键盘传 true：「自动填入」开时收起按键只留重量框，并给一个「展开键盘」按钮，
+     * 不关自动填入也能手改（D-0149）；关掉自动填入时按键始终展开。手改后秤读数不变就不会被覆盖（见 useScaleAutoFill）。
+     * 盒数 / 份数等非秤录入的键盘不传，始终展开、无按钮。
      */
     collapseOnAutoFill?: boolean;
+    /**
+     * 大框改显示的值（去皮页的实重，D-0147）。仅在 displayLabel 非空时生效；输入语义不变——
+     * 按键 / 秤自动填入改的仍是 modelValue（称重）。
+     */
+    displayValue?: number;
+    /** 大框里数字前的小标签（如「实重」）；为空 = 大框照常显示可编辑的 modelValue */
+    displayLabel?: string;
+    /** 大框下方小字（如「称重：x，去皮：y」），只在 displayLabel 生效时显示 */
+    displayHint?: string;
   }>(),
   {
     placeholder: '',
     unit: '',
     precision: 3,
-    collapseOnAutoFill: false
+    collapseOnAutoFill: false,
+    displayValue: undefined,
+    displayLabel: '',
+    displayHint: ''
   }
 );
 
+const { t } = useI18n();
 const scaleCfg = useScaleConfigStore();
-const collapsed = computed<boolean>(() => props.collapseOnAutoFill && scaleCfg.autoFill);
+/** 「自动填入」开着的秤重量键盘：默认收起，可点按钮展开手改 */
+const collapsible = computed<boolean>(() => props.collapseOnAutoFill && scaleCfg.autoFill);
+const expanded = ref(false);
+// 自动填入开关一变就回到默认（开 = 收起），免得上次展开的状态带到下一轮
+watch(
+  () => scaleCfg.autoFill,
+  () => {
+    expanded.value = false;
+  }
+);
+const collapsed = computed<boolean>(() => collapsible.value && !expanded.value);
+
+const netMode = computed<boolean>(() => props.displayLabel !== '');
+const netText = computed<string>(() =>
+  props.displayValue == null || !Number.isFinite(props.displayValue) ? '—' : props.displayValue.toFixed(Math.max(props.precision, 0))
+);
+const netInvalid = computed<boolean>(() => props.displayValue != null && props.displayValue <= 0);
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: number | undefined): void;
@@ -88,12 +131,11 @@ function sanitize(raw: string): string {
 
 function emitFromBuffer() {
   const s = buffer.value;
-  if (s === '' || s === '.') {
-    emit('update:modelValue', undefined);
-    return;
-  }
-  const num = Number(s);
-  emit('update:modelValue', Number.isNaN(num) ? undefined : num);
+  const num = s === '' || s === '.' ? undefined : Number(s);
+  const value = num === undefined || Number.isNaN(num) ? undefined : num;
+  emit('update:modelValue', value);
+  // 秤重量键盘的手改：通知自动填入「读数不变前别覆盖」
+  if (props.collapseOnAutoFill) scaleCfg.markManualEdit(value);
 }
 
 function press(key: string) {
@@ -141,6 +183,41 @@ function normalize() {
   height: 44px;
   margin-bottom: 12px;
   background: var(--el-fill-color-blank);
+}
+.numpad-display--net {
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.numpad-net-label {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+.numpad-net {
+  flex: 1;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--el-color-primary);
+}
+.numpad-net.invalid {
+  color: var(--el-color-danger);
+}
+.numpad-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+}
+.numpad-toggle {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin-bottom: 8px;
+  border: 1px dashed var(--el-color-primary-light-5);
+  border-radius: 6px;
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+  font-size: 14px;
+  cursor: pointer;
 }
 .numpad-input {
   flex: 1;

@@ -14,7 +14,7 @@
       row-key="id"
       selectable
       show-export
-      :action-width="220"
+      :action-width="250"
       perm-prefix="djs:common:store"
       @search="handleSearch"
       @reset="handleReset"
@@ -37,6 +37,9 @@
         <el-tooltip :content="t('store.title.bindUser')" placement="top">
           <el-button v-hasPermi="['djs:common:store:bindUser']" link type="primary" icon="UserFilled" @click="handleBindUser(row)" />
         </el-tooltip>
+        <el-tooltip :content="t('store.title.traceQr')" placement="top">
+          <el-button v-hasPermi="['djs:common:store:traceQr']" link type="primary" icon="Grid" @click="handleTraceQr(row)" />
+        </el-tooltip>
         <el-tooltip :content="t('biz.table.action.del')" placement="top">
           <el-button v-hasPermi="['djs:common:store:remove']" link type="danger" icon="Delete" @click="handleDel(row)" />
         </el-tooltip>
@@ -47,6 +50,7 @@
     <StoreView ref="viewRef" />
     <SetManagerDialog ref="setManagerRef" @success="handleFormSuccess" />
     <StoreUserBindDialog ref="bindUserRef" />
+    <StoreTraceQrDialog ref="traceQrRef" />
   </div>
 </template>
 
@@ -57,6 +61,7 @@ import StoreForm from './components/StoreForm.vue';
 import StoreView from './components/StoreView.vue';
 import SetManagerDialog from './components/SetManagerDialog.vue';
 import StoreUserBindDialog from './components/StoreUserBindDialog.vue';
+import StoreTraceQrDialog, { type StoreTraceQrTarget } from './components/StoreTraceQrDialog.vue';
 import { delStore, listStore } from '@/api/djs-common/store';
 import type { StoreQuery, StoreVO } from '@/api/djs-common/store/types';
 import { useI18n } from 'vue-i18n';
@@ -69,6 +74,7 @@ const formRef = ref<{ openCreate: () => void; openEdit: (id: number | string) =>
 const viewRef = ref<{ open: (id: number | string) => void }>();
 const setManagerRef = ref<{ open: (storeId: number | string, currentUserId?: number | null) => void }>();
 const bindUserRef = ref<{ open: (storeId: number | string) => void }>();
+const traceQrRef = ref<{ open: (target: StoreTraceQrTarget) => void }>();
 
 const list = ref<StoreVO[]>([]);
 const total = ref(0);
@@ -170,6 +176,9 @@ function handleSetManager(row: BizRow) {
 }
 function handleBindUser(row: BizRow) {
   bindUserRef.value?.open(row.id);
+}
+function handleTraceQr(row: BizRow) {
+  traceQrRef.value?.open({ storeName: row.storeName as string | undefined, storeCode: row.storeCode as string | undefined });
 }
 async function handleDel(rowOrRows: BizRow | BizRow[]) {
   const ids = Array.isArray(rowOrRows) ? rowOrRows.map((r) => r.id) : [rowOrRows.id];

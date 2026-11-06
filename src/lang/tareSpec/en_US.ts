@@ -34,6 +34,8 @@ export default {
     outDestination: 'Out destination',
     inDestination: 'In location',
     askIn: 'Confirm stock in?',
-    askOut: 'Confirm stock out?'
+    askOut: 'Confirm stock out?',
+    expandKeys: 'Show keypad',
+    collapseKeys: 'Hide keypad'
   }
 };

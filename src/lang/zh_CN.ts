@@ -370,7 +370,20 @@ export default {
       edit: '编辑门店',
       view: '门店详情',
       setManager: '设置店长',
-      bindUser: '门店人员选择'
+      bindUser: '门店人员选择',
+      traceQr: '猪只追溯码'
+    },
+    traceQr: {
+      title: '门店猪只追溯码',
+      storeName: '门店名称',
+      storeCode: '门店编码',
+      link: '扫码链接',
+      tip: '每个门店一个固定二维码，可长期张贴；顾客扫码看到的是本店当天到店的猪肉里最重那头猪的追溯信息，每天自动更新。',
+      copy: '复制链接',
+      copied: '链接已复制',
+      copyFailed: '复制失败，请手动选中链接复制',
+      download: '下载二维码',
+      genFailed: '二维码生成失败，请重试'
     },
     bindUser: {
       title: '门店人员选择',

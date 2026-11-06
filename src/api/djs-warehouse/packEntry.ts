@@ -93,6 +93,8 @@ export interface PigCutRecordVO {
   isOutsource?: boolean;
   /** 领用称重 kg（分割白条领用时现场过磅，白条重量展示用此值，非 in_weight） */
   pickupWeight?: number;
+  /** 猪只日龄（天，按接收日算，口径同猪只入库管理）；外购/无出栏记录为空 → 卡片不显示。> 365 天卡片走超龄样式（V7 第35行） */
+  ageDays?: number | null;
   /** 剩余可分割重量 kg（= pickupWeight − 已入库分割产品重量合计；后端计算回填） */
   remainingWeight?: number;
   isHalf: number;
@@ -191,6 +193,10 @@ export interface CutPartItem {
   cutPart?: 'lean' | 'part' | 'bone' | 'skin' | 'scrap';
   productWeight: number;
   productSpec?: string;
+  /** 称重（秤读数 / 手输），kg 三位小数；与 tareWeight 另存留痕，须满足 grossWeight − tareWeight = productWeight（D-0147） */
+  grossWeight?: string;
+  /** 去皮重量 kg 三位小数，不去皮为 "0.000"（D-0147） */
+  tareWeight?: string;
 }
 
 /** 分割出库称重 BO（多部位） */
@@ -218,6 +224,10 @@ export interface PigCutPickupBo {
   inhouseId?: number | string;
   /** 领用称重 kg（现场过磅，校验 ≤ 白条出栏重量；可空则回落 in_weight 快照） */
   pickupWeight?: number;
+  /** 称重（秤读数 / 手输），kg 三位小数；与 tareWeight 另存留痕，须满足 grossWeight − tareWeight = pickupWeight（D-0147） */
+  grossWeight?: string;
+  /** 去皮重量 kg 三位小数，不去皮为 "0.000"（D-0147） */
+  tareWeight?: string;
   locationId?: number | string;
   targetStoreId?: number | string;
   targetDemandId?: number | string;
@@ -229,6 +239,11 @@ export interface PigCutPickupBo {
 export interface WhiteBarOutBo {
   sourceInhouseId: number | string;
   productWeight: number;
+  /** 称重（秤读数 / 手输），kg 三位小数；与 tareWeight 另存留痕，须满足 grossWeight − tareWeight = productWeight（D-0147） */
+  grossWeight?: string;
+  /** 去皮重量 kg 三位小数，不去皮为 "0.000"（D-0147） */
+  tareWeight?: string;
+
   storeId?: number | string;
   proofOssIds?: string;
   remark?: string;
@@ -238,6 +253,11 @@ export interface WhiteBarOutBo {
 export interface WarehouseOutBo {
   sourceInhouseId: number | string;
   productWeight: number;
+  /** 称重（秤读数 / 手输），kg 三位小数；与 tareWeight 另存留痕，须满足 grossWeight − tareWeight = productWeight（D-0147） */
+  grossWeight?: string;
+  /** 去皮重量 kg 三位小数，不去皮为 "0.000"（D-0147） */
+  tareWeight?: string;
+
   /** 出库去向（字典 djs_stock_out_dest 的 dict_value；admin row2 落 cut_record.out_dest） */
   outDest: string;
   proofOssIds?: string;

@@ -40,9 +40,10 @@ vi.mock('element-plus', async (original) => ({
 vi.mock('../../production/packEntry/components/ScaleFillBar.vue', () => ({ default: { template: '<span />' } }));
 vi.mock('../../production/packEntry/components/WeightNumpad.vue', () => ({
   default: {
-    props: ['modelValue'],
+    props: ['modelValue', 'displayValue', 'displayLabel', 'displayHint'],
     emits: ['update:modelValue'],
-    template: '<input class="test-weight" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" />'
+    template:
+      '<div><input class="test-weight" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" /><p v-if="displayLabel" class="test-net">{{ displayLabel }} {{ displayValue }} | {{ displayHint }}</p></div>'
   }
 }));
 import VegInStation from './VegInStation.vue';
@@ -184,6 +185,8 @@ describe('row282 果蔬入库管理', () => {
       plantingRecordId: plotA,
       productId: product1,
       weight: '12.500',
+      grossWeight: '12.500',
+      tareWeight: '0.000',
       teamIds: [team1],
       perfPercent: 80
     });
@@ -213,7 +216,7 @@ describe('row282 果蔬入库管理', () => {
         ]
       })
     );
-    expect(api.submitVegIn).toHaveBeenCalledWith(expect.objectContaining({ weight: '11.300' }));
+    expect(api.submitVegIn).toHaveBeenCalledWith(expect.objectContaining({ weight: '11.300', grossWeight: '12.500', tareWeight: '1.200' }));
   });
 
   it('opens a custom percent input that only accepts 1-99', async () => {
@@ -335,7 +338,15 @@ describe('row283 果蔬出库管理', () => {
     expect(buttonByText(wrapper, '.recent-destinations .option', '矿山').classes()).toContain('active');
     await submit.trigger('click');
     await flushPromises();
-    expect(api.submitVegOut).toHaveBeenCalledWith({ productId, stockIds: ['s1', 's2'], weight: '10.000', destination: 'warehouse', outDest: 'mine' });
+    expect(api.submitVegOut).toHaveBeenCalledWith({
+      productId,
+      stockIds: ['s1', 's2'],
+      weight: '10.000',
+      grossWeight: '10.000',
+      tareWeight: '0.000',
+      destination: 'warehouse',
+      outDest: 'mine'
+    });
     expect(message.success).toHaveBeenCalledWith('vegOutSaved');
   });
 
@@ -348,7 +359,14 @@ describe('row283 果蔬出库管理', () => {
     await wrapper.find('.test-weight').setValue('3.5');
     await buttonByText(wrapper, '.submit-button', 'confirmOut').trigger('click');
     await flushPromises();
-    expect(api.submitVegOut).toHaveBeenCalledWith({ productId, stockIds: ['s3'], weight: '3.500', destination: 'feed' });
+    expect(api.submitVegOut).toHaveBeenCalledWith({
+      productId,
+      stockIds: ['s3'],
+      weight: '3.500',
+      grossWeight: '3.500',
+      tareWeight: '0.000',
+      destination: 'feed'
+    });
   });
 
   it('deducts the tare before the stock check and submit, and confirms as stock-out', async () => {
@@ -359,11 +377,19 @@ describe('row283 果蔬出库管理', () => {
     await wrapper.findAll('.stock-card')[1].trigger('click');
     await buttonByText(wrapper, '.destination-options .option', 'pigFeed').trigger('click');
     await wrapper.find('.test-weight').setValue('80.5');
+    expect(wrapper.find('.test-net').text()).toBe('net 80 | gross：80.500Kg，tareWeight：0.500Kg');
     expect(wrapper.find('.field-error').exists()).toBe(false);
     await buttonByText(wrapper, '.submit-button', 'confirmOut').trigger('click');
     await flushPromises();
     expect(weighing.confirmWeighing).toHaveBeenCalledWith({ direction: 'out', gross: 80.5, tare: 0.5, net: 80, destination: 'pigFeed' });
-    expect(api.submitVegOut).toHaveBeenCalledWith({ productId, stockIds: ['s3'], weight: '80.000', destination: 'feed' });
+    expect(api.submitVegOut).toHaveBeenCalledWith({
+      productId,
+      stockIds: ['s3'],
+      weight: '80.000',
+      grossWeight: '80.500',
+      tareWeight: '0.500',
+      destination: 'feed'
+    });
   });
 
   it('a cancelled confirmation does not dispatch', async () => {

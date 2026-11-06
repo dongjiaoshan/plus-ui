@@ -35,9 +35,10 @@ vi.mock('element-plus', async (original) => ({
 vi.mock('../../production/packEntry/components/ScaleFillBar.vue', () => ({ default: { template: '<span />' } }));
 vi.mock('../../production/packEntry/components/WeightNumpad.vue', () => ({
   default: {
-    props: ['modelValue'],
+    props: ['modelValue', 'displayValue', 'displayLabel', 'displayHint'],
     emits: ['update:modelValue'],
-    template: '<input class="test-weight" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" />'
+    template:
+      '<div><input class="test-weight" :value="modelValue" @input="$emit(\'update:modelValue\', Number($event.target.value))" /><p v-if="displayLabel" class="test-net">{{ displayLabel }} {{ displayValue }} | {{ displayHint }}</p></div>'
   }
 }));
 import VegOutStation from './VegOutStation.vue';
@@ -94,7 +95,14 @@ describe('V7 行13 果蔬出库「家禽饲料」去向', () => {
     await submit.trigger('click');
     await flushPromises();
     expect(weighing.confirmWeighing).toHaveBeenCalledWith(expect.objectContaining({ direction: 'out', destination: 'poultryFeed' }));
-    expect(api.submitVegOut).toHaveBeenCalledWith({ productId, stockIds: ['s1'], weight: '12.000', destination: 'poultry_feed' });
+    expect(api.submitVegOut).toHaveBeenCalledWith({
+      productId,
+      stockIds: ['s1'],
+      weight: '12.000',
+      grossWeight: '12.000',
+      tareWeight: '0.000',
+      destination: 'poultry_feed'
+    });
     expect(message.success).toHaveBeenCalledWith('vegOutSaved');
   });
 

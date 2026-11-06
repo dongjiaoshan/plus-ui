@@ -91,7 +91,14 @@
           <label>{{ tr('outWeight') }}</label>
           <ScaleFillBar v-model="weight" :in-gram="false" />
         </div>
-        <WeightNumpad v-model="weight" unit="kg" :precision="3" :placeholder="tr('outWeight')" collapse-on-auto-fill />
+        <WeightNumpad
+          v-model="weight"
+          unit="kg"
+          :precision="3"
+          :placeholder="tr('outWeight')"
+          collapse-on-auto-fill
+          v-bind="tare.numpadProps.value"
+        />
         <TareSelector :tare="tare" />
         <p v-if="overStock" class="field-error" role="alert">{{ tr('overStock') }}</p>
         <section class="info-section">
@@ -308,6 +315,7 @@ async function submit() {
       productId: product.productId,
       stockIds: [...stock.stockIds],
       weight: net.toFixed(3),
+      ...tare.weighPayload(),
       destination: destination.value,
       ...(destination.value === 'warehouse' ? { outDest: outDest.value } : {})
     });

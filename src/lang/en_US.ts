@@ -370,7 +370,20 @@ export default {
       edit: 'Edit store',
       view: 'Store details',
       setManager: 'Set manager',
-      bindUser: 'Store staff'
+      bindUser: 'Store staff',
+      traceQr: 'Pig trace QR'
+    },
+    traceQr: {
+      title: 'Store pig trace QR code',
+      storeName: 'Store name',
+      storeCode: 'Store code',
+      link: 'Scan URL',
+      tip: 'One fixed QR code per store that can stay posted. Customers see the trace of the heaviest pig among today\'s pork arrivals at this store, refreshed daily.',
+      copy: 'Copy link',
+      copied: 'Link copied',
+      copyFailed: 'Copy failed, please select the link and copy it manually',
+      download: 'Download QR code',
+      genFailed: 'Failed to generate the QR code, please retry'
     },
     bindUser: {
       title: 'Store staff',

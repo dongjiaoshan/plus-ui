@@ -58,6 +58,10 @@ export interface VegInSubmission {
   plantingRecordId: string;
   productId?: string;
   weight: string;
+  /** 称重（秤读数 / 手输），kg 三位小数；与 tareWeight 另存留痕，须满足 grossWeight − tareWeight = 实重（D-0147） */
+  grossWeight?: string;
+  /** 去皮重量 kg 三位小数，不去皮为 "0.000"（D-0147） */
+  tareWeight?: string;
   teamIds: string[];
   perfPercent: number;
 }
@@ -96,6 +100,10 @@ export interface VegOutSubmission {
   productId: string;
   stockIds: string[];
   weight: string;
+  /** 称重（秤读数 / 手输），kg 三位小数；与 tareWeight 另存留痕，须满足 grossWeight − tareWeight = 实重（D-0147） */
+  grossWeight?: string;
+  /** 去皮重量 kg 三位小数，不去皮为 "0.000"（D-0147） */
+  tareWeight?: string;
   destination: VegOutDestination;
   outDest?: string;
 }

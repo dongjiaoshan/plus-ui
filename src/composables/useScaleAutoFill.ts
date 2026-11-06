@@ -14,6 +14,10 @@ import { useScaleConfigStore } from '@/store/modules/scaleConfig';
  * - **零点死区**：|重量| < MIN_KG(5g) 一律读作 0，滤掉空秤噪声（否则「取下」显示成 2g 而不是 0）。
  * - **失联/秤异常(Code=0) 不改值**：只停止跟随，保留框里现有的值，不把手输值抹成 0。
  * - **同值不重复写**：镜像值与当前录入值相等就不 emit，避免每 300ms 一次无谓的表单更新。
+ *
+ * 手改例外（D-0149，甲方 2026-11-04）：自动填入开着时工人可点「展开键盘」手改重量，不用关自动填入。
+ * WeightNumpad 手改时打点（scaleConfig.markManualEdit），此后**只有秤读数发生变化才会再次覆盖**；
+ * 读数不变时手输值保持。录入值被别处改掉（选卡片清空 / 提交后 reset）或切换自动填入开关，手改保持即解除、恢复镜像。
  */
 
 /** 零点死区（kg）：小于此值（含负数）一律读作 0 */
@@ -57,6 +61,15 @@ export function useScaleAutoFill(opts: UseScaleAutoFillOptions) {
   const following = computed<boolean>(() => cfg.autoFill && scale.connected.value && scale.code.value === 1 && !toValue(opts.disabled));
 
   const lastPushed = ref<number | null>(null);
+  /** 手改保持：记下手改那一刻的秤读数（按录入口径换算）与手改值；null = 正常镜像 */
+  let manualHold: { reading: number; value: number | undefined } | null = null;
+  let seenManualSeq = cfg.manualSeq;
+  watch(
+    () => cfg.autoFill,
+    () => {
+      manualHold = null;
+    }
+  );
   // ⚠️ watch 源里**必须**带上 `opts.current?.()` —— 它让「当前录入值」成为响应式依赖，
   // 于是外部把值改掉/清空（如选卡片时程序化置 undefined、提交后 reset）也会重新触发镜像纠回来。
   // 少了这一项就只在「秤读数变化」时才推：秤上放着东西读数恒定时，被清空的框永远填不回来
@@ -70,14 +83,26 @@ export function useScaleAutoFill(opts: UseScaleAutoFillOptions) {
         scale.code.value,
         cfg.autoFill,
         toValue(opts.disabled),
-        opts.current ? opts.current() : null
+        opts.current ? opts.current() : null,
+        cfg.manualSeq
       ] as const,
     () => {
-      if (!following.value) return;
       const kg = scale.weightKg.value;
+      if (cfg.manualSeq !== seenManualSeq) {
+        seenManualSeq = cfg.manualSeq;
+        // 只有正在跟随时的手改才需要保持；没在跟随时手改本来就不会被覆盖
+        manualHold = following.value && kg !== null ? { reading: convert(kg), value: cfg.manualValue } : null;
+        if (manualHold) return;
+      }
+      if (!following.value) return;
       if (kg === null) return;
       const v = convert(kg);
       const cur = opts.current ? opts.current() : lastPushed.value;
+      if (manualHold) {
+        const valueKept = opts.current ? cur === manualHold.value : true;
+        if (valueKept && v === manualHold.reading) return;
+        manualHold = null;
+      }
       if (cur !== undefined && cur !== null && cur === v) return;
       opts.onFill(v);
       lastPushed.value = v;
