@@ -25,6 +25,7 @@ export interface InoutStatQuery extends PageQuery {
   productName?: string;
   /** 产品类型多选（djs_product_type） */
   productTypes?: number[];
+  belongTypes?: string[];
   /** 入库方式多选（djs_flow_type，仅入库统计） */
   flowTypes?: string[];
   /** 供应商 ID 精确（仅入库统计；雪花 > 2^53 全链路 string；与 noSupplier 互斥） */
@@ -41,6 +42,8 @@ export interface InoutStatInVO {
   productCode?: string;
   productName?: string;
   productTypeName?: string;
+  belongTypeName?: string;
+  belongType?: string;
   productSpec?: string;
   inModeName?: string;
   inboundQty?: number | string;
@@ -59,6 +62,8 @@ export interface InoutStatOutVO {
   productCode?: string;
   productName?: string;
   productTypeName?: string;
+  belongTypeName?: string;
+  belongType?: string;
   productSpec?: string;
   /** 出库去向（空 / 字典未命中后端回填「未指定」，是展示值不是分组键） */
   outDestName?: string;

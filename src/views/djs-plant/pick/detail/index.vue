@@ -60,14 +60,14 @@ function statSourceLabel(v: unknown): string {
 }
 
 const searchModel = reactive<Record<string, unknown>>({
-  pickDateRange: undefined,
+  recordTimeRange: undefined,
   cropName: undefined,
   teamId: undefined,
   statSource: undefined
 });
 
 const searchSchema = computed<SearchFieldSchema[]>(() => [
-  { field: 'pickDateRange', label: t('pickDetail.field.pickDate'), type: 'daterange' },
+  { field: 'recordTimeRange', label: t('pickDetail.field.recordTime'), type: 'daterange' },
   { field: 'cropName', label: t('pickDetail.field.cropName'), type: 'input', placeholder: t('pickDetail.placeholder.cropName') },
   {
     field: 'statSource',
@@ -94,13 +94,6 @@ const columns = computed<BizTableColumn[]>(() => [
     minWidth: 170,
     align: 'center',
     formatter: (r: BizRow) => (r.recordTime != null ? String(r.recordTime) : '-')
-  },
-  {
-    prop: 'pickDate',
-    label: t('pickDetail.column.pickDate'),
-    minWidth: 130,
-    align: 'center',
-    formatter: (r: BizRow) => (r.pickDate != null ? String(r.pickDate) : '-')
   },
   {
     prop: 'cropName',
@@ -167,16 +160,16 @@ const columns = computed<BizTableColumn[]>(() => [
   }
 ]);
 
-/** daterange 字段绑成 [start, end] 数组，拆成 pickDateBegin / pickDateEnd 传后端。 */
+/** daterange 字段绑成 [start, end] 数组，拆成 recordTimeBegin / recordTimeEnd 传后端。 */
 function rangeOf(v: unknown): { begin?: string; end?: string } {
   return Array.isArray(v) && v.length === 2 ? { begin: v[0] || undefined, end: v[1] || undefined } : {};
 }
 
 function buildQuery(): PickDetailQuery {
-  const { begin, end } = rangeOf(searchModel.pickDateRange);
+  const { begin, end } = rangeOf(searchModel.recordTimeRange);
   return {
-    pickDateBegin: begin,
-    pickDateEnd: end,
+    recordTimeBegin: begin,
+    recordTimeEnd: end,
     cropName: (searchModel.cropName as string | undefined) || undefined,
     teamId: (searchModel.teamId as string | number | undefined) ?? undefined,
     statSource: (searchModel.statSource as string | undefined) || undefined,
@@ -223,12 +216,12 @@ function handlePageChange(pn: number, ps: number) {
 }
 
 function handleExport() {
-  const { begin, end } = rangeOf(searchModel.pickDateRange);
+  const { begin, end } = rangeOf(searchModel.recordTimeRange);
   proxy?.download(
     'djs/warehouse/vegHandle/pickDetail/export',
     {
-      pickDateBegin: begin,
-      pickDateEnd: end,
+      recordTimeBegin: begin,
+      recordTimeEnd: end,
       cropName: (searchModel.cropName as string | undefined) || undefined,
       teamId: (searchModel.teamId as string | number | undefined) ?? undefined,
       statSource: (searchModel.statSource as string | undefined) || undefined

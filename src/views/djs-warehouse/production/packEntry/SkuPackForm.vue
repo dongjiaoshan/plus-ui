@@ -369,20 +369,8 @@ const SEND_DEST_LABEL_KEY: Record<DeliverDest, string> = {
 };
 const sendDests = computed(() => (props.sendDestKinds ?? []).map((v) => ({ value: v as number | string, label: t(SEND_DEST_LABEL_KEY[v]) })));
 
-const {
-  products,
-  productLoading,
-  sources,
-  sourceLoading,
-  plotMap,
-  plotLoading,
-  stores,
-  loadProducts,
-  loadVegProductsByMaterial,
-  loadStores,
-  loadSources,
-  loadPlots
-} = usePackEntryOptions();
+const { products, productLoading, sources, sourceLoading, plotMap, plotLoading, stores, loadProducts, loadStores, loadSources, loadPlots } =
+  usePackEntryOptions();
 
 // doc/14 §1：打包来源 = 全部「活动（未打包）」inhouse WIP。不再按「近 1-2 天」过滤——
 // 统一 WIP 模型下，未打包的领用库存持续可见直到被打包消耗（consumeInhouse 按实重扣减），
@@ -574,31 +562,9 @@ const vegMaterialFallback = ref(false);
  * 依赖 sources 已 loadSources('veg') 完成。
  */
 async function loadVegProducts() {
-  // 今天领用过滤（doc/14 §5）：后端 listSourceForVeg 已按 DATE(produce_date)=今天 过滤，
-  // 这里只从「今天领用」的 veg 来源推导本次领用原料 id。
-  const materialIds = Array.from(
-    new Set(
-      effectiveSources.value
-        .map((s) => s.productId)
-        .filter((id): id is number => id != null)
-        .map((id) => String(id))
-    )
-  );
-  // 今天没领用 → 直接空（须先 mp 领用才有料；不回退显示全部）
-  if (materialIds.length === 0) {
-    products.value = [];
-    vegMaterialFallback.value = false;
-    return;
-  }
-  const count = await loadVegProductsByMaterial(materialIds);
-  // 有当天领用但 product_material 未配（命中 0）→ 仍回退显全部 + 提示（doc#12 安全兜底：
-  // 可打包却因未配料空白会卡住工人；此时显全部 + 顶部提示，与「无领用直接空」区分）。
-  if (count === 0) {
-    vegMaterialFallback.value = true;
-    await loadVegProductsByMaterial([]);
-  } else {
-    vegMaterialFallback.value = false;
-  }
+  // 候选需要同时包含尚未领料但存在今后未满足需求的成品；在 displayProducts 按同一需求池筛选。
+  await loadProducts(1, 'vegetable', undefined, undefined, 1);
+  vegMaterialFallback.value = false;
 }
 
 function onProductChange(item: ProductInfoVO) {
@@ -714,18 +680,11 @@ watch([() => form.value.productId, effectiveSources], () => {
 
 // 左侧卡片：只显「今天有领用原料」的成品 —— 即其有效原材料出现在 sources（已领用原料 inhouse）。
 // 同一原材料的多个规格成品（猪皮原料 → 猪皮200/500）都会命中（一料多品共享池，doc/14 §5）。
-const requisitionedProductIds = computed<Set<string>>(() => {
-  const set = new Set<string>();
-  if (!sourceFilterActive.value) return set;
-  effectiveSources.value.forEach((s) => {
-    if (s.productId != null) set.add(String(s.productId));
-  });
-  return set;
+const displayProducts = computed<ProductInfoVO[]>(() => {
+  if (!sourceFilterActive.value && props.kind !== 'veg') return products.value;
+  const materialIds = new Set(effectiveSources.value.filter((source) => source.productId != null).map((source) => String(source.productId)));
+  return products.value.filter((product) => materialIds.has(effectiveMaterialId(product)) || Number(demandMap.value[String(product.id)] || 0) > 0);
 });
-
-const displayProducts = computed<ProductInfoVO[]>(() =>
-  sourceFilterActive.value ? products.value.filter((p) => requisitionedProductIds.value.has(effectiveMaterialId(p))) : products.value
-);
 
 // 124#1：肉品打包挂载/刷新后，若尚未选产品，自动选中第一个「有门店需求」的产品（减少选择）。
 // 依赖 displayProducts + demandMap（各成品聚合门店需求份数）均已加载。产品或需求变化后重触发，

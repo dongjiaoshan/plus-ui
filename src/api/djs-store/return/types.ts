@@ -226,6 +226,9 @@ export interface StoreReturnOpsItemVO {
   /** 入库库位下拉可选项（猪肉固定鲜品库/冻品库） */
   locationOptions?: LocationPickerVO[];
   isDiscard?: number;
+  warehouseDiscardQty?: number | string;
+  warehouseRemark?: string;
+  warehouseAdded?: number;
   returnStatus?: string;
   returnDate?: string;
   operatorId?: string;
@@ -240,6 +243,7 @@ export interface StoreReturnUnitCandidateVO {
   productId: string;
   /** 产品业务编码（字典里配的就是它） */
   productCode?: string;
+  productType?: number;
   productName?: string;
   productSpec?: string;
   belongType?: string;

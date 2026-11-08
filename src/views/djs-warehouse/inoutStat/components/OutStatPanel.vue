@@ -9,7 +9,7 @@
       :total="total"
       :loading="loading"
       :columns="columns"
-      :dict-types="['djs_stock_out_dest', 'djs_product_type']"
+      :dict-types="['djs_stock_out_dest', 'djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       perm-prefix="djs:warehouse:inoutStat"
@@ -88,10 +88,10 @@ const pageNum = ref(1);
 const pageSize = ref(10);
 
 /** 默认近一个月（上月同日 → 今天）；重置也回到这个区间，而不是清空 */
-const searchModel = reactive<{ dateRange: string[]; productName?: string; productType: Array<string | number>; stockOutDest: string[] }>({
+const searchModel = reactive<{ dateRange: string[]; productName?: string; belongType: Array<string | number>; stockOutDest: string[] }>({
   dateRange: defaultDateRange(),
   productName: undefined,
-  productType: [],
+  belongType: [],
   stockOutDest: []
 });
 
@@ -99,14 +99,14 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('inoutStat.field.date'), type: 'daterange' },
   { field: 'productName', label: t('inoutStat.field.productName'), type: 'input' },
   { field: 'stockOutDest', label: t('inoutStat.field.outDest'), type: 'select', multiple: true, dictType: 'djs_stock_out_dest' },
-  { field: 'productType', label: t('inoutStat.field.productType'), type: 'select', multiple: true, dictType: 'djs_product_type' }
+  { field: 'belongType', label: t('inoutStat.field.productType'), type: 'select', multiple: true, dictType: 'djs_belong_type' }
 ]);
 
 const columns = computed<BizTableColumn[]>(() => [
   // row187：产品编码是第一列（也是后端聚合的身份键）
   { prop: 'productCode', label: t('inoutStat.column.productCode'), minWidth: 110, align: 'center' },
   { prop: 'productName', label: t('inoutStat.column.productName'), minWidth: 160, align: 'center', showOverflowTooltip: true },
-  { prop: 'productTypeName', label: t('inoutStat.column.productType'), minWidth: 100, align: 'center' },
+  { prop: 'belongTypeName', label: t('inoutStat.column.productType'), minWidth: 100, align: 'center' },
   { prop: 'productSpec', label: t('inoutStat.column.productSpec'), minWidth: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'outDestName', label: t('inoutStat.column.outDest'), minWidth: 120, align: 'center', showOverflowTooltip: true },
   { prop: 'storeName', label: t('inoutStat.column.storeName'), minWidth: 140, align: 'center', showOverflowTooltip: true },
@@ -128,8 +128,7 @@ function buildQuery(): Omit<InoutStatQuery, 'pageNum' | 'pageSize'> {
     dateFrom: from || undefined,
     dateTo: to || undefined,
     productName: searchModel.productName || undefined,
-    productTypes:
-      Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType.map((v) => Number(v)) : undefined,
+    belongTypes: Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType.map((v) => String(v)) : undefined,
     stockOutDests: Array.isArray(searchModel.stockOutDest) && searchModel.stockOutDest.length ? searchModel.stockOutDest : undefined
   };
 }
@@ -160,7 +159,7 @@ function handleSearch(payload?: Record<string, unknown>) {
 function handleReset() {
   searchModel.dateRange = defaultDateRange();
   searchModel.productName = undefined;
-  searchModel.productType = [];
+  searchModel.belongType = [];
   searchModel.stockOutDest = [];
   pageNum.value = 1;
   loadList();

@@ -19,6 +19,8 @@ export interface CutBar {
   inhouseId?: string;
   cutRecordId?: string;
   whiteBarNo: string;
+  /** 白条产品名称（左半扇/右半扇）。 */
+  productName?: string;
   earNo?: string;
   /** 首次接收日减出生日期，缺少来源时不显示 */
   ageDays?: number;

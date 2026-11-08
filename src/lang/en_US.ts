@@ -378,7 +378,7 @@ export default {
       storeName: 'Store name',
       storeCode: 'Store code',
       link: 'Scan URL',
-      tip: 'One fixed QR code per store that can stay posted. Customers see the trace of the heaviest pig among today\'s pork arrivals at this store, refreshed daily.',
+      tip: "One fixed QR code per store that can stay posted. Customers see the trace of the heaviest pig among today's pork arrivals at this store, refreshed daily.",
       copy: 'Copy link',
       copied: 'Link copied',
       copyFailed: 'Copy failed, please select the link and copy it manually',
@@ -2630,7 +2630,7 @@ export default {
   pickDetail: {
     pageTitle: 'Pick Detail',
     field: {
-      pickDate: 'Pick Date',
+      recordTime: 'Harvest Recorded At',
       cropName: 'Crop',
       team: 'Pick Team'
     },
@@ -2640,7 +2640,7 @@ export default {
       statSource: 'Select stat source'
     },
     column: {
-      recordTime: 'Recorded At',
+      recordTime: 'Harvest Recorded At',
       pickDate: 'Pick Date',
       cropName: 'Crop',
       productName: 'Product',
@@ -2793,7 +2793,7 @@ export default {
     field: {
       date: 'Date',
       productName: 'Product Name',
-      productType: 'Product Type',
+      productType: 'Product Category',
       inMode: 'Inbound Method',
       outDest: 'Outbound Destination',
       supplier: 'Supplier',
@@ -2825,7 +2825,7 @@ export default {
       storeName: 'Outbound store',
       productCode: 'Product Code',
       productName: 'Product Name',
-      productType: 'Product Type',
+      productType: 'Product Category',
       productSpec: 'Spec',
       inMode: 'Inbound Method',
       inboundQty: 'Inbound Qty',
@@ -3393,6 +3393,13 @@ export default {
         discardNo: 'No'
       },
       storeReturn: {
+        discardQuantity: 'Discarded quantity',
+        warehouseRemark: 'Remarks',
+        addProducts: 'Add return products',
+        addSelected: 'Add to return list',
+        productType: 'Product type',
+        amountRequired: 'Enter a received or discarded quantity above zero; untouched rows remain pending',
+
         title: 'Store Return Operations',
         returnDate: 'Return Date',
         returnType: 'Return Type',
@@ -3589,6 +3596,7 @@ export default {
           itemList: 'Product Items'
         },
         column: {
+          tomorrowDemandQty: 'Next-day Demand',
           produceDate: 'Produce Date',
           produceNo: 'Produce No.',
           productName: 'Product Name',

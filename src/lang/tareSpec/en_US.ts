@@ -18,6 +18,11 @@ export default {
     positions: 'Choose at least one page'
   },
   station: {
+    cumulative: 'Cumulative tare',
+    fixed: 'Fixed tare',
+    capture: 'Tare',
+    restore: 'Restore',
+
     tare: 'Tare',
     none: 'No tare',
     gross: 'Gross',

@@ -17,6 +17,9 @@ export function useTare(position: TarePosition, gross: MaybeRefOrGetter<number |
   const options = ref<TareOption[]>([]);
   /** '' = 不去皮 */
   const selectedId = ref('');
+  const cumulativeEnabled = ['pig_in', 'cut_out', 'veg_out', 'veg_in'].includes(position);
+  const mode = ref<'fixed' | 'cumulative'>('fixed');
+  const cumulativeKg = ref(0);
   const loadFailed = ref(false);
 
   async function load() {
@@ -36,7 +39,7 @@ export function useTare(position: TarePosition, gross: MaybeRefOrGetter<number |
   onActivated(load);
 
   const selected = computed(() => options.value.find((o) => o.id === selectedId.value));
-  const tareKg = computed<number>(() => Number(selected.value?.tareWeight ?? 0));
+  const tareKg = computed<number>(() => (mode.value === 'cumulative' ? cumulativeKg.value : Number(selected.value?.tareWeight ?? 0)));
   const grossKg = computed<number | undefined>(() => {
     const v = toValue(gross);
     return v == null || !Number.isFinite(v) ? undefined : Number(v);
@@ -46,15 +49,33 @@ export function useTare(position: TarePosition, gross: MaybeRefOrGetter<number |
     grossKg.value === undefined ? undefined : (Math.round(grossKg.value * 1000) - Math.round(tareKg.value * 1000)) / 1000
   );
 
+  /** 切换模式从零开始累计，固定规格仍沿用已有选择。 */
+  function setMode(value: 'fixed' | 'cumulative') {
+    if (value === 'cumulative' && !cumulativeEnabled) return;
+    mode.value = value;
+    cumulativeKg.value = 0;
+  }
+
+  /** 当前总称重成为新的零点；不能重复累加总读数，否则第二次去皮会扣重两次。 */
+  function captureTare() {
+    if (mode.value !== 'cumulative' || grossKg.value == null || grossKg.value < 0) return;
+    cumulativeKg.value = Math.round(grossKg.value * 1000) / 1000;
+  }
+
+  function restoreTare() {
+    cumulativeKg.value = 0;
+  }
+
   /** 选规格；'' = 不去皮 */
   function select(id: string) {
     selectedId.value = id;
   }
 
   /** 绑到 WeightNumpad（v-bind）：选了规格 → 大框显示实重 + 小字「称重：x，去皮：y」；否则空对象，大框照旧 */
-  const numpadProps = computed<{ displayValue?: number; displayLabel?: string; displayHint?: string }>(() => {
-    if (!selected.value) return {};
+  const numpadProps = computed<{ displayValue?: number; displayLabel?: string; displayHint?: string; emphasize?: boolean }>(() => {
+    if (mode.value === 'fixed' && !selected.value) return { emphasize: cumulativeEnabled };
     return {
+      emphasize: cumulativeEnabled,
       displayValue: net.value,
       displayLabel: t('tareSpec.station.net'),
       displayHint: `${t('tareSpec.station.gross')}：${kgText(grossKg.value)}，${t('tareSpec.station.tareWeight')}：${kgText(tareKg.value)}`
@@ -68,7 +89,24 @@ export function useTare(position: TarePosition, gross: MaybeRefOrGetter<number |
     return { grossWeight: milli(grossKg.value ?? 0), tareWeight: milli(tareKg.value) };
   }
 
-  return { options, selectedId, selected, tareKg, grossKg, net, loadFailed, load, select, numpadProps, weighPayload };
+  return {
+    options,
+    selectedId,
+    selected,
+    tareKg,
+    grossKg,
+    net,
+    loadFailed,
+    load,
+    select,
+    numpadProps,
+    weighPayload,
+    cumulativeEnabled,
+    mode,
+    setMode,
+    captureTare,
+    restoreTare
+  };
 }
 
 export type TareState = ReturnType<typeof useTare>;

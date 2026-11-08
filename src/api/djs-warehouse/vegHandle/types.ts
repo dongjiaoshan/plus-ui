@@ -83,9 +83,9 @@ export interface PickDetailVO {
 
 export interface PickDetailQuery {
   /** 采摘日期范围-起 yyyy-MM-dd。 */
-  pickDateBegin?: string;
+  recordTimeBegin?: string;
   /** 采摘日期范围-止 yyyy-MM-dd。 */
-  pickDateEnd?: string;
+  recordTimeEnd?: string;
   cropName?: string;
   /** 采摘班组 id。 */
   teamId?: number | string;

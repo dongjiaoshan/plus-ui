@@ -8,7 +8,7 @@
       :total="total"
       :loading="loading"
       :columns="columns"
-      :dict-types="['djs_product_type']"
+      :dict-types="['djs_belong_type']"
       :page-num="pageNum"
       :page-size="pageSize"
       perm-prefix="djs:warehouse:inoutStat"
@@ -105,13 +105,13 @@ const inModeOptions = computed(() =>
 const searchModel = reactive<{
   dateRange: string[];
   productName?: string;
-  productType: Array<string | number>;
+  belongType: Array<string | number>;
   flowType: string[];
   supplier?: string;
 }>({
   dateRange: defaultDateRange(),
   productName: undefined,
-  productType: [],
+  belongType: [],
   flowType: [],
   supplier: undefined
 });
@@ -120,7 +120,7 @@ const searchSchema = computed<SearchFieldSchema[]>(() => [
   { field: 'dateRange', label: t('inoutStat.field.date'), type: 'daterange' },
   { field: 'productName', label: t('inoutStat.field.productName'), type: 'input' },
   { field: 'flowType', label: t('inoutStat.field.inMode'), type: 'select', multiple: true, options: inModeOptions.value },
-  { field: 'productType', label: t('inoutStat.field.productType'), type: 'select', multiple: true, dictType: 'djs_product_type' },
+  { field: 'belongType', label: t('inoutStat.field.productType'), type: 'select', multiple: true, dictType: 'djs_belong_type' },
   // 单选 + 打字过滤（SearchForm 的 select 恒 filterable），选中即精确筛
   { field: 'supplier', label: t('inoutStat.field.supplier'), type: 'select', options: supplierPickOptions.value }
 ]);
@@ -129,7 +129,7 @@ const columns = computed<BizTableColumn[]>(() => [
   // row187：产品编码是第一列（也是后端聚合的身份键）
   { prop: 'productCode', label: t('inoutStat.column.productCode'), minWidth: 110, align: 'center' },
   { prop: 'productName', label: t('inoutStat.column.productName'), minWidth: 160, align: 'center', showOverflowTooltip: true },
-  { prop: 'productTypeName', label: t('inoutStat.column.productType'), minWidth: 100, align: 'center' },
+  { prop: 'belongTypeName', label: t('inoutStat.column.productType'), minWidth: 100, align: 'center' },
   { prop: 'productSpec', label: t('inoutStat.column.productSpec'), minWidth: 110, align: 'center', showOverflowTooltip: true },
   { prop: 'inModeName', label: t('inoutStat.column.inMode'), minWidth: 120, align: 'center' },
   {
@@ -152,8 +152,7 @@ function buildQuery(): Omit<InoutStatQuery, 'pageNum' | 'pageSize'> {
     dateFrom: from || undefined,
     dateTo: to || undefined,
     productName: searchModel.productName || undefined,
-    productTypes:
-      Array.isArray(searchModel.productType) && searchModel.productType.length ? searchModel.productType.map((v) => Number(v)) : undefined,
+    belongTypes: Array.isArray(searchModel.belongType) && searchModel.belongType.length ? searchModel.belongType.map((v) => String(v)) : undefined,
     flowTypes: Array.isArray(searchModel.flowType) && searchModel.flowType.length ? searchModel.flowType : undefined,
     // 「无供应商」是空桶没有 ID，用独立开关表达；两者互斥，永远只传一个
     supplierId: supplier && supplier !== NO_SUPPLIER_VALUE ? supplier : undefined,
@@ -187,7 +186,7 @@ function handleSearch(payload?: Record<string, unknown>) {
 function handleReset() {
   searchModel.dateRange = defaultDateRange();
   searchModel.productName = undefined;
-  searchModel.productType = [];
+  searchModel.belongType = [];
   searchModel.flowType = [];
   searchModel.supplier = undefined;
   pageNum.value = 1;

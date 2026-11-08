@@ -12,7 +12,7 @@
           :key="source.key"
           type="button"
           class="source-card"
-          :class="{ active: source.key === selectedKey, 'over-age': isOverAge(source) }"
+          :class="{ active: source.key === selectedKey, 'over-age': isOverAge(source), 'source-card--cut': !isBurn }"
           :disabled="busy || loading"
           :aria-pressed="source.key === selectedKey"
           @click="selectSource(source.key)"
@@ -29,10 +29,8 @@
           </template>
           <template v-else-if="source.bar">
             <span class="bar-product-name" :class="halfSideClass(source.bar.productName)">{{ source.bar.productName || '—' }}</span>
-            <span class="bar-number">{{ tr('whiteBarNo') }}：{{ source.bar.whiteBarNo || '—' }}</span>
-            <span>{{ tr('inTime') }}：{{ source.bar.inTime || '—' }}</span>
-            <span>{{ tr('inWeight') }}：{{ kg(source.bar.inWeight) }}</span>
             <span>{{ tr('operateTime') }}：{{ source.bar.operateTime || '—' }}</span>
+            <span>{{ tr('inWeight') }}：{{ kg(source.bar.inWeight) }}</span>
             <span class="remaining">{{ tr('remaining') }}：{{ kg(source.bar.remainingWeight) }}</span>
           </template>
         </button>
@@ -638,6 +636,24 @@ onMounted(() => refresh());
 .active {
   border-color: var(--el-color-primary) !important;
   background: var(--el-color-primary-light-9) !important;
+}
+.source-card--cut {
+  flex-basis: 310px;
+  font-size: 16px;
+  font-weight: 700;
+  strong {
+    font-size: 19px;
+    font-weight: 700;
+  }
+  .remaining {
+    font-weight: 700;
+  }
+  .bar-product-name {
+    font-size: 22px;
+  }
+  .age-days {
+    font-size: 22px;
+  }
 }
 .source-head {
   display: flex;

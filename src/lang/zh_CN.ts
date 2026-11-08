@@ -2618,7 +2618,7 @@ export default {
   pickDetail: {
     pageTitle: '采摘明细',
     field: {
-      pickDate: '采摘日期',
+      recordTime: '采摘记录时间',
       cropName: '作物名称',
       team: '采摘班组'
     },
@@ -2628,7 +2628,7 @@ export default {
       statSource: '请选择统计来源'
     },
     column: {
-      recordTime: '记录时间',
+      recordTime: '采摘记录时间',
       pickDate: '采摘日期',
       cropName: '作物名称',
       productName: '产品名称',
@@ -2781,7 +2781,7 @@ export default {
     field: {
       date: '日期',
       productName: '产品名称',
-      productType: '产品类型',
+      productType: '产品类别',
       inMode: '入库方式',
       outDest: '出库去向',
       supplier: '供应商',
@@ -2813,7 +2813,7 @@ export default {
       storeName: '出库门店',
       productCode: '产品编码',
       productName: '产品名称',
-      productType: '产品类型',
+      productType: '产品类别',
       productSpec: '规格',
       inMode: '入库方式',
       inboundQty: '入库量',
@@ -3379,6 +3379,13 @@ export default {
         discardNo: '否'
       },
       storeReturn: {
+        discardQuantity: '仓库丢弃量',
+        warehouseRemark: '备注',
+        addProducts: '新增退回产品',
+        addSelected: '加入退回列表',
+        productType: '产品类型',
+        amountRequired: '请至少录入一项大于0的仓库确认量或丢弃量；双零行仍保留待处理',
+
         title: '门店退回操作',
         returnDate: '退回日期',
         returnType: '退回类型',
@@ -3573,6 +3580,7 @@ export default {
           itemList: '产品明细'
         },
         column: {
+          tomorrowDemandQty: '明日需求量',
           produceDate: '生产日期',
           produceNo: '生产编号',
           productName: '产品名称',

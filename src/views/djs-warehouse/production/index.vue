@@ -87,7 +87,7 @@ const columns = computed<BizTableColumn[]>(() => [
     label: '需求满足率',
     minWidth: 110,
     align: 'center',
-    // 满足率 = 生产量 / 需求量 × 100%；需求量为 0 时后端返 null → 展示 -
+    // 满足率 = 生产量 / 明日需求量 × 100%；需求量为 0 时后端返 null → 展示 -
     formatter: (row: BizRow) => {
       const v = (row as ProductProductionGroupVO).fulfillmentRate;
       if (v === null || v === undefined) return '-';
@@ -99,7 +99,7 @@ const columns = computed<BizTableColumn[]>(() => [
   { prop: 'belongType', label: t('djs.warehouse.production.column.belongType'), minWidth: 110, dictType: 'djs_belong_type' },
   {
     prop: 'demandQty',
-    label: '需求量',
+    label: t('djs.warehouse.production.column.tomorrowDemandQty'),
     minWidth: 100,
     align: 'center',
     formatter: (row: BizRow) => {

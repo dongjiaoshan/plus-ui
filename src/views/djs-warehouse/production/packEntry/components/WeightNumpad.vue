@@ -2,14 +2,14 @@
   <div class="numpad">
     <!-- 选了去皮规格：大框显示实重（只读），按键 / 秤自动填入改的仍是称重（modelValue）；下方小字给出称重与去皮 -->
     <template v-if="netMode">
-      <div class="numpad-display numpad-display--net" role="status">
+      <div class="numpad-display numpad-display--net" :class="{ 'numpad-display--emphasized': emphasize }" role="status">
         <span class="numpad-net-label">{{ displayLabel }}</span>
         <span class="numpad-net" :class="{ invalid: netInvalid }">{{ netText }}</span>
         <span v-if="unit" class="numpad-unit">{{ unit }}</span>
       </div>
       <p v-if="displayHint" class="numpad-hint">{{ displayHint }}</p>
     </template>
-    <div v-else class="numpad-display">
+    <div v-else class="numpad-display" :class="{ 'numpad-display--emphasized': emphasize }">
       <input class="numpad-input" :value="buffer" :placeholder="placeholder" inputmode="decimal" @input="onInput" @blur="normalize" />
       <span v-if="unit" class="numpad-unit">{{ unit }}</span>
     </div>
@@ -54,6 +54,7 @@ const props = withDefaults(
      * 大框改显示的值（去皮页的实重，D-0147）。仅在 displayLabel 非空时生效；输入语义不变——
      * 按键 / 秤自动填入改的仍是 modelValue（称重）。
      */
+    emphasize?: boolean;
     displayValue?: number;
     /** 大框里数字前的小标签（如「实重」）；为空 = 大框照常显示可编辑的 modelValue */
     displayLabel?: string;
@@ -65,6 +66,7 @@ const props = withDefaults(
     unit: '',
     precision: 3,
     collapseOnAutoFill: false,
+    emphasize: false,
     displayValue: undefined,
     displayLabel: '',
     displayHint: ''
@@ -227,6 +229,13 @@ function normalize() {
   background: transparent;
   color: var(--el-text-color-primary);
   width: 100%;
+}
+.numpad-display--emphasized .numpad-input,
+.numpad-display--emphasized .numpad-net,
+.numpad-display--emphasized .numpad-unit,
+.numpad-display--emphasized .numpad-net-label {
+  color: var(--el-color-danger);
+  font-weight: 700;
 }
 .numpad-input::placeholder {
   color: var(--el-text-color-placeholder);

@@ -74,9 +74,9 @@
 <script setup name="StoreReturnOps" lang="ts">
 import BizTable from '@/components/BizTable/index.vue';
 import type { BizTableColumn, BizTableExpose, SearchFieldSchema } from '@/components/BizTable/types';
-import { listReturnStoreDaily } from '@/api/djs-warehouse/return';
+import { listReturnStoreDaily } from '@/api/djs-warehouse/storeReturn';
 import type { ReturnProductQuery, ReturnStoreDailyVO } from '@/api/djs-warehouse/return/types';
-import { listReturnOwnerOptions } from '@/api/djs-store/return';
+import { listReturnOwnerOptions } from '@/api/djs-warehouse/storeReturn';
 import type { StoreReturnOwnerOptionVO } from '@/api/djs-store/return/types';
 import ReturnOpsDrawer from './components/ReturnOpsDrawer.vue';
 import UnitReturnCreateDialog from './components/UnitReturnCreateDialog.vue';
@@ -234,7 +234,7 @@ function handlePageChange(pn: number, ps: number) {
 /** 导出外层汇总（与列表同口径、同筛选条件）。 */
 function handleExport() {
   proxy?.download(
-    'djs/store/return/store-daily/export',
+    'djs/warehouse/storeReturn/store-daily/export',
     buildQueryParams(),
     `${t('djs.warehouse.storeReturn.title')}_${new Date().getTime()}.xlsx`
   );

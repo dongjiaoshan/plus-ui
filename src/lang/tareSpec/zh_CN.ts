@@ -18,6 +18,11 @@ export default {
     positions: '请至少选择一个可选位置'
   },
   station: {
+    cumulative: '累计去皮',
+    fixed: '固定去皮',
+    capture: '去皮',
+    restore: '恢复',
+
     tare: '去皮',
     none: '不去皮',
     gross: '称重',
