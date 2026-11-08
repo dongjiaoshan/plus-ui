@@ -24,8 +24,8 @@
       @page-change="handlePageChange"
     >
       <template #action="{ row }">
-        <!-- admin row99：仅非 KG 生产产品可按件标损；白条与 KG 产品均不提供操作。 -->
-        <template v-if="canMarkDamage">
+        <!-- 白条保持禁标损；KG 生产产品在确认到店后开放。 -->
+        <template v-if="canMarkDamage(row)">
           <el-button v-if="(row as ProductProductionVO).isDamaged === 1" link type="primary" size="small" @click="onDamage(row)">
             {{ t('storeDemand.damage.editAction') }}
           </el-button>
@@ -76,15 +76,33 @@ const pageSize = ref(10);
  * 就是这么来的。demand_id 与 is_delivery_check 是点击发车那一刻同事务写的，
  * 与需求行「到店量」的聚合口径（Σ demand_deduct_qty WHERE is_delivery_check=1）是同一把钥匙。
  */
-const scope = reactive<{ demandId: string; productType: string; productUnit: string }>({
+const scope = reactive<{ demandId: string; storeId: string; productType: string; productUnit: string; receivedTime: string }>({
   demandId: '',
+  storeId: '',
   productType: '',
-  productUnit: ''
+  productUnit: '',
+  receivedTime: ''
 });
 
 // admin row3：白条产品（猪只整只/半只）明细不显示「记为损坏」操作
 const isWhiteBar = computed(() => scope.productType === 'white_bar');
-const canMarkDamage = computed(() => !isWhiteBar.value && !isKgUnit(scope.productUnit));
+function canMarkDamage(row: BizRow): boolean {
+  if (isWhiteBar.value) return false;
+  if (!isKgUnit(scope.productUnit)) return true;
+  const item = row as ProductProductionVO;
+  return (
+    Boolean(scope.receivedTime) &&
+    item.isDeliveryCheck === 1 &&
+    Boolean(item.demandId) &&
+    Boolean(item.storeId) &&
+    String(item.storeId) === scope.storeId &&
+    item.productAttr === 1 &&
+    item.deliverDest !== 'mail' &&
+    item.deliverType !== 2 &&
+    item.deliverDest !== 'gift' &&
+    item.deliverDest !== 'warehouse_out'
+  );
+}
 
 // 「是否损坏」搜索条（全部 = undefined / 是 = 1 / 否 = 0），select 走 dict djs_yes_no
 const searchModel = reactive<Record<string, unknown>>({ isDamaged: undefined });
@@ -226,6 +244,7 @@ function onClosed() {
   scope.demandId = '';
   scope.productType = '';
   scope.productUnit = '';
+  scope.receivedTime = '';
   list.value = [];
   total.value = 0;
 }
@@ -234,10 +253,12 @@ function onClosed() {
  * 打开「产品明细」弹框（row204：按需求 id 拉这条需求已到店的逐件产出）。
  * @param params 需求行的 id / productType / productUnit
  */
-function open(params: { demandId: string; productType?: string; productUnit?: string }) {
+function open(params: { demandId: string; storeId?: string | number; productType?: string; productUnit?: string; receivedTime?: string }) {
   scope.demandId = String(params.demandId ?? '');
+  scope.storeId = String(params.storeId ?? '');
   scope.productType = String(params.productType ?? '');
   scope.productUnit = String(params.productUnit ?? '');
+  scope.receivedTime = String(params.receivedTime ?? '');
   Object.keys(searchModel).forEach((k) => (searchModel[k] = undefined));
   pageNum.value = 1;
   pageSize.value = 10;

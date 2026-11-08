@@ -126,7 +126,7 @@ describe('V7 tare and second confirmation', () => {
     expect(buttons[0].classes()).toContain('active');
     wrapper.unmount();
   });
-  it('shows the pig age frozen at marketing on the card, and nothing when unknown', async () => {
+  it('shows the pig receiving age on the card, and nothing when unknown', async () => {
     api.getBurnPigs.mockResolvedValue({
       data: [
         { id: pigId, barId: 'QA-PIG', earNo: 'QA-EAR', marketingTime: '2026-09-28 08:00:00', status: 'pending_singe', ageDays: 183 },
@@ -141,7 +141,7 @@ describe('V7 tare and second confirmation', () => {
     expect(cards[1].find('.age-days').exists()).toBe(false);
     wrapper.unmount();
   });
-  it('marks pigs older than 365 days and warns in red before sending one to a store', async () => {
+  it('keeps the over-age card style without warning when sending it to a store', async () => {
     api.getBurnPigs.mockResolvedValue({
       data: [
         { id: pigId, barId: 'QA-PIG', earNo: 'QA-EAR', marketingTime: '2026-09-28 08:00:00', status: 'pending_singe', ageDays: 366 },
@@ -164,7 +164,37 @@ describe('V7 tare and second confirmation', () => {
     await wrapper.find('.test-weight').setValue('50');
     await wrapper.find('.submit-button').trigger('click');
     await flushPromises();
-    expect(weighing.confirmWeighing.mock.calls[0][0]).toMatchObject({ destination: 'store：QA门店', warning: 'overAgeStoreWarning' });
+    expect(weighing.confirmWeighing.mock.calls[0][0]).toMatchObject({ destination: 'store：QA门店' });
+    expect(weighing.confirmWeighing.mock.calls[0][0].warning).toBeUndefined();
+    wrapper.unmount();
+  });
+  it.each([0, 307, 365])('warns before sending a %i-day pig to a store and keeps the final confirmation', async (ageDays) => {
+    api.getBurnPigs.mockResolvedValue({
+      data: [{ id: pigId, barId: 'QA-PIG', earNo: 'QA-EAR', status: 'pending_singe', ageDays }]
+    });
+    const wrapper = render();
+    await flushPromises();
+    await wrapper.find('.test-weight').setValue('50');
+    await wrapper.find('.submit-button').trigger('click');
+    await flushPromises();
+    expect(weighing.confirmWeighing).toHaveBeenCalledWith(expect.objectContaining({ warning: 'underAgeStoreWarning', direction: 'out' }));
+    expect(api.submitBurn).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+  it('renders receiving age for both unpicked and picked white-bar cards and omits missing ages', async () => {
+    api.getCutBars.mockResolvedValue({
+      data: [
+        { barInfoId: pigId, inhouseId: '1', earNo: 'EAR-1', whiteBarNo: 'BAR-1', ageDays: 400, inWeight: 40, remainingWeight: 40 },
+        { barInfoId: pigId, cutRecordId: '2', earNo: 'EAR-1', whiteBarNo: 'BAR-2', ageDays: 400, inWeight: 40, remainingWeight: 30 },
+        { barInfoId: '3', inhouseId: '3', whiteBarNo: 'BAR-3', inWeight: 40, remainingWeight: 40 }
+      ]
+    });
+    api.getCutProducts.mockResolvedValue({ data: [] });
+    const wrapper = render('cut');
+    await flushPromises();
+    expect(wrapper.findAll('.age-days').map((age) => age.text())).toEqual(['400dayUnit', '400dayUnit']);
+    expect(wrapper.findAll('.source-card').filter((card) => card.classes().includes('over-age'))).toHaveLength(2);
+    expect(wrapper.findAll('.source-card')[2].find('.age-days').exists()).toBe(false);
     wrapper.unmount();
   });
   it('does not warn about age when the pig goes to the white-bar store', async () => {

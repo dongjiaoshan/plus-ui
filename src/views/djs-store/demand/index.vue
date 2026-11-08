@@ -29,13 +29,7 @@
         <el-button plain @click="onToggleAllSelection">
           {{ t('storeDemand.action.selectAllPage') }}
         </el-button>
-        <el-button
-          v-hasPermi="['djs:store:demand:receive']"
-          type="success"
-          plain
-          :disabled="receivableSelectedCount === 0"
-          @click="onBatchReceive"
-        >
+        <el-button v-hasPermi="['djs:store:demand:receive']" type="success" plain :disabled="receivableSelectedCount === 0" @click="onBatchReceive">
           {{ t('storeDemand.action.batchReceive') }}<template v-if="receivableSelectedCount > 0"> ({{ receivableSelectedCount }})</template>
         </el-button>
       </template>
@@ -334,8 +328,10 @@ function onViewDetail(row: BizRow) {
   const r = row as StoreDemandVO;
   detailDialogRef.value?.open({
     demandId: r.id,
+    storeId: r.storeId,
     productType: r.productType,
-    productUnit: r.productUnit
+    productUnit: r.productUnit,
+    receivedTime: r.receivedTime
   });
 }
 

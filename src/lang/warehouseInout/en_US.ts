@@ -3,7 +3,7 @@ export default {
   whiteBarNo: 'Carcass number',
   productList: 'Products',
   dayUnit: ' d',
-  overAgeStoreWarning: 'This pig is over 365 days old. Are you sure it should go to the store?',
+  underAgeStoreWarning: 'This pig is not over 365 days old and does not meet store requirements. Send it to the store anyway?',
   pigTitle: 'Pig intake',
   cutTitle: 'Carcass cutting and dispatch',
   refresh: 'Refresh',

@@ -19,7 +19,7 @@
         >
           <div class="source-head">
             <strong class="source-label">{{ source.label }}</strong>
-            <span v-if="source.pig?.ageDays != null" class="age-days">{{ source.pig.ageDays }}{{ tr('dayUnit') }}</span>
+            <span v-if="sourceAgeDays(source) != null" class="age-days">{{ sourceAgeDays(source) }}{{ tr('dayUnit') }}</span>
           </div>
           <template v-if="source.pig">
             <span>{{ tr('marketingTime') }}：{{ source.pig.marketingTime || '—' }}</span>
@@ -467,7 +467,10 @@ async function submit() {
       tare: tare.tareKg.value,
       net: Number(netWeight.value),
       destination: destinationText(),
-      warning: isBurn.value && destination.value === 'store' && isOverAge(source) ? tr('overAgeStoreWarning') : undefined
+      warning:
+        isBurn.value && destination.value === 'store' && source.pig?.ageDays != null && source.pig.ageDays <= 365
+          ? tr('underAgeStoreWarning')
+          : undefined
     });
     if (isBurn.value && source.pig) {
       const payload = {
@@ -501,7 +504,6 @@ async function submit() {
   }
 }
 
-/** 日龄超过一年的猪：卡片未选中 / 选中都换超龄样式提醒，送门店时确认框加红字（V7 第30/34行） */
 /** 左 / 右半扇用不同底色的醒目标签区分，避免工人选错半扇（V7 第39行）；名称里没有左右字样时不加色。 */
 function halfSideClass(name?: string): string {
   if (name?.includes('左')) return 'bar-side-left';
@@ -509,7 +511,10 @@ function halfSideClass(name?: string): string {
   return '';
 }
 function isOverAge(source: Source): boolean {
-  return isOverAgeDays(source.pig?.ageDays);
+  return isOverAgeDays(sourceAgeDays(source));
+}
+function sourceAgeDays(source: Source): number | undefined {
+  return source.pig?.ageDays ?? source.bar?.ageDays;
 }
 
 /** 二次确认弹框里的去向文案：选项名 + 门店 / 仓库出库去向 */

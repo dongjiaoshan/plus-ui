@@ -3,7 +3,7 @@ export default {
   whiteBarNo: '白条编号',
   productList: '产品列表',
   dayUnit: '天',
-  overAgeStoreWarning: '该猪只日龄已超过365天，是否确认需要送往门店？',
+  underAgeStoreWarning: '该猪只日龄未超过365天，不满足门店需求，是否确认需要送往门店？',
   pigTitle: '猪只入库管理',
   cutTitle: '白条分割出库管理',
   refresh: '刷新',

@@ -11,6 +11,8 @@ export interface ProductProductionVO {
   productId: number;
   productName: string;
   productType: number;
+  /** 产品主数据属性：1=生产产品、2=原材料，产品明细接口回填。 */
+  productAttr?: number;
   productUnit: string;
   productSpec?: string;
   plotId?: number;
