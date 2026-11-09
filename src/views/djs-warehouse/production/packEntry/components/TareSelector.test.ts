@@ -145,5 +145,17 @@ it('starts a fresh net entry after each capture without adding tare to scale rea
   await action('restore').trigger('click');
   expect(tare!.net.value).toBe(63);
   expect(tare!.weighPayload().tareWeight).toBe('0.000');
+  await wrapper.find('.numpad-back').trigger('click');
+  expect(tare!.net.value).toBe(6);
+  await wrapper.find('.numpad-back').trigger('click');
+  expect(gross.value).toBeUndefined();
+  await digit('5').trigger('click');
+  await digit('0').trigger('click');
+  await action('capture').trigger('click');
+  await digit('2').trigger('click');
+  expect(tare!.net.value).toBe(2);
+  await action('restore').trigger('click');
+  await digit('3').trigger('click');
+  expect(gross.value).toBe(3);
   wrapper.unmount();
 });

@@ -387,6 +387,8 @@ async function loadCutDemands(generation: number, selectDefault: boolean) {
     const result = await getCutStoreDemands(selectedProduct.value.productId);
     if (generation !== productGeneration || (!selectDefault && destination.value !== 'store')) return;
     cutDemands.value = result.data;
+    const onlyDemand = cutDemands.value.length === 1 ? cutDemands.value[0] : undefined;
+    cutDemandKey.value = onlyDemand ? `${onlyDemand.storeId}:${onlyDemand.productId}` : '';
     if (selectDefault) destination.value = cutDemands.value.length ? 'store' : 'outbound';
   } catch (error) {
     if (generation === productGeneration && (selectDefault || destination.value === 'store')) {
@@ -418,7 +420,7 @@ async function refresh(preferredKey = selectedKey.value, keepProduct = selectedP
           })
         );
     if (generation !== refreshGeneration) return;
-    // The cut API already merges both sources by oldest inbound time and numeric record ID.
+    // The cut API already merges both sources by newest inbound time and numeric record ID.
     // Preserve that order rather than re-sorting prefixed cut:/in: keys in the browser.
     sources.value = isBurn.value ? list.sort((a, b) => b.time.localeCompare(a.time) || a.key.localeCompare(b.key)) : list;
     const selected = sources.value.find((s) => s.key === preferredKey) || sources.value[0];

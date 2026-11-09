@@ -336,6 +336,36 @@ describe('row266 cut store demand', () => {
     expect(api.submitCut.mock.calls[0][0]).not.toHaveProperty('outDest');
     wrapper.unmount();
   });
+  it('selects the only demand on load and on returning to the store destination', async () => {
+    arrange();
+    const wrapper = render('cut');
+    await flushPromises();
+    expect(wrapper.find('.store-demand-card').attributes('aria-pressed')).toBe('true');
+    await wrapper.find('.test-weight').setValue('15');
+    expect(wrapper.find('.submit-button').attributes('disabled')).toBeUndefined();
+    await wrapper.findAll('.destination-options button')[0].trigger('click');
+    await wrapper.findAll('.destination-options button')[1].trigger('click');
+    await flushPromises();
+    expect(wrapper.find('.store-demand-card').attributes('aria-pressed')).toBe('true');
+    wrapper.unmount();
+  });
+  it('requires an explicit choice for several demand cards and clears a previous single choice', async () => {
+    arrange();
+    const wrapper = render('cut');
+    await flushPromises();
+    const single = api.getCutStoreDemands.mock.results[0];
+    const response = await single.value;
+    api.getCutStoreDemands.mockResolvedValue({ data: [response.data[0], { ...response.data[0], storeId: 'other', storeName: '另一门店' }] });
+    await wrapper.findAll('.destination-options button')[0].trigger('click');
+    await wrapper.findAll('.destination-options button')[1].trigger('click');
+    await flushPromises();
+    expect(wrapper.findAll('.store-demand-card').map((card) => card.attributes('aria-pressed'))).toEqual(['false', 'false']);
+    await wrapper.find('.test-weight').setValue('15');
+    expect(wrapper.find('.submit-button').attributes('disabled')).toBeDefined();
+    await wrapper.findAll('.store-demand-card')[1].trigger('click');
+    expect(wrapper.find('.submit-button').attributes('disabled')).toBeUndefined();
+    wrapper.unmount();
+  });
   it('blocks underweight and cancels over-measure without posting', async () => {
     arrange();
     api.getCutStoreDemands.mockResolvedValue({

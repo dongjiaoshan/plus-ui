@@ -163,6 +163,10 @@ function press(key: string) {
 }
 
 function backspace() {
+  // 去皮/恢复后首个数字仍重新录入；退格则从当前可编辑重量开始删。
+  if (buffer.value === '' && props.modelValue != null && Number.isFinite(props.modelValue)) {
+    buffer.value = String((Math.round(props.modelValue * 1000) - Math.round(props.manualOffset * 1000)) / 1000);
+  }
   if (buffer.value === '') return;
   buffer.value = buffer.value.slice(0, -1);
   emitFromBuffer();

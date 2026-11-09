@@ -152,7 +152,13 @@ async function loadItems() {
       confirmInput: operationDefaultConfirmInput(r),
       discardInput: 0,
       noteInput: r.warehouseRemark || '',
-      locationId: r.locationId || defaultLocationOf(r.defaultLocationId, r.locationOptions)
+      locationId:
+        r.returnStatus === 'received'
+          ? r.locationId
+          : defaultLocationOf(
+              r.locationOptions?.some((location) => String(location.id) === String(r.locationId)) ? r.locationId : r.defaultLocationId,
+              r.locationOptions
+            )
     }));
   } finally {
     loading.value = false;

@@ -135,6 +135,7 @@ function kg(v: number | undefined): string {
   font-weight: 600;
 }
 .tare-actions button {
+  justify-content: center;
   background: var(--el-color-primary);
   border-color: var(--el-color-primary);
   color: var(--el-color-white);
