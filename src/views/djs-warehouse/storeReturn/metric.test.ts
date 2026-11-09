@@ -9,6 +9,8 @@ import {
   metricSuffix,
   normalizeInput,
   normalizeConfirmQty,
+  operationDefaultConfirmInput,
+  operationMaxQty,
   toConfirmWeight
 } from './metric';
 
@@ -203,5 +205,32 @@ describe('row305 其他分组KG按实际称重', () => {
     expect(normalizeInput(limited, '2.3')).toEqual({ text: '0.3', capped: true });
     expect(maxQty({ ...limited, unlimitedConfirmWeight: undefined })).toBe(0.3);
     expect(canConvert({ productUnit: '只', materialUnit: 'kg', unlimitedConfirmWeight: false })).toBe(false);
+  });
+});
+
+describe('V7 row79 仓库操作预填', () => {
+  it('KG按计量规则折料，非KG保留退回数量', () => {
+    expect(operationDefaultConfirmInput({ ...cowpea, returnQuantity: 2 })).toBe(0.6);
+    expect(operationDefaultConfirmInput({ ...countedMaterial, returnQuantity: 2 })).toBe(2);
+    expect(operationDefaultConfirmInput({ productUnit: 'kg', returnQuantity: 2.375 })).toBe(2.375);
+  });
+  it('人工新增、不可入库和缺转换配置保持0', () => {
+    expect(operationDefaultConfirmInput({ ...cowpea, warehouseAdded: 1 })).toBe(0);
+    expect(operationDefaultConfirmInput({ ...cowpea, canInbound: false })).toBe(0);
+    expect(operationDefaultConfirmInput({ productUnit: '份', materialUnit: 'kg', returnQuantity: 3, canConvert: false })).toBe(0);
+    expect(operationDefaultConfirmInput({ productUnit: '份', materialUnit: 'kg', returnQuantity: 0 })).toBe(0);
+  });
+});
+
+describe('V7 row79 仓库操作非KG边界', () => {
+  it.each([0.5, 30])('非KG计量规则%s不改变默认和合计上限', (materialNum) => {
+    const row = { productUnit: '盒', materialUnit: '份', returnQuantity: 2, materialNum };
+    expect(operationDefaultConfirmInput(row)).toBe(2);
+    expect(operationMaxQty(row)).toBe(2);
+    expect(operationMaxQty({ ...row, warehouseAdded: 1 })).toBeNull();
+  });
+  it('KG上限继续折料及容差，人工新增不套原报退量', () => {
+    expect(operationMaxQty(cowpea)).toBe(0.36);
+    expect(operationMaxQty({ ...cowpea, warehouseAdded: 1 })).toBeNull();
   });
 });

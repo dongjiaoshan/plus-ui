@@ -119,6 +119,22 @@ export function defaultConfirmInput(it: ReturnMetricInput): string {
   return base !== null ? String(base) : '';
 }
 
+/** 仓库操作上限：人工补录无报退基数；非KG以原退回量封顶。 */
+export function operationMaxQty(it: ReturnMetricInput & { warehouseAdded?: number }): number | null {
+  if (it.warehouseAdded === 1) return null;
+  if (metricIsKg(it)) return maxQty(it);
+  const qty = toNum(it.returnQuantity);
+  return qty !== null && qty > 0 ? qty : null;
+}
+
+/** 仓库操作预填：原有行仅KG折料，非KG沿用退回数量；人工补录行等待实填。 */
+export function operationDefaultConfirmInput(it: ReturnMetricInput & { warehouseAdded?: number; canInbound?: boolean }): number {
+  if (it.warehouseAdded === 1 || it.canInbound === false) return 0;
+  if (!metricIsKg(it)) return toNum(it.returnQuantity) ?? 0;
+  if (!canConvert(it)) return 0;
+  return toNum(defaultConfirmInput(it)) ?? 0;
+}
+
 /**
  * 仓库输入已经是原材料量，直接提交；保留三位以对齐 DECIMAL(12,3)。
  */

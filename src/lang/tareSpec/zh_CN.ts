@@ -18,6 +18,7 @@ export default {
     positions: '请至少选择一个可选位置'
   },
   station: {
+    mode: '去皮模式',
     cumulative: '累计去皮',
     fixed: '固定去皮',
     capture: '去皮',

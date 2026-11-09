@@ -1,26 +1,28 @@
 <template>
   <!-- 去皮（V7-R4）：「不去皮」排第一，再列本页可选规格。称重 / 去皮 / 实重显示在上方重量大框（WeightNumpad，见 useTare.numpadProps） -->
   <section v-if="tare.cumulativeEnabled || tare.options.value.length" class="tare-selector">
-    <label class="tare-title">{{ tare.cumulativeEnabled ? 'TAP' : t('tareSpec.station.tare') }}</label>
-    <div v-if="tare.cumulativeEnabled" class="tare-modes">
+    <label class="tare-title">{{ tare.cumulativeEnabled ? t('tareSpec.station.mode') : t('tareSpec.station.tare') }}</label>
+    <div v-if="tare.cumulativeEnabled" class="tare-modes" role="tablist" :aria-label="t('tareSpec.station.mode')">
       <button
+        role="tab"
         type="button"
         :class="{ active: tare.mode.value === 'cumulative' }"
-        :aria-pressed="tare.mode.value === 'cumulative'"
+        :aria-selected="tare.mode.value === 'cumulative'"
         @click="tare.setMode('cumulative')"
       >
         {{ t('tareSpec.station.cumulative') }}
       </button>
       <button
+        role="tab"
         type="button"
         :class="{ active: tare.mode.value === 'fixed' }"
-        :aria-pressed="tare.mode.value === 'fixed'"
+        :aria-selected="tare.mode.value === 'fixed'"
         @click="tare.setMode('fixed')"
       >
         {{ t('tareSpec.station.fixed') }}
       </button>
     </div>
-    <div v-if="tare.mode.value === 'cumulative'" class="tare-modes">
+    <div v-if="tare.mode.value === 'cumulative'" class="tare-actions">
       <button type="button" :disabled="tare.grossKg.value == null || tare.grossKg.value < 0" @click="tare.captureTare()">
         {{ t('tareSpec.station.capture') }}
       </button>
@@ -70,13 +72,13 @@ function kg(v: number | undefined): string {
   margin-bottom: 8px;
 }
 .tare-options,
-.tare-modes {
+.tare-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 .tare-options button,
-.tare-modes button {
+.tare-actions button {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -95,12 +97,12 @@ function kg(v: number | undefined): string {
   font-size: 11px;
 }
 .tare-options button.active,
-.tare-modes button.active {
+.tare-actions button.active {
   border-color: var(--el-color-primary);
   background: var(--el-color-primary-light-9);
   color: var(--el-color-primary);
 }
-.tare-modes {
+.tare-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 8px;
 }
@@ -110,7 +112,41 @@ function kg(v: number | undefined): string {
   color: var(--el-color-warning);
 }
 .tare-options button:disabled,
-.tare-modes button:disabled {
+.tare-actions button:disabled {
   cursor: not-allowed;
+}
+.tare-modes {
+  display: flex;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+.tare-modes button {
+  flex: 1;
+  padding: 12px 4px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--el-text-color-regular);
+  cursor: pointer;
+}
+.tare-modes button.active {
+  border-bottom-color: var(--el-color-primary);
+  color: var(--el-color-primary);
+  font-weight: 600;
+}
+.tare-actions button {
+  background: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+  color: var(--el-color-white);
+  transition:
+    background 100ms ease,
+    transform 100ms ease;
+}
+.tare-actions button:active:not(:disabled) {
+  background: var(--el-color-primary-dark-2);
+  transform: translateY(1px);
+}
+.tare-actions button:disabled {
+  opacity: 0.5;
 }
 </style>

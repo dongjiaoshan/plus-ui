@@ -105,6 +105,7 @@ const belongType = computed(() => batch.value?.belongType ?? '');
 const showProductWeight = computed(() => belongType.value === 'vegetable' || belongType.value === 'pork');
 
 const columns = computed<BizTableColumn[]>(() => [
+  { prop: 'storeName', label: t('djs.warehouse.production.column.storeName'), width: 210 },
   { prop: 'produceNo', label: t('djs.warehouse.production.column.produceNo'), minWidth: 160 },
   // 果蔬 / 肉品产品：生产单号后追加「产品重量」列，按 g 展示（KG→g，formatWeightByBelong 对 pork/vegetable 走克）
   ...(showProductWeight.value
@@ -161,7 +162,6 @@ const columns = computed<BizTableColumn[]>(() => [
       return r.plotCode || '-';
     }
   },
-  { prop: 'storeName', label: t('djs.warehouse.production.column.storeName'), minWidth: 140 },
   {
     prop: 'deliverDest',
     label: t('djs.warehouse.production.column.deliverDest'),

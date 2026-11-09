@@ -3393,6 +3393,8 @@ export default {
         discardNo: 'No'
       },
       storeReturn: {
+        productCategory: 'Product category',
+        selectProducts: 'Select',
         discardQuantity: 'Discarded quantity',
         warehouseRemark: 'Remarks',
         addProducts: 'Add return products',

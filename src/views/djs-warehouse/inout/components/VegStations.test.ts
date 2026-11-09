@@ -197,6 +197,8 @@ describe('row282 果蔬入库管理', () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '菜筐', tareWeight: 1.2, selected: true }] });
     const wrapper = mount(VegInStation, { global });
     await flushPromises();
+    // V7-R63 now defaults to cumulative; this regression exercises the fixed specification branch.
+    await wrapper.find('[role=tablist] [role=tab]:last-child').trigger('click');
     expect(tareApi.listTareOptions).toHaveBeenCalledWith('veg_in');
     await wrapper.findAll('.plot-card')[0].trigger('click');
     await wrapper.find('.test-weight').setValue('12.5');
@@ -373,6 +375,8 @@ describe('row283 果蔬出库管理', () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '菜筐', tareWeight: 0.5, selected: true }] });
     const wrapper = mount(VegOutStation, { global });
     await flushPromises();
+    // V7-R63 now defaults to cumulative; this regression exercises the fixed specification branch.
+    await wrapper.find('[role=tablist] [role=tab]:last-child').trigger('click');
     expect(tareApi.listTareOptions).toHaveBeenCalledWith('veg_out');
     await wrapper.findAll('.stock-card')[1].trigger('click');
     await buttonByText(wrapper, '.destination-options .option', 'pigFeed').trigger('click');

@@ -28,7 +28,7 @@
       :show-batch-del="false"
       :show-row-edit="false"
       :show-row-del="false"
-      :action-min-width="120"
+      :action-width="120"
       @search="handleSearch"
       @reset="handleReset"
       @add="openCreate"

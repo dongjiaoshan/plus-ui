@@ -96,10 +96,31 @@ beforeEach(() => {
 });
 
 describe('V7 tare and second confirmation', () => {
+  it('keeps the cut API chronology and mixed-source ID order when rendering and refreshing', async () => {
+    api.getCutBars.mockResolvedValue({
+      data: [
+        { cutRecordId: '140', barInfoId: '1', earNo: 'OLD-CUT', inTime: '2026-10-01 08:00:00', remainingWeight: 10 },
+        { inhouseId: '150', barInfoId: '2', earNo: 'OLD-IN', inTime: '2026-10-01 08:00:00', remainingWeight: 10 },
+        { cutRecordId: '160', barInfoId: '3', earNo: 'NEW-CUT', inTime: '2026-11-01 08:00:00', remainingWeight: 10 },
+        { cutRecordId: '170', barInfoId: '4', earNo: 'UNKNOWN', remainingWeight: 10 }
+      ]
+    });
+    api.getCutProducts.mockResolvedValue({ data: [] });
+    const wrapper = render('cut');
+    await flushPromises();
+    const labels = () => wrapper.findAll('.source-label').map((card) => card.text());
+    expect(labels()).toEqual(['OLD-CUT', 'OLD-IN', 'NEW-CUT', 'UNKNOWN']);
+    await wrapper.find('.station-heading button').trigger('click');
+    await flushPromises();
+    expect(labels()).toEqual(['OLD-CUT', 'OLD-IN', 'NEW-CUT', 'UNKNOWN']);
+    wrapper.unmount();
+  });
   it('submits the net weight after tare and shows gross / tare / net / destination in the confirmation', async () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: true }] });
     const wrapper = render();
     await flushPromises();
+    // V7-R63 now defaults to cumulative; this regression exercises the fixed specification branch.
+    await wrapper.find('[role=tablist] [role=tab]:last-child').trigger('click');
     expect(tareApi.listTareOptions).toHaveBeenCalledWith('pig_in');
     expect(wrapper.find('.tare-options button.active').text()).toContain('塑料筐');
     await wrapper.find('.test-weight').setValue('50');
@@ -121,6 +142,8 @@ describe('V7 tare and second confirmation', () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: false }] });
     const wrapper = render();
     await flushPromises();
+    // V7-R63 now defaults to cumulative; this regression exercises the fixed specification branch.
+    await wrapper.find('[role=tablist] [role=tab]:last-child').trigger('click');
     const buttons = wrapper.findAll('.tare-options button');
     expect(buttons[0].text()).toBe('none');
     expect(buttons[0].classes()).toContain('active');
@@ -214,6 +237,8 @@ describe('V7 tare and second confirmation', () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: true }] });
     const wrapper = render();
     await flushPromises();
+    // V7-R63 now defaults to cumulative; this regression exercises the fixed specification branch.
+    await wrapper.find('[role=tablist] [role=tab]:last-child').trigger('click');
     await wrapper.findAll('.tare-options button')[0].trigger('click');
     await wrapper.find('.test-weight').setValue('50');
     await wrapper.find('.submit-button').trigger('click');
@@ -226,6 +251,8 @@ describe('V7 tare and second confirmation', () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '大筐', tareWeight: 5, selected: true }] });
     const wrapper = render();
     await flushPromises();
+    // V7-R63 now defaults to cumulative; this regression exercises the fixed specification branch.
+    await wrapper.find('[role=tablist] [role=tab]:last-child').trigger('click');
     await wrapper.find('.test-weight').setValue('5');
     expect(wrapper.find('.submit-button').attributes('disabled')).toBeDefined();
     wrapper.unmount();
@@ -234,6 +261,8 @@ describe('V7 tare and second confirmation', () => {
     tareApi.listTareOptions.mockRejectedValue(new Error('boom'));
     const wrapper = render();
     await flushPromises();
+    // V7-R63 now defaults to cumulative; this regression exercises the fixed specification branch.
+    await wrapper.find('[role=tablist] [role=tab]:last-child').trigger('click');
     expect(wrapper.find('.tare-load-failed').text()).toBe('loadFailed');
     await wrapper.find('.test-weight').setValue('12');
     await wrapper.find('.submit-button').trigger('click');

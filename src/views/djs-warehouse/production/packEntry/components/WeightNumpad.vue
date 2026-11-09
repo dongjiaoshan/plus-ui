@@ -52,7 +52,7 @@ const props = withDefaults(
     collapseOnAutoFill?: boolean;
     /**
      * 大框改显示的值（去皮页的实重，D-0147）。仅在 displayLabel 非空时生效；输入语义不变——
-     * 按键 / 秤自动填入改的仍是 modelValue（称重）。
+     * modelValue仍是称重；累计去皮后的按键输入用manualOffset换回称重，秤值不加偏移。
      */
     emphasize?: boolean;
     displayValue?: number;
@@ -60,6 +60,10 @@ const props = withDefaults(
     displayLabel?: string;
     /** 大框下方小字（如「称重：x，去皮：y」），只在 displayLabel 生效时显示 */
     displayHint?: string;
+    /** 累计去皮后的手输值是净重，modelValue 仍为总称重；秤自动填入不经过此换算。 */
+    manualOffset?: number;
+    /** 去皮/恢复/切模式开始新一轮编辑，防止按键拼接上一轮读数。 */
+    inputEpoch?: number;
   }>(),
   {
     placeholder: '',
@@ -69,7 +73,9 @@ const props = withDefaults(
     emphasize: false,
     displayValue: undefined,
     displayLabel: '',
-    displayHint: ''
+    displayHint: '',
+    manualOffset: 0,
+    inputEpoch: 0
   }
 );
 
@@ -103,9 +109,13 @@ const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.'];
 const buffer = ref<string>(props.modelValue == null || Number.isNaN(props.modelValue) ? '' : String(props.modelValue));
 
 watch(
-  () => props.modelValue,
-  (v) => {
-    const asStr = v == null || Number.isNaN(v) ? '' : String(v);
+  () => [props.modelValue, props.manualOffset, props.inputEpoch] as const,
+  ([v, offset, epoch], previous) => {
+    if (previous && epoch !== previous[2]) {
+      buffer.value = '';
+      return;
+    }
+    const asStr = v == null || Number.isNaN(v) ? '' : String((Math.round(v * 1000) - Math.round(offset * 1000)) / 1000);
     // 仅当外部值与 buffer 当前数值不一致时回灌（避免「5.」中间态被自身 emit 冲掉）。
     // 末条：外部给 0 而框内为空时也要写「0」——秤自动填入镜像空秤读数时，
     // 空框和 0 数值相等会被前两条判为"一致"而不回灌，工人就看不到归零（本项目只有秤会显式给 0，
@@ -134,7 +144,7 @@ function sanitize(raw: string): string {
 function emitFromBuffer() {
   const s = buffer.value;
   const num = s === '' || s === '.' ? undefined : Number(s);
-  const value = num === undefined || Number.isNaN(num) ? undefined : num;
+  const value = num === undefined || Number.isNaN(num) ? undefined : (Math.round(num * 1000) + Math.round(props.manualOffset * 1000)) / 1000;
   emit('update:modelValue', value);
   // 秤重量键盘的手改：通知自动填入「读数不变前别覆盖」
   if (props.collapseOnAutoFill) scaleCfg.markManualEdit(value);

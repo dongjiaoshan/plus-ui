@@ -18,6 +18,7 @@ export default {
     positions: 'Choose at least one page'
   },
   station: {
+    mode: 'Tare mode',
     cumulative: 'Cumulative tare',
     fixed: 'Fixed tare',
     capture: 'Tare',

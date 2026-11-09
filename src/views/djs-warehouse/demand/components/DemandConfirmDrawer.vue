@@ -66,20 +66,54 @@
         {{ t('demand.confirmPage.pigTip.suffix') }}
       </div>
 
-      <el-table v-loading="loading" :data="list" border :empty-text="t('demand.confirmPage.empty')">
+      <el-table
+        ref="confirmTable"
+        v-loading="loading"
+        class="demand-confirm-table"
+        :fit="false"
+        :data="list"
+        border
+        :empty-text="t('demand.confirmPage.empty')"
+      >
         <!-- 需求状态（V6-R197）：直接渲染后端派生的 storeDemandStatus + djs_store_demand_status 字典，
              不再在前端把仓库 7 态映射成门店文案 —— 那份前端映射把 COMPLETED 一律写成「确认到店」，
              缺量出车（一件都没到）的行也显示确认到店，正是甲方 row197 报的问题。 -->
-        <el-table-column :label="t('demand.confirmPage.column.demandStatus')" min-width="120" align="center" header-align="center">
+        <el-table-column :label="t('demand.confirmPage.column.demandStatus')" :width="baselineWidths[0]" align="center" header-align="center">
           <template #default="{ row }">
             <dict-tag :options="djs_store_demand_status" :value="row.storeDemandStatus" />
           </template>
         </el-table-column>
         <!-- 需求日期列（row196）：本抽屉锁定单一需求日期，逐行显式展示 demand_date，避免把「需求最终确认时间」误读成需求日期（次日预约单常见：确认于前一天、需求日期为次日）。 -->
-        <el-table-column :label="t('demand.confirmPage.column.demandDate')" prop="demandDate" min-width="110" align="center" header-align="center" />
-        <el-table-column :label="t('demand.confirmPage.column.productName')" prop="productName" min-width="120" align="center" header-align="center" show-overflow-tooltip />
-        <el-table-column :label="t('demand.confirmPage.column.productSpec')" prop="productSpec" min-width="120" align="center" header-align="center" show-overflow-tooltip />
-        <el-table-column :label="t('demand.confirmPage.column.demandQuantity')" prop="demandQuantity" min-width="120" align="center" header-align="center">
+        <el-table-column
+          :label="t('demand.confirmPage.column.demandDate')"
+          prop="demandDate"
+          :width="baselineWidths[1]"
+          align="center"
+          header-align="center"
+        />
+        <el-table-column
+          :label="t('demand.confirmPage.column.productName')"
+          prop="productName"
+          :width="baselineWidths[2]"
+          align="center"
+          header-align="center"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          :label="t('demand.confirmPage.column.productSpec')"
+          prop="productSpec"
+          :width="baselineWidths[3]"
+          align="center"
+          header-align="center"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          :label="t('demand.confirmPage.column.demandQuantity')"
+          prop="demandQuantity"
+          :width="baselineWidths[4]"
+          align="center"
+          header-align="center"
+        >
           <template #default="{ row }">{{
             productType === 'white_bar'
               ? formatOrderQuantity(row.demandQuantity, row.productUnit, true)
@@ -88,7 +122,7 @@
         </el-table-column>
         <!-- 到店量（V6-R197）：需求量右边，口径 = 该需求下已发货清点的成品条数，与需求量同单位、同格式化。
              没发过车的行显 0（不是 '—'）—— 「还没发车」在业务上就是到店 0。 -->
-        <el-table-column :label="t('demand.confirmPage.column.arrivedQuantity')" min-width="120" align="center" header-align="center">
+        <el-table-column :label="t('demand.confirmPage.column.arrivedQuantity')" :width="baselineWidths[5]" align="center" header-align="center">
           <template #default="{ row }">{{
             productType === 'white_bar'
               ? formatOrderQuantity(row.arrivedQuantity ?? 0, row.productUnit, true)
@@ -96,19 +130,32 @@
           }}</template>
         </el-table-column>
         <el-table-column :label="t('demand.confirmPage.column.productUnit')" width="70" align="center" header-align="center">
-          <template #default="{ row }">{{ productType === 'white_bar' ? t('demand.kpi.unitHead') : (row.productUnit || '-') }}</template>
+          <template #default="{ row }">{{ productType === 'white_bar' ? t('demand.kpi.unitHead') : row.productUnit || '-' }}</template>
         </el-table-column>
-        <el-table-column :label="t('demand.confirmPage.column.storeName')" min-width="120" align="center" header-align="center" show-overflow-tooltip>
+        <el-table-column :label="t('demand.confirmPage.column.storeName')" width="240" align="center" header-align="center" show-overflow-tooltip>
           <template #default="{ row }">{{ storeNameOf(row) }}</template>
         </el-table-column>
-        <el-table-column :label="t('demand.confirmPage.column.demandRemark')" prop="demandRemark" min-width="120" align="center" header-align="center" show-overflow-tooltip />
-        <el-table-column :label="t('demand.confirmPage.column.confirmerTime')" prop="confirmerTime" min-width="120" align="center" header-align="center">
+        <el-table-column
+          :label="t('demand.confirmPage.column.demandRemark')"
+          prop="demandRemark"
+          :width="baselineWidths[7]"
+          align="center"
+          header-align="center"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          :label="t('demand.confirmPage.column.confirmerTime')"
+          prop="confirmerTime"
+          :width="baselineWidths[8]"
+          align="center"
+          header-align="center"
+        >
           <template #default="{ row }">{{ row.confirmerTime ? proxy?.parseTime?.(row.confirmerTime) : '—' }}</template>
         </el-table-column>
-        <el-table-column :label="t('demand.confirmPage.column.demandConfirmer')" min-width="120" align="center" header-align="center">
+        <el-table-column :label="t('demand.confirmPage.column.demandConfirmer')" :width="baselineWidths[9]" align="center" header-align="center">
           <template #default="{ row }">{{ row.demandConfirmerName || '—' }}</template>
         </el-table-column>
-        <el-table-column :label="t('demand.confirmPage.column.pigAssigned')" min-width="120" align="center" header-align="center">
+        <el-table-column :label="t('demand.confirmPage.column.pigAssigned')" :width="baselineWidths[10]" align="center" header-align="center">
           <template #default="{ row }">{{ pigAssignedLabel(row) }}</template>
         </el-table-column>
         <el-table-column
@@ -161,6 +208,8 @@
 
 <script setup name="DemandConfirmDrawer" lang="ts">
 import { useI18n } from 'vue-i18n';
+import { useResizeObserver } from '@vueuse/core';
+import type { TableInstance } from 'element-plus';
 import { Refresh } from '@element-plus/icons-vue';
 import { formatOrderQuantity, isKgUnit } from '@/utils/weight';
 import PigAssignDialog from './PigAssignDialog.vue';
@@ -187,6 +236,25 @@ const emit = defineEmits<{ (e: 'changed'): void }>();
 const props = withDefaults(defineProps<{ adjustMode?: boolean }>(), { adjustMode: false });
 
 const visible = ref(false);
+
+// Preserve the former Element Plus flex widths at every viewport, then expand only the store column.
+// Fixed column widths let the added store space scroll instead of being taken from all other columns.
+const confirmTable = ref<TableInstance>();
+const tableWidth = ref(0);
+useResizeObserver(
+  () => confirmTable.value?.$el,
+  (entries) => {
+    tableWidth.value = entries[0]?.target.clientWidth ?? 0;
+  }
+);
+const baselineWidths = computed(() => {
+  const minimums = [120, 110, 120, 120, 120, 120, 120, 120, 120, 120, 120];
+  const flexibleTotal = minimums.reduce((sum, width) => sum + width, 0);
+  const extra = Math.max(0, tableWidth.value - flexibleTotal - 70 - (props.adjustMode ? 300 : 240));
+  const widths = minimums.map((width) => width + Math.floor((width * extra) / flexibleTotal));
+  widths[0] = minimums[0] + extra - widths.slice(1).reduce((sum, width, i) => sum + width - minimums[i + 1], 0);
+  return widths;
+});
 
 /** open() 传入的需求日期 + 产品上下文（每次打开重置，不缓存——修复整页子路由的旧数据缓存 bug）。 */
 const demandDate = ref('');
@@ -405,6 +473,10 @@ defineExpose({ open, visible });
 .demand-confirm {
   width: 100%;
   box-sizing: border-box;
+}
+/* fit=false otherwise adds a right border, changing the former client width and flex remainder by 1px. */
+.demand-confirm-table.el-table--border {
+  border-right: 0;
 }
 .ctx-header {
   display: flex;

@@ -73,7 +73,7 @@ function buildHtml(detail: DemandPrintDetailVO, labels: DemandSheetLabels, conte
   return `<h1>${esc(storeName)}-${esc(labels.titleSuffix)}</h1>
     <div class="meta">
       <span><em>${esc(labels.demandDate)}：</em><b>${esc(detail.demandDate)}</b></span>
-      <span><em>${esc(labels.storeName)}：</em><b>${esc(storeName)}</b></span>
+      <span class="meta-store"><em>${esc(labels.storeName)}：</em><b>${esc(storeName)}</b></span>
       <span><em>${esc(labels.categoryCount)}：</em><b>${esc(detail.categoryCount)}</b></span>
     </div>
     <table>
@@ -108,8 +108,12 @@ html, body { margin: 0; padding: 0; font-family: "Microsoft YaHei", "PingFang SC
 body { width: calc(100% - 20mm); margin: 0 auto; padding-top: 10mm; }
 h1 { margin: 0 0 5mm; font-size: 6mm; text-align: center; font-weight: 700; letter-spacing: 0.3mm; }
 /* 信息条三段等分、各段居中（样张：日期 / 门店 / 品类总数横向均布） */
-.meta { display: grid; grid-template-columns: repeat(3, 1fr); background: #f5f7fa; border-radius: 1.5mm;
+.meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #f5f7fa; border-radius: 1.5mm;
         padding: 3mm 0; margin-bottom: 5mm; font-size: 3.6mm; text-align: center; }
+.meta > span { min-width: 0; padding: 0 2mm; white-space: nowrap; }
+.meta-store { display: flex; justify-content: center; align-items: baseline; }
+.meta-store em { flex: 0 0 auto; }
+.meta-store b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .meta em { font-style: normal; color: #666; }
 .meta b { font-size: 4.2mm; color: #222; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 3.4mm; }

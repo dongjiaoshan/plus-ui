@@ -20,6 +20,9 @@ export const listReturnOwnerOptions = (): AxiosPromise<StoreReturnOwnerOptionVO[
   request({ url: `${base}/operation/owner-options`, method: 'get' });
 export const listReturnUnitCandidates = (): AxiosPromise<StoreReturnUnitCandidateVO[]> =>
   request({ url: `${base}/operation/unit-candidates`, method: 'get' });
+/** 仓库补录按显式退回清单选品，门店端继续使用自己的候选规则。 */
+export const listWarehouseSupplementCandidates = (): AxiosPromise<StoreReturnUnitCandidateVO[]> =>
+  request({ url: `${base}/operation/supplement-candidates`, method: 'get' });
 export const confirmStoreReturn = (data: StoreReturnConfirmForm) => request({ url: `${base}/confirm`, method: 'put', data });
 export const createUnitReturn = (data: StoreReturnUnitForm) => request({ url: `${base}/unit`, method: 'post', data });
 

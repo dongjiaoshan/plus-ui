@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="t('djs.warehouse.storeReturn.addTitle')" width="90%" append-to-body destroy-on-close>
-    <el-form inline>
+    <el-form inline label-width="100px" class="return-meta">
       <el-form-item :label="t('djs.warehouse.storeReturn.returnDate')" required
         ><el-date-picker v-model="returnDate" type="date" value-format="YYYY-MM-DD" :clearable="false"
       /></el-form-item>
@@ -13,16 +13,21 @@
       <section class="candidate-panel">
         <div class="filters">
           <el-input v-model="keyword" :placeholder="t('djs.warehouse.storeReturn.searchProduct')" clearable />
-          <el-select v-model="productType" clearable :placeholder="t('djs.warehouse.storeReturn.productType')"
+          <el-select v-model="belongType" clearable :placeholder="t('djs.warehouse.storeReturn.productCategory')"
             ><el-option v-for="o in typeOptions" :key="o.value" :label="o.label" :value="o.value"
           /></el-select>
         </div>
         <el-table :data="filteredCandidates" height="420" row-key="productId" @selection-change="onSelection">
           <el-table-column type="selection" width="42" />
           <el-table-column prop="productName" :label="t('djs.warehouse.storeReturn.productName')" min-width="130" />
-          <el-table-column prop="productSpec" :label="t('djs.warehouse.storeReturn.productSpec')" min-width="90" />
+          <el-table-column width="100" align="right">
+            <template #header>
+              <el-button type="primary" :disabled="!selection.length" @click="addSelected">{{
+                t('djs.warehouse.storeReturn.selectProducts')
+              }}</el-button>
+            </template>
+          </el-table-column>
         </el-table>
-        <el-button :disabled="!selection.length" @click="addSelected">{{ t('djs.warehouse.storeReturn.addSelected') }} →</el-button>
       </section>
       <section class="selected-panel">
         <el-table :data="selected" row-key="productId" border height="470">
@@ -84,10 +89,10 @@ const props = defineProps<{ modelValue: boolean }>();
 const emit = defineEmits<{ (e: 'update:modelValue', v: boolean): void; (e: 'done'): void }>();
 const { t } = useI18n();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const dictionaries = proxy?.useDict('djs_return_unit', 'djs_product_type') as Record<string, DictOption[]>;
-const { djs_return_unit, djs_product_type } = toRefs(dictionaries);
+const dictionaries = proxy?.useDict('djs_return_unit', 'djs_belong_type') as Record<string, DictOption[]>;
+const { djs_return_unit, djs_belong_type } = toRefs(dictionaries);
 const unitOptions = computed(() => djs_return_unit.value || []);
-const typeOptions = computed(() => djs_product_type.value || []);
+const typeOptions = computed(() => djs_belong_type.value || []);
 const visible = computed({ get: () => props.modelValue, set: (v: boolean) => emit('update:modelValue', v) });
 function todayLocal() {
   const d = new Date();
@@ -96,7 +101,7 @@ function todayLocal() {
 const returnDate = ref(todayLocal());
 const returnUnit = ref('');
 const keyword = ref('');
-const productType = ref<string>();
+const belongType = ref<string>();
 const loading = ref(false);
 const submitLoading = ref(false);
 const candidates = ref<StoreReturnUnitCandidateVO[]>([]);
@@ -107,7 +112,7 @@ const filteredCandidates = computed(() =>
     (r) =>
       !selected.value.some((s) => String(s.productId) === String(r.productId)) &&
       (r.productName || '').includes(keyword.value.trim()) &&
-      (!productType.value || String(r.productType) === String(productType.value))
+      (!belongType.value || r.belongType === belongType.value)
   )
 );
 const precision = (r: UnitRow) => (isKgUnit(r.materialUnit || r.productUnit) ? 3 : 1);
@@ -135,7 +140,7 @@ async function load() {
   returnDate.value = todayLocal();
   returnUnit.value = '';
   keyword.value = '';
-  productType.value = undefined;
+  belongType.value = undefined;
   selected.value = [];
   selection.value = [];
   try {
@@ -192,6 +197,10 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
+.return-meta :deep(.el-form-item__label) {
+  white-space: nowrap;
+}
+
 .return-transfer {
   display: flex;
   gap: 20px;

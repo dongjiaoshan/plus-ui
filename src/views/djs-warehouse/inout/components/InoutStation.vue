@@ -418,7 +418,9 @@ async function refresh(preferredKey = selectedKey.value, keepProduct = selectedP
           })
         );
     if (generation !== refreshGeneration) return;
-    sources.value = list.sort((a, b) => b.time.localeCompare(a.time) || a.key.localeCompare(b.key));
+    // The cut API already merges both sources by oldest inbound time and numeric record ID.
+    // Preserve that order rather than re-sorting prefixed cut:/in: keys in the browser.
+    sources.value = isBurn.value ? list.sort((a, b) => b.time.localeCompare(a.time) || a.key.localeCompare(b.key)) : list;
     const selected = sources.value.find((s) => s.key === preferredKey) || sources.value[0];
     await selectSource(selected?.key || '', keepProduct);
     const [dict, destinations] = await Promise.all([getDicts('djs_stock_out_dest'), getRecentOutDests()]);

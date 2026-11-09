@@ -3379,6 +3379,8 @@ export default {
         discardNo: '否'
       },
       storeReturn: {
+        productCategory: '产品类别',
+        selectProducts: '选择',
         discardQuantity: '仓库丢弃量',
         warehouseRemark: '备注',
         addProducts: '新增退回产品',

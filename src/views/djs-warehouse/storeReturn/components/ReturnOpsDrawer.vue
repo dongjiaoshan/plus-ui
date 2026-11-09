@@ -7,6 +7,7 @@
           v-if="mode === 'handle'"
           v-hasPermi="['djs:warehouse:storeReturn:confirm']"
           :disabled="!pendingItems.length"
+          type="primary"
           @click="openProductPicker"
           >{{ t('djs.warehouse.storeReturn.addProducts') }}</el-button
         >
@@ -24,7 +25,7 @@
               v-model="r.confirmInput"
               :min="0"
               :precision="precision(r)"
-              :max="maxOf(r)"
+              :max="maxOf(r, r.discardInput)"
               :controls="false"
               :disabled="r.canInbound === false"
               class="cell-num"
@@ -34,7 +35,15 @@
         </el-table-column>
         <el-table-column :label="t('djs.warehouse.storeReturn.discardQuantity')" min-width="170" align="center">
           <template #default="{ row: r }">
-            <el-input-number v-if="editable(r)" v-model="r.discardInput" :min="0" :precision="precision(r)" :controls="false" class="cell-num" />
+            <el-input-number
+              v-if="editable(r)"
+              v-model="r.discardInput"
+              :min="0"
+              :max="metricIsKg(r) ? undefined : maxOf(r, r.confirmInput)"
+              :precision="precision(r)"
+              :controls="false"
+              class="cell-num"
+            />
             <span v-else>{{ discarded(r) }}</span> {{ metricSuffix(r) }}
           </template>
         </el-table-column>
@@ -77,11 +86,25 @@
 <script setup name="StoreReturnOpsDrawer" lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { listReturnOpsItems, listReturnUnitCandidates, confirmWarehouseReturn, addWarehouseReturnProducts } from '@/api/djs-warehouse/storeReturn';
+import {
+  listReturnOpsItems,
+  listWarehouseSupplementCandidates,
+  confirmWarehouseReturn,
+  addWarehouseReturnProducts
+} from '@/api/djs-warehouse/storeReturn';
 import type { StoreReturnOpsItemVO, StoreReturnUnitCandidateVO } from '@/api/djs-store/return/types';
 import type { ReturnStoreDailyVO } from '@/api/djs-warehouse/return/types';
 import LocationSelect from '@/components/LocationSelect/index.vue';
-import { defaultLocationOf, fromConfirmWeight, isKgUnit, maxQty, metricIsKg, metricSuffix, toNum } from '../metric';
+import {
+  defaultLocationOf,
+  operationDefaultConfirmInput,
+  fromConfirmWeight,
+  isKgUnit,
+  operationMaxQty,
+  metricIsKg,
+  metricSuffix,
+  toNum
+} from '../metric';
 
 interface OpsRow extends StoreReturnOpsItemVO {
   confirmInput: number;
@@ -103,7 +126,10 @@ const items = ref<OpsRow[]>([]);
 const pendingItems = computed(() => items.value.filter((r) => r.returnStatus !== 'received'));
 const editable = (r: OpsRow) => props.mode === 'handle' && r.returnStatus !== 'received';
 const precision = (r: OpsRow) => (metricIsKg(r) ? 3 : 1);
-const maxOf = (r: OpsRow) => (r.warehouseAdded === 1 ? undefined : (maxQty(r) ?? undefined));
+const maxOf = (r: OpsRow, other: number) => {
+  const cap = operationMaxQty(r);
+  return cap === null ? undefined : Math.max(0, cap - (metricIsKg(r) ? 0 : Number(other || 0)));
+};
 const confirmed = (r: OpsRow) => (r.warehouseDiscardQty == null && r.isDiscard === 1 ? '0' : fromConfirmWeight(r, r.receivedQty ?? r.receivedWeight));
 const discarded = (r: OpsRow) => fromConfirmWeight(r, r.warehouseDiscardQty ?? (r.isDiscard === 1 ? (r.receivedQty ?? r.receivedWeight ?? 0) : 0));
 function formatQty(value: unknown, r: OpsRow) {
@@ -123,7 +149,7 @@ async function loadItems() {
     });
     items.value = (data || []).map((r) => ({
       ...r,
-      confirmInput: 0,
+      confirmInput: operationDefaultConfirmInput(r),
       discardInput: 0,
       noteInput: r.warehouseRemark || '',
       locationId: r.locationId || defaultLocationOf(r.defaultLocationId, r.locationOptions)
@@ -155,7 +181,7 @@ function onSelection(rows: StoreReturnUnitCandidateVO[]) {
   selection.value = rows;
 }
 async function openProductPicker() {
-  const { data } = await listReturnUnitCandidates();
+  const { data } = await listWarehouseSupplementCandidates();
   candidates.value = data || [];
   keyword.value = '';
   selection.value = [];
