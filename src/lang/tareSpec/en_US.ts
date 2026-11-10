@@ -19,7 +19,7 @@ export default {
   },
   station: {
     mode: 'Tare mode',
-    cumulative: 'Cumulative tare',
+    cumulative: 'Normal tare',
     fixed: 'Fixed tare',
     capture: 'Tare',
     restore: 'Restore',

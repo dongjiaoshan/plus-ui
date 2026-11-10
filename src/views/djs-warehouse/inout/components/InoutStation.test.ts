@@ -115,6 +115,33 @@ describe('V7 tare and second confirmation', () => {
     expect(labels()).toEqual(['OLD-CUT', 'OLD-IN', 'NEW-CUT', 'UNKNOWN']);
     wrapper.unmount();
   });
+  it('shows each half inbound timestamp above its independent operation timestamp, keeping API order', async () => {
+    api.getCutBars.mockResolvedValue({
+      data: [
+        { inhouseId: '150', barInfoId: '1', productName: '右半扇', earNo: 'NEW', inTime: '2026-11-10 09:25:00', remainingWeight: 10 },
+        {
+          cutRecordId: '140',
+          barInfoId: '2',
+          productName: '左半扇',
+          earNo: 'OLD',
+          inTime: '2026-11-09 08:00:00',
+          operateTime: '2026-11-10 10:00:00',
+          remainingWeight: 10
+        },
+        { cutRecordId: '160', barInfoId: '3', earNo: 'UNKNOWN', remainingWeight: 10 }
+      ]
+    });
+    api.getCutProducts.mockResolvedValue({ data: [] });
+    const wrapper = render('cut');
+    await flushPromises();
+    const cards = wrapper.findAll('.source-card');
+    expect(cards.map((card) => card.find('.source-label').text())).toEqual(['NEW', 'OLD', 'UNKNOWN']);
+    expect(cards[0].find('.bar-in-time').text()).toBe('inTime：2026-11-10 09:25:00');
+    expect(cards[0].find('.bar-operate-time').text()).toBe('operateTime：—');
+    expect(cards[1].findAll('.bar-time').map((row) => row.text())).toEqual(['inTime：2026-11-09 08:00:00', 'operateTime：2026-11-10 10:00:00']);
+    expect(cards[2].findAll('.bar-time').map((row) => row.text())).toEqual(['inTime：—', 'operateTime：—']);
+    wrapper.unmount();
+  });
   it('submits the net weight after tare and shows gross / tare / net / destination in the confirmation', async () => {
     tareApi.listTareOptions.mockResolvedValue({ data: [{ id: 't1', specName: '塑料筐', tareWeight: 1, selected: true }] });
     const wrapper = render();

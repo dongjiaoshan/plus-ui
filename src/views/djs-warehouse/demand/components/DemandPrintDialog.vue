@@ -1,11 +1,4 @@
-<!--
-  需求单打印弹框（V7-R8，仓库 › 需求管理）。
-
-  搜索：需求日期区间（默认今日 ~ 明日）+ 需求门店（多选）。
-  列表：需求日期 / 需求品类数 / 需求门店 / 操作（打印），全部居中。一行 = 一张门店订货单（需求日期 × 门店）。
-  打印：拉该门店该日明细 → printDemandSheet 生成 A4 横向订货单 → 浏览器打印。
-  数据源：GET /djs/warehouse/demand/print/list、/print/detail（仅已确认且未删除的需求，D-0151）。
--->
+<!-- 单日门店需求列表；普通与汇总打印仅输出已确认内容。 -->
 <template>
   <el-dialog v-model="visible" :title="t('demandPrint.title')" width="760px" append-to-body destroy-on-close>
     <template #header="{ titleId, titleClass }">
@@ -16,14 +9,7 @@
     </template>
     <el-form :inline="true" class="print-search" @submit.prevent>
       <el-form-item :label="t('demandPrint.field.demandDate')">
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          value-format="YYYY-MM-DD"
-          :start-placeholder="t('demandPrint.placeholder.begin')"
-          :end-placeholder="t('demandPrint.placeholder.end')"
-          style="width: 240px"
-        />
+        <el-date-picker v-model="demandDate" type="date" :clearable="false" value-format="YYYY-MM-DD" style="width: 180px" />
       </el-form-item>
       <el-form-item :label="t('demandPrint.field.store')">
         <el-select
@@ -42,8 +28,13 @@
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleSearch">{{ t('demandPrint.action.search') }}</el-button>
         <el-button icon="Refresh" @click="handleReset">{{ t('demandPrint.action.reset') }}</el-button>
+        <el-button type="primary" plain icon="Printer" :loading="summaryPrinting" @click="onPrintSummary">
+          {{ t('demandPrint.action.summaryPrint') }}
+        </el-button>
       </el-form-item>
     </el-form>
+
+    <el-alert v-if="summaryError" :title="summaryError" type="error" show-icon class="summary-error" />
 
     <el-table v-loading="loading" :data="list" border :empty-text="t('demandPrint.empty')">
       <el-table-column :label="t('demandPrint.column.demandDate')" prop="demandDate" min-width="130" align="center" header-align="center" />
@@ -70,10 +61,10 @@
 </template>
 
 <script setup lang="ts">
-import { getDemandPrintDetail, listDemandPrintSheet, type DemandPrintSheetVO } from '@/api/djs-warehouse/demandPrint';
+import { getDemandPrintDetail, getDemandPrintSummary, listDemandPrintSheet, type DemandPrintSheetVO } from '@/api/djs-warehouse/demandPrint';
 import { shiftYmd, todayYmd } from '@/utils/date';
 import { useUserStore } from '@/store/modules/user';
-import { printDemandSheet, type DemandSheetLabels } from '../printDemandSheet';
+import { printDemandSheet, printDemandSummary, type DemandSheetLabels } from '../printDemandSheet';
 import { useI18n } from 'vue-i18n';
 
 defineOptions({ name: 'DemandPrintDialog' });
@@ -92,15 +83,12 @@ const list = ref<DemandPrintSheetVO[]>([]);
 const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(10);
-const dateRange = ref<string[]>([]);
+const demandDate = ref(shiftYmd(1));
+const summaryPrinting = ref(false);
+const summaryError = ref('');
 const storeIds = ref<string[]>([]);
 /** 正在拉明细的那一行（防连点 + 按钮 loading） */
 const printingKey = ref('');
-
-/** 默认需求日期区间：今日 ~ 明日（甲方原文）。 */
-function defaultRange(): string[] {
-  return [todayYmd(), shiftYmd(1)];
-}
 
 function keyOf(row: DemandPrintSheetVO): string {
   return `${row.demandDate}_${row.storeId}`;
@@ -109,10 +97,8 @@ function keyOf(row: DemandPrintSheetVO): string {
 async function fetchList() {
   loading.value = true;
   try {
-    const [beginDate, endDate] = dateRange.value?.length === 2 ? dateRange.value : [undefined, undefined];
     const res = await listDemandPrintSheet({
-      beginDate,
-      endDate,
+      demandDate: demandDate.value,
       storeIds: storeIds.value.length ? storeIds.value : undefined,
       pageNum: pageNum.value,
       pageSize: pageSize.value
@@ -125,12 +111,13 @@ async function fetchList() {
 }
 
 function handleSearch() {
+  summaryError.value = '';
   pageNum.value = 1;
   fetchList();
 }
 
 function handleReset() {
-  dateRange.value = defaultRange();
+  demandDate.value = shiftYmd(1);
   storeIds.value = [];
   handleSearch();
 }
@@ -176,9 +163,36 @@ async function onPrint(row: DemandPrintSheetVO) {
   }
 }
 
-/** 打开弹框：每次重置为默认条件（今日 ~ 明日、全部门店）并重拉。 */
+async function onPrintSummary() {
+  if (summaryPrinting.value) return;
+  summaryPrinting.value = true;
+  summaryError.value = '';
+  try {
+    const res = await getDemandPrintSummary(demandDate.value, storeIds.value.length ? storeIds.value : undefined);
+    if (!res.data?.items?.length) {
+      proxy?.$modal.msgWarning(t('demandPrint.emptySummary'));
+      return;
+    }
+    printDemandSummary(res.data, {
+      titleSuffix: t('demandPrint.summary.titleSuffix'),
+      productName: t('demandPrint.sheet.productName'),
+      productSpec: t('demandPrint.summary.productSpec'),
+      demandQuantity: t('demandPrint.sheet.demandQuantity'),
+      unit: t('demandPrint.sheet.unit'),
+      rawMaterialName: t('demandPrint.summary.rawMaterialName')
+    });
+  } catch (error) {
+    // 请求层已展示服务端具体原因；保留可见失败状态并允许修正条件后重试。
+    summaryError.value = error instanceof Error ? error.message : t('demandPrint.summaryFailed');
+  } finally {
+    summaryPrinting.value = false;
+  }
+}
+
+/** 每次打开重置为明日与全部门店，并重新查询。 */
 function open() {
-  dateRange.value = defaultRange();
+  summaryError.value = '';
+  demandDate.value = shiftYmd(1);
   storeIds.value = [];
   list.value = [];
   total.value = 0;
@@ -200,6 +214,9 @@ defineExpose({ open });
 .print-confirmed-hint {
   font-size: 12px;
   color: var(--el-text-color-secondary);
+}
+.summary-error {
+  margin-bottom: 12px;
 }
 .print-search :deep(.el-form-item) {
   margin-bottom: 12px;

@@ -49,7 +49,7 @@
           ></el-table-column>
           <el-table-column :label="t('djs.warehouse.storeReturn.inboundLocation')" min-width="200"
             ><template #default="{ row: r }"
-              ><LocationSelect v-model="r.locationId" :options="r.locationOptions || []" :disabled="Number(r.receivedQty) <= 0" /></template
+              ><LocationSelect v-model="r.locationId" :options="r.locationOptions || []" :disabled="r.canInbound === false" /></template
           ></el-table-column>
           <el-table-column width="80"
             ><template #default="{ row: r }"

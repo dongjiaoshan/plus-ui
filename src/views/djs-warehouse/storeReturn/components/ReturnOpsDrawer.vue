@@ -54,7 +54,7 @@
         </el-table-column>
         <el-table-column :label="t('djs.warehouse.storeReturn.inboundLocation')" min-width="200" align="center">
           <template #default="{ row: r }">
-            <LocationSelect v-if="editable(r)" v-model="r.locationId" :options="r.locationOptions || []" :disabled="Number(r.confirmInput) <= 0" />
+            <LocationSelect v-if="editable(r)" v-model="r.locationId" :options="r.locationOptions || []" :disabled="r.canInbound === false" />
             <span v-else>{{ r.locationName || '—' }}</span>
           </template>
         </el-table-column>
@@ -95,16 +95,8 @@ import {
 import type { StoreReturnOpsItemVO, StoreReturnUnitCandidateVO } from '@/api/djs-store/return/types';
 import type { ReturnStoreDailyVO } from '@/api/djs-warehouse/return/types';
 import LocationSelect from '@/components/LocationSelect/index.vue';
-import {
-  defaultLocationOf,
-  operationDefaultConfirmInput,
-  fromConfirmWeight,
-  isKgUnit,
-  operationMaxQty,
-  metricIsKg,
-  metricSuffix,
-  toNum
-} from '../metric';
+import { defaultLocationOf, operationDefaultConfirmInput, operationMaxQty, metricIsKg, metricSuffix } from '../metric';
+import { formatDetailQuantity } from '../detailQuantity';
 
 interface OpsRow extends StoreReturnOpsItemVO {
   confirmInput: number;
@@ -130,11 +122,13 @@ const maxOf = (r: OpsRow, other: number) => {
   const cap = operationMaxQty(r);
   return cap === null ? undefined : Math.max(0, cap - (metricIsKg(r) ? 0 : Number(other || 0)));
 };
-const confirmed = (r: OpsRow) => (r.warehouseDiscardQty == null && r.isDiscard === 1 ? '0' : fromConfirmWeight(r, r.receivedQty ?? r.receivedWeight));
-const discarded = (r: OpsRow) => fromConfirmWeight(r, r.warehouseDiscardQty ?? (r.isDiscard === 1 ? (r.receivedQty ?? r.receivedWeight ?? 0) : 0));
+const confirmed = (r: OpsRow) =>
+  formatDetailQuantity(r.warehouseDiscardQty == null && r.isDiscard === 1 ? 0 : (r.receivedQty ?? r.receivedWeight), metricSuffix(r));
+const discarded = (r: OpsRow) =>
+  formatDetailQuantity(r.warehouseDiscardQty ?? (r.isDiscard === 1 ? (r.receivedQty ?? r.receivedWeight ?? 0) : 0), metricSuffix(r));
 function formatQty(value: unknown, r: OpsRow) {
-  const n = toNum(value as number | string | undefined);
-  return n == null ? '—' : `${isKgUnit(r.productUnit) ? n.toFixed(3) : n} ${r.productUnit || ''}`;
+  const text = formatDetailQuantity(value, r.productUnit);
+  return text === '—' ? text : `${text} ${r.productUnit || ''}`;
 }
 async function loadItems() {
   if (!props.row) return;

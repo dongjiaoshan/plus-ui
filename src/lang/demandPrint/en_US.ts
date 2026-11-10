@@ -1,7 +1,7 @@
 export default {
   button: 'Print demand sheets',
   title: 'Print demand sheets',
-  confirmedOnlyHint: 'Only confirmed demands are printed. Confirm demands before printing.',
+  confirmedOnlyHint: 'Submitted demands are listed. Only confirmed items are printed.',
   field: {
     demandDate: 'Demand date',
     store: 'Store'
@@ -20,10 +20,14 @@ export default {
   action: {
     search: 'Search',
     reset: 'Reset',
-    print: 'Print'
+    print: 'Print',
+    summaryPrint: 'Print summary demand sheet'
   },
-  empty: 'No confirmed demand for the selected dates and stores',
+  empty: 'No submitted demand for the selected date and stores',
   emptySheet: 'No confirmed demand for this store on this date',
+  summaryFailed: 'Summary printing failed. Check the error message and try again.',
+  emptySummary: 'No confirmed demand to summarize for the selected date and stores',
+  summary: { titleSuffix: 'Summary demand report', productSpec: 'Spec', rawMaterialName: 'Raw material' },
   sheet: {
     titleSuffix: 'Order sheet',
     demandDate: 'Order date',

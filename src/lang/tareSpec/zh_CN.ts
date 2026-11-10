@@ -19,7 +19,7 @@ export default {
   },
   station: {
     mode: '去皮模式',
-    cumulative: '累计去皮',
+    cumulative: '普通去皮',
     fixed: '固定去皮',
     capture: '去皮',
     restore: '恢复',

@@ -29,7 +29,8 @@
           </template>
           <template v-else-if="source.bar">
             <span class="bar-product-name" :class="halfSideClass(source.bar.productName)">{{ source.bar.productName || '—' }}</span>
-            <span>{{ tr('operateTime') }}：{{ source.bar.operateTime || '—' }}</span>
+            <span class="bar-time bar-in-time">{{ tr('inTime') }}：{{ source.bar.inTime || '—' }}</span>
+            <span class="bar-time bar-operate-time">{{ tr('operateTime') }}：{{ source.bar.operateTime || '—' }}</span>
             <span>{{ tr('inWeight') }}：{{ kg(source.bar.inWeight) }}</span>
             <span class="remaining">{{ tr('remaining') }}：{{ kg(source.bar.remainingWeight) }}</span>
           </template>
@@ -648,6 +649,9 @@ onMounted(() => refresh());
   strong {
     font-size: 19px;
     font-weight: 700;
+  }
+  .bar-time {
+    font-size: 12px;
   }
   .remaining {
     font-weight: 700;

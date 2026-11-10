@@ -11,7 +11,7 @@
  * 分页交给浏览器排版：产品多时自然换页，`thead { display: table-header-group }` 让表头每页重复，
  * 普通行尽量不跨页，超过可用页高的长备注行允许拆页。标题与信息条只在首页出现。
  */
-import type { DemandPrintDetailVO } from '@/api/djs-warehouse/demandPrint';
+import type { DemandPrintDetailVO, DemandPrintSummaryVO } from '@/api/djs-warehouse/demandPrint';
 import { formatOrderQuantity, formatQtyByUnit } from '@/utils/weight';
 
 /** 打印页固定文案（由调用方从 i18n 取好传入，本文件不直接依赖 vue-i18n 实例）。 */
@@ -155,6 +155,32 @@ function prepareRowBreaks(doc: Document, pageHeight: number): void {
  * iframe 必须真实挂进文档（不能 display:none，否则部分浏览器不渲染内容），打印完成后延时移除。
  */
 export function printDemandSheet(detail: DemandPrintDetailVO, labels: DemandSheetLabels, context: DemandPrintContext): void {
+  printFrame(`${detail.storeName ?? ''}-${labels.titleSuffix}`, buildHtml(detail, labels, context));
+}
+
+export interface DemandSummaryLabels {
+  titleSuffix: string;
+  productName: string;
+  productSpec: string;
+  demandQuantity: string;
+  unit: string;
+  rawMaterialName: string;
+}
+
+/** 汇总打印严格为五列，每个名称一行；聚合与单位一致性由服务端校验。 */
+export function printDemandSummary(detail: DemandPrintSummaryVO, labels: DemandSummaryLabels): void {
+  const title = `${detail.demandDate}-${labels.titleSuffix}`;
+  const rows = detail.items
+    .map(
+      (item) =>
+        `<tr><td class="name">${esc(item.productName)}</td><td>${esc(item.productSpec)}</td><td>${esc(formatQtyByUnit(item.demandQuantity, item.productUnit))}</td><td>${esc(item.productUnit)}</td><td>${esc(item.rawMaterialName)}</td></tr>`
+    )
+    .join('');
+  const html = `<h1>${esc(title)}</h1><table><colgroup><col style="width:25%"/><col style="width:22%"/><col style="width:15%"/><col style="width:10%"/><col style="width:28%"/></colgroup><thead><tr class="print-top-space"><td colspan="5"></td></tr><tr><th class="name">${esc(labels.productName)}</th><th>${esc(labels.productSpec)}</th><th>${esc(labels.demandQuantity)}</th><th>${esc(labels.unit)}</th><th>${esc(labels.rawMaterialName)}</th></tr></thead><tbody>${rows}</tbody><tfoot><tr class="print-bottom-space"><td colspan="5"></td></tr></tfoot></table>`;
+  printFrame(title, html);
+}
+
+function printFrame(title: string, body: string): void {
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:210mm;height:297mm;border:0;';
   document.body.appendChild(iframe);
@@ -163,12 +189,9 @@ export function printDemandSheet(detail: DemandPrintDetailVO, labels: DemandShee
     iframe.remove();
     return;
   }
-  const title = `${detail.storeName ?? ''}-${labels.titleSuffix}`;
   const doc = cw.document;
   doc.open();
-  doc.write(
-    `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${STYLE}</style></head><body>${buildHtml(detail, labels, context)}</body></html>`
-  );
+  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${STYLE}</style></head><body>${body}</body></html>`);
   doc.close();
   // 等排版完成再唤起打印；浏览器以 --kiosk-printing 启动时 print() 静默送默认打印机，否则弹系统框
   cw.setTimeout(async () => {

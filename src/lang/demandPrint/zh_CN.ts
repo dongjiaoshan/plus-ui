@@ -1,7 +1,7 @@
 export default {
   button: '需求单打印',
   title: '需求单打印',
-  confirmedOnlyHint: '仅打印已确认的需求，请先确认需求后进行打印',
+  confirmedOnlyHint: '列表显示已提交的需求，打印仅包含已确认内容',
   field: {
     demandDate: '需求日期',
     store: '需求门店'
@@ -20,10 +20,14 @@ export default {
   action: {
     search: '搜索',
     reset: '重置',
-    print: '打印'
+    print: '打印',
+    summaryPrint: '汇总需求单打印'
   },
-  empty: '所选日期与门店下暂无已确认需求',
+  empty: '所选日期与门店下暂无已提交需求',
   emptySheet: '该门店当日无已确认需求，无需打印',
+  summaryFailed: '汇总打印未完成，请核对错误提示后重试',
+  emptySummary: '所选日期与门店下暂无已确认需求，无需汇总打印',
+  summary: { titleSuffix: '汇总需求统计单', productSpec: '规格', rawMaterialName: '原材料名称' },
   sheet: {
     titleSuffix: '订货单',
     demandDate: '订货日期',

@@ -10,10 +10,8 @@ import { AxiosPromise } from 'axios';
 
 /** 订货单列表查询。 */
 export interface DemandPrintQuery extends PageQuery {
-  /** 需求日期起（yyyy-MM-dd，含） */
-  beginDate?: string;
-  /** 需求日期止（yyyy-MM-dd，含） */
-  endDate?: string;
+  /** 单一需求日期（yyyy-MM-dd）。 */
+  demandDate: string;
   /** 需求门店多选（snowflake 字符串） */
   storeIds?: string[];
 }
@@ -56,3 +54,21 @@ export const listDemandPrintSheet = (query: DemandPrintQuery): AxiosPromise<Dema
 /** 某门店某日订货单打印明细。 */
 export const getDemandPrintDetail = (demandDate: string, storeId: string): AxiosPromise<DemandPrintDetailVO> =>
   request({ url: '/djs/warehouse/demand/print/detail', method: 'get', params: { demandDate, storeId } });
+
+/** 已确认需求按产品名称汇总的打印行。 */
+export interface DemandPrintSummaryItemVO {
+  productName: string;
+  productSpec?: string;
+  demandQuantity: number | string;
+  productUnit?: string;
+  rawMaterialName?: string;
+}
+
+export interface DemandPrintSummaryVO {
+  demandDate: string;
+  items: DemandPrintSummaryItemVO[];
+}
+
+/** 所选日期与门店范围的已确认需求汇总，不受普通列表分页影响。 */
+export const getDemandPrintSummary = (demandDate: string, storeIds?: string[]): AxiosPromise<DemandPrintSummaryVO> =>
+  request({ url: '/djs/warehouse/demand/print/summary', method: 'get', params: { demandDate, storeIds } });
