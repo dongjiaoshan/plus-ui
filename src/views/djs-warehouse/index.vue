@@ -222,7 +222,7 @@ const productionKpis = computed(() => {
   return [
     { label: t('warehouse.dashboard.kpiSlaughterPig'), unit: t('warehouse.dashboard.unitHead'), value: c?.todaySlaughterPigCount ?? 0 },
     { label: t('warehouse.dashboard.kpiWhiteBarWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayMarketingWeight) },
-    { label: t('warehouse.dashboard.kpiCutBar'), unit: t('warehouse.dashboard.unitHead'), value: fmtCount(c?.todayCutBarCount) },
+    { label: t('warehouse.dashboard.kpiCutBar'), unit: t('warehouse.dashboard.unitCutSide'), value: fmtCount(c?.todayCutBarCount) },
     { label: t('warehouse.dashboard.kpiCutProductWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayCutProductWeight) },
     { label: t('warehouse.dashboard.kpiVegHandleKinds'), unit: t('warehouse.dashboard.unitKind'), value: c?.todayVegHandleKinds ?? 0 },
     { label: t('warehouse.dashboard.kpiVegHandleWeight'), unit: t('warehouse.dashboard.unitKg'), value: fmt(c?.todayVegHandleWeight) },
@@ -236,8 +236,7 @@ function fmt(v?: number | null): string {
   return Number(v).toFixed(2);
 }
 
-// 头数口径（白条需求量 / 分割白条数）：半只 0.5 计，值可为小数（后端 BigDecimal 序列化成字符串）。
-// 不四舍五入（取整会把 0.5→1 破坏口径），去掉整数的 .0 尾巴：3.0→"3"、1.5→"1.5"。
+// BigDecimal 可能序列化为字符串。保留白条需求量的小数，分割扇数直接显示整数。
 function fmtCount(v?: number | string | null): string {
   if (v == null) return '0';
   return String(Number(v));

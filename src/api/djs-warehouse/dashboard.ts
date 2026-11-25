@@ -145,7 +145,7 @@ export interface WarehouseDashboardChartsVo {
   todayVegReceiveWeight: number;
   /** 果蔬产品种类（种） */
   todayVegProductKinds: number;
-  /** 果蔬产品总重（kg） */
+  /** 有效果蔬生产份数（字段名沿用） */
   todayVegProductWeight: number;
   /** 今日生产笔数（兼容旧口径） */
   todayProductionCount: number;
